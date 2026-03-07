@@ -54,4 +54,8 @@ def mark_provision_complete(
     agent.status = status
     agent.provision_requested_at = None
     agent.provision_action = None
+    # Seed last_seen_at so reconcile treats a freshly-provisioned agent as
+    # having checked in.  Real heartbeats will overwrite this later.
+    if status == "online" and agent.last_seen_at is None:
+        agent.last_seen_at = utcnow()
     agent.updated_at = utcnow()

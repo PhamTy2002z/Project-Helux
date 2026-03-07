@@ -119,7 +119,8 @@ class AgentLifecycleOrchestrator(OpenClawDBService):
                 deliver_wakeup=deliver_wakeup,
                 wakeup_verb=wakeup_verb,
             )
-        except OpenClawGatewayError as exc:
+        except (OpenClawGatewayError, OSError, RuntimeError, ValueError) as exc:
+            is_gateway_error = isinstance(exc, OpenClawGatewayError)
             locked.status = "offline"
             locked.provision_action = None
             locked.last_provision_error = str(exc)
@@ -127,25 +128,32 @@ class AgentLifecycleOrchestrator(OpenClawDBService):
             self.session.add(locked)
             await self.session.commit()
             await self.session.refresh(locked)
+
+            # Enqueue reconcile retry so the agent can recover when the
+            # gateway becomes reachable again (bounded by MAX_WAKE_ATTEMPTS).
+            if wake and locked.checkin_deadline_at is not None:
+                enqueue_lifecycle_reconcile(
+                    QueuedAgentLifecycleReconcile(
+                        agent_id=locked.id,
+                        gateway_id=locked.gateway_id,
+                        board_id=locked.board_id,
+                        generation=locked.lifecycle_generation,
+                        checkin_deadline_at=locked.checkin_deadline_at,
+                    )
+                )
+
             if raise_gateway_errors:
-                raise HTTPException(
-                    status_code=status.HTTP_502_BAD_GATEWAY,
-                    detail=f"Gateway {action} failed: {exc}",
-                ) from exc
-            return locked
-        except (OSError, RuntimeError, ValueError) as exc:
-            locked.status = "offline"
-            locked.provision_action = None
-            locked.last_provision_error = str(exc)
-            locked.updated_at = utcnow()
-            self.session.add(locked)
-            await self.session.commit()
-            await self.session.refresh(locked)
-            if raise_gateway_errors:
-                raise HTTPException(
-                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail=f"Unexpected error {action}ing gateway provisioning.",
-                ) from exc
+                status_code = (
+                    status.HTTP_502_BAD_GATEWAY
+                    if is_gateway_error
+                    else status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+                detail = (
+                    f"Gateway {action} failed: {exc}"
+                    if is_gateway_error
+                    else f"Unexpected error {action}ing gateway provisioning."
+                )
+                raise HTTPException(status_code=status_code, detail=detail) from exc
             return locked
 
         mark_provision_complete(
