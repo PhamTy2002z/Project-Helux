@@ -1212,6 +1212,11 @@ class OpenClawGatewayProvisioner:
             session_label=agent.name or "Gateway Agent",
         )
 
+        # Gateway hot-reloads after file writes.  Wait for the reload to
+        # settle before sending session/wake RPCs that would otherwise hit
+        # the "draining for restart" window.
+        await asyncio.sleep(1.0)
+
         if reset_session:
             try:
                 await control_plane.reset_agent_session(session_key)
