@@ -1,0 +1,656 @@
+# System Architecture
+
+## High-Level Architecture
+
+OpenClaw Mission Control follows a three-tier architecture with clear separation between presentation, application, and data layers.
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                        Client Layer                          │
+│  ┌────────────┐  ┌────────────┐  ┌────────────┐            │
+│  │  Browser   │  │ API Client │  │  Gateway   │            │
+│  │    UI      │  │  (cURL)    │  │  WebSocket │            │
+│  └────────────┘  └────────────┘  └────────────┘            │
+└─────────────────────────────────────────────────────────────┘
+                           │
+                           ▼
+┌─────────────────────────────────────────────────────────────┐
+│                     Application Layer                        │
+│  ┌──────────────────────────────────────────────────────┐   │
+│  │              Next.js Frontend (Port 3000)            │   │
+│  │  - React 19 Server/Client Components                 │   │
+│  │  - TanStack Query for data fetching                  │   │
+│  │  - Generated API client (Orval)                      │   │
+│  └──────────────────────────────────────────────────────┘   │
+│                           │                                  │
+│                           ▼                                  │
+│  ┌──────────────────────────────────────────────────────┐   │
+│  │              FastAPI Backend (Port 8000)             │   │
+│  │  ┌────────────┐  ┌────────────┐  ┌────────────┐     │   │
+│  │  │ API Routes │→ │  Services  │→ │   Models   │     │   │
+│  │  └────────────┘  └────────────┘  └────────────┘     │   │
+│  │                                                       │   │
+│  │  ┌────────────────────────────────────────────────┐  │   │
+│  │  │         OpenClaw Integration Layer            │  │   │
+│  │  │  - Gateway RPC                                │  │   │
+│  │  │  - Lifecycle Orchestrator                     │  │   │
+│  │  │  - Provisioning Service                       │  │   │
+│  │  └────────────────────────────────────────────────┘  │   │
+│  └──────────────────────────────────────────────────────┘   │
+│                           │                                  │
+│  ┌──────────────────────────────────────────────────────┐   │
+│  │           RQ Worker (Background Jobs)                │   │
+│  │  - Webhook processing                                │   │
+│  │  - Async task execution                              │   │
+│  └──────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────┘
+                           │
+                           ▼
+┌─────────────────────────────────────────────────────────────┐
+│                       Data Layer                             │
+│  ┌────────────────────┐      ┌────────────────────┐         │
+│  │   PostgreSQL       │      │      Redis         │         │
+│  │  (Port 5432)       │      │   (Port 6379)      │         │
+│  │  - Primary data    │      │   - Job queue      │         │
+│  │  - Relational      │      │   - Caching        │         │
+│  └────────────────────┘      └────────────────────┘         │
+└─────────────────────────────────────────────────────────────┘
+```
+
+## Component Architecture
+
+### Frontend Architecture (Next.js)
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                      Browser                                 │
+│  ┌──────────────────────────────────────────────────────┐   │
+│  │              Next.js App Router                      │   │
+│  │  ┌────────────────────────────────────────────────┐  │   │
+│  │  │  Pages (app/)                                  │  │   │
+│  │  │  - Server Components (default)                 │  │   │
+│  │  │  - Client Components ('use client')            │  │   │
+│  │  └────────────────────────────────────────────────┘  │   │
+│  │                      │                                │   │
+│  │                      ▼                                │   │
+│  │  ┌────────────────────────────────────────────────┐  │   │
+│  │  │  Components (Atomic Design)                    │  │   │
+│  │  │  atoms → molecules → organisms → templates     │  │   │
+│  │  └────────────────────────────────────────────────┘  │   │
+│  │                      │                                │   │
+│  │                      ▼                                │   │
+│  │  ┌────────────────────────────────────────────────┐  │   │
+│  │  │  State Management                              │  │   │
+│  │  │  - TanStack Query (server state)               │  │   │
+│  │  │  - React useState/useReducer (local state)     │  │   │
+│  │  └────────────────────────────────────────────────┘  │   │
+│  │                      │                                │   │
+│  │                      ▼                                │   │
+│  │  ┌────────────────────────────────────────────────┐  │   │
+│  │  │  API Client (Generated by Orval)              │  │   │
+│  │  │  - Type-safe API calls                         │  │   │
+│  │  │  - Request/response schemas                    │  │   │
+│  │  └────────────────────────────────────────────────┘  │   │
+│  └──────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────┘
+                           │
+                           ▼ HTTP/HTTPS
+                    Backend API (Port 8000)
+```
+
+### Backend Architecture (FastAPI)
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    FastAPI Application                       │
+│  ┌──────────────────────────────────────────────────────┐   │
+│  │  API Layer (app/api/)                                │   │
+│  │  ┌────────────────────────────────────────────────┐  │   │
+│  │  │  Route Handlers (24 modules)                   │  │   │
+│  │  │  - Request validation (Pydantic)               │  │   │
+│  │  │  - Response serialization                      │  │   │
+│  │  │  - Authentication/Authorization                │  │   │
+│  │  └────────────────────────────────────────────────┘  │   │
+│  │                      │                                │   │
+│  │                      ▼                                │   │
+│  │  ┌────────────────────────────────────────────────┐  │   │
+│  │  │  Service Layer (app/services/)                 │  │   │
+│  │  │  - Business logic                              │  │   │
+│  │  │  - Orchestration                               │  │   │
+│  │  │  - External integrations                       │  │   │
+│  │  │                                                 │  │   │
+│  │  │  ┌──────────────────────────────────────────┐  │  │   │
+│  │  │  │  OpenClaw Integration                    │  │  │   │
+│  │  │  │  - Gateway RPC                           │  │  │   │
+│  │  │  │  - Lifecycle Orchestrator                │  │  │   │
+│  │  │  │  - Provisioning Service                  │  │  │   │
+│  │  │  └──────────────────────────────────────────┘  │  │   │
+│  │  └────────────────────────────────────────────────┘  │   │
+│  │                      │                                │   │
+│  │                      ▼                                │   │
+│  │  ┌────────────────────────────────────────────────┐  │   │
+│  │  │  Model Layer (app/models/)                     │  │   │
+│  │  │  - SQLModel ORM                                │  │   │
+│  │  │  - Database schema                             │  │   │
+│  │  │  - Relationships                               │  │   │
+│  │  └────────────────────────────────────────────────┘  │   │
+│  └──────────────────────────────────────────────────────┘   │
+│                           │                                  │
+│                           ▼                                  │
+│  ┌──────────────────────────────────────────────────────┐   │
+│  │  Database Session (Async SQLAlchemy)                 │   │
+│  │  - Connection pooling                                │   │
+│  │  - Transaction management                            │   │
+│  └──────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────┘
+                           │
+                           ▼
+                      PostgreSQL
+```
+
+## Data Flow Patterns
+
+### Standard CRUD Operation Flow
+
+```
+User Action (Browser)
+    │
+    ▼
+React Component
+    │
+    ▼
+TanStack Query Hook
+    │
+    ▼
+Generated API Client (Orval)
+    │
+    ▼ HTTP Request
+FastAPI Route Handler
+    │
+    ├─→ Authentication Check (deps.py)
+    │
+    ├─→ Request Validation (Pydantic Schema)
+    │
+    ▼
+Service Layer Function
+    │
+    ├─→ Business Logic
+    │
+    ├─→ Database Query (SQLModel)
+    │
+    ▼
+Database (PostgreSQL)
+    │
+    ▼
+Response (Pydantic Schema)
+    │
+    ▼ HTTP Response
+API Client
+    │
+    ▼
+TanStack Query Cache Update
+    │
+    ▼
+React Component Re-render
+    │
+    ▼
+Updated UI
+```
+
+### Async Job Processing Flow
+
+```
+API Request
+    │
+    ▼
+FastAPI Route Handler
+    │
+    ▼
+Enqueue Job (Redis RQ)
+    │
+    ├─→ Return Job ID immediately
+    │
+    ▼
+RQ Worker Process
+    │
+    ├─→ Dequeue Job
+    │
+    ├─→ Execute Job Function
+    │
+    ├─→ Update Job Status
+    │
+    ▼
+Job Completion
+    │
+    ├─→ Webhook Notification (optional)
+    │
+    └─→ Database Update
+```
+
+### Gateway Communication Flow
+
+```
+Mission Control Backend
+    │
+    ▼
+WebSocket Connection
+    │
+    ├─→ Gateway Registration
+    │   └─→ Store gateway metadata
+    │
+    ├─→ Health Check (periodic)
+    │   └─→ Update gateway status
+    │
+    ├─→ Agent Provisioning Request
+    │   │
+    │   ▼
+    │   Gateway (Remote)
+    │   │
+    │   ├─→ Create Agent Instance
+    │   │
+    │   ├─→ Configure Agent
+    │   │
+    │   └─→ Return Agent Status
+    │
+    └─→ Agent Lifecycle Events
+        └─→ Update Mission Control state
+```
+
+## Authentication and Authorization Flow
+
+### Clerk Authentication Mode
+
+```
+User Login
+    │
+    ▼
+Clerk Sign-In Component
+    │
+    ▼
+Clerk Authentication Service
+    │
+    ├─→ JWT Token Generated
+    │
+    ▼
+Frontend (Next.js)
+    │
+    ├─→ Store JWT in Clerk Session
+    │
+    ▼
+API Request with JWT
+    │
+    ▼
+Backend (FastAPI)
+    │
+    ├─→ Extract JWT from Authorization header
+    │
+    ├─→ Verify JWT with Clerk API
+    │
+    ├─→ Extract user_id from JWT claims
+    │
+    ├─→ Load user from database
+    │
+    ▼
+Authorized Request Processing
+```
+
+### Local Bearer Token Mode
+
+```
+User Login
+    │
+    ▼
+Frontend Login Form
+    │
+    ├─→ Submit credentials (or use pre-shared token)
+    │
+    ▼
+Backend (FastAPI)
+    │
+    ├─→ Validate token against LOCAL_AUTH_TOKEN env var
+    │
+    ├─→ Create session
+    │
+    ▼
+Frontend
+    │
+    ├─→ Store token in localStorage/sessionStorage
+    │
+    ▼
+API Request with Bearer Token
+    │
+    ▼
+Backend (FastAPI)
+    │
+    ├─→ Extract token from Authorization header
+    │
+    ├─→ Validate against LOCAL_AUTH_TOKEN
+    │
+    ▼
+Authorized Request Processing
+```
+
+## Database Schema Overview
+
+### Core Entities
+
+```
+Organizations
+    │
+    ├─→ OrganizationMembers (users in org)
+    │
+    ├─→ OrganizationInvites (pending invites)
+    │
+    ├─→ OrganizationBoardAccess (board permissions)
+    │
+    └─→ BoardGroups
+            │
+            ├─→ BoardGroupMemory (shared memory)
+            │
+            └─→ Boards
+                    │
+                    ├─→ BoardMemory (board-specific memory)
+                    │
+                    ├─→ BoardOnboarding (setup state)
+                    │
+                    ├─→ BoardWebhooks
+                    │   └─→ BoardWebhookPayloads
+                    │
+                    ├─→ Agents (assigned to board)
+                    │
+                    └─→ Tasks
+                            │
+                            ├─→ TaskCustomFields (metadata)
+                            │
+                            ├─→ TaskDependencies (task relationships)
+                            │
+                            ├─→ TaskFingerprints (deduplication)
+                            │
+                            ├─→ TagAssignments
+                            │   └─→ Tags
+                            │
+                            └─→ ApprovalTaskLinks
+                                    └─→ Approvals
+```
+
+### Key Relationships
+
+- **Organizations** → **BoardGroups**: One-to-many
+- **BoardGroups** → **Boards**: One-to-many
+- **Boards** → **Tasks**: One-to-many
+- **Boards** → **Agents**: Many-to-many (through assignment)
+- **Tasks** → **Tags**: Many-to-many (through TagAssignments)
+- **Tasks** → **Approvals**: Many-to-many (through ApprovalTaskLinks)
+- **Tasks** → **Tasks**: Many-to-many (through TaskDependencies)
+
+### Supporting Entities
+
+- **Gateways**: Remote execution environments
+- **Skills**: Agent capabilities from marketplace
+- **ActivityEvents**: Audit trail for all operations
+- **Users**: Managed by Clerk or local auth
+
+## API Structure
+
+### REST API Endpoints
+
+```
+/api/
+├── /auth
+│   ├── POST /login
+│   └── POST /logout
+│
+├── /organizations
+│   ├── GET    /organizations
+│   ├── POST   /organizations
+│   ├── GET    /organizations/{id}
+│   ├── PATCH  /organizations/{id}
+│   ├── DELETE /organizations/{id}
+│   ├── GET    /organizations/{id}/members
+│   ├── POST   /organizations/{id}/invites
+│   └── GET    /organizations/{id}/boards
+│
+├── /board-groups
+│   ├── GET    /board-groups
+│   ├── POST   /board-groups
+│   ├── GET    /board-groups/{id}
+│   ├── PATCH  /board-groups/{id}
+│   ├── DELETE /board-groups/{id}
+│   ├── GET    /board-groups/{id}/memory
+│   └── POST   /board-groups/{id}/memory
+│
+├── /boards
+│   ├── GET    /boards
+│   ├── POST   /boards
+│   ├── GET    /boards/{id}
+│   ├── PATCH  /boards/{id}
+│   ├── DELETE /boards/{id}
+│   ├── GET    /boards/{id}/tasks
+│   ├── GET    /boards/{id}/agents
+│   ├── GET    /boards/{id}/memory
+│   ├── POST   /boards/{id}/memory
+│   ├── GET    /boards/{id}/webhooks
+│   └── POST   /boards/{id}/webhooks
+│
+├── /tasks
+│   ├── GET    /tasks
+│   ├── POST   /tasks
+│   ├── GET    /tasks/{id}
+│   ├── PATCH  /tasks/{id}
+│   ├── DELETE /tasks/{id}
+│   ├── GET    /tasks/{id}/dependencies
+│   ├── POST   /tasks/{id}/dependencies
+│   └── GET    /tasks/{id}/custom-fields
+│
+├── /agents
+│   ├── GET    /agents
+│   ├── POST   /agents
+│   ├── GET    /agents/{id}
+│   ├── PATCH  /agents/{id}
+│   ├── DELETE /agents/{id}
+│   ├── POST   /agents/{id}/start
+│   ├── POST   /agents/{id}/stop
+│   └── GET    /agents/{id}/logs
+│
+├── /gateways
+│   ├── GET    /gateways
+│   ├── POST   /gateways
+│   ├── GET    /gateways/{id}
+│   ├── PATCH  /gateways/{id}
+│   ├── DELETE /gateways/{id}
+│   └── GET    /gateways/{id}/health
+│
+├── /approvals
+│   ├── GET    /approvals
+│   ├── POST   /approvals
+│   ├── GET    /approvals/{id}
+│   ├── POST   /approvals/{id}/approve
+│   └── POST   /approvals/{id}/reject
+│
+├── /tags
+│   ├── GET    /tags
+│   ├── POST   /tags
+│   ├── GET    /tags/{id}
+│   ├── PATCH  /tags/{id}
+│   └── DELETE /tags/{id}
+│
+├── /activity
+│   └── GET    /activity
+│
+├── /metrics
+│   └── GET    /metrics
+│
+└── /skills
+    ├── GET    /skills/marketplace
+    └── POST   /skills/install
+```
+
+### WebSocket Endpoints
+
+```
+/ws/gateway/{gateway_id}
+    - Gateway registration and health checks
+    - Agent provisioning requests
+    - Lifecycle event streaming
+```
+
+## Deployment Architecture
+
+### Docker Compose Deployment
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                      Docker Host                             │
+│                                                              │
+│  ┌────────────────────────────────────────────────────┐     │
+│  │  frontend (Next.js)                                │     │
+│  │  Port: 3000                                        │     │
+│  │  Depends: backend                                  │     │
+│  └────────────────────────────────────────────────────┘     │
+│                           │                                  │
+│  ┌────────────────────────────────────────────────────┐     │
+│  │  backend (FastAPI)                                 │     │
+│  │  Port: 8000                                        │     │
+│  │  Depends: db, redis                                │     │
+│  └────────────────────────────────────────────────────┘     │
+│                           │                                  │
+│  ┌────────────────────────────────────────────────────┐     │
+│  │  webhook-worker (RQ Worker)                        │     │
+│  │  Depends: backend, redis                           │     │
+│  └────────────────────────────────────────────────────┘     │
+│                           │                                  │
+│  ┌──────────────────┐    │    ┌──────────────────┐          │
+│  │  db (PostgreSQL) │◄───┴───►│  redis (Redis)   │          │
+│  │  Port: 5432      │         │  Port: 6379      │          │
+│  │  Volume: pgdata  │         │  Volume: redisdata│         │
+│  └──────────────────┘         └──────────────────┘          │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Local Development Deployment
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                      Local Machine                           │
+│                                                              │
+│  ┌────────────────────────────────────────────────────┐     │
+│  │  Next.js Dev Server (npm run dev)                  │     │
+│  │  Port: 3000                                        │     │
+│  │  Hot reload enabled                                │     │
+│  └────────────────────────────────────────────────────┘     │
+│                           │                                  │
+│  ┌────────────────────────────────────────────────────┐     │
+│  │  FastAPI (uvicorn --reload)                        │     │
+│  │  Port: 8000                                        │     │
+│  │  Hot reload enabled                                │     │
+│  └────────────────────────────────────────────────────┘     │
+│                           │                                  │
+│  ┌────────────────────────────────────────────────────┐     │
+│  │  RQ Worker (rq worker)                             │     │
+│  │  Watches Redis queue                               │     │
+│  └────────────────────────────────────────────────────┘     │
+│                           │                                  │
+│  ┌──────────────────┐    │    ┌──────────────────┐          │
+│  │  PostgreSQL      │◄───┴───►│  Redis           │          │
+│  │  (Docker or      │         │  (Docker or      │          │
+│  │   local install) │         │   local install) │          │
+│  └──────────────────┘         └──────────────────┘          │
+└─────────────────────────────────────────────────────────────┘
+```
+
+## Security Architecture
+
+### Network Security
+- All services bind to localhost in development
+- Production deployment behind reverse proxy (nginx/traefik)
+- HTTPS termination at reverse proxy
+- CORS configuration for allowed origins
+
+### Authentication Security
+- JWT tokens with expiration (Clerk mode)
+- Secure token storage (httpOnly cookies preferred)
+- Bearer token validation (local mode)
+- Environment-based secret management
+
+### Database Security
+- Connection pooling with max connections limit
+- Parameterized queries (SQLModel/SQLAlchemy)
+- Row-level security for multi-tenant isolation
+- Regular automated backups
+
+### API Security
+- Rate limiting per endpoint
+- Input validation with Pydantic
+- SQL injection prevention (ORM)
+- XSS prevention (output encoding)
+
+## Performance Considerations
+
+### Backend Performance
+- Async database operations (asyncpg)
+- Connection pooling (SQLAlchemy)
+- Redis caching for frequently accessed data
+- Background job processing (RQ)
+- Database indexes on foreign keys and query columns
+
+### Frontend Performance
+- Server-side rendering (Next.js)
+- Code splitting (dynamic imports)
+- Image optimization (Next.js Image)
+- TanStack Query caching
+- Optimistic UI updates
+
+### Database Performance
+- Indexes on frequently queried columns
+- Pagination for large result sets
+- Eager loading to prevent N+1 queries
+- Query optimization with EXPLAIN ANALYZE
+
+## Scalability Patterns
+
+### Horizontal Scaling
+- Stateless backend API (multiple instances behind load balancer)
+- Shared PostgreSQL database
+- Shared Redis instance for job queue
+- Session storage in database or Redis (not in-memory)
+
+### Vertical Scaling
+- Increase database resources (CPU, RAM, storage)
+- Increase Redis memory for larger cache
+- Increase backend worker processes (uvicorn workers)
+
+### Future Scaling Considerations
+- Database read replicas for read-heavy workloads
+- Redis cluster for distributed caching
+- Message queue (RabbitMQ/Kafka) for event streaming
+- CDN for static assets
+
+## Monitoring and Observability
+
+### Health Checks
+- `/healthz` endpoint for backend health
+- Database connection check
+- Redis connection check
+- Gateway connectivity status
+
+### Metrics
+- API request latency (P50, P95, P99)
+- Database query performance
+- Job queue length and processing time
+- Active gateway connections
+- Error rates by endpoint
+
+### Logging
+- Structured logging (JSON format)
+- Log levels (DEBUG, INFO, WARNING, ERROR)
+- Request/response logging
+- Error stack traces
+- Audit trail via ActivityEvents
+
+## Unresolved Questions
+
+1. What is the expected concurrent user load for production deployments?
+2. Should we implement database read replicas for scaling?
+3. What is the disaster recovery strategy and RTO/RPO targets?
+4. Should we add distributed tracing (OpenTelemetry)?
+5. What monitoring solution should be recommended (Prometheus, Datadog, etc.)?

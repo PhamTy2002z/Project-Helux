@@ -114,22 +114,40 @@ def _heartbeat_config(agent: Agent) -> dict[str, Any]:
 
 
 def _tools_exec_host_patch(config_data: dict[str, Any]) -> dict[str, Any] | None:
-    """Ensure ``tools.exec.host`` is set to ``"gateway"`` so agents can run commands.
+    """Ensure gateway-level tools config grants full tool access.
 
-    Without this, heartbeat-driven agents cannot execute ``curl``, ``bash``, or
-    any other shell command — making HEARTBEAT.md instructions unexecutable.
+    Sets ``tools.profile`` to ``"full"`` so all agents default to full tool
+    access, and ``tools.exec.host`` to ``"gateway"`` so agents can execute
+    shell commands.  ``tools.exec.security`` is set to ``"full"`` to allow
+    unrestricted tool execution.
+
     Returns a partial ``tools`` dict to merge into ``config.patch``, or ``None``
-    if the setting is already present.
+    if all settings are already present.
     """
     tools = config_data.get("tools")
     if not isinstance(tools, dict):
-        return {"exec": {"host": "gateway"}}
+        return {"profile": "full", "exec": {"host": "gateway", "security": "full"}}
+
+    result: dict[str, Any] = {}
+
+    # Ensure gateway-level tools.profile = "full".
+    if tools.get("profile") != "full":
+        result["profile"] = "full"
+
+    # Ensure tools.exec.host = "gateway" and tools.exec.security = "full".
     exec_cfg = tools.get("exec")
+    desired_exec = {"host": "gateway", "security": "full"}
     if not isinstance(exec_cfg, dict):
-        return {"exec": {"host": "gateway"}}
-    if exec_cfg.get("host"):
-        return None  # Already configured — don't override user choice.
-    return {"exec": {"host": "gateway"}}
+        result["exec"] = desired_exec
+    else:
+        exec_patch: dict[str, str] = {}
+        for key, value in desired_exec.items():
+            if exec_cfg.get(key) != value:
+                exec_patch[key] = value
+        if exec_patch:
+            result["exec"] = exec_patch
+
+    return result if result else None
 
 
 def _channel_heartbeat_visibility_patch(config_data: dict[str, Any]) -> dict[str, Any] | None:
@@ -759,6 +777,10 @@ def _updated_agent_list(
         new_entry = dict(raw_entry)
         new_entry["workspace"] = workspace_path
         new_entry["heartbeat"] = heartbeat
+        # Ensure full tool access per agent.
+        new_entry.setdefault("tools", {})
+        if isinstance(new_entry["tools"], dict):
+            new_entry["tools"]["profile"] = "full"
         new_list.append(new_entry)
         updated_ids.add(agent_id)
 
@@ -766,7 +788,12 @@ def _updated_agent_list(
         if agent_id in updated_ids:
             continue
         new_list.append(
-            {"id": agent_id, "workspace": workspace_path, "heartbeat": heartbeat},
+            {
+                "id": agent_id,
+                "workspace": workspace_path,
+                "heartbeat": heartbeat,
+                "tools": {"profile": "full"},
+            },
         )
 
     return new_list

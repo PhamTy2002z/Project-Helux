@@ -120,6 +120,8 @@ class AgentLifecycleOrchestrator(OpenClawDBService):
                 wakeup_verb=wakeup_verb,
             )
         except OpenClawGatewayError as exc:
+            locked.status = "offline"
+            locked.provision_action = None
             locked.last_provision_error = str(exc)
             locked.updated_at = utcnow()
             self.session.add(locked)
@@ -132,6 +134,8 @@ class AgentLifecycleOrchestrator(OpenClawDBService):
                 ) from exc
             return locked
         except (OSError, RuntimeError, ValueError) as exc:
+            locked.status = "offline"
+            locked.provision_action = None
             locked.last_provision_error = str(exc)
             locked.updated_at = utcnow()
             self.session.add(locked)

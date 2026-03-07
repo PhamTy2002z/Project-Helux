@@ -1,0 +1,10 @@
+{
+  "private": true,
+  "scripts": {
+    "dev": "concurrently -k -n be,fe -c blue,green \"cd backend && .venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload --reload-exclude .venv\" \"cd frontend && NEXT_PUBLIC_API_URL=http://localhost:8000 NEXT_PUBLIC_AUTH_MODE=local npm run dev -- -p 3001\"",
+    "dev:stop": "kill $(lsof -ti:8000) $(lsof -ti:3001) 2>/dev/null || true"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  }
+}
