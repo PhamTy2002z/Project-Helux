@@ -623,21 +623,54 @@ TaskCommentCard.displayName = "TaskCommentCard";
 const ChatMessageCard = memo(function ChatMessageCard({
   message,
   fallbackSource,
+  isCurrentUser,
 }: {
   message: BoardChatMessage;
   fallbackSource: string;
+  isCurrentUser: boolean;
 }) {
   const sourceLabel = resolveHumanActorName(message.source, fallbackSource);
   return (
-    <div className="rounded-2xl border border-slate-200 bg-slate-50/60 p-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-sm font-semibold text-slate-900">{sourceLabel}</p>
-        <span className="text-xs text-slate-400">
-          {formatShortTimestamp(message.created_at)}
-        </span>
-      </div>
-      <div className="mt-2 select-text cursor-text text-sm leading-relaxed text-slate-900 break-words">
-        <Markdown content={message.content} variant="basic" />
+    <div
+      className={cn(
+        "flex",
+        isCurrentUser ? "justify-end" : "justify-start",
+      )}
+    >
+      <div
+        className={cn(
+          "max-w-[85%] rounded-2xl p-4",
+          isCurrentUser
+            ? "rounded-br-md bg-blue-600 text-white"
+            : "rounded-bl-md border border-slate-200 bg-slate-50/60",
+        )}
+      >
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p
+            className={cn(
+              "text-sm font-semibold",
+              isCurrentUser ? "text-white" : "text-slate-900",
+            )}
+          >
+            {sourceLabel}
+          </p>
+          <span
+            className={cn(
+              "text-xs",
+              isCurrentUser ? "text-blue-200" : "text-slate-400",
+            )}
+          >
+            {formatShortTimestamp(message.created_at)}
+          </span>
+        </div>
+        <div
+          className={cn(
+            "mt-2 select-text cursor-text text-sm leading-relaxed break-words",
+            isCurrentUser ? "text-white" : "text-slate-900",
+          )}
+        >
+          <Markdown content={message.content} variant="basic" />
+        </div>
       </div>
     </div>
   );
@@ -4028,13 +4061,22 @@ export default function BoardDetailPage() {
                   No messages yet. Start the conversation with your lead agent.
                 </p>
               ) : (
-                chatMessages.map((message) => (
-                  <ChatMessageCard
-                    key={message.id}
-                    message={message}
-                    fallbackSource={currentUserDisplayName}
-                  />
-                ))
+                chatMessages.map((message) => {
+                  const sourceLabel = resolveHumanActorName(
+                    message.source,
+                    currentUserDisplayName,
+                  );
+                  const isCurrentUser =
+                    sourceLabel === currentUserDisplayName;
+                  return (
+                    <ChatMessageCard
+                      key={message.id}
+                      message={message}
+                      fallbackSource={currentUserDisplayName}
+                      isCurrentUser={isCurrentUser}
+                    />
+                  );
+                })
               )}
               <div ref={chatEndRef} />
             </div>

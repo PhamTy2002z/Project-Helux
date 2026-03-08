@@ -10,8 +10,10 @@ from fastapi import APIRouter, Depends, Query, Request
 from sse_starlette.sse import EventSourceResponse
 
 from app.api.deps import ActorContext, require_admin_or_agent, require_org_admin
+from app.core.agent_tokens import generate_agent_token, hash_agent_token
 from app.core.auth import AuthContext, get_auth_context
 from app.db.session import get_session
+from app.models.agents import Agent
 from app.schemas.agents import (
     AgentCreate,
     AgentHeartbeat,
@@ -166,3 +168,26 @@ async def delete_agent(
     """Delete an agent and clean related task state."""
     service = AgentLifecycleService(session)
     return await service.delete_agent(agent_id=agent_id, ctx=ctx)
+
+
+@router.post("/{agent_id}/rotate-token")
+async def rotate_agent_token(
+    agent_id: str,
+    session: AsyncSession = SESSION_DEP,
+    auth: AuthContext = AUTH_DEP,
+) -> dict[str, str]:
+    """Generate a new auth token for an agent. Returns the plaintext token once.
+
+    Only available to authenticated admin users. Store the returned token
+    securely — it cannot be retrieved again after this response.
+    """
+    from fastapi import HTTPException, status
+
+    agent = await session.get(Agent, agent_id)
+    if agent is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Agent not found")
+    raw_token = generate_agent_token()
+    agent.agent_token_hash = hash_agent_token(raw_token)
+    session.add(agent)
+    await session.commit()
+    return {"agent_id": agent_id, "agent_name": agent.name or "", "token": raw_token}
