@@ -33,8 +33,8 @@ importers:
         specifier: ^8.21.3
         version: 8.21.3(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       agentation:
-        specifier: ^2.2.1
-        version: 2.2.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+        specifier: ^2.3.0
+        version: 2.3.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       cmdk:
         specifier: ^1.1.1
         version: 1.1.1(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -52,7 +52,7 @@ importers:
         version: 10.1.0(@types/react@19.2.14)(react@19.2.4)
       recharts:
         specifier: ^3.7.0
-        version: 3.8.0(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react-is@16.13.1)(react@19.2.4)(redux@5.0.1)
+        version: 3.8.0(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react-is@17.0.2)(react@19.2.4)(redux@5.0.1)
       remark-breaks:
         specifier: ^4.0.0
         version: 4.0.0
@@ -1708,8 +1708,8 @@ packages:
     resolution: {integrity: sha512-MnA+YT8fwfJPgBx3m60MNqakm30XOkyIoH1y6huTQvC0PwZG7ki8NacLBcrPbNoo8vEZy7Jpuk7+jMO+CUovTQ==}
     engines: {node: '>= 14'}
 
-  agentation@2.2.1:
-    resolution: {integrity: sha512-yV9P1DggI7M3SRaRwLwt+xqE5lXqg5l8xtqCr8KzEkbnH8Wa6eRATU97uKnD7cC8FrsJP62Mmw0Xf5Xi5KV50Q==}
+  agentation@2.3.0:
+    resolution: {integrity: sha512-uGcDel78I5UAVSiWnsNv0pHj+ieuHyZ4GCsL6kqEralKeIW32869JlwfsKoy5S71jseyrI6O5duU+AacJs+CmQ==}
     peerDependencies:
       react: '>=18.0.0'
       react-dom: '>=18.0.0'
@@ -6078,7 +6078,7 @@ snapshots:
 
   agent-base@7.1.4: {}
 
-  agentation@2.2.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
+  agentation@2.3.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
     optionalDependencies:
       react: 19.2.4
       react-dom: 19.2.4(react@19.2.4)
@@ -8564,7 +8564,7 @@ snapshots:
 
   readdirp@5.0.0: {}
 
-  recharts@3.8.0(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react-is@16.13.1)(react@19.2.4)(redux@5.0.1):
+  recharts@3.8.0(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react-is@17.0.2)(react@19.2.4)(redux@5.0.1):
     dependencies:
       '@reduxjs/toolkit': 2.11.2(react-redux@9.2.0(@types/react@19.2.14)(react@19.2.4)(redux@5.0.1))(react@19.2.4)
       clsx: 2.1.1
@@ -8574,7 +8574,7 @@ snapshots:
       immer: 10.2.0
       react: 19.2.4
       react-dom: 19.2.4(react@19.2.4)
-      react-is: 16.13.1
+      react-is: 17.0.2
       react-redux: 9.2.0(@types/react@19.2.14)(react@19.2.4)(redux@5.0.1)
       reselect: 5.1.1
       tiny-invariant: 1.3.3
