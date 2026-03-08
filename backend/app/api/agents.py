@@ -12,6 +12,7 @@ from sse_starlette.sse import EventSourceResponse
 from app.api.deps import ActorContext, require_admin_or_agent, require_org_admin
 from app.core.agent_tokens import generate_agent_token, hash_agent_token
 from app.core.auth import AuthContext, get_auth_context
+from app.core.logging import get_logger
 from app.db.session import get_session
 from app.models.agents import Agent
 from app.schemas.agents import (
@@ -23,6 +24,9 @@ from app.schemas.agents import (
 )
 from app.schemas.common import OkResponse
 from app.schemas.pagination import DefaultLimitOffsetPage
+from app.models.gateways import Gateway
+from app.services.openclaw.gateway_resolver import optional_gateway_client_config
+from app.services.openclaw.gateway_rpc import OpenClawGatewayError, openclaw_call
 from app.services.openclaw.provisioning_db import AgentLifecycleService, AgentUpdateOptions
 from app.services.organizations import OrganizationContext
 
@@ -31,6 +35,7 @@ if TYPE_CHECKING:
     from sqlmodel.ext.asyncio.session import AsyncSession
 
 router = APIRouter(prefix="/agents", tags=["agents"])
+logger = get_logger(__name__)
 
 BOARD_ID_QUERY = Query(default=None)
 GATEWAY_ID_QUERY = Query(default=None)
@@ -190,4 +195,68 @@ async def rotate_agent_token(
     agent.agent_token_hash = hash_agent_token(raw_token)
     session.add(agent)
     await session.commit()
+
+    await _sync_token_to_gateway(agent, raw_token, session)
+
     return {"agent_id": agent_id, "agent_name": agent.name or "", "token": raw_token}
+
+
+async def _sync_token_to_gateway(agent: Agent, raw_token: str, session: object) -> None:
+    import re as _re
+
+    if not agent.gateway_id or not agent.openclaw_session_id:
+        return
+
+    gateway = await session.get(Gateway, agent.gateway_id)  # type: ignore[attr-defined]
+    if gateway is None:
+        return
+
+    config = optional_gateway_client_config(gateway)
+    if config is None:
+        return
+
+    session_id: str = agent.openclaw_session_id
+    if session_id.startswith("agent:") and session_id.endswith(":main"):
+        gw_agent_id = session_id[len("agent:"):-len(":main")]
+    else:
+        gw_agent_id = session_id
+
+    files_to_update = {
+        "TOOLS.md": _re.compile(r"(AUTH_TOKEN=)[^\s`]+"),
+        "HEARTBEAT.md": _re.compile(r"(`AUTH_TOKEN`:\s*`)[^`]+(`\s*)"),
+    }
+
+    for filename, pattern in files_to_update.items():
+        try:
+            result = await openclaw_call(
+                "agents.files.get",
+                {"agentId": gw_agent_id, "name": filename},
+                config=config,
+            )
+            if not isinstance(result, dict):
+                continue
+            file_obj = result.get("file") or result
+            content = file_obj.get("content") if isinstance(file_obj, dict) else None
+            if not isinstance(content, str):
+                continue
+
+            if filename == "TOOLS.md":
+                new_content = pattern.sub(rf"\g<1>{raw_token}", content)
+            else:
+                new_content = pattern.sub(rf"\g<1>{raw_token}\g<2>", content)
+
+            if new_content == content:
+                continue
+
+            await openclaw_call(
+                "agents.files.set",
+                {"agentId": gw_agent_id, "name": filename, "content": new_content},
+                config=config,
+            )
+        except (OpenClawGatewayError, Exception) as exc:
+            logger.warning(
+                "rotate_token.gateway_sync_failed agent_id=%s file=%s error=%s",
+                agent.id,
+                filename,
+                exc,
+            )
