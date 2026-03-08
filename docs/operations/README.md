@@ -1,86 +1,101 @@
 # Operations
 
-Runbooks and operational notes for running Mission Control.
+This guide covers day-2 operations for Mission Control in SaaS beta mode.
+Use this page as the entry point for readiness checks, backup and restore
+workflows, and incident triage.
 
 ## Health checks
 
-Backend exposes:
-
-- `/healthz` — liveness
-- `/readyz` — readiness
-
-Example:
+Mission Control exposes both liveness and dependency-aware readiness probes.
+Use `/healthz` for process-level liveness and `/readyz` for deploy gates.
 
 ```bash
-curl -f http://localhost:8000/healthz
-curl -f http://localhost:8000/readyz
+curl -sS http://localhost:8000/healthz
+curl -sS http://localhost:8000/readyz | jq
 ```
+
+`/readyz` includes component statuses for:
+- Database connectivity (`required=true`)
+- Redis connectivity (`required=true`)
+- Worker heartbeat freshness (`required=false` when configured)
+
+If a required component fails, `/readyz` returns HTTP `503`.
+
+## Worker heartbeat signal
+
+To include worker liveness in readiness payloads, set these variables in your
+runtime environment:
+
+- `WORKER_HEARTBEAT_KEY`
+- `READINESS_WORKER_HEARTBEAT_KEY`
+- `READINESS_WORKER_HEARTBEAT_MAX_AGE_SECONDS`
+
+In `compose.yml`, backend and `webhook-worker` use a shared key by default.
 
 ## Logs
 
-### Docker Compose
+Use correlated fields to triage incidents quickly.
+
+- `request_id`
+- `organization_id`
+- `actor_id`
+- `endpoint`
+
+### Docker Compose examples
 
 ```bash
-# tail everything
+# Tail all services
 docker compose -f compose.yml --env-file .env logs -f --tail=200
 
-# tail just backend
+# Tail backend only
 docker compose -f compose.yml --env-file .env logs -f --tail=200 backend
 ```
 
-The backend supports slow-request logging via `REQUEST_LOG_SLOW_MS`.
-
 ## Backups
 
-The DB runs in Postgres (Compose `db` service) and persists to the `postgres_data` named volume.
-
-### Minimal backup (logical)
-
-Example with `pg_dump` (run on the host):
+Use `scripts/ops/backup.sh` to create logical Postgres backups with retention.
+For production, encrypt backup artifacts at rest.
 
 ```bash
-# load variables from .env (trusted file only)
-set -a
-. ./.env
-set +a
-
-: "${POSTGRES_DB:?set POSTGRES_DB in .env}"
-: "${POSTGRES_USER:?set POSTGRES_USER in .env}"
-: "${POSTGRES_PORT:?set POSTGRES_PORT in .env}"
-: "${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env (strong, unique value; not \"postgres\")}"
-
-PGPASSWORD="$POSTGRES_PASSWORD" pg_dump \
-  -h 127.0.0.1 -p "$POSTGRES_PORT" -U "$POSTGRES_USER" \
-  -d "$POSTGRES_DB" \
-  --format=custom > mission_control.backup
+# Required env vars: POSTGRES_DB, POSTGRES_USER, POSTGRES_PASSWORD
+BACKUP_DIR=./backups \
+BACKUP_RETENTION_DAYS=30 \
+BACKUP_ENCRYPTION_PASSWORD='replace-with-strong-secret' \
+./scripts/ops/backup.sh
 ```
 
-> **Note**
-> For real production, prefer automated backups + retention + periodic restore drills.
+## Restore drills
 
-## Upgrades / rollbacks
-
-### Upgrade (Compose)
+Run restore drills with `scripts/ops/restore-check.sh`. This script restores
+into a temporary database, validates core tables, then cleans up.
 
 ```bash
-docker compose -f compose.yml --env-file .env up -d --build
+BACKUP_FILE=./backups/mission-control-20260308T040000Z.dump.enc \
+BACKUP_ENCRYPTION_PASSWORD='replace-with-strong-secret' \
+POSTGRES_USER=postgres \
+POSTGRES_PASSWORD=postgres \
+./scripts/ops/restore-check.sh
 ```
 
-### Rollback
+Drill cadence:
+- Staging: weekly
+- Production: monthly
 
-Rollback typically means deploying a previous image/commit.
+RPO and RTO targets for beta:
+- RPO: 24 hours
+- RTO: 2 hours
 
-> **Warning**
-> If you applied non-backward-compatible DB migrations, rolling back the app may require restoring the database.
+## Runbooks
 
-## Common issues
+Use these focused runbooks for live operations:
 
-### Frontend loads but API calls fail
+- [Backup and restore drill](./backup-restore-drill.md)
+- [Incident triage](./incident-triage.md)
 
-- Confirm `NEXT_PUBLIC_API_URL` is set and reachable from the browser.
-- Confirm backend CORS includes the frontend origin (`CORS_ORIGINS`).
+## Rollback notes
 
-### Auth mismatch
+If a release degrades tenant isolation, readiness, or quota enforcement:
 
-- Backend: `AUTH_MODE` (`local` or `clerk`)
-- Frontend: `NEXT_PUBLIC_AUTH_MODE` should match
+1. Roll back application version first.
+2. If schema changes are incompatible, restore from a validated backup.
+3. Rotate affected tokens if incident scope includes authentication compromise.

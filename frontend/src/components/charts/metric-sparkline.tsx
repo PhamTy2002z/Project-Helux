@@ -1,13 +1,6 @@
 "use client";
 
-import {
-  Area,
-  AreaChart,
-  ResponsiveContainer,
-  type TooltipContentProps,
-  Tooltip,
-  YAxis,
-} from "recharts";
+import { Area, AreaChart, ResponsiveContainer, Tooltip, YAxis } from "recharts";
 import { useId } from "react";
 
 import { cn } from "@/lib/utils";
@@ -33,15 +26,22 @@ const formatSparkValue = (value: number) => {
   return Number.isInteger(rounded) ? rounded.toString() : rounded.toFixed(1);
 };
 
+type SparklineTooltipProps = {
+  active?: boolean;
+  payload?: ReadonlyArray<{
+    value?: unknown;
+    payload?: { index?: unknown };
+  }>;
+  bucket?: string;
+  labels?: string[];
+};
+
 const SparklineTooltip = ({
   active,
   payload,
   bucket,
   labels,
-}: TooltipContentProps<number, string> & {
-  bucket?: string;
-  labels?: string[];
-}) => {
+}: SparklineTooltipProps) => {
   if (!active || !payload?.length) {
     return null;
   }
@@ -102,10 +102,14 @@ export default function MetricSparkline({
             </linearGradient>
           </defs>
           <YAxis hide domain={["dataMin", "dataMax"]} />
-          <Tooltip<number, string>
+          <Tooltip
             cursor={false}
             content={(props) => (
-              <SparklineTooltip {...props} bucket={bucket} labels={labels} />
+              <SparklineTooltip
+                {...(props as SparklineTooltipProps)}
+                bucket={bucket}
+                labels={labels}
+              />
             )}
           />
           <Area

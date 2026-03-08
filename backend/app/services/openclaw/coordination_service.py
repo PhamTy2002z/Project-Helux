@@ -205,6 +205,7 @@ class GatewayCoordinationService(AbstractGatewayMessagingService):
                 message=f"Nudge failed for {target.name}: {exc}",
                 agent_id=actor_agent.id,
                 board_id=board.id,
+                organization_id=board.organization_id,
             )
             await self.session.commit()
             self.logger.error(
@@ -235,6 +236,7 @@ class GatewayCoordinationService(AbstractGatewayMessagingService):
             message=f"Nudge sent to {target.name}.",
             agent_id=actor_agent.id,
             board_id=board.id,
+            organization_id=board.organization_id,
         )
         await self.session.commit()
         self.logger.info(
@@ -400,6 +402,7 @@ class GatewayCoordinationService(AbstractGatewayMessagingService):
             message=note,
             agent_id=actor_agent_id,
             board_id=board.id,
+            organization_id=board.organization_id,
         )
         await self.session.commit()
         self.logger.info(
@@ -474,6 +477,7 @@ class GatewayCoordinationService(AbstractGatewayMessagingService):
                 message=f"Lead user question failed for {board.name}: {exc}",
                 agent_id=actor_agent.id,
                 board_id=board.id,
+                organization_id=board.organization_id,
             )
             await self.session.commit()
             self.logger.error(
@@ -506,6 +510,7 @@ class GatewayCoordinationService(AbstractGatewayMessagingService):
             message=f"Lead requested user info via gateway agent for board: {board.name}.",
             agent_id=actor_agent.id,
             board_id=board.id,
+            organization_id=board.organization_id,
         )
         main_agent = await Agent.objects.filter_by(gateway_id=gateway.id, board_id=None).first(
             self.session,
@@ -601,6 +606,7 @@ class GatewayCoordinationService(AbstractGatewayMessagingService):
                 message=f"Lead message failed for {board.name}: {exc}",
                 agent_id=actor_agent.id,
                 board_id=board.id,
+                organization_id=board.organization_id,
             )
             await self.session.commit()
             self.logger.error(
@@ -633,6 +639,7 @@ class GatewayCoordinationService(AbstractGatewayMessagingService):
             message=f"Sent {payload.kind} to lead for board: {board.name}.",
             agent_id=actor_agent.id,
             board_id=board.id,
+            organization_id=board.organization_id,
         )
         await self.session.commit()
         self.logger.info(
@@ -720,6 +727,7 @@ class GatewayCoordinationService(AbstractGatewayMessagingService):
             event_type="gateway.main.lead_broadcast.sent",
             message=f"Broadcast {payload.kind} to {sent} board leads (failed: {failed}).",
             agent_id=actor_agent.id,
+            organization_id=actor_agent.organization_id,
         )
         await self.session.commit()
         self.logger.info(

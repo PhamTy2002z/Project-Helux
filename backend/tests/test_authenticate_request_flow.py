@@ -10,6 +10,7 @@ from fastapi import HTTPException
 
 from app.core import auth
 from app.core.auth_mode import AuthMode
+from app.core.auth_profile import AuthProfile
 from app.models.users import User
 
 
@@ -146,3 +147,60 @@ async def test_get_auth_context_optional_local_mode_returns_none_without_token(
         session=_FakeSession(),  # type: ignore[arg-type]
     )
     assert out is None
+
+
+@pytest.mark.asyncio
+async def test_get_auth_context_clerk_mode_allows_local_fallback_outside_saas_profile(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(auth.settings, "auth_mode", AuthMode.CLERK)
+    monkeypatch.setattr(auth.settings, "auth_profile", AuthProfile.DEV)
+    monkeypatch.setattr(auth.settings, "local_auth_token", "expected-token")
+    monkeypatch.setattr(auth.settings, "clerk_secret_key", "sk_test_dummy")
+
+    from clerk_backend_api.security.types import AuthStatus, RequestState
+
+    async def _fake_authenticate(_request: Any) -> RequestState:
+        return RequestState(status=AuthStatus.SIGNED_OUT)
+
+    async def _fake_local_user(_session: Any) -> User:
+        return User(clerk_user_id="local-auth-user", email="local@localhost", name="Local User")
+
+    monkeypatch.setattr(auth, "_authenticate_clerk_request", _fake_authenticate)
+    monkeypatch.setattr(auth, "_get_or_create_local_user", _fake_local_user)
+
+    ctx = await auth.get_auth_context(  # type: ignore[arg-type]
+        request=SimpleNamespace(headers={"Authorization": "Bearer expected-token"}),
+        credentials=None,
+        session=_FakeSession(),  # type: ignore[arg-type]
+    )
+
+    assert ctx.actor_type == "user"
+    assert ctx.user is not None
+    assert ctx.user.clerk_user_id == "local-auth-user"
+
+
+@pytest.mark.asyncio
+async def test_get_auth_context_clerk_mode_disables_local_fallback_in_saas_profile(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(auth.settings, "auth_mode", AuthMode.CLERK)
+    monkeypatch.setattr(auth.settings, "auth_profile", AuthProfile.SAAS)
+    monkeypatch.setattr(auth.settings, "local_auth_token", "expected-token")
+    monkeypatch.setattr(auth.settings, "clerk_secret_key", "sk_test_dummy")
+
+    from clerk_backend_api.security.types import AuthStatus, RequestState
+
+    async def _fake_authenticate(_request: Any) -> RequestState:
+        return RequestState(status=AuthStatus.SIGNED_OUT)
+
+    monkeypatch.setattr(auth, "_authenticate_clerk_request", _fake_authenticate)
+
+    with pytest.raises(HTTPException) as exc_info:
+        await auth.get_auth_context(  # type: ignore[arg-type]
+            request=SimpleNamespace(headers={"Authorization": "Bearer expected-token"}),
+            credentials=None,
+            session=_FakeSession(),  # type: ignore[arg-type]
+        )
+
+    assert exc_info.value.status_code == 401

@@ -56,17 +56,13 @@ from app.services.approval_task_links import (
     load_task_ids_by_approval,
     pending_approval_conflicts_by_task,
 )
+from app.services.entitlements import enforce_task_quota
 from app.services.mentions import extract_mentions, matches_agent_mention
 from app.services.openclaw.gateway_dispatch import GatewayDispatchService
 from app.services.openclaw.gateway_rpc import GatewayConfig as GatewayClientConfig
 from app.services.openclaw.gateway_rpc import OpenClawGatewayError
 from app.services.organizations import require_board_access
-from app.services.tags import (
-    TagState,
-    load_tag_state,
-    replace_tags,
-    validate_tag_ids,
-)
+from app.services.tags import TagState, load_tag_state, replace_tags, validate_tag_ids
 from app.services.task_dependencies import (
     blocked_by_dependency_ids,
     dependency_ids_by_task_id,
@@ -75,6 +71,7 @@ from app.services.task_dependencies import (
     replace_task_dependencies,
     validate_dependency_update,
 )
+from app.services.tenant_invariants import require_agent_in_board
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Sequence
@@ -512,6 +509,7 @@ async def _reconcile_dependents_for_dependency_toggle(
                     ),
                     agent_id=actor_agent_id,
                     board_id=dependent.board_id,
+                    organization_id=dependent.organization_id,
                 )
             else:
                 record_activity(
@@ -521,6 +519,7 @@ async def _reconcile_dependents_for_dependency_toggle(
                     message=f"Dependency completion changed: {dependency_task.title}.",
                     agent_id=actor_agent_id,
                     board_id=dependent.board_id,
+                    organization_id=dependent.organization_id,
                 )
         else:
             record_activity(
@@ -530,6 +529,7 @@ async def _reconcile_dependents_for_dependency_toggle(
                 message=f"Dependency completion changed: {dependency_task.title}.",
                 agent_id=actor_agent_id,
                 board_id=dependent.board_id,
+                organization_id=dependent.organization_id,
             )
 
 
@@ -690,6 +690,7 @@ async def _notify_agent_on_task_assign(
             agent_id=agent.id,
             task_id=task.id,
             board_id=board.id,
+            organization_id=board.organization_id,
         )
         await session.commit()
     else:
@@ -700,6 +701,7 @@ async def _notify_agent_on_task_assign(
             agent_id=agent.id,
             task_id=task.id,
             board_id=board.id,
+            organization_id=board.organization_id,
         )
         await session.commit()
 
@@ -743,6 +745,7 @@ async def _notify_agent_on_task_rework(
             agent_id=agent.id,
             task_id=task.id,
             board_id=board.id,
+            organization_id=board.organization_id,
         )
         await session.commit()
     else:
@@ -753,6 +756,7 @@ async def _notify_agent_on_task_rework(
             agent_id=agent.id,
             task_id=task.id,
             board_id=board.id,
+            organization_id=board.organization_id,
         )
         await session.commit()
 
@@ -818,6 +822,7 @@ async def _notify_lead_on_task_create(
             agent_id=lead.id,
             task_id=task.id,
             board_id=board.id,
+            organization_id=board.organization_id,
         )
         await session.commit()
     else:
@@ -828,6 +833,7 @@ async def _notify_lead_on_task_create(
             agent_id=lead.id,
             task_id=task.id,
             board_id=board.id,
+            organization_id=board.organization_id,
         )
         await session.commit()
 
@@ -877,6 +883,7 @@ async def _notify_lead_on_task_unassigned(
             agent_id=lead.id,
             task_id=task.id,
             board_id=board.id,
+            organization_id=board.organization_id,
         )
         await session.commit()
     else:
@@ -887,6 +894,7 @@ async def _notify_lead_on_task_unassigned(
             agent_id=lead.id,
             task_id=task.id,
             board_id=board.id,
+            organization_id=board.organization_id,
         )
         await session.commit()
 
@@ -1367,12 +1375,15 @@ async def _task_event_generator(
 
         async with async_session_maker() as session:
             rows = await _fetch_task_events(session, board_id, last_seen)
-            deps_map, dep_status, tag_state_by_task_id, custom_field_values_by_task_id = (
-                await _stream_task_state(
-                    session,
-                    board_id=board_id,
-                    rows=rows,
-                )
+            (
+                deps_map,
+                dep_status,
+                tag_state_by_task_id,
+                custom_field_values_by_task_id,
+            ) = await _stream_task_state(
+                session,
+                board_id=board_id,
+                rows=rows,
             )
 
         for event, task in rows:
@@ -1452,15 +1463,25 @@ async def create_task(
     auth: AuthContext = ADMIN_AUTH_DEP,
 ) -> TaskRead:
     """Create a task and initialize dependency rows."""
+    await enforce_task_quota(session, organization_id=board.organization_id)
     data = payload.model_dump(exclude={"depends_on_task_ids", "tag_ids", "custom_field_values"})
     depends_on_task_ids = list(payload.depends_on_task_ids)
     tag_ids = list(payload.tag_ids)
     custom_field_values = dict(payload.custom_field_values)
 
     task = Task.model_validate(data)
+    task.organization_id = board.organization_id
     task.board_id = board.id
     if task.created_by_user_id is None and auth.user is not None:
         task.created_by_user_id = auth.user.id
+
+    if task.assigned_agent_id is not None:
+        await require_agent_in_board(
+            session,
+            agent_id=task.assigned_agent_id,
+            board_id=board.id,
+            organization_id=board.organization_id,
+        )
 
     normalized_deps = await validate_dependency_update(
         session,
@@ -1515,6 +1536,7 @@ async def create_task(
         task_id=task.id,
         message=f"Task created: {task.title}.",
         board_id=board.id,
+        organization_id=board.organization_id,
     )
     await session.commit()
     await _notify_lead_on_task_create(session=session, board=board, task=task)
@@ -2294,6 +2316,7 @@ async def _apply_lead_task_update(
         message=message,
         agent_id=update.actor.agent.id,
         board_id=update.board_id,
+        organization_id=update.task.organization_id,
     )
     await _reconcile_dependents_for_dependency_toggle(
         session,
@@ -2461,11 +2484,21 @@ async def _apply_admin_task_rules(
         update.updates.get("assigned_agent_id"),
     )
     if assigned_agent_id:
-        agent = await Agent.objects.by_id(assigned_agent_id).first(session)
-        if agent is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
-        if agent.board_id and update.task.board_id and agent.board_id != update.task.board_id:
-            raise HTTPException(status_code=status.HTTP_409_CONFLICT)
+        if update.task.board_id is None:
+            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT)
+        if update.task.organization_id is not None:
+            await require_agent_in_board(
+                session,
+                agent_id=assigned_agent_id,
+                board_id=update.task.board_id,
+                organization_id=update.task.organization_id,
+            )
+        else:
+            agent = await Agent.objects.by_id(assigned_agent_id).first(session)
+            if agent is None:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+            if agent.board_id and agent.board_id != update.task.board_id:
+                raise HTTPException(status_code=status.HTTP_409_CONFLICT)
 
 
 async def _record_task_comment_from_update(
@@ -2480,6 +2513,7 @@ async def _record_task_comment_from_update(
         message=update.comment,
         task_id=update.task.id,
         board_id=update.task.board_id,
+        organization_id=update.task.organization_id,
         agent_id=(
             update.actor.agent.id
             if update.actor.actor_type == "agent" and update.actor.agent
@@ -2508,6 +2542,7 @@ async def _record_task_update_activity(
         message=message,
         agent_id=actor_agent_id,
         board_id=update.board_id,
+        organization_id=update.task.organization_id,
     )
     await _reconcile_dependents_for_dependency_toggle(
         session,
@@ -2708,6 +2743,7 @@ async def create_task_comment(
         message=payload.message,
         task_id=task.id,
         board_id=task.board_id,
+        organization_id=task.organization_id,
         agent_id=_comment_actor_id(actor),
     )
     session.add(event)

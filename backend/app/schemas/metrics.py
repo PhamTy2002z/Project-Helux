@@ -8,6 +8,8 @@ from uuid import UUID
 
 from sqlmodel import SQLModel
 
+from app.schemas.entitlements import EntitlementUsageRead
+
 RUNTIME_ANNOTATION_TYPES = (datetime, UUID)
 DashboardRangeKey = Literal["24h", "3d", "7d", "14d", "1m", "3m", "6m", "1y"]
 DashboardBucketKey = Literal["hour", "day", "week", "month"]
@@ -103,3 +105,16 @@ class DashboardMetrics(SQLModel):
     error_rate: DashboardSeriesSet
     wip: DashboardWipSeriesSet
     pending_approvals: DashboardPendingApprovals
+
+
+class TenantSloMetrics(SQLModel):
+    """Tenant-scoped SaaS SLO summary used for support and alerting."""
+
+    organization_id: UUID
+    range: DashboardRangeKey
+    generated_at: datetime
+    dimensions: dict[str, str]
+    error_rate_pct: float
+    median_cycle_time_hours: float | None
+    approval_queue_lag_seconds: float
+    quota_usage: EntitlementUsageRead

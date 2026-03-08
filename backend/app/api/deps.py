@@ -26,11 +26,13 @@ from fastapi import Depends, HTTPException, status
 
 from app.core.agent_auth import AgentAuthContext, get_agent_auth_context_optional
 from app.core.auth import AuthContext, get_auth_context, get_auth_context_optional
+from app.core.logging import bind_request_actor_context
 from app.db.session import get_session
+from app.models.agents import Agent
 from app.models.boards import Board
 from app.models.organizations import Organization
 from app.models.tasks import Task
-from app.services.admin_access import require_admin
+from app.services.admin_access import require_admin, require_agent_in_organization
 from app.services.organizations import (
     OrganizationContext,
     ensure_member_for_user,
@@ -73,8 +75,14 @@ def require_admin_or_agent(
     """Authorize either an admin user or an authenticated agent."""
     if auth is not None:
         require_admin(auth)
+        if auth.user is not None:
+            bind_request_actor_context(actor_id=str(auth.user.id))
         return ActorContext(actor_type="user", user=auth.user)
     if agent_auth is not None:
+        bind_request_actor_context(
+            actor_id=str(agent_auth.agent.id),
+            organization_id=str(agent_auth.agent.organization_id),
+        )
         return ActorContext(actor_type="agent", agent=agent_auth.agent)
     raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
 
@@ -99,6 +107,10 @@ async def require_org_member(
     )
     if organization is None:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
+    bind_request_actor_context(
+        actor_id=str(auth.user.id),
+        organization_id=str(member.organization_id),
+    )
     return OrganizationContext(organization=organization, member=member)
 
 
@@ -112,6 +124,23 @@ async def require_org_admin(
     if not is_org_admin(ctx.member):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
     return ctx
+
+
+async def get_agent_for_org_admin(
+    agent_id: UUID,
+    session: AsyncSession = SESSION_DEP,
+    ctx: OrganizationContext = Depends(require_org_admin),
+) -> Agent:
+    """Load an agent and require org-admin ownership within the active org."""
+    agent = await Agent.objects.by_id(agent_id).first(session)
+    if agent is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    await require_agent_in_organization(
+        session=session,
+        agent=agent,
+        organization_id=ctx.organization.id,
+    )
+    return agent
 
 
 async def get_board_or_404(
@@ -203,6 +232,10 @@ async def get_task_or_404(
 ) -> Task:
     """Load a task for a board or raise HTTP 404."""
     task = await Task.objects.by_id(task_id).first(session)
-    if task is None or task.board_id != board.id:
+    if (
+        task is None
+        or task.board_id != board.id
+        or (task.organization_id is not None and task.organization_id != board.organization_id)
+    ):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
     return task

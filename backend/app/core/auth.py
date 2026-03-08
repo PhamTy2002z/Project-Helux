@@ -32,6 +32,7 @@ from pydantic import BaseModel, ValidationError
 from starlette.concurrency import run_in_threadpool
 
 from app.core.auth_mode import AuthMode
+from app.core.auth_profile import AuthProfile
 from app.core.config import settings
 from app.core.logging import get_logger
 from app.db import crud
@@ -458,6 +459,8 @@ async def _try_local_auth_fallback(
     session: AsyncSession,
 ) -> AuthContext | None:
     """Try LOCAL_AUTH_TOKEN as fallback in clerk mode (service-account for CLI/dev)."""
+    if settings.auth_profile == AuthProfile.SAAS:
+        return None
     if not getattr(settings, "local_auth_token", None):
         return None
     return await _resolve_local_auth_context(

@@ -26,12 +26,7 @@ from app.models.boards import Board
 from app.models.tags import Tag
 from app.models.task_dependencies import TaskDependency
 from app.models.tasks import Task
-from app.schemas.agents import (
-    AgentCreate,
-    AgentHeartbeat,
-    AgentNudge,
-    AgentRead,
-)
+from app.schemas.agents import AgentCreate, AgentHeartbeat, AgentNudge, AgentRead
 from app.schemas.approvals import ApprovalCreate, ApprovalRead, ApprovalStatus
 from app.schemas.board_memory import BoardMemoryCreate, BoardMemoryRead
 from app.schemas.board_onboarding import BoardOnboardingAgentUpdate, BoardOnboardingRead
@@ -52,6 +47,7 @@ from app.schemas.pagination import DefaultLimitOffsetPage
 from app.schemas.tags import TagRef
 from app.schemas.tasks import TaskCommentCreate, TaskCommentRead, TaskCreate, TaskRead, TaskUpdate
 from app.services.activity_log import record_activity
+from app.services.entitlements import enforce_task_quota
 from app.services.openclaw.coordination_service import GatewayCoordinationService
 from app.services.openclaw.policies import OpenClawAuthorizationPolicy
 from app.services.openclaw.provisioning_db import AgentLifecycleService
@@ -80,6 +76,7 @@ TASK_DEP = Depends(get_task_or_404)
 BOARD_ID_QUERY = Query(default=None)
 TASK_STATUS_QUERY = Query(default=None, alias="status")
 IS_CHAT_QUERY = Query(default=None)
+CHAT_SESSION_ID_QUERY = Query(default=None)
 APPROVAL_STATUS_QUERY = Query(default=None, alias="status")
 
 AGENT_LEAD_TAGS = cast("list[str | Enum]", ["agent-lead"])
@@ -777,6 +774,7 @@ async def create_task(
     """
     _guard_board_access(agent_ctx, board)
     _require_board_lead(agent_ctx)
+    await enforce_task_quota(session, organization_id=board.organization_id)
     data = payload.model_dump(
         exclude={"depends_on_task_ids", "tag_ids", "custom_field_values"},
     )
@@ -785,6 +783,7 @@ async def create_task(
     custom_field_values = dict(payload.custom_field_values)
 
     task = Task.model_validate(data)
+    task.organization_id = board.organization_id
     task.board_id = board.id
     task.auto_created = True
     task.auto_reason = f"lead_agent:{agent_ctx.agent.id}"
@@ -822,6 +821,8 @@ async def create_task(
         agent = await Agent.objects.by_id(task.assigned_agent_id).first(session)
         if agent is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+        if agent.organization_id != board.organization_id:
+            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT)
         if agent.is_board_lead:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -860,6 +861,7 @@ async def create_task(
         message=f"Task created by lead: {task.title}.",
         agent_id=agent_ctx.agent.id,
         board_id=task.board_id,
+        organization_id=board.organization_id,
     )
     await session.commit()
     if task.assigned_agent_id:
@@ -1071,6 +1073,7 @@ async def create_task_comment(
 )
 async def list_board_memory(
     is_chat: bool | None = IS_CHAT_QUERY,
+    chat_session_id: UUID | None = CHAT_SESSION_ID_QUERY,
     board: Board = BOARD_DEP,
     session: AsyncSession = SESSION_DEP,
     agent_ctx: AgentAuthContext = AGENT_CTX_DEP,
@@ -1082,9 +1085,10 @@ async def list_board_memory(
     _guard_board_access(agent_ctx, board)
     return await board_memory_api.list_board_memory(
         is_chat=is_chat,
+        chat_session_id=chat_session_id,
         board=board,
         session=session,
-        _actor=_actor(agent_ctx),
+        actor=_actor(agent_ctx),
     )
 
 

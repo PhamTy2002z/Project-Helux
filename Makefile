@@ -83,6 +83,10 @@ test: backend-test frontend-test ## Run tests
 backend-test: ## Backend tests (pytest)
 	cd $(BACKEND_DIR) && uv run pytest
 
+.PHONY: backend-saas-gates
+backend-saas-gates: ## Targeted SaaS release gates (authz/isolation/readiness/anti-abuse)
+	bash scripts/ci/run_saas_gates.sh
+
 .PHONY: backend-coverage
 backend-coverage: ## Backend tests with coverage gate (scoped 100% stmt+branch on selected modules)
 	# Policy: enforce 100% coverage only for the explicitly scoped, unit-testable backend modules.

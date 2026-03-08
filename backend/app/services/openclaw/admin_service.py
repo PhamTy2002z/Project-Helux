@@ -106,7 +106,10 @@ class GatewayAdminLifecycleService(OpenClawDBService):
 
     async def find_main_agent(self, gateway: Gateway) -> Agent | None:
         return (
-            await Agent.objects.filter_by(gateway_id=gateway.id)
+            await Agent.objects.filter_by(
+                gateway_id=gateway.id,
+                organization_id=gateway.organization_id,
+            )
             .filter(col(Agent.board_id).is_(None))
             .first(self.session)
         )
@@ -121,6 +124,7 @@ class GatewayAdminLifecycleService(OpenClawDBService):
             agent = Agent(
                 name=main_agent_name,
                 status="provisioning",
+                organization_id=gateway.organization_id,
                 board_id=None,
                 gateway_id=gateway.id,
                 is_board_lead=False,
@@ -129,6 +133,9 @@ class GatewayAdminLifecycleService(OpenClawDBService):
                 identity_profile=identity_profile,
             )
             self.session.add(agent)
+            changed = True
+        if agent.organization_id != gateway.organization_id:
+            agent.organization_id = gateway.organization_id
             changed = True
         if agent.board_id is not None:
             agent.board_id = None

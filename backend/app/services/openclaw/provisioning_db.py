@@ -46,14 +46,14 @@ from app.schemas.agents import (
 from app.schemas.common import OkResponse
 from app.schemas.gateways import GatewayTemplatesSyncError, GatewayTemplatesSyncResult
 from app.services.activity_log import record_activity
+from app.services.entitlements import enforce_agent_quota
 from app.services.openclaw.constants import (
     _TOOLS_KV_RE,
     DEFAULT_HEARTBEAT_CONFIG,
+    LEAD_GATEWAY_FILES,
     OFFLINE_AFTER,
 )
-from app.services.openclaw.db_agent_state import (
-    mint_agent_token,
-)
+from app.services.openclaw.db_agent_state import mint_agent_token
 from app.services.openclaw.db_service import OpenClawDBService
 from app.services.openclaw.gateway_resolver import (
     gateway_client_config,
@@ -61,11 +61,7 @@ from app.services.openclaw.gateway_resolver import (
     require_gateway_for_board,
 )
 from app.services.openclaw.gateway_rpc import GatewayConfig as GatewayClientConfig
-from app.services.openclaw.gateway_rpc import (
-    OpenClawGatewayError,
-    ensure_session,
-    send_message,
-)
+from app.services.openclaw.gateway_rpc import OpenClawGatewayError, ensure_session, send_message
 from app.services.openclaw.internal.agent_key import agent_key as _agent_key
 from app.services.openclaw.internal.retry import GatewayBackoff
 from app.services.openclaw.internal.session_keys import (
@@ -151,6 +147,98 @@ class OpenClawProvisioningService(OpenClawDBService):
     def lead_agent_name(_: Board) -> str:
         return "Lead Agent"
 
+    @staticmethod
+    def _lead_workspace_has_missing_required_files(
+        existing_files: dict[str, dict[str, Any]],
+    ) -> bool:
+        for file_name in LEAD_GATEWAY_FILES:
+            entry = existing_files.get(file_name)
+            if entry is None or bool(entry.get("missing")):
+                return True
+        return False
+
+    async def _resolve_lead_reconcile_token(
+        self,
+        *,
+        agent: Agent,
+        agent_gateway_id: str,
+        control_plane: OpenClawGatewayControlPlane,
+    ) -> str:
+        auth_token = await _get_existing_auth_token(
+            agent_gateway_id=agent_gateway_id,
+            control_plane=control_plane,
+        )
+        if (
+            auth_token
+            and agent.agent_token_hash
+            and verify_agent_token(auth_token, agent.agent_token_hash)
+        ):
+            return auth_token
+
+        rotated = mint_agent_token(agent)
+        agent.updated_at = utcnow()
+        self.session.add(agent)
+        await self.session.commit()
+        await self.session.refresh(agent)
+        return rotated
+
+    async def _reconcile_existing_lead_workspace_if_needed(
+        self,
+        *,
+        existing: Agent,
+        request: LeadAgentRequest,
+    ) -> Agent:
+        if not request.config.url:
+            return existing
+
+        board = request.board
+        agent_gateway_id = _agent_key(existing)
+        control_plane = OpenClawGatewayControlPlane(request.config)
+        try:
+            existing_files = await control_plane.list_agent_files(agent_gateway_id)
+        except OpenClawGatewayError:
+            self.logger.warning(
+                "lead.ensure.workspace_check_failed board_id=%s agent_id=%s",
+                board.id,
+                existing.id,
+            )
+            return existing
+
+        if not self._lead_workspace_has_missing_required_files(existing_files):
+            return existing
+
+        auth_token = await self._resolve_lead_reconcile_token(
+            agent=existing,
+            agent_gateway_id=agent_gateway_id,
+            control_plane=control_plane,
+        )
+        try:
+            return await AgentLifecycleOrchestrator(self.session).run_lifecycle(
+                gateway=request.gateway,
+                agent_id=existing.id,
+                board=board,
+                user=request.user,
+                action="update",
+                auth_token=auth_token,
+                force_bootstrap=False,
+                reset_session=False,
+                wake=False,
+                deliver_wakeup=False,
+                wakeup_verb="updated",
+                clear_confirm_token=False,
+                raise_gateway_errors=True,
+            )
+        except HTTPException as exc:
+            if exc.status_code != status.HTTP_502_BAD_GATEWAY:
+                raise
+            self.logger.warning(
+                "lead.ensure.workspace_reconcile_failed board_id=%s agent_id=%s detail=%s",
+                board.id,
+                existing.id,
+                exc.detail,
+            )
+            return existing
+
     async def ensure_board_lead_agent(
         self,
         *,
@@ -185,6 +273,10 @@ class OpenClawProvisioningService(OpenClawDBService):
                 self.session.add(existing)
                 await self.session.commit()
                 await self.session.refresh(existing)
+            existing = await self._reconcile_existing_lead_workspace_if_needed(
+                existing=existing,
+                request=request,
+            )
             return existing, False
 
         merged_identity_profile: dict[str, Any] = {
@@ -203,6 +295,7 @@ class OpenClawProvisioningService(OpenClawDBService):
 
         agent = Agent(
             name=config_options.agent_name or self.lead_agent_name(board),
+            organization_id=board.organization_id,
             board_id=board.id,
             gateway_id=request.gateway.id,
             is_board_lead=True,
@@ -913,13 +1006,10 @@ class AgentLifecycleService(OpenClawDBService):
         ctx: OrganizationContext,
         write: bool,
     ) -> None:
+        if agent.organization_id != ctx.organization.id:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
         if agent.board_id is None:
             OpenClawAuthorizationPolicy.require_org_admin(is_admin=is_org_admin(ctx.member))
-            gateway = await self.get_main_agent_gateway(agent)
-            OpenClawAuthorizationPolicy.require_gateway_in_org(
-                gateway=gateway,
-                organization_id=ctx.organization.id,
-            )
             return
 
         board = await Board.objects.by_id(agent.board_id).first(self.session)
@@ -943,6 +1033,7 @@ class AgentLifecycleService(OpenClawDBService):
             message=f"Heartbeat received from {agent.name}.",
             agent_id=agent.id,
             board_id=agent.board_id,
+            organization_id=agent.organization_id,
         )
 
     @staticmethod
@@ -959,6 +1050,7 @@ class AgentLifecycleService(OpenClawDBService):
             message=f"{action_label} message failed: {error}",
             agent_id=agent.id,
             board_id=agent.board_id,
+            organization_id=agent.organization_id,
         )
 
     async def coerce_agent_create_payload(
@@ -1117,6 +1209,7 @@ class AgentLifecycleService(OpenClawDBService):
                 message=f"{action.capitalize()}d directly for {provisioned.name}.",
                 agent_id=provisioned.id,
                 board_id=provisioned.board_id,
+                organization_id=provisioned.organization_id,
             )
             record_activity(
                 self.session,
@@ -1124,6 +1217,7 @@ class AgentLifecycleService(OpenClawDBService):
                 message=f"Wakeup message sent to {provisioned.name}.",
                 agent_id=provisioned.id,
                 board_id=provisioned.board_id,
+                organization_id=provisioned.organization_id,
             )
             await self.session.commit()
             self.logger.info(
@@ -1359,9 +1453,11 @@ class AgentLifecycleService(OpenClawDBService):
             user=actor.user,
             write=True,
         )
+        await enforce_agent_quota(self.session, organization_id=board.organization_id)
         gateway, _client_config = await self.require_gateway(board)
         data: dict[str, Any] = {
             "name": payload.name,
+            "organization_id": board.organization_id,
             "board_id": board.id,
             "gateway_id": gateway.id,
             "heartbeat_config": DEFAULT_HEARTBEAT_CONFIG.copy(),
@@ -1490,6 +1586,7 @@ class AgentLifecycleService(OpenClawDBService):
                     (col(Agent.gateway_id) == gateway_id) & (col(Agent.board_id).is_(None)),
                 ),
             )
+        statement = statement.where(col(Agent.organization_id) == ctx.organization.id)
         statement = statement.order_by(col(Agent.created_at).desc())
 
         def _transform(items: Sequence[Any]) -> Sequence[Any]:
@@ -1560,8 +1657,10 @@ class AgentLifecycleService(OpenClawDBService):
             write=actor.actor_type == "user",
         )
         await self.enforce_board_spawn_limit_for_lead(board=board, actor=actor)
+        await enforce_agent_quota(self.session, organization_id=board.organization_id)
         gateway, _client_config = await self.require_gateway(board)
         data = payload.model_dump()
+        data["organization_id"] = board.organization_id
         data["gateway_id"] = gateway.id
         requested_name = (data.get("name") or "").strip()
         await self.ensure_unique_agent_name(
@@ -1823,6 +1922,7 @@ class AgentLifecycleService(OpenClawDBService):
             message=f"Deleted agent {agent.name}.",
             agent_id=None,
             board_id=agent.board_id,
+            organization_id=agent.organization_id,
         )
         now = utcnow()
         await crud.update_where(

@@ -19,6 +19,7 @@ type BoardChatComposerProps = {
   isSending?: boolean;
   disabled?: boolean;
   mentionSuggestions?: string[];
+  autoFocus?: boolean;
   onSend: (content: string) => Promise<boolean>;
 };
 
@@ -49,6 +50,7 @@ function BoardChatComposerImpl({
   isSending = false,
   disabled = false,
   mentionSuggestions,
+  autoFocus = false,
   onSend,
 }: BoardChatComposerProps) {
   const [value, setValue] = useState("");
@@ -91,6 +93,11 @@ function BoardChatComposerImpl({
     shouldFocusAfterSendRef.current = false;
     textareaRef.current?.focus();
   }, [isSending]);
+
+  useEffect(() => {
+    if (!autoFocus) return;
+    textareaRef.current?.focus();
+  }, [autoFocus]);
 
   useEffect(() => {
     return () => {
@@ -252,7 +259,9 @@ function BoardChatComposerImpl({
         ) : null}
       </div>
       <div className="mt-3 flex items-center justify-between gap-3">
-        <p className="text-xs text-slate-500">Enter to send, Shift+Enter for newline.</p>
+        <p className="text-xs text-slate-500">
+          Enter to send, Shift+Enter for newline.
+        </p>
         <Button
           onClick={() => void send()}
           disabled={isSending || disabled || !value.trim()}

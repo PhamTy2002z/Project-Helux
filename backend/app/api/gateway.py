@@ -19,6 +19,7 @@ from app.schemas.gateway_api import (
     GatewaySessionsResponse,
     GatewaysStatusResponse,
 )
+from app.services.activity_log import record_admin_audit
 from app.services.openclaw.gateway_rpc import GATEWAY_EVENTS, GATEWAY_METHODS, PROTOCOL_VERSION
 from app.services.openclaw.session_service import GatewaySessionService
 from app.services.organizations import OrganizationContext
@@ -127,6 +128,7 @@ async def send_gateway_session_message(
     board_id: str | None = BOARD_ID_QUERY,
     session: AsyncSession = SESSION_DEP,
     auth: AuthContext = AUTH_DEP,
+    ctx: OrganizationContext = ORG_ADMIN_DEP,
 ) -> OkResponse:
     """Send a message into a specific gateway session."""
     service = GatewaySessionService(session)
@@ -134,8 +136,18 @@ async def send_gateway_session_message(
         session_id=session_id,
         payload=payload,
         board_id=board_id,
+        organization_id=ctx.organization.id,
         user=auth.user,
     )
+    record_admin_audit(
+        session,
+        audit_action="gateway.session.message",
+        endpoint="/api/v1/gateways/sessions/{session_id}/message",
+        organization_id=ctx.organization.id,
+        actor_id=auth.user.id if auth.user is not None else None,
+        details={"session_id": session_id, "board_id": board_id},
+    )
+    await session.commit()
     return OkResponse()
 
 

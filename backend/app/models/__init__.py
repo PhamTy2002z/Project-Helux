@@ -4,6 +4,7 @@ from app.models.activity_events import ActivityEvent
 from app.models.agents import Agent
 from app.models.approval_task_links import ApprovalTaskLink
 from app.models.approvals import Approval
+from app.models.board_chat_sessions import BoardChatSession
 from app.models.board_group_memory import BoardGroupMemory
 from app.models.board_groups import BoardGroup
 from app.models.board_memory import BoardMemory
@@ -16,6 +17,7 @@ from app.models.organization_board_access import OrganizationBoardAccess
 from app.models.organization_invite_board_access import OrganizationInviteBoardAccess
 from app.models.organization_invites import OrganizationInvite
 from app.models.organization_members import OrganizationMember
+from app.models.organization_plans import OrganizationPlan
 from app.models.organizations import Organization
 from app.models.skills import GatewayInstalledSkill, MarketplaceSkill, SkillPack
 from app.models.tag_assignments import TagAssignment
@@ -38,6 +40,7 @@ __all__ = [
     "BoardGroupMemory",
     "BoardWebhook",
     "BoardWebhookPayload",
+    "BoardChatSession",
     "BoardMemory",
     "BoardOnboardingSession",
     "BoardGroup",
@@ -51,6 +54,7 @@ __all__ = [
     "TaskCustomFieldDefinition",
     "TaskCustomFieldValue",
     "OrganizationMember",
+    "OrganizationPlan",
     "OrganizationBoardAccess",
     "OrganizationInvite",
     "OrganizationInviteBoardAccess",

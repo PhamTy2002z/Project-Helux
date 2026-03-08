@@ -1,11 +1,13 @@
 "use client";
 
 import { AuthMode } from "@/auth/mode";
+import { isSaasAuthProfile } from "@/auth/profile";
 
 let localToken: string | null = null;
 const STORAGE_KEY = "mc_local_auth_token";
 
 export function isLocalAuthMode(): boolean {
+  if (isSaasAuthProfile()) return false;
   return process.env.NEXT_PUBLIC_AUTH_MODE === AuthMode.Local;
 }
 

@@ -240,17 +240,28 @@ function ChartTooltipContent({
             const key = `${nameKey || item.name || item.dataKey || "value"}`;
             const itemConfig = getPayloadConfigFromPayload(config, item, key);
             const indicatorColor = color || item.payload.fill || item.color;
+            const renderKey =
+              typeof item.dataKey === "string" ||
+              typeof item.dataKey === "number"
+                ? item.dataKey
+                : `${key}-${index}`;
 
             return (
               <div
-                key={item.dataKey}
+                key={renderKey}
                 className={cn(
                   "[&>svg]:text-muted-foreground flex w-full flex-wrap items-stretch gap-2 [&>svg]:h-2.5 [&>svg]:w-2.5",
                   indicator === "dot" && "items-center",
                 )}
               >
                 {formatter && item?.value !== undefined && item.name ? (
-                  formatter(item.value, item.name, item, index, item.payload)
+                  formatter(
+                    item.value as unknown as ChartTooltipValue,
+                    item.name as ChartTooltipName,
+                    item,
+                    index,
+                    payload as unknown as any[],
+                  )
                 ) : (
                   <>
                     {itemConfig?.icon ? (

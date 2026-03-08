@@ -86,9 +86,39 @@ Common status codes:
 - `403 Forbidden`: authenticated but not allowed
 - `404 Not Found`: resource missing (or not visible)
 - `422 Unprocessable Entity`: request validation error
+- `429 Too Many Requests`: rate limit or quota limit reached
 - `500 Internal Server Error`: unhandled server errors
 
 Validation errors (`422`) typically return `detail` as a list of structured field errors (FastAPI/Pydantic style).
+
+## Rate limits and quotas
+
+The backend enforces coarse request limits and plan-based resource quotas.
+
+- Request throttling:
+  - Per-IP fixed-window rate limiting.
+  - Per-actor fixed-window rate limiting (`Authorization` or `X-Agent-Token`).
+- Plan tiers (manual assignment, no payment checkout):
+  - `free`
+  - `beta`
+  - `pro`
+
+When a caller exceeds limits, the API returns `429` with a structured error in
+`detail`.
+
+Common machine-readable `detail.code` values:
+
+- `rate_limited`
+- `quota_exceeded`
+
+### Plan and quota endpoints
+
+- `GET /api/v1/organizations/me/plan`
+  - Returns the active organization's current manual plan assignment.
+- `PATCH /api/v1/organizations/me/plan`
+  - Updates the active organization's plan tier (org admin only).
+- `GET /api/v1/metrics/quotas`
+  - Returns current quota usage and limits for the active organization.
 
 ## Pagination
 
@@ -134,7 +164,6 @@ curl -s "http://localhost:8000/api/v1/agent/boards/<board-id>/tasks?status=inbox
   - required auth header (`Authorization` vs `X-Agent-Token`)
   - required role (admin vs member vs agent)
   - common error responses per endpoint
-- Rate limits are not currently specified in the docs; if enforced, document them here and in OpenAPI.
 - Add canonical examples for:
   - creating/updating tasks + comments
   - board memory streaming

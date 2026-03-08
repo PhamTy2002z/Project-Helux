@@ -6,19 +6,17 @@ import asyncio
 import random
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
+from datetime import UTC, datetime
+
+from redis.asyncio import Redis
 
 from app.core.config import settings
 from app.core.logging import get_logger
 from app.services.openclaw.lifecycle_queue import TASK_TYPE as LIFECYCLE_RECONCILE_TASK_TYPE
-from app.services.openclaw.lifecycle_queue import (
-    requeue_lifecycle_queue_task,
-)
+from app.services.openclaw.lifecycle_queue import requeue_lifecycle_queue_task
 from app.services.openclaw.lifecycle_reconcile import process_lifecycle_queue_task
 from app.services.queue import QueuedTask, dequeue_task
-from app.services.webhooks.dispatch import (
-    process_webhook_queue_task,
-    requeue_webhook_queue_task,
-)
+from app.services.webhooks.dispatch import process_webhook_queue_task, requeue_webhook_queue_task
 from app.services.webhooks.queue import TASK_TYPE as WEBHOOK_TASK_TYPE
 
 logger = get_logger(__name__)
@@ -54,6 +52,28 @@ _TASK_HANDLERS: dict[str, _TaskHandler] = {
 
 def _compute_jitter(base_delay: float) -> float:
     return random.uniform(0, min(settings.rq_dispatch_retry_max_seconds / 10, base_delay * 0.1))
+
+
+async def _publish_worker_heartbeat() -> None:
+    heartbeat_key = settings.worker_heartbeat_key or settings.readiness_worker_heartbeat_key
+    if not heartbeat_key:
+        return
+    client = Redis.from_url(settings.rq_redis_url)
+    try:
+        await client.set(
+            heartbeat_key,
+            f"{datetime.now(UTC).timestamp():.6f}",
+            ex=max(
+                int(settings.worker_heartbeat_ttl_seconds),
+                int(settings.readiness_worker_heartbeat_max_age_seconds) * 2,
+            ),
+        )
+    finally:
+        maybe_aclose = getattr(client, "aclose", None)
+        if callable(maybe_aclose):
+            await maybe_aclose()
+        else:
+            await client.close()
 
 
 async def flush_queue(*, block: bool = False, block_timeout: float = 0) -> int:
@@ -127,6 +147,7 @@ async def flush_queue(*, block: bool = False, block_timeout: float = 0) -> int:
 async def _run_worker_loop() -> None:
     while True:
         try:
+            await _publish_worker_heartbeat()
             await flush_queue(
                 block=True,
                 # Keep a finite timeout so scheduled tasks are periodically drained.

@@ -19,6 +19,7 @@ class BoardMemoryCreate(SQLModel):
     content: NonEmptyStr
     tags: list[str] | None = None
     source: str | None = None
+    chat_session_id: UUID | None = None
 
 
 class BoardMemoryRead(SQLModel):
@@ -32,4 +33,5 @@ class BoardMemoryRead(SQLModel):
     tags: list[str] | None = None
     source: str | None = None
     is_chat: bool = False
+    chat_session_id: UUID | None = None
     created_at: datetime
