@@ -13,7 +13,7 @@ export default function Slide4() {
         className="absolute bottom-0 right-0 top-0 h-full object-cover"
         style={{ left: "400px" }}
       />
-      <div className="absolute inset-0 bg-black/35" />
+      <div className="absolute inset-0 bg-black/28" />
 
       <div className="relative z-10 flex h-full w-full flex-col">
         <div className="absolute left-0 right-0 top-0 px-[5%] pt-[3.5%]">

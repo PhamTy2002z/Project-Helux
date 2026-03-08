@@ -49,7 +49,7 @@ export default function Slide3() {
         className="absolute inset-0 h-full w-full object-cover"
         style={{ transform: "scale(-1, -1)", opacity: 0.5 }}
       />
-      <div className="absolute inset-0 bg-black/40" />
+      <div className="absolute inset-0 bg-black/32" />
 
       <div className="relative z-10 flex h-full w-full flex-col">
         <BlurReveal delay={0.05} className="px-[5%] pt-[3.5%]">

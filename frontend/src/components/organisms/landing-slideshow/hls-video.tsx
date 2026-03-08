@@ -10,6 +10,10 @@ type HlsVideoProps = {
 
 export default function HlsVideo({ src, className, style }: HlsVideoProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const mergedStyle: React.CSSProperties = {
+    ...style,
+    filter: `${style?.filter ? `${style.filter} ` : ""}contrast(1.08) saturate(1.08)`,
+  };
 
   useEffect(() => {
     const video = videoRef.current;
@@ -38,10 +42,22 @@ export default function HlsVideo({ src, className, style }: HlsVideoProps) {
         return;
       }
 
-      const hls = new Hls({ autoStartLoad: true });
+      const hls = new Hls({
+        autoStartLoad: true,
+        capLevelToPlayerSize: true,
+        abrBandWidthFactor: 0.95,
+        abrBandWidthUpFactor: 0.8,
+      });
       hls.loadSource(src);
       hls.attachMedia(video);
-      hls.on(Hls.Events.MANIFEST_PARSED, playVideo);
+      hls.on(Hls.Events.MANIFEST_PARSED, (_, data) => {
+        const highestLevel = data.levels.length - 1;
+        const startupLevel = Math.max(0, highestLevel - 1);
+        // Start near-high quality to avoid the initial blurry ramp-up.
+        hls.startLevel = startupLevel;
+        hls.nextLevel = startupLevel;
+        playVideo();
+      });
       hlsCleanup = () => hls.destroy();
     };
 
@@ -61,9 +77,9 @@ export default function HlsVideo({ src, className, style }: HlsVideoProps) {
       muted
       loop
       playsInline
-      preload="metadata"
+      preload="auto"
       className={className}
-      style={style}
+      style={mergedStyle}
       aria-hidden="true"
       tabIndex={-1}
     />

@@ -12,9 +12,9 @@ export default function Slide5() {
       <HlsVideo
         src="https://stream.mux.com/BuGGTsiXq1T00WUb8qfURrHkTCbhrkfFLSv4uAOZzdhw.m3u8"
         className="absolute object-cover"
-        style={{ width: "200%", height: "200%", bottom: 0, left: 0 }}
+        style={{ width: "150%", height: "150%", bottom: 0, left: 0 }}
       />
-      <div className="absolute inset-0 bg-black/35" />
+      <div className="absolute inset-0 bg-black/28" />
 
       <div className="relative z-10 flex h-full w-full flex-col">
         <BlurReveal delay={0.05} className="px-[5%] pt-[3.5%]">

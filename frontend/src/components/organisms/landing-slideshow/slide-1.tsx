@@ -34,7 +34,7 @@ export default function Slide1() {
         src="https://stream.mux.com/Aa02T7oM1wH5Mk5EEVDYhbZ1ChcdhRsS2m1NYyx4Ua1g.m3u8"
         className="absolute inset-0 h-full w-full object-cover"
       />
-      <div className="absolute inset-0 bg-black/35" />
+      <div className="absolute inset-0 bg-black/30" />
 
       <div className="relative z-10 flex h-full w-full flex-col">
         <BlurReveal delay={0.1} className="px-[5%] pt-[3.5%]">

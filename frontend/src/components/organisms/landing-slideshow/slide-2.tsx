@@ -23,7 +23,7 @@ export default function Slide2() {
         src="https://stream.mux.com/s8pMcOvMQXc4GD6AX4e1o01xFogFxipmuKltNfSYza0200.m3u8"
         className="absolute inset-0 h-full w-full object-cover"
       />
-      <div className="absolute inset-0 bg-black/40" />
+      <div className="absolute inset-0 bg-black/32" />
 
       <div className="relative z-10 flex h-full w-full flex-col">
         <BlurReveal delay={0.05} className="px-[5%] pt-[3.5%]">
