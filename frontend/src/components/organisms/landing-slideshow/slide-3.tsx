@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 
 import { BlurReveal, WordByWordReveal } from "./animated-text";
 import HlsVideo from "./hls-video";
@@ -40,6 +40,7 @@ function GradientDot({ size = 12 }: GradientDotProps) {
 }
 
 export default function Slide3() {
+  const shouldReduceMotion = useReducedMotion();
 
   return (
     <div className="relative flex h-full w-full flex-col overflow-hidden bg-black">
@@ -86,9 +87,13 @@ export default function Slide3() {
 
         <motion.div
           className="absolute bottom-[3%] left-0 right-0 top-[40%]"
-          initial={{ opacity: 0, y: 30 }}
+          initial={shouldReduceMotion ? false : { opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.7, ease: EASING }}
+          transition={{
+            duration: shouldReduceMotion ? 0 : 0.8,
+            delay: shouldReduceMotion ? 0 : 0.7,
+            ease: EASING,
+          }}
         >
           <div className="absolute bottom-0 right-0 h-[70%] w-[55%]">
             <svg width="100%" height="100%" viewBox="0 0 540 300" preserveAspectRatio="none">

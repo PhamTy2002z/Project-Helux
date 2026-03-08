@@ -2,7 +2,7 @@
 
 import type { CSSProperties, ReactNode } from "react";
 
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 
 const EASING: [number, number, number, number] = [0.25, 0.1, 0.25, 1];
 
@@ -17,6 +17,12 @@ export function SlideUpLine({
   delay = 0,
   duration = 0.7,
 }: SlideUpLineProps) {
+  const shouldReduceMotion = useReducedMotion();
+
+  if (shouldReduceMotion) {
+    return <span className="inline-block">{children}</span>;
+  }
+
   return (
     <span className="inline-block overflow-hidden">
       <motion.span
@@ -48,6 +54,16 @@ export function WordByWordReveal({
   duration = 0.55,
   style,
 }: WordByWordRevealProps) {
+  const shouldReduceMotion = useReducedMotion();
+
+  if (shouldReduceMotion) {
+    return (
+      <p className={className} style={style}>
+        {text}
+      </p>
+    );
+  }
+
   return (
     <p className={className} style={style}>
       {text.split(" ").map((word, index) => (
@@ -79,6 +95,12 @@ export function BlurReveal({
   duration = 0.9,
   className,
 }: BlurRevealProps) {
+  const shouldReduceMotion = useReducedMotion();
+
+  if (shouldReduceMotion) {
+    return <div className={className}>{children}</div>;
+  }
+
   return (
     <motion.div
       className={className}

@@ -55,13 +55,13 @@ export default function Slide5() {
             <div className="flex flex-wrap gap-3">
               <Link
                 href="/boards/new"
-                className="rounded-full border border-white/30 bg-white/95 px-6 py-3 text-sm font-semibold text-black transition hover:bg-white"
+                className="rounded-full border border-white/30 bg-white/95 px-6 py-3 text-sm font-semibold text-black transition-colors hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black"
               >
                 Create Board
               </Link>
               <Link
                 href="/activity"
-                className="rounded-full border border-white/30 bg-white/10 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/20"
+                className="rounded-full border border-white/30 bg-white/10 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black"
               >
                 View Activity
               </Link>

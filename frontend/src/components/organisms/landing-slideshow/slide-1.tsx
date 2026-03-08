@@ -14,9 +14,9 @@ import HlsVideo from "./hls-video";
 import Logo from "./logo";
 
 const PRIMARY_BTN_CLASS =
-  "rounded-full border border-white/30 bg-white/95 px-6 py-3 text-sm font-semibold text-black transition hover:bg-white";
+  "rounded-full border border-white/30 bg-white/95 px-6 py-3 text-sm font-semibold text-black transition-colors hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black";
 const SECONDARY_BTN_CLASS =
-  "rounded-full border border-white/30 bg-white/10 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/20";
+  "rounded-full border border-white/30 bg-white/10 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black";
 
 const deckMeta = [
   { label: "Type", value: "Landing Deck" },
@@ -57,20 +57,20 @@ export default function Slide1() {
 
         <div className="flex flex-1 flex-col justify-end px-[5%] pb-[8%]">
           <h1
-            className="leading-[0.9] tracking-tight text-white"
+            className="text-balance leading-[0.9] tracking-tight text-white"
             style={{ fontSize: "clamp(44px, 9vw, 128px)" }}
           >
-            <SlideUpLine delay={0.3} duration={0.7}>Command your boards.</SlideUpLine>
+            <SlideUpLine delay={0.3} duration={0.7}>Run Every Board in One Place.</SlideUpLine>
             <br />
-            <SlideUpLine delay={0.4} duration={0.7}>See every decision.</SlideUpLine>
+            <SlideUpLine delay={0.4} duration={0.7}>Never Miss a Decision.</SlideUpLine>
           </h1>
 
           <p
             className="mt-5 max-w-[800px] text-white/85"
             style={{ fontSize: "clamp(14px, 1.3vw, 20px)" }}
           >
-            One control room for tasks, approvals, and agent execution status.
-            Keep operators in sync with realtime signals from every board.
+            Track tasks, approvals, and agent health in realtime so teams ship
+            faster with clear ownership and audit trails.
           </p>
 
           <div className="mt-8 flex flex-wrap gap-3">
@@ -92,7 +92,7 @@ export default function Slide1() {
                     signUpForceRedirectUrl="/onboarding"
                   >
                     <button type="button" className={SECONDARY_BTN_CLASS}>
-                      Start Free Trial
+                      Start Free in 2 Minutes
                     </button>
                   </SignInButton>
                 </>
@@ -102,7 +102,7 @@ export default function Slide1() {
                     Open Boards
                   </Link>
                   <Link href="/onboarding" className={SECONDARY_BTN_CLASS}>
-                    Start Free Trial
+                    Start Free in 2 Minutes
                   </Link>
                 </>
               )}

@@ -2,8 +2,6 @@
 
 import { useEffect, useRef } from "react";
 
-import Hls from "hls.js";
-
 type HlsVideoProps = {
   src: string;
   className?: string;
@@ -19,28 +17,41 @@ export default function HlsVideo({ src, className, style }: HlsVideoProps) {
       return;
     }
 
-    let cleanupNative: (() => void) | undefined;
+    let isDisposed = false;
+    let hlsCleanup: (() => void) | undefined;
+    let nativeCleanup: (() => void) | undefined;
 
-    if (Hls.isSupported()) {
+    const playVideo = () => {
+      void video.play().catch(() => undefined);
+    };
+
+    const setupVideo = async () => {
+      if (video.canPlayType("application/vnd.apple.mpegurl")) {
+        video.src = src;
+        video.addEventListener("loadedmetadata", playVideo);
+        nativeCleanup = () => video.removeEventListener("loadedmetadata", playVideo);
+        return;
+      }
+
+      const { default: Hls } = await import("hls.js");
+      if (isDisposed || !Hls.isSupported()) {
+        return;
+      }
+
       const hls = new Hls({ autoStartLoad: true });
       hls.loadSource(src);
       hls.attachMedia(video);
-      hls.on(Hls.Events.MANIFEST_PARSED, () => {
-        void video.play().catch(() => undefined);
-      });
-      return () => hls.destroy();
-    }
+      hls.on(Hls.Events.MANIFEST_PARSED, playVideo);
+      hlsCleanup = () => hls.destroy();
+    };
 
-    if (video.canPlayType("application/vnd.apple.mpegurl")) {
-      const onLoadedMetadata = () => {
-        void video.play().catch(() => undefined);
-      };
-      video.src = src;
-      video.addEventListener("loadedmetadata", onLoadedMetadata);
-      cleanupNative = () => video.removeEventListener("loadedmetadata", onLoadedMetadata);
-    }
+    void setupVideo();
 
-    return cleanupNative;
+    return () => {
+      isDisposed = true;
+      nativeCleanup?.();
+      hlsCleanup?.();
+    };
   }, [src]);
 
   return (
@@ -53,6 +64,8 @@ export default function HlsVideo({ src, className, style }: HlsVideoProps) {
       preload="metadata"
       className={className}
       style={style}
+      aria-hidden="true"
+      tabIndex={-1}
     />
   );
 }

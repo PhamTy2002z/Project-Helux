@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 
 import { BlurReveal, WordByWordReveal } from "./animated-text";
 import HlsVideo from "./hls-video";
@@ -15,6 +15,7 @@ const stats = [
 ];
 
 export default function Slide2() {
+  const shouldReduceMotion = useReducedMotion();
 
   return (
     <div className="relative flex h-full w-full flex-col overflow-hidden bg-black">
@@ -58,9 +59,13 @@ export default function Slide2() {
               <motion.div
                 key={stat.value}
                 className="flex min-w-[190px] flex-1 flex-col gap-3"
-                initial={{ y: 30, opacity: 0 }}
+                initial={shouldReduceMotion ? false : { y: 30, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
-                transition={{ duration: 0.6, delay: 0.6 + index * 0.1, ease: EASING }}
+                transition={{
+                  duration: shouldReduceMotion ? 0 : 0.6,
+                  delay: shouldReduceMotion ? 0 : 0.6 + index * 0.1,
+                  ease: EASING,
+                }}
               >
                 <span
                   className="leading-[0.96] tracking-tight text-white"
