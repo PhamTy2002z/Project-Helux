@@ -143,7 +143,7 @@ function BoardChatComposerImpl({
   }, [disabled, isSending, onSend, value]);
 
   return (
-    <div className="mt-4 space-y-2">
+    <div className="mt-4 rounded-2xl border border-slate-200 bg-white/95 p-3 shadow-sm">
       <div className="relative">
         <Textarea
           ref={textareaRef}
@@ -223,11 +223,11 @@ function BoardChatComposerImpl({
             void send();
           }}
           placeholder={placeholder}
-          className="min-h-[120px]"
+          className="min-h-[104px] resize-y rounded-xl border-slate-200 bg-slate-50/70 text-slate-900 shadow-none focus-visible:ring-blue-200"
           disabled={isSending || disabled}
         />
         {mentionTarget && filteredMentionOptions.length > 0 ? (
-          <div className="absolute bottom-full left-0 z-20 mb-2 w-full overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg">
+          <div className="absolute bottom-full left-0 z-20 mb-2 w-full max-w-sm overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg shadow-slate-200/70">
             <div className="max-h-52 overflow-y-auto py-1">
               {filteredMentionOptions.map((option, index) => (
                 <button
@@ -239,7 +239,7 @@ function BoardChatComposerImpl({
                   }}
                   className={`flex w-full items-center justify-between px-3 py-2 text-left text-sm transition ${
                     index === activeIndex
-                      ? "bg-slate-100 text-slate-900"
+                      ? "bg-blue-50 text-blue-700"
                       : "text-slate-700 hover:bg-slate-50"
                   }`}
                 >
@@ -251,10 +251,13 @@ function BoardChatComposerImpl({
           </div>
         ) : null}
       </div>
-      <div className="flex justify-end">
+      <div className="mt-3 flex items-center justify-between gap-3">
+        <p className="text-xs text-slate-500">Enter to send, Shift+Enter for newline.</p>
         <Button
           onClick={() => void send()}
           disabled={isSending || disabled || !value.trim()}
+          size="sm"
+          className="rounded-lg px-4"
         >
           {isSending ? "Sending…" : "Send"}
         </Button>

@@ -631,44 +631,22 @@ const ChatMessageCard = memo(function ChatMessageCard({
 }) {
   const sourceLabel = resolveHumanActorName(message.source, fallbackSource);
   return (
-    <div
-      className={cn(
-        "flex",
-        isCurrentUser ? "justify-end" : "justify-start",
-      )}
-    >
+    <div className={cn("flex", isCurrentUser ? "justify-end" : "justify-start")}>
       <div
         className={cn(
-          "max-w-[85%] rounded-2xl p-4",
-          isCurrentUser
-            ? "rounded-br-md bg-blue-600 text-white"
-            : "rounded-bl-md border border-slate-200 bg-slate-50/60",
+          "w-fit max-w-[84%] rounded-2xl border px-4 py-3 shadow-sm",
+          "border-slate-200 bg-white text-slate-900",
         )}
       >
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <p
-            className={cn(
-              "text-sm font-semibold",
-              isCurrentUser ? "text-white" : "text-slate-900",
-            )}
-          >
+          <p className="text-[13px] font-semibold text-slate-900">
             {sourceLabel}
           </p>
-          <span
-            className={cn(
-              "text-xs",
-              isCurrentUser ? "text-blue-200" : "text-slate-400",
-            )}
-          >
+          <span className="text-[11px] text-slate-400">
             {formatShortTimestamp(message.created_at)}
           </span>
         </div>
-        <div
-          className={cn(
-            "mt-2 select-text cursor-text text-sm leading-relaxed break-words",
-            isCurrentUser ? "text-white" : "text-slate-900",
-          )}
-        >
+        <div className="mt-1 select-text cursor-text text-sm leading-6 break-words text-slate-900">
           <Markdown content={message.content} variant="basic" />
         </div>
       </div>
@@ -4026,7 +4004,7 @@ export default function BoardDetailPage() {
 
       <aside
         className={cn(
-          "fixed right-0 top-0 z-50 h-full w-[560px] max-w-[96vw] transform border-l border-slate-200 bg-white shadow-2xl transition-transform",
+          "fixed right-0 top-0 z-50 h-full w-[680px] max-w-[96vw] transform border-l border-slate-200 bg-white shadow-2xl transition-transform",
           isChatOpen ? "transform-none" : "translate-x-full",
         )}
       >
@@ -4050,7 +4028,7 @@ export default function BoardDetailPage() {
             </button>
           </div>
           <div className="flex flex-1 flex-col overflow-hidden px-6 py-4">
-            <div className="flex-1 space-y-4 overflow-y-auto rounded-2xl border border-slate-200 bg-white p-4">
+            <div className="flex-1 space-y-3 overflow-y-auto rounded-2xl border border-slate-200 bg-slate-50/60 p-4">
               {chatError ? (
                 <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
                   {chatError}

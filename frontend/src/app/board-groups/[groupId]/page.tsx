@@ -105,24 +105,24 @@ const canWriteGroupBoards = (
 
 function GroupChatMessageCard({ message }: { message: BoardGroupMemoryRead }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-slate-50/60 p-4">
+    <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-sm font-semibold text-slate-900">
+        <p className="text-[13px] font-semibold text-slate-900">
           {message.source ?? "User"}
         </p>
-        <span className="text-xs text-slate-400">
+        <span className="text-[11px] text-slate-400">
           {formatTimestamp(message.created_at)}
         </span>
       </div>
-      <div className="mt-2 select-text cursor-text text-sm leading-relaxed text-slate-900 break-words">
+      <div className="mt-1 select-text cursor-text text-sm leading-6 text-slate-900 break-words">
         <Markdown content={message.content} variant="basic" />
       </div>
       {message.tags?.length ? (
-        <div className="mt-3 flex flex-wrap gap-2 text-[11px] text-slate-600">
+        <div className="mt-2.5 flex flex-wrap gap-2 text-[11px] text-slate-600">
           {message.tags.map((tag) => (
             <span
               key={tag}
-              className="rounded-full border border-slate-200 bg-white px-2 py-0.5"
+              className="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5"
             >
               {tag}
             </span>
@@ -1145,7 +1145,7 @@ export default function BoardGroupDetailPage() {
               </p>
             </div>
 
-            <div className="flex-1 space-y-4 overflow-y-auto rounded-2xl border border-slate-200 bg-white p-4">
+            <div className="flex-1 space-y-3 overflow-y-auto rounded-2xl border border-slate-200 bg-slate-50/60 p-4">
               {chatHistoryQuery.error ? (
                 <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
                   {chatHistoryQuery.error.message}
