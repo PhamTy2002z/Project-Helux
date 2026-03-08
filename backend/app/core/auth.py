@@ -452,6 +452,21 @@ def _parse_subject(claims: dict[str, object]) -> str | None:
     return payload.sub
 
 
+async def _try_local_auth_fallback(
+    *,
+    request: Request,
+    session: AsyncSession,
+) -> AuthContext | None:
+    """Try LOCAL_AUTH_TOKEN as fallback in clerk mode (service-account for CLI/dev)."""
+    if not getattr(settings, "local_auth_token", None):
+        return None
+    return await _resolve_local_auth_context(
+        request=request,
+        session=session,
+        required=False,
+    )
+
+
 async def get_auth_context(
     request: Request,
     credentials: HTTPAuthorizationCredentials | None = SECURITY_DEP,
@@ -468,8 +483,19 @@ async def get_auth_context(
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
         return local_auth
 
-    request_state = await _authenticate_clerk_request(request)
+    try:
+        request_state = await _authenticate_clerk_request(request)
+    except Exception:
+        # Clerk SDK may crash on non-JWT tokens; fall back to local auth
+        local_ctx = await _try_local_auth_fallback(request=request, session=session)
+        if local_ctx is not None:
+            return local_ctx
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
     if request_state.status != AuthStatus.SIGNED_IN or not isinstance(request_state.payload, dict):
+        # Fallback: accept LOCAL_AUTH_TOKEN as service-account auth in clerk mode
+        local_ctx = await _try_local_auth_fallback(request=request, session=session)
+        if local_ctx is not None:
+            return local_ctx
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
     claims: dict[str, object] = {str(k): v for k, v in request_state.payload.items()}
     try:
@@ -509,9 +535,15 @@ async def get_auth_context_optional(
             required=False,
         )
 
-    request_state = await _authenticate_clerk_request(request)
+    try:
+        request_state = await _authenticate_clerk_request(request)
+    except Exception:
+        # Clerk SDK may fail on non-JWT tokens; fall back to LOCAL_AUTH_TOKEN
+        return await _try_local_auth_fallback(request=request, session=session)
     if request_state.status != AuthStatus.SIGNED_IN or not isinstance(request_state.payload, dict):
-        return None
+        # Clerk auth failed; fall back to LOCAL_AUTH_TOKEN for CLI/service access
+        return await _try_local_auth_fallback(request=request, session=session)
+
     claims: dict[str, object] = {str(k): v for k, v in request_state.payload.items()}
 
     try:
