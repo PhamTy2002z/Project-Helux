@@ -81,14 +81,16 @@ def test_extract_clerk_profile_prefers_primary_email() -> None:
 
 
 @pytest.mark.asyncio
-async def test_get_or_sync_user_updates_email_and_name(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_get_or_sync_user_updates_email_without_setting_name(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     existing = User(clerk_user_id="user_123", email="old@example.com", name=None)
 
     async def _fake_get_or_create(*_args: Any, **_kwargs: Any) -> tuple[User, bool]:
         return existing, False
 
     async def _fake_fetch(_clerk_user_id: str) -> tuple[str | None, str | None]:
-        return "new@example.com", "New Name"
+        raise AssertionError("Clerk profile fetch should not be required when claim email exists")
 
     monkeypatch.setattr(auth.crud, "get_or_create", _fake_get_or_create)
     monkeypatch.setattr(auth, "_fetch_clerk_profile", _fake_fetch)
@@ -97,12 +99,12 @@ async def test_get_or_sync_user_updates_email_and_name(monkeypatch: pytest.Monke
     out = await auth._get_or_sync_user(
         session,  # type: ignore[arg-type]
         clerk_user_id="user_123",
-        claims={},
+        claims={"email": "new@example.com", "name": "New Name"},
     )
 
     assert out is existing
     assert existing.email == "new@example.com"
-    assert existing.name == "New Name"
+    assert existing.name is None
     assert session.committed == 1
     assert session.refreshed == [existing]
 
@@ -131,7 +133,7 @@ async def test_get_or_sync_user_uses_clerk_profile_when_claims_are_minimal(
 
     assert out is existing
     assert existing.email == "from-clerk@example.com"
-    assert existing.name == "From Clerk"
+    assert existing.name is None
     assert session.committed == 1
     assert session.refreshed == [existing]
 

@@ -35,6 +35,7 @@ from app.schemas.metrics import (
     DashboardWipPoint,
     DashboardWipRangeSeries,
     DashboardWipSeriesSet,
+    SaasBillingHealthMetrics,
     TenantSloMetrics,
 )
 from app.services.entitlements import get_entitlement_usage
@@ -43,6 +44,10 @@ from app.services.organizations import OrganizationContext, list_accessible_boar
 router = APIRouter(prefix="/metrics", tags=["metrics"])
 
 ERROR_EVENT_PATTERN = "%failed"
+UPGRADE_MODAL_EVENT_TYPE = "saas.billing.simulated.upgrade_modal_open"
+CHECKOUT_SUCCESS_EVENT_TYPE = "saas.billing.simulated.checkout_succeeded"
+CHECKOUT_FAILURE_EVENT_TYPE = "saas.billing.simulated.checkout_failed"
+TRIAL_BLOCKED_EVENT_TYPE = "saas.trial.expired.blocked"
 _RUNTIME_TYPE_REFERENCES = (UUID, AsyncSession)
 RANGE_QUERY = Query(default="24h")
 BOARD_ID_QUERY = Query(default=None)
@@ -470,6 +475,23 @@ async def _pending_approval_queue_lag_seconds(
     return max((utcnow() - oldest).total_seconds(), 0.0)
 
 
+async def _count_org_event_type(
+    session: AsyncSession,
+    *,
+    organization_id: UUID,
+    event_type: str,
+    range_spec: RangeSpec,
+) -> int:
+    statement = (
+        select(func.count(col(ActivityEvent.id)))
+        .where(col(ActivityEvent.organization_id) == organization_id)
+        .where(col(ActivityEvent.event_type) == event_type)
+        .where(col(ActivityEvent.created_at) >= range_spec.start)
+        .where(col(ActivityEvent.created_at) <= range_spec.end)
+    )
+    return int((await session.exec(statement)).one() or 0)
+
+
 async def _resolve_dashboard_board_ids(
     session: AsyncSession,
     *,
@@ -608,4 +630,58 @@ async def tenant_slo_metrics(
         median_cycle_time_hours=await _median_cycle_time_for_range(session, primary, board_ids),
         approval_queue_lag_seconds=await _pending_approval_queue_lag_seconds(session, board_ids),
         quota_usage=await get_entitlement_usage(session, organization_id=ctx.organization.id),
+    )
+
+
+@router.get("/saas-billing-health", response_model=SaasBillingHealthMetrics)
+async def saas_billing_health_metrics(
+    range_key: DashboardRangeKey = RANGE_QUERY,
+    session: AsyncSession = SESSION_DEP,
+    ctx: OrganizationContext = ORG_MEMBER_DEP,
+) -> SaasBillingHealthMetrics:
+    """Return lightweight SaaS billing observability metrics for support workflows."""
+    primary = _resolve_range(range_key)
+    org_id = ctx.organization.id
+    upgrade_modal_open_count = await _count_org_event_type(
+        session,
+        organization_id=org_id,
+        event_type=UPGRADE_MODAL_EVENT_TYPE,
+        range_spec=primary,
+    )
+    checkout_success_count = await _count_org_event_type(
+        session,
+        organization_id=org_id,
+        event_type=CHECKOUT_SUCCESS_EVENT_TYPE,
+        range_spec=primary,
+    )
+    checkout_failure_count = await _count_org_event_type(
+        session,
+        organization_id=org_id,
+        event_type=CHECKOUT_FAILURE_EVENT_TYPE,
+        range_spec=primary,
+    )
+    trial_blocked_count = await _count_org_event_type(
+        session,
+        organization_id=org_id,
+        event_type=TRIAL_BLOCKED_EVENT_TYPE,
+        range_spec=primary,
+    )
+    checkout_total = checkout_success_count + checkout_failure_count
+    runtime_gate_total = trial_blocked_count + checkout_total
+    checkout_failure_ratio_pct = (
+        (checkout_failure_count / checkout_total) * 100 if checkout_total > 0 else 0.0
+    )
+    trial_blocked_rate_pct = (
+        (trial_blocked_count / runtime_gate_total) * 100 if runtime_gate_total > 0 else 0.0
+    )
+    return SaasBillingHealthMetrics(
+        organization_id=org_id,
+        range=primary.key,
+        generated_at=utcnow(),
+        upgrade_modal_open_count=upgrade_modal_open_count,
+        checkout_success_count=checkout_success_count,
+        checkout_failure_count=checkout_failure_count,
+        checkout_failure_ratio_pct=checkout_failure_ratio_pct,
+        trial_blocked_count=trial_blocked_count,
+        trial_blocked_rate_pct=trial_blocked_rate_pct,
     )

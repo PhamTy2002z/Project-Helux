@@ -29,6 +29,7 @@ from app.schemas.common import OkResponse
 from app.schemas.pagination import DefaultLimitOffsetPage
 from app.schemas.view_models import BoardGroupSnapshot
 from app.services.board_group_snapshot import build_group_snapshot
+from app.services.entitlements import enforce_board_group_quota
 from app.services.openclaw.constants import DEFAULT_HEARTBEAT_CONFIG
 from app.services.openclaw.gateway_rpc import OpenClawGatewayError
 from app.services.openclaw.provisioning import OpenClawGatewayProvisioner
@@ -121,6 +122,7 @@ async def create_board_group(
     ctx: OrganizationContext = ORG_ADMIN_DEP,
 ) -> BoardGroup:
     """Create a board group in the active organization."""
+    await enforce_board_group_quota(session, organization_id=ctx.organization.id)
     data = payload.model_dump()
     if not (data.get("slug") or "").strip():
         data["slug"] = _slugify(data.get("name") or "")

@@ -216,6 +216,14 @@ def _actor_display_name(actor: ActorContext) -> str:
     return "User"
 
 
+def _agent_reply_body_hint(memory: BoardMemory) -> str:
+    payload = '{"content":"...","tags":["chat"]'
+    if memory.chat_session_id is not None:
+        payload += f',"chat_session_id":"{memory.chat_session_id}"'
+    payload += "}"
+    return payload
+
+
 async def _notify_chat_targets(
     *,
     session: AsyncSession,
@@ -270,13 +278,14 @@ async def _notify_chat_targets(
             f"{snippet}\n\n"
             "Reply via board chat:\n"
             f"POST {base_url}/api/v1/agent/boards/{board.id}/memory\n"
-            'Body: {"content":"...","tags":["chat"]}'
+            f"Body: {_agent_reply_body_hint(memory)}"
         )
         error = await dispatch.try_send_agent_message(
             session_key=agent.openclaw_session_id,
             config=config,
             agent_name=agent.name,
             message=message,
+            deliver=True,
         )
         if error is not None:
             continue
@@ -408,6 +417,13 @@ async def create_board_memory(
         chat_session_id=resolved_chat_session.id if resolved_chat_session else None,
         source=source,
     )
+    actor_agent = actor.agent if actor.actor_type == "agent" else None
+    if actor_agent is not None:
+        actor_agent.last_seen_at = utcnow()
+        if actor_agent.status in {"offline", "provisioning"}:
+            actor_agent.status = "online"
+        actor_agent.updated_at = utcnow()
+        session.add(actor_agent)
     session.add(memory)
     await session.commit()
     await session.refresh(memory)

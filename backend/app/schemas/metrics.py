@@ -118,3 +118,17 @@ class TenantSloMetrics(SQLModel):
     median_cycle_time_hours: float | None
     approval_queue_lag_seconds: float
     quota_usage: EntitlementUsageRead
+
+
+class SaasBillingHealthMetrics(SQLModel):
+    """Billing-simulated observability metrics for support and alert triage."""
+
+    organization_id: UUID
+    range: DashboardRangeKey
+    generated_at: datetime
+    upgrade_modal_open_count: int
+    checkout_success_count: int
+    checkout_failure_count: int
+    checkout_failure_ratio_pct: float
+    trial_blocked_count: int
+    trial_blocked_rate_pct: float

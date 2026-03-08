@@ -22,6 +22,7 @@ from app.models.approval_task_links import ApprovalTaskLink
 from app.models.approvals import Approval
 from app.models.board_group_memory import BoardGroupMemory
 from app.models.board_groups import BoardGroup
+from app.models.billing_checkout_attempts import BillingCheckoutAttempt
 from app.models.board_memory import BoardMemory
 from app.models.board_onboarding import BoardOnboardingSession
 from app.models.board_webhook_payloads import BoardWebhookPayload
@@ -37,6 +38,7 @@ from app.models.organizations import Organization
 from app.models.task_dependencies import TaskDependency
 from app.models.task_fingerprints import TaskFingerprint
 from app.models.tasks import Task
+from app.models.user_onboarding_progress import UserOnboardingProgress
 from app.models.users import User
 from app.schemas.common import OkResponse
 from app.schemas.entitlements import OrganizationPlanAssign, OrganizationPlanRead
@@ -412,8 +414,20 @@ async def delete_my_org(
     )
     await crud.delete_where(
         session,
+        BillingCheckoutAttempt,
+        col(BillingCheckoutAttempt.organization_id) == org_id,
+        commit=False,
+    )
+    await crud.delete_where(
+        session,
         OrganizationPlan,
         col(OrganizationPlan.organization_id) == org_id,
+        commit=False,
+    )
+    await crud.delete_where(
+        session,
+        UserOnboardingProgress,
+        col(UserOnboardingProgress.organization_id) == org_id,
         commit=False,
     )
     await crud.delete_where(

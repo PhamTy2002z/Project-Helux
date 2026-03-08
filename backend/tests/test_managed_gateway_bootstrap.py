@@ -83,6 +83,7 @@ async def test_bootstrap_creates_gateway_and_main_agent(monkeypatch: pytest.Monk
         )
         assert main_agent is not None
         assert main_agent.organization_id == org_id
+        assert main_agent.name == f"Managed GateWay Agent - {gateway.id}"
 
     assert "provision" in captured["value"]
 
@@ -118,7 +119,9 @@ async def test_bootstrap_reuses_existing_gateway_and_backfills_main_agent(
         main_agents = await session.exec(
             select(Agent).where(Agent.gateway_id == gateway_id).where(Agent.board_id.is_(None)),
         )
-        assert len(list(main_agents)) == 1
+        main_agents_list = list(main_agents)
+        assert len(main_agents_list) == 1
+        assert main_agents_list[0].name == "Existing Gateway Agent"
 
 
 @pytest.mark.asyncio

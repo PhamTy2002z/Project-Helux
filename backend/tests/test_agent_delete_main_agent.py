@@ -1,5 +1,5 @@
 # ruff: noqa: S101
-"""Unit tests for agent deletion behavior."""
+"""Unit tests for protecting gateway main agents from mutations."""
 
 from __future__ import annotations
 
@@ -8,9 +8,10 @@ from types import SimpleNamespace
 from uuid import UUID, uuid4
 
 import pytest
+from fastapi import HTTPException, status
 
 import app.services.openclaw.provisioning_db as agent_service
-from app.models.approvals import Approval
+from app.schemas.agents import AgentUpdate
 
 
 @dataclass
@@ -38,100 +39,99 @@ class _AgentStub:
     openclaw_session_id: str | None = None
 
 
-@dataclass
-class _GatewayStub:
-    id: UUID
-    url: str
-    token: str | None
-    workspace_root: str
-    allow_insecure_tls: bool = False
-    disable_device_pairing: bool = False
-
-
 @pytest.mark.asyncio
-async def test_delete_gateway_main_agent_does_not_require_board_id(
+async def test_delete_gateway_main_agent_is_forbidden(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     session = _FakeSession()
     service = agent_service.AgentLifecycleService(session)  # type: ignore[arg-type]
 
-    gateway_id = uuid4()
     agent = _AgentStub(
         id=uuid4(),
         name="Primary Gateway Agent",
-        gateway_id=gateway_id,
+        gateway_id=uuid4(),
         organization_id=uuid4(),
         board_id=None,
         openclaw_session_id="agent:gateway-x:main",
     )
-    gateway = _GatewayStub(
-        id=gateway_id,
-        url="ws://gateway.example/ws",
-        token=None,
-        workspace_root="/tmp/openclaw",
-    )
     ctx = SimpleNamespace(
-        organization=SimpleNamespace(id=uuid4()), member=SimpleNamespace(id=uuid4())
+        organization=SimpleNamespace(id=uuid4()),
+        member=SimpleNamespace(id=uuid4()),
     )
 
     async def _fake_first_agent(_session: object) -> _AgentStub:
         return agent
 
-    async def _fake_first_gateway(_session: object) -> _GatewayStub:
-        return gateway
+    async def _no_access_check(*_args, **_kwargs) -> None:
+        return None
+
+    async def _should_not_delete(*_args, **_kwargs):
+        raise AssertionError("_delete_agent_record should not run for protected agents")
 
     monkeypatch.setattr(
         agent_service.Agent,
         "objects",
         SimpleNamespace(by_id=lambda _id: SimpleNamespace(first=_fake_first_agent)),
     )
-    monkeypatch.setattr(
-        agent_service.Gateway,
-        "objects",
-        SimpleNamespace(by_id=lambda _id: SimpleNamespace(first=_fake_first_gateway)),
+    monkeypatch.setattr(service, "require_agent_access", _no_access_check)
+    monkeypatch.setattr(service, "_delete_agent_record", _should_not_delete)
+
+    with pytest.raises(HTTPException) as exc_info:
+        await service.delete_agent(agent_id=str(agent.id), ctx=ctx)  # type: ignore[arg-type]
+
+    assert exc_info.value.status_code == status.HTTP_403_FORBIDDEN
+    assert "system-managed" in str(exc_info.value.detail).lower()
+    assert session.committed == 0
+    assert session.deleted == []
+
+
+@pytest.mark.asyncio
+async def test_update_gateway_main_agent_is_forbidden(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    session = _FakeSession()
+    service = agent_service.AgentLifecycleService(session)  # type: ignore[arg-type]
+
+    agent = _AgentStub(
+        id=uuid4(),
+        name="Primary Gateway Agent",
+        gateway_id=uuid4(),
+        organization_id=uuid4(),
+        board_id=None,
+        openclaw_session_id="agent:gateway-x:main",
     )
+    ctx = SimpleNamespace(
+        organization=SimpleNamespace(id=uuid4()),
+        member=SimpleNamespace(id=uuid4()),
+    )
+    options = agent_service.AgentUpdateOptions(force=False, user=None, context=ctx)  # type: ignore[arg-type]
+
+    async def _fake_first_agent(_session: object) -> _AgentStub:
+        return agent
 
     async def _no_access_check(*_args, **_kwargs) -> None:
         return None
 
-    async def _should_not_be_called(*_args, **_kwargs):
-        raise AssertionError("require_board/require_gateway should not be called for main agents")
+    async def _should_not_mutate(*_args, **_kwargs):
+        raise AssertionError("Mutation internals should not run for protected agents")
 
-    called: dict[str, int] = {"delete_lifecycle": 0}
-
-    async def _fake_delete_agent_lifecycle(
-        _self,
-        *,
-        agent: object,
-        gateway: object,
-        delete_files: bool = True,
-        delete_session: bool = True,
-    ) -> str | None:
-        _ = (_self, agent, gateway, delete_files, delete_session)
-        called["delete_lifecycle"] += 1
-        return "/tmp/openclaw/workspace-gateway-x"
-
-    updated_models: list[type[object]] = []
-
-    async def _fake_update_where(*_args, **_kwargs) -> None:
-        if len(_args) >= 2 and isinstance(_args[1], type):
-            updated_models.append(_args[1])
-        return None
-
-    monkeypatch.setattr(service, "require_agent_access", _no_access_check)
-    monkeypatch.setattr(service, "require_board", _should_not_be_called)
-    monkeypatch.setattr(service, "require_gateway", _should_not_be_called)
     monkeypatch.setattr(
-        agent_service.OpenClawGatewayProvisioner,
-        "delete_agent_lifecycle",
-        _fake_delete_agent_lifecycle,
+        agent_service.Agent,
+        "objects",
+        SimpleNamespace(by_id=lambda _id: SimpleNamespace(first=_fake_first_agent)),
     )
-    monkeypatch.setattr(agent_service.crud, "update_where", _fake_update_where)
-    monkeypatch.setattr(agent_service, "record_activity", lambda *_a, **_k: None)
+    monkeypatch.setattr(service, "require_agent_access", _no_access_check)
+    monkeypatch.setattr(service, "validate_agent_update_inputs", _should_not_mutate)
+    monkeypatch.setattr(service, "apply_agent_update_mutations", _should_not_mutate)
 
-    result = await service.delete_agent(agent_id=str(agent.id), ctx=ctx)  # type: ignore[arg-type]
+    with pytest.raises(HTTPException) as exc_info:
+        await service.update_agent(
+            agent_id=str(agent.id),
+            payload=AgentUpdate(name="Updated Name"),
+            options=options,
+        )
 
-    assert result.ok is True
-    assert called["delete_lifecycle"] == 1
-    assert Approval in updated_models
-    assert session.deleted and session.deleted[0] == agent
+    assert exc_info.value.status_code == status.HTTP_403_FORBIDDEN
+    assert "system-managed" in str(exc_info.value.detail).lower()
+    assert session.committed == 0
+

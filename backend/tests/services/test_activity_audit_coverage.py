@@ -8,6 +8,7 @@ from app.services.activity_log import ADMIN_AUDIT_EVENT_BY_ACTION, record_admin_
 
 EXPECTED_AUDIT_ACTIONS = {
     "organization.plan.assign",
+    "billing.simulate.checkout",
     "organization.member.update",
     "organization.member.access.update",
     "organization.member.remove",
@@ -34,6 +35,7 @@ def test_admin_audit_actions_are_used_in_mutation_routes() -> None:
     source = "\n".join(
         [
             (backend_root / "app/api/organizations.py").read_text(encoding="utf-8"),
+            (backend_root / "app/api/billing.py").read_text(encoding="utf-8"),
             (backend_root / "app/api/gateway.py").read_text(encoding="utf-8"),
             (backend_root / "app/api/gateways.py").read_text(encoding="utf-8"),
         ],

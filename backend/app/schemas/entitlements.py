@@ -8,7 +8,7 @@ from uuid import UUID
 
 from sqlmodel import SQLModel
 
-PlanTier = Literal["free", "beta", "pro"]
+PlanTier = Literal["trial_7d", "pro"]
 RUNTIME_ANNOTATION_TYPES = (datetime, UUID)
 
 
