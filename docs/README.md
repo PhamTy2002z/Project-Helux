@@ -7,6 +7,7 @@ This folder is the documentation home for **OpenClaw Mission Control**.
 - [Getting started](./getting-started/README.md)
 - [Development](./development/README.md)
 - [Testing](./testing/README.md)
+- [Landing page design guidelines](./landing-page-design-guidelines.md)
 - [Deployment](./deployment/README.md)
 - [Release checklist](./release/README.md)
 - [SaaS beta go-live checklist](./release/saas-beta-go-live-checklist.md)
