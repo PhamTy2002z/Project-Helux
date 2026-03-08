@@ -5,10 +5,7 @@ import type { ReactNode } from "react";
 
 import { DM_Serif_Display, IBM_Plex_Sans, Sora } from "next/font/google";
 
-import { AuthProvider } from "@/components/providers/AuthProvider";
-import { QueryProvider } from "@/components/providers/QueryProvider";
 import { Agentation } from "agentation";
-import { GlobalLoader } from "@/components/ui/global-loader";
 
 export const metadata: Metadata = {
   title: "OpenClaw Mission Control",
@@ -42,12 +39,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <body
         className={`${bodyFont.variable} ${headingFont.variable} ${displayFont.variable} min-h-screen bg-app text-strong antialiased`}
       >
-        <AuthProvider>
-          <QueryProvider>
-            <GlobalLoader />
-            {children}
-          </QueryProvider>
-        </AuthProvider>
+        {children}
         {process.env.NODE_ENV === "development" && <Agentation />}
       </body>
     </html>

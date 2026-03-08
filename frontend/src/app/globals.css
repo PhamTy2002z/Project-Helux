@@ -1,3 +1,5 @@
+@import url("https://fonts.cdnfonts.com/css/aeonik");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -129,6 +131,17 @@ body {
 
 .landing-page {
   font-family: var(--font-body), sans-serif;
+}
+
+.landing-slideshow {
+  --slide-muted: #80838e;
+  --slide-divider: rgba(255, 255, 255, 0.15);
+  --slide-purple: #8238dc;
+  --slide-pink: #f75cb7;
+  --slide-blue-light: #7fbaff;
+  --slide-blue-dark: #536efb;
+  --slide-axis: #1a2035;
+  --slide-bg-alt: #131318;
 }
 
 /* Landing (Enterprise) */
