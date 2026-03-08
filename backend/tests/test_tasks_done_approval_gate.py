@@ -441,6 +441,67 @@ async def test_update_task_lead_can_still_change_status_when_only_lead_rule_enab
 
 
 @pytest.mark.asyncio
+async def test_update_task_lead_can_move_inbox_to_in_progress_when_only_lead_rule_enabled() -> None:
+    engine = await _make_engine()
+    try:
+        async with await _make_session(engine) as session:
+            _board, task, lead_agent = await _seed_board_task_and_agent(
+                session,
+                task_status="inbox",
+                require_approval_for_done=False,
+                only_lead_can_change_status=True,
+                agent_is_board_lead=True,
+            )
+            task.assigned_agent_id = None
+            session.add(task)
+            await session.commit()
+            await session.refresh(task)
+
+            updated = await tasks_api.update_task(
+                payload=TaskUpdate(status="in_progress"),
+                task=task,
+                session=session,
+                actor=ActorContext(actor_type="agent", agent=lead_agent),
+            )
+
+            assert updated.status == "in_progress"
+            assert updated.assigned_agent_id is None
+            assert updated.in_progress_at is not None
+    finally:
+        await engine.dispose()
+
+
+@pytest.mark.asyncio
+async def test_update_task_lead_still_restricted_to_inbox_or_done_when_current_status_is_review() -> (
+    None
+):
+    engine = await _make_engine()
+    try:
+        async with await _make_session(engine) as session:
+            _board, task, lead_agent = await _seed_board_task_and_agent(
+                session,
+                task_status="review",
+                require_approval_for_done=False,
+                only_lead_can_change_status=True,
+                agent_is_board_lead=True,
+            )
+
+            with pytest.raises(HTTPException) as exc:
+                await tasks_api.update_task(
+                    payload=TaskUpdate(status="in_progress"),
+                    task=task,
+                    session=session,
+                    actor=ActorContext(actor_type="agent", agent=lead_agent),
+                )
+
+            assert exc.value.status_code == 403
+            assert isinstance(exc.value.detail, str)
+            assert "review tasks can only move to `done` or `inbox`" in exc.value.detail
+    finally:
+        await engine.dispose()
+
+
+@pytest.mark.asyncio
 async def test_update_task_allows_dependency_change_with_pending_approval() -> None:
     engine = await _make_engine()
     try:
