@@ -181,36 +181,39 @@ backend/
 ```
 frontend/
 ├── src/
-│   ├── app/               # Next.js App Router pages (40+ routes)
-│   │   ├── activity/
-│   │   ├── agents/
-│   │   │   ├── [agentId]/
-│   │   │   └── new/
-│   │   ├── approvals/
-│   │   ├── boards/
-│   │   │   ├── [boardId]/
-│   │   │   └── new/
-│   │   ├── board-groups/
-│   │   │   ├── [groupId]/
-│   │   │   └── new/
-│   │   ├── custom-fields/
-│   │   │   ├── [fieldId]/
-│   │   │   └── new/
-│   │   ├── dashboard/
-│   │   ├── gateways/
-│   │   │   ├── [gatewayId]/
-│   │   │   └── new/
-│   │   ├── invite/
-│   │   ├── onboarding/
-│   │   ├── organization/
-│   │   ├── settings/
-│   │   ├── sign-in/
-│   │   ├── skills/
-│   │   │   ├── marketplace/
-│   │   │   └── packs/
-│   │   ├── tags/
-│   │   │   ├── [tagId]/
-│   │   │   └── add/
+│   ├── app/               # Next.js App Router with route groups
+│   │   ├── (app)/         # Protected routes (auth required)
+│   │   │   ├── activity/
+│   │   │   ├── agents/
+│   │   │   │   └── [agentId]/
+│   │   │   ├── approvals/
+│   │   │   ├── boards/
+│   │   │   │   ├── [boardId]/
+│   │   │   │   └── new/
+│   │   │   ├── board-groups/
+│   │   │   │   ├── [groupId]/
+│   │   │   │   └── new/
+│   │   │   ├── custom-fields/
+│   │   │   │   └── new/
+│   │   │   ├── dashboard/
+│   │   │   ├── gateways/
+│   │   │   │   ├── [gatewayId]/
+│   │   │   │   └── new/
+│   │   │   ├── invite/
+│   │   │   ├── onboarding/
+│   │   │   ├── organization/
+│   │   │   ├── settings/
+│   │   │   ├── skills/
+│   │   │   │   ├── marketplace/
+│   │   │   │   └── packs/
+│   │   │   ├── tags/
+│   │   │   │   └── [tagId]/
+│   │   │   └── layout.tsx
+│   │   ├── (public)/      # Public routes (no auth required)
+│   │   │   ├── sign-in/
+│   │   │   └── layout.tsx
+│   │   ├── api/           # API routes (server-side)
+│   │   │   └── local-auth/
 │   │   ├── layout.tsx
 │   │   ├── page.tsx
 │   │   └── globals.css
@@ -248,6 +251,10 @@ frontend/
 │   │   │   ├── tags/
 │   │   │   ├── tasks/
 │   │   │   └── users/
+│   │   ├── api-base-server.ts # Server-side API base with auth handling
+│   │   ├── api-base.ts    # Client-side API base
+│   │   ├── sse-parser.ts  # Server-sent event buffer parser
+│   │   ├── query-policy.ts # React Query default policies
 │   │   ├── utils.ts
 │   │   └── constants.ts
 │   ├── hooks/             # Custom React hooks
@@ -277,9 +284,12 @@ frontend/
 
 ### Frontend Patterns
 - **Atomic Design**: Components organized by complexity (atoms → templates)
+- **Route Groups**: `(app)` and `(public)` route groups for protected/public separation
 - **Server Components**: Next.js App Router with React Server Components
 - **Client-Side State**: TanStack Query for server state management
 - **Code Generation**: Orval generates API client from OpenAPI spec
+- **SSE Streaming**: Consolidated `useSSEStream` hook with exponential backoff retry logic
+- **SSE Parsing**: Reusable `parseSSEBuffer` for handling streamed events
 - **Composition**: Radix UI primitives composed into custom components
 - **Type Safety**: End-to-end TypeScript from API to UI
 

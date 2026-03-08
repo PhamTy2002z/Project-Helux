@@ -6,6 +6,37 @@
 **Status**: Pre-release, under active development
 **Last Updated**: 2026-03-08
 
+## Recent Updates
+
+- ✅ SaaS payment scaffold + PLG onboarding plan (`260308-2053`) phases 1-4 completed:
+  - Billing v1 scope locked (`trial_7d`, `pro`) with explicit out-of-scope boundaries
+  - Simulated checkout API added (`/api/v1/billing/simulate/checkout`, `/api/v1/billing/me/subscription`)
+  - Idempotent checkout persistence and billing audit events added
+  - Entitlement enforcement upgraded (trial expiry block, board-group quota, agents-per-board quota)
+  - Frontend upgrade modal + quota summary integrated into settings/sidebar and create flows
+- ✅ Frontend performance hardening plan (`260308-1727`) phases 1-9 completed:
+  - Route bundle metric collection + budget enforcement scripts
+  - Server/client provider boundary split via `(app)` and `(public)` route groups
+  - Query policy normalization for high-traffic routes with anti-pattern guard checks
+  - SSE logic consolidated into reusable `useSSEStream` hook with exponential backoff
+  - SSE buffer parsing abstracted to `parseSSEBuffer` utility function
+  - Markdown heavy parser isolation via `LazyMarkdown` + `MarkdownLite`
+  - Chat render hot-path optimization (state-layer ordering + `content-visibility`)
+  - Perf verification complete with budgets passing:
+    - shared root main: 400.8 KB / 430 KB
+    - `/`: 951.4 KB / 1000 KB
+    - `/dashboard`: 1072.2 KB / 1250 KB
+    - `/boards`: 1111.3 KB / 1150 KB
+    - `/activity`: 1075.6 KB / 1250 KB
+- ✅ SaaS payment scaffold + PLG onboarding plan (`260308-2053`) phases 5-7 completed in code/CI:
+  - Step-based onboarding progress API + migration (`/api/v1/onboarding/progress/me`)
+  - New onboarding wizard/checklist with nav unlock gating by onboarding completion
+  - Billing observability endpoints:
+    - `GET /api/v1/metrics/saas-billing-health`
+    - `GET /api/v1/billing/support/timeline`
+    - `POST /api/v1/billing/events/upgrade-modal-open`
+  - SaaS gates expanded with billing/onboarding/trial-expiry coverage
+
 ## Project Phases
 
 ### Phase 1: Foundation (Completed)
@@ -61,9 +92,9 @@
 
 ---
 
-### Phase 3: Agent Operations (In Progress)
+### Phase 3: Agent Operations & React Performance Optimization (In Progress)
 
-**Status**: 🔄 In Progress (80% complete)
+**Status**: 🔄 In Progress (92% complete)
 **Timeline**: Q1 2025 - Q2 2025
 
 #### Completed Features
@@ -76,6 +107,12 @@
 - ✅ OpenClaw gateway integration
 - ✅ Gateway WebSocket communication
 - ✅ Gateway health checks
+- ✅ Frontend performance optimization (route groups, SSE consolidation)
+- ✅ Reusable SSE streaming patterns (`useSSEStream`, `parseSSEBuffer`)
+- ✅ React Query policy normalization with bundle budget enforcement
+- ✅ Markdown heavy dependency isolation (`LazyMarkdown`, `MarkdownLite`)
+- ✅ Chat render-path optimization (ordered upsert merge, render sort removal, content-visibility)
+- ✅ Performance hardening verification + rollout checklist for plan `260308-1727`
 
 #### In Progress
 

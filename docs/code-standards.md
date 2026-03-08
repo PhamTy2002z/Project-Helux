@@ -47,6 +47,14 @@ Database
 
 ### Frontend Structure
 
+#### Route Groups Pattern
+```
+(app)/          # Protected routes requiring authentication
+    ↓ Applied layout.tsx + middleware checks
+(public)/       # Public routes without auth requirement
+    ↓ Separate layout.tsx for unauthenticated UI
+```
+
 #### Atomic Design Pattern
 ```
 atoms/          # Basic UI elements (buttons, inputs, labels)
@@ -207,6 +215,35 @@ export function useBoard(boardId: string) {
     queryKey: ['board', boardId],
     queryFn: () => getBoard({ boardId }),
     enabled: !!boardId,
+  });
+}
+
+// SSE streaming hook with exponential backoff
+export function useSSEStream(
+  url: string,
+  onMessage: (data: any) => void,
+  enabled: boolean = true
+) {
+  // Consolidates stream connection, retry logic, and cleanup
+  // Handles buffer parsing via parseSSEBuffer utility
+  useEffect(() => {
+    if (!enabled) return;
+    // Connection and event handling logic
+  }, [url, enabled]);
+}
+```
+
+#### React Query Configuration
+```typescript
+// Use query-policy.ts for consistent React Query defaults
+// Centralized configuration for staleTime, gcTime, retry behavior
+import { getQueryPolicy } from '@/lib/query-policy';
+
+export function useBoardChatMessages(boardId: string) {
+  return useQuery({
+    queryKey: ['board', boardId, 'chat-messages'],
+    queryFn: () => getBoardChatMessages(boardId),
+    ...getQueryPolicy('chat-messages'),  // Apply default policy
   });
 }
 ```
@@ -504,9 +541,35 @@ Clarify environment variable requirements.
 
 ### Frontend Performance
 - Code splitting with Next.js dynamic imports
+- Keep heavy markdown parsing behind lazy boundaries (`LazyMarkdown`)
 - Image optimization with Next.js Image component
 - Lazy loading for below-the-fold content
 - Minimize bundle size with tree shaking
+- Keep list ordering invariants at data/hook layer, not in render loops
+- Use `content-visibility` for long scroll regions where safe
+
+#### Performance Budgets and Guardrails
+- Route bundle metrics must be generated from Next build artifacts:
+  - `cd frontend && pnpm build && pnpm perf:collect`
+- Budget checks must pass before merge:
+  - `cd frontend && pnpm perf:check`
+- Query anti-pattern guard for high-traffic routes must pass:
+  - `cd frontend && pnpm query-policy:check`
+- Budget report artifacts are generated on each run:
+  - `frontend/plans/performance/route-bundle-metrics.json`
+  - `frontend/plans/performance/route-bundle-metrics.md`
+- Initial hard thresholds (set on March 8, 2026):
+  - Shared root main JS: `<= 430 KB`
+  - `/`: `<= 1000 KB` initial JS
+  - `/dashboard`: `<= 1250 KB` initial JS
+  - `/boards`: `<= 1150 KB` initial JS
+  - `/activity`: `<= 1250 KB` initial JS
+- Latest validated run (March 8, 2026):
+  - Shared root main JS: `400.8 KB`
+  - `/`: `951.4 KB`
+  - `/dashboard`: `1072.2 KB`
+  - `/boards`: `1111.3 KB`
+  - `/activity`: `1075.6 KB`
 
 ### Database Performance
 - Add indexes for frequently queried columns

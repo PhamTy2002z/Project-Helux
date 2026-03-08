@@ -46,6 +46,7 @@ docker compose -f compose.yml --env-file .env up -d --build
 - [ ] `GET /healthz` returns HTTP `200`
 - [ ] `GET /readyz` returns HTTP `200`
 - [ ] `GET /api/v1/metrics/tenant-slo` returns tenant SLO payload
+- [ ] `GET /api/v1/metrics/saas-billing-health` returns billing observability payload
 - [ ] Admin mutation endpoints emit `admin.*` audit events
 
 ## Rollback criteria

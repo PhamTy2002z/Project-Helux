@@ -28,6 +28,7 @@ Entry criteria:
 Execution:
 - [ ] Add approved design partner organizations
 - [ ] Monitor `admin.*` audit events and quota pressure daily
+- [ ] Monitor `saas-billing-health` failure ratio and trial-block trend daily
 
 Exit criteria:
 - [ ] No critical security or isolation incidents for 7 days

@@ -59,6 +59,14 @@ ORDER BY created_at DESC
 LIMIT 100;
 ```
 
+For billing/trial incidents, query the billing support timeline by request id:
+
+```bash
+curl -sS \
+  -H "Authorization: Bearer <admin-token>" \
+  "http://localhost:8000/api/v1/billing/support/timeline?request_id=<request-id>" | jq
+```
+
 ## Step 5: Decide response path
 
 Use this decision matrix:

@@ -8,6 +8,9 @@ uv run pytest \
   tests/api/test_gateways_authz.py \
   tests/services/test_tenant_invariants.py \
   tests/core/test_rate_limit.py \
+  tests/api/test_billing_simulated_checkout.py \
+  tests/api/test_trial_expiry_blocking.py \
+  tests/api/test_onboarding_progress.py \
   tests/api/test_quota_enforcement.py \
   tests/api/test_readiness.py \
   tests/api/test_metrics_tenant_dimensions.py \
