@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { useAuth } from "@/auth/clerk";
+import { isSaasAuthProfile } from "@/auth/profile";
 
 import { ApiError } from "@/api/mutator";
 import { useCreateBoardApiV1BoardsPost } from "@/api/generated/boards/boards";
@@ -36,6 +37,7 @@ const slugify = (value: string) =>
 export default function NewBoardPage() {
   const router = useRouter();
   const { isSignedIn } = useAuth();
+  const isSaasMode = isSaasAuthProfile();
 
   const { isAdmin } = useOrganizationMembership(isSignedIn);
 
@@ -51,7 +53,7 @@ export default function NewBoardPage() {
     ApiError
   >(undefined, {
     query: {
-      enabled: Boolean(isSignedIn && isAdmin),
+      enabled: Boolean(isSignedIn && isAdmin && !isSaasMode),
       refetchOnMount: "always",
       retry: false,
     },
@@ -98,7 +100,7 @@ export default function NewBoardPage() {
     error ?? gatewaysQuery.error?.message ?? groupsQuery.error?.message ?? null;
 
   const isFormReady = Boolean(
-    name.trim() && description.trim() && displayGatewayId,
+    name.trim() && description.trim() && (isSaasMode || displayGatewayId),
   );
 
   const gatewayOptions = useMemo(
@@ -125,8 +127,10 @@ export default function NewBoardPage() {
       return;
     }
     if (!resolvedGatewayId) {
-      setError("Select a gateway before creating a board.");
-      return;
+      if (!isSaasMode) {
+        setError("Select a gateway before creating a board.");
+        return;
+      }
     }
     const trimmedDescription = description.trim();
     if (!trimmedDescription) {
@@ -141,7 +145,7 @@ export default function NewBoardPage() {
         name: trimmedName,
         slug: slugify(trimmedName),
         description: trimmedDescription,
-        gateway_id: resolvedGatewayId,
+        ...(isSaasMode ? {} : { gateway_id: resolvedGatewayId }),
         board_group_id: boardGroupId === "none" ? null : boardGroupId,
       },
     });
@@ -176,23 +180,25 @@ export default function NewBoardPage() {
                 disabled={isLoading}
               />
             </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-900">
-                Gateway <span className="text-red-500">*</span>
-              </label>
-              <SearchableSelect
-                ariaLabel="Select gateway"
-                value={displayGatewayId}
-                onValueChange={setGatewayId}
-                options={gatewayOptions}
-                placeholder="Select gateway"
-                searchPlaceholder="Search gateways..."
-                emptyMessage="No gateways found."
-                triggerClassName="w-full h-11 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                contentClassName="rounded-xl border border-slate-200 shadow-lg"
-                itemClassName="px-4 py-3 text-sm text-slate-700 data-[selected=true]:bg-slate-50 data-[selected=true]:text-slate-900"
-              />
-            </div>
+            {!isSaasMode ? (
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-900">
+                  Gateway <span className="text-red-500">*</span>
+                </label>
+                <SearchableSelect
+                  ariaLabel="Select gateway"
+                  value={displayGatewayId}
+                  onValueChange={setGatewayId}
+                  options={gatewayOptions}
+                  placeholder="Select gateway"
+                  searchPlaceholder="Search gateways..."
+                  emptyMessage="No gateways found."
+                  triggerClassName="w-full h-11 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                  contentClassName="rounded-xl border border-slate-200 shadow-lg"
+                  itemClassName="px-4 py-3 text-sm text-slate-700 data-[selected=true]:bg-slate-50 data-[selected=true]:text-slate-900"
+                />
+              </div>
+            ) : null}
           </div>
 
           <div className="grid gap-6 md:grid-cols-2">
@@ -233,7 +239,7 @@ export default function NewBoardPage() {
           </div>
         </div>
 
-        {gateways.length === 0 ? (
+        {!isSaasMode && gateways.length === 0 ? (
           <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
             <p>
               No gateways available. Create one in{" "}

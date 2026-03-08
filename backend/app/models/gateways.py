@@ -26,5 +26,9 @@ class Gateway(QueryModel, table=True):
     disable_device_pairing: bool = Field(default=False)
     workspace_root: str
     allow_insecure_tls: bool = Field(default=False)
+    activation_status: str = Field(default="ready")
+    activation_error: str | None = Field(default=None)
+    activation_attempts: int = Field(default=0)
+    last_activation_at: datetime | None = Field(default=None)
     created_at: datetime = Field(default_factory=utcnow)
     updated_at: datetime = Field(default_factory=utcnow)

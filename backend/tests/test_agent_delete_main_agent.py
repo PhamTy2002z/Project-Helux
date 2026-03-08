@@ -33,6 +33,7 @@ class _AgentStub:
     id: UUID
     name: str
     gateway_id: UUID
+    organization_id: UUID
     board_id: UUID | None = None
     openclaw_session_id: str | None = None
 
@@ -59,6 +60,7 @@ async def test_delete_gateway_main_agent_does_not_require_board_id(
         id=uuid4(),
         name="Primary Gateway Agent",
         gateway_id=gateway_id,
+        organization_id=uuid4(),
         board_id=None,
         openclaw_session_id="agent:gateway-x:main",
     )

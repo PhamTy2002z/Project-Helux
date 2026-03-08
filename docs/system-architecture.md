@@ -240,6 +240,9 @@ RQ Worker Process
     ├─→ Dequeue Job
     │
     ├─→ Execute Job Function
+    │     - gateway activation/provisioning tasks
+    │     - lifecycle reconcile tasks
+    │     - webhook dispatch tasks
     │
     ├─→ Update Job Status
     │
@@ -249,6 +252,26 @@ Job Completion
     ├─→ Webhook Notification (optional)
     │
     └─→ Database Update
+```
+
+### Organization Bootstrap + Managed Gateway Flow
+
+```
+User Authentication / First Org Creation
+    │
+    ▼
+Organization bootstrap service
+    │
+    ├─→ Create org + owner membership
+    │
+    ├─→ Auto-create managed gateway row (org-scoped workspace root)
+    │
+    ├─→ Upsert gateway-main agent record immediately (DB only)
+    │     - avoids race where board create happens before worker runs
+    │
+    └─→ Enqueue async gateway activation task
+          - worker performs compatibility + runtime provisioning
+          - status transitions: activating → ready | degraded
 ```
 
 ### Gateway Communication Flow

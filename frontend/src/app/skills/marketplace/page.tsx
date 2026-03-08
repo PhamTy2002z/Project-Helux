@@ -2,7 +2,6 @@
 
 export const dynamic = "force-dynamic";
 
-import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
@@ -793,14 +792,17 @@ export default function SkillsMarketplacePage() {
                 No gateways available yet.
               </p>
               <p className="mt-2">
-                Create a gateway first, then return here to manage installs.
+                Managed runtime provisioning is in progress. Retry in a moment.
               </p>
-              <Link
-                href="/gateways/new"
+              <Button
+                type="button"
                 className={`${buttonVariants({ variant: "primary", size: "md" })} mt-4`}
+                onClick={() => {
+                  void gatewaysQuery.refetch();
+                }}
               >
-                Create gateway
-              </Link>
+                Refresh status
+              </Button>
             </div>
           ) : (
             <>

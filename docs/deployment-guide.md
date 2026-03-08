@@ -504,6 +504,13 @@ LOG_LEVEL=INFO
 
 # API
 NEXT_PUBLIC_API_URL=https://yourdomain.com
+
+# Managed gateway auto-provision (new organizations: free + paid)
+MANAGED_GATEWAY_AUTO_PROVISION=true
+MANAGED_GATEWAY_URL=wss://gateway.yourdomain.com/ws
+MANAGED_GATEWAY_TOKEN=<gateway-token>
+MANAGED_GATEWAY_WORKSPACE_ROOT=/srv/openclaw/managed
+MANAGED_GATEWAY_DISABLE_DEVICE_PAIRING=true
 ```
 
 ### Resource Recommendations

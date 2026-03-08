@@ -6,8 +6,8 @@ import {
   streamBoardMemoryApiV1BoardsBoardIdMemoryStreamGet,
 } from "@/api/generated/board-memory/board-memory";
 import type { BoardMemoryRead } from "@/api/generated/model";
-import { createExponentialBackoff } from "@/lib/backoff";
 import { apiDatetimeToMs } from "@/lib/datetime";
+import { useSSEStream } from "@/lib/hooks/use-sse-stream";
 
 const PAGE_SIZE = 50;
 
@@ -197,110 +197,47 @@ export const useBoardChatMessages = ({
     [boardId, chatSessionId, enabled, onMessageCreated, source],
   );
 
-  useEffect(() => {
-    if (!enabled || !boardId || !chatSessionId) return;
-
-    let cancelled = false;
-    const abortController = new AbortController();
-    const backoff = createExponentialBackoff();
-    let reconnectTimeout: number | undefined;
-
-    const connect = async () => {
-      try {
-        const since = latestTimestamp(messagesRef.current);
-        const streamResult =
-          await streamBoardMemoryApiV1BoardsBoardIdMemoryStreamGet(
-            boardId,
-            {
-              is_chat: true,
-              chat_session_id: chatSessionId,
-              ...(since ? { since } : {}),
-            },
-            {
-              headers: { Accept: "text/event-stream" },
-              signal: abortController.signal,
-            },
-          );
-        if (streamResult.status !== 200) {
-          throw new Error("Unable to connect board chat stream.");
-        }
-        const response = streamResult.data as Response;
-        if (!(response instanceof Response) || !response.body) {
-          throw new Error("Unable to connect board chat stream.");
-        }
-
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder();
-        let buffer = "";
-
-        while (!cancelled) {
-          const { value, done } = await reader.read();
-          if (done) break;
-          if (value && value.length) {
-            backoff.reset();
+  useSSEStream({
+    enabled: enabled && !!boardId && !!chatSessionId,
+    key: `${boardId}-${chatSessionId}`,
+    connect: async (signal) => {
+      const since = latestTimestamp(messagesRef.current);
+      const streamResult =
+        await streamBoardMemoryApiV1BoardsBoardIdMemoryStreamGet(
+          boardId,
+          {
+            is_chat: true,
+            chat_session_id: chatSessionId!,
+            ...(since ? { since } : {}),
+          },
+          {
+            headers: { Accept: "text/event-stream" },
+            signal,
+          },
+        );
+      if (streamResult.status !== 200) {
+        throw new Error("Unable to connect board chat stream.");
+      }
+      return streamResult.data as Response;
+    },
+    onEvent: (event) => {
+      if (event.eventType === "memory" && event.data) {
+        try {
+          const payload = JSON.parse(event.data) as {
+            memory?: BoardMemoryRead;
+          };
+          if (payload.memory?.tags?.includes("chat")) {
+            setMessages((prev) =>
+              mergeMessagesById(prev, [payload.memory as BoardMemoryRead]),
+            );
+            onMessageCreated?.(payload.memory as BoardMemoryRead);
           }
-          buffer += decoder.decode(value, { stream: true });
-          buffer = buffer.replace(/\r\n/g, "\n");
-
-          let boundary = buffer.indexOf("\n\n");
-          while (boundary !== -1) {
-            const chunk = buffer.slice(0, boundary);
-            buffer = buffer.slice(boundary + 2);
-
-            let eventType = "message";
-            let data = "";
-            for (const line of chunk.split("\n")) {
-              if (line.startsWith("event:")) {
-                eventType = line.slice(6).trim();
-              } else if (line.startsWith("data:")) {
-                data += line.slice(5).trim();
-              }
-            }
-
-            if (eventType === "memory" && data) {
-              try {
-                const payload = JSON.parse(data) as {
-                  memory?: BoardMemoryRead;
-                };
-                if (payload.memory?.tags?.includes("chat")) {
-                  setMessages((prev) =>
-                    mergeMessagesById(prev, [
-                      payload.memory as BoardMemoryRead,
-                    ]),
-                  );
-                  onMessageCreated?.(payload.memory as BoardMemoryRead);
-                }
-              } catch {
-                // Ignore malformed stream payloads.
-              }
-            }
-
-            boundary = buffer.indexOf("\n\n");
-          }
+        } catch {
+          // Ignore malformed stream payloads.
         }
-      } catch {
-        // Reconnect handled below.
       }
-
-      if (!cancelled) {
-        const delay = backoff.nextDelayMs();
-        reconnectTimeout = window.setTimeout(() => {
-          reconnectTimeout = undefined;
-          void connect();
-        }, delay);
-      }
-    };
-
-    void connect();
-
-    return () => {
-      cancelled = true;
-      abortController.abort();
-      if (reconnectTimeout !== undefined) {
-        window.clearTimeout(reconnectTimeout);
-      }
-    };
-  }, [boardId, chatSessionId, enabled, onMessageCreated]);
+    },
+  });
 
   return useMemo(
     () => ({

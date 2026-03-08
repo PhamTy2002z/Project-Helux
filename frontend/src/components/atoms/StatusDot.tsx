@@ -1,3 +1,5 @@
+import { memo } from "react";
+
 import { cn } from "@/lib/utils";
 
 type StatusDotVariant = "agent" | "approval" | "task";
@@ -59,7 +61,7 @@ type StatusDotProps = {
   className?: string;
 };
 
-export function StatusDot({
+export const StatusDot = memo(function StatusDot({
   status,
   variant = "agent",
   className,
@@ -74,4 +76,4 @@ export function StatusDot({
       )}
     />
   );
-}
+});

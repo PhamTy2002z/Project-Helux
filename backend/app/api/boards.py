@@ -40,6 +40,9 @@ from app.services.entitlements import enforce_board_quota
 from app.services.openclaw.gateway_dispatch import GatewayDispatchService
 from app.services.openclaw.gateway_rpc import GatewayConfig as GatewayClientConfig
 from app.services.openclaw.gateway_rpc import OpenClawGatewayError
+from app.services.openclaw.managed_gateway_bootstrap import (
+    ensure_managed_gateway_for_organization,
+)
 from app.services.organizations import OrganizationContext, board_access_filter
 
 if TYPE_CHECKING:
@@ -64,6 +67,7 @@ AGENT_BOARD_ROLE_TAGS = cast("list[str | Enum]", ["agent-lead", "agent-worker"])
 _ERR_GATEWAY_MAIN_AGENT_REQUIRED = (
     "gateway must have a gateway main agent before boards can be created or updated"
 )
+_ERR_GATEWAY_UNAVAILABLE = "No managed gateway is available for this organization yet"
 
 
 def _format_board_field_value(value: object) -> str:
@@ -142,6 +146,29 @@ async def _require_gateway_for_create(
     ctx: OrganizationContext = ORG_ADMIN_DEP,
     session: AsyncSession = SESSION_DEP,
 ) -> Gateway:
+    if payload.gateway_id is None:
+        gateway = (
+            await Gateway.objects.filter_by(organization_id=ctx.organization.id)
+            .order_by(col(Gateway.created_at).asc())
+            .first(session)
+        )
+        if gateway is None:
+            await ensure_managed_gateway_for_organization(
+                session,
+                organization_id=ctx.organization.id,
+            )
+            gateway = (
+                await Gateway.objects.filter_by(organization_id=ctx.organization.id)
+                .order_by(col(Gateway.created_at).asc())
+                .first(session)
+            )
+        if gateway is None:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail=_ERR_GATEWAY_UNAVAILABLE,
+            )
+        await _require_gateway_main_agent(session, gateway)
+        return gateway
     return await _require_gateway(
         session,
         payload.gateway_id,
@@ -493,6 +520,7 @@ async def create_board(
     await enforce_board_quota(session, organization_id=ctx.organization.id)
     data = payload.model_dump()
     data["organization_id"] = ctx.organization.id
+    data["gateway_id"] = _gateway.id
     return await crud.create(session, Board, **data)
 
 

@@ -66,6 +66,10 @@ class GatewayRead(GatewayBase):
     id: UUID
     organization_id: UUID
     token: str | None = None
+    activation_status: str = "ready"
+    activation_error: str | None = None
+    activation_attempts: int = 0
+    last_activation_at: datetime | None = None
     created_at: datetime
     updated_at: datetime
 

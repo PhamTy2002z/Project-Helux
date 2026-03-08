@@ -320,6 +320,12 @@ async def ensure_member_for_user(
         _normalize_skill_pack_source_url(existing_pack_source)
         for existing_pack_source in existing_pack_urls
     }
+    if isinstance(session, AsyncSession):
+        from app.services.openclaw.managed_gateway_bootstrap import (
+            ensure_managed_gateway_for_organization,
+        )
+
+        await ensure_managed_gateway_for_organization(session, organization_id=org_id)
     user.active_organization_id = org_id
     session.add(user)
     session.add(member)

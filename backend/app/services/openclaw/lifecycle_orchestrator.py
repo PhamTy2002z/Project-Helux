@@ -6,12 +6,14 @@ duplicate provisioning/wake/state logic.
 
 from __future__ import annotations
 
+import asyncio
 from typing import TYPE_CHECKING
 from uuid import UUID
 
 from fastapi import HTTPException, status
 from sqlmodel import col, select
 
+from app.core.config import settings
 from app.core.time import utcnow
 from app.models.agents import Agent
 from app.models.boards import Board
@@ -106,20 +108,23 @@ class AgentLifecycleOrchestrator(OpenClawDBService):
             return locked
 
         try:
-            await OpenClawGatewayProvisioner().apply_agent_lifecycle(
-                agent=locked,
-                gateway=gateway,
-                board=board,
-                auth_token=raw_token,
-                user=template_user,
-                action=action,
-                force_bootstrap=force_bootstrap,
-                reset_session=reset_session,
-                wake=wake,
-                deliver_wakeup=deliver_wakeup,
-                wakeup_verb=wakeup_verb,
+            await asyncio.wait_for(
+                OpenClawGatewayProvisioner().apply_agent_lifecycle(
+                    agent=locked,
+                    gateway=gateway,
+                    board=board,
+                    auth_token=raw_token,
+                    user=template_user,
+                    action=action,
+                    force_bootstrap=force_bootstrap,
+                    reset_session=reset_session,
+                    wake=wake,
+                    deliver_wakeup=deliver_wakeup,
+                    wakeup_verb=wakeup_verb,
+                ),
+                timeout=settings.gateway_lifecycle_timeout_seconds,
             )
-        except (OpenClawGatewayError, OSError, RuntimeError, ValueError) as exc:
+        except (OpenClawGatewayError, OSError, RuntimeError, TimeoutError, ValueError) as exc:
             is_gateway_error = isinstance(exc, OpenClawGatewayError)
             locked.status = "offline"
             locked.provision_action = None

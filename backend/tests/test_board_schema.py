@@ -1,12 +1,21 @@
 # ruff: noqa: INP001
 """Schema validation tests for board and onboarding goal requirements."""
 
-from uuid import uuid4
-
 import pytest
 
 from app.schemas.board_onboarding import BoardOnboardingConfirm
 from app.schemas.boards import BoardCreate, BoardUpdate
+
+
+def test_board_create_allows_missing_gateway_id_for_managed_mode() -> None:
+    """Managed mode can resolve gateway server-side when create payload omits it."""
+    created = BoardCreate(
+        name="Managed",
+        slug="managed",
+        description="Managed gateway binding.",
+        board_type="general",
+    )
+    assert created.gateway_id is None
 
 
 def test_goal_board_requires_objective_and_metrics_when_confirmed() -> None:
@@ -19,7 +28,6 @@ def test_goal_board_requires_objective_and_metrics_when_confirmed() -> None:
             name="Goal Board",
             slug="goal",
             description="Ship onboarding improvements.",
-            gateway_id=uuid4(),
             board_type="goal",
             goal_confirmed=True,
         )
@@ -28,7 +36,6 @@ def test_goal_board_requires_objective_and_metrics_when_confirmed() -> None:
         name="Goal Board",
         slug="goal",
         description="Ship onboarding improvements.",
-        gateway_id=uuid4(),
         board_type="goal",
         goal_confirmed=True,
         objective="Launch onboarding",
@@ -42,7 +49,6 @@ def test_goal_board_allows_missing_objective_before_confirmation() -> None:
         name="Draft",
         slug="draft",
         description="Iterate on backlog hygiene.",
-        gateway_id=uuid4(),
         board_type="goal",
     )
 
@@ -53,7 +59,6 @@ def test_general_board_allows_missing_objective() -> None:
         name="General",
         slug="general",
         description="General coordination board.",
-        gateway_id=uuid4(),
         board_type="general",
     )
 
@@ -65,7 +70,6 @@ def test_board_create_requires_description() -> None:
             name="Goal Board",
             slug="goal",
             description="  ",
-            gateway_id=uuid4(),
             board_type="goal",
         )
 
@@ -82,7 +86,6 @@ def test_board_rule_toggles_have_expected_defaults() -> None:
         name="Ops Board",
         slug="ops-board",
         description="Operations workflow board.",
-        gateway_id=uuid4(),
     )
     assert created.require_approval_for_done is True
     assert created.require_review_before_done is False
@@ -114,7 +117,6 @@ def test_board_max_agents_must_be_non_negative() -> None:
             name="Ops Board",
             slug="ops-board",
             description="Operations workflow board.",
-            gateway_id=uuid4(),
             max_agents=-1,
         )
 

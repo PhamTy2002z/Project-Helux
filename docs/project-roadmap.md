@@ -134,6 +134,8 @@
 - ✅ Gateway health monitoring
 - ✅ Agent provisioning via gateways
 - ✅ Gateway metadata and status tracking
+- ✅ Async gateway activation queue with retry-backed provisioning states (`activating`, `ready`, `degraded`)
+- ✅ Managed gateway auto-provision for newly created organizations (free + paid tiers) with non-blocking activation
 
 #### In Progress
 

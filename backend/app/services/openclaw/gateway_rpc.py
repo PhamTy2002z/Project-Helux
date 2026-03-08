@@ -19,6 +19,7 @@ from uuid import uuid4
 import websockets
 from websockets.exceptions import WebSocketException
 
+from app.core.config import settings
 from app.core.logging import TRACE_LEVEL, get_logger
 from app.services.openclaw.device_identity import (
     build_device_auth_payload,
@@ -269,9 +270,22 @@ def _build_device_connect_payload(
 async def _await_response(
     ws: websockets.ClientConnection,
     request_id: str,
+    *,
+    timeout_s: float,
 ) -> object:
+    deadline = asyncio.get_running_loop().time() + timeout_s
     while True:
-        raw = await ws.recv()
+        remaining = deadline - asyncio.get_running_loop().time()
+        if remaining <= 0:
+            raise OpenClawGatewayError(
+                f"Gateway RPC response timed out after {int(timeout_s)} seconds",
+            )
+        try:
+            raw = await asyncio.wait_for(ws.recv(), timeout=remaining)
+        except TimeoutError as exc:
+            raise OpenClawGatewayError(
+                f"Gateway RPC response timed out after {int(timeout_s)} seconds",
+            ) from exc
         data = json.loads(raw)
         logger.log(
             TRACE_LEVEL,
@@ -298,6 +312,8 @@ async def _send_request(
     ws: websockets.ClientConnection,
     method: str,
     params: dict[str, Any] | None,
+    *,
+    timeout_s: float,
 ) -> object:
     request_id = str(uuid4())
     message = {
@@ -314,7 +330,7 @@ async def _send_request(
         sorted((params or {}).keys()),
     )
     await ws.send(json.dumps(message))
-    return await _await_response(ws, request_id)
+    return await _await_response(ws, request_id, timeout_s=timeout_s)
 
 
 def _build_connect_params(
@@ -382,7 +398,11 @@ async def _ensure_connected(
         "params": _build_connect_params(config, connect_nonce=connect_nonce),
     }
     await ws.send(json.dumps(response))
-    return await _await_response(ws, connect_id)
+    return await _await_response(
+        ws,
+        connect_id,
+        timeout_s=settings.gateway_rpc_response_timeout_seconds,
+    )
 
 
 async def _recv_first_message_or_none(
@@ -404,6 +424,7 @@ async def _openclaw_call_once(
     origin = _build_control_ui_origin(gateway_url) if config.disable_device_pairing else None
     ssl_context = _create_ssl_context(config)
     connect_kwargs: dict[str, Any] = {"ping_interval": None}
+    connect_kwargs["open_timeout"] = settings.gateway_rpc_connect_timeout_seconds
     if origin is not None:
         connect_kwargs["origin"] = origin
     if ssl_context is not None:
@@ -411,7 +432,12 @@ async def _openclaw_call_once(
     async with websockets.connect(gateway_url, **connect_kwargs) as ws:
         first_message = await _recv_first_message_or_none(ws)
         await _ensure_connected(ws, first_message, config)
-        return await _send_request(ws, method, params)
+        return await _send_request(
+            ws,
+            method,
+            params,
+            timeout_s=settings.gateway_rpc_response_timeout_seconds,
+        )
 
 
 async def _openclaw_connect_metadata_once(
@@ -422,6 +448,7 @@ async def _openclaw_connect_metadata_once(
     origin = _build_control_ui_origin(gateway_url) if config.disable_device_pairing else None
     ssl_context = _create_ssl_context(config)
     connect_kwargs: dict[str, Any] = {"ping_interval": None}
+    connect_kwargs["open_timeout"] = settings.gateway_rpc_connect_timeout_seconds
     if origin is not None:
         connect_kwargs["origin"] = origin
     if ssl_context is not None:

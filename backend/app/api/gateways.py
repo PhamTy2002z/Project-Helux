@@ -5,11 +5,13 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlmodel import col
 
 from app.api.deps import require_org_admin
 from app.core.auth import AuthContext, get_auth_context
+from app.core.auth_profile import AuthProfile
+from app.core.config import settings
 from app.db import crud
 from app.db.pagination import paginate
 from app.db.session import get_session
@@ -26,6 +28,10 @@ from app.schemas.gateways import (
 from app.schemas.pagination import DefaultLimitOffsetPage
 from app.services.activity_log import record_admin_audit
 from app.services.openclaw.admin_service import GatewayAdminLifecycleService
+from app.services.openclaw.gateway_activation_queue import (
+    QueuedGatewayActivation,
+    enqueue_gateway_activation,
+)
 from app.services.openclaw.session_service import GatewayTemplateSyncQuery
 
 if TYPE_CHECKING:
@@ -46,6 +52,15 @@ OVERWRITE_QUERY = Query(default=False)
 LEAD_ONLY_QUERY = Query(default=False)
 BOARD_ID_QUERY = Query(default=None)
 _RUNTIME_TYPE_REFERENCES = (UUID,)
+_ERR_GATEWAY_MANAGEMENT_DISABLED = "Gateway configuration is managed automatically in SaaS mode."
+
+
+def _require_gateway_management_enabled() -> None:
+    if settings.auth_profile == AuthProfile.SAAS:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=_ERR_GATEWAY_MANAGEMENT_DISABLED,
+        )
 
 
 def _template_sync_query(
@@ -94,19 +109,23 @@ async def create_gateway(
     ctx: OrganizationContext = ORG_ADMIN_DEP,
 ) -> Gateway:
     """Create a gateway and provision or refresh its main agent."""
-    service = GatewayAdminLifecycleService(session)
-    await service.assert_gateway_runtime_compatible(
-        url=payload.url,
-        token=payload.token,
-        allow_insecure_tls=payload.allow_insecure_tls,
-        disable_device_pairing=payload.disable_device_pairing,
-    )
+    _require_gateway_management_enabled()
     data = payload.model_dump()
     gateway_id = uuid4()
     data["id"] = gateway_id
     data["organization_id"] = ctx.organization.id
+    data["activation_status"] = "activating"
+    data["activation_error"] = None
+    data["activation_attempts"] = 0
+    data["last_activation_at"] = None
     gateway = await crud.create(session, Gateway, **data)
-    await service.ensure_main_agent(gateway, auth, action="provision")
+    enqueued = enqueue_gateway_activation(
+        QueuedGatewayActivation(gateway_id=gateway.id, action="provision"),
+    )
+    if not enqueued:
+        gateway.activation_status = "degraded"
+        gateway.activation_error = "Failed to enqueue gateway activation task"
+        session.add(gateway)
     record_admin_audit(
         session,
         audit_action="gateway.create",
@@ -114,7 +133,7 @@ async def create_gateway(
         organization_id=ctx.organization.id,
         actor_id=auth.user.id if auth.user is not None else None,
         target_id=gateway.id,
-        details={"name": gateway.name, "url": gateway.url},
+        details={"name": gateway.name, "url": gateway.url, "activation_enqueued": enqueued},
     )
     await session.commit()
     return gateway
@@ -144,36 +163,32 @@ async def update_gateway(
     ctx: OrganizationContext = ORG_ADMIN_DEP,
 ) -> Gateway:
     """Patch a gateway and refresh the main-agent provisioning state."""
+    _require_gateway_management_enabled()
     service = GatewayAdminLifecycleService(session)
     gateway = await service.require_gateway(
         gateway_id=gateway_id,
         organization_id=ctx.organization.id,
     )
     updates = payload.model_dump(exclude_unset=True)
-    if (
+    should_reactivate = (
         "url" in updates
         or "token" in updates
         or "allow_insecure_tls" in updates
         or "disable_device_pairing" in updates
-    ):
-        raw_next_url = updates.get("url", gateway.url)
-        next_url = raw_next_url.strip() if isinstance(raw_next_url, str) else ""
-        next_token = updates.get("token", gateway.token)
-        next_allow_insecure_tls = bool(
-            updates.get("allow_insecure_tls", gateway.allow_insecure_tls),
-        )
-        next_disable_device_pairing = bool(
-            updates.get("disable_device_pairing", gateway.disable_device_pairing),
-        )
-        if next_url:
-            await service.assert_gateway_runtime_compatible(
-                url=next_url,
-                token=next_token,
-                allow_insecure_tls=next_allow_insecure_tls,
-                disable_device_pairing=next_disable_device_pairing,
-            )
+    )
+    if should_reactivate:
+        updates["activation_status"] = "activating"
+        updates["activation_error"] = None
     await crud.patch(session, gateway, updates)
-    await service.ensure_main_agent(gateway, auth, action="update")
+    enqueued = True
+    if should_reactivate:
+        enqueued = enqueue_gateway_activation(
+            QueuedGatewayActivation(gateway_id=gateway.id, action="update"),
+        )
+        if not enqueued:
+            gateway.activation_status = "degraded"
+            gateway.activation_error = "Failed to enqueue gateway activation task"
+            session.add(gateway)
     record_admin_audit(
         session,
         audit_action="gateway.update",
@@ -181,7 +196,10 @@ async def update_gateway(
         organization_id=ctx.organization.id,
         actor_id=auth.user.id if auth.user is not None else None,
         target_id=gateway.id,
-        details={"updated_fields": sorted(updates.keys())},
+        details={
+            "updated_fields": sorted(updates.keys()),
+            "activation_enqueued": enqueued if should_reactivate else None,
+        },
     )
     await session.commit()
     return gateway
@@ -196,6 +214,7 @@ async def sync_gateway_templates(
     ctx: OrganizationContext = ORG_ADMIN_DEP,
 ) -> GatewayTemplatesSyncResult:
     """Sync templates for a gateway and optionally rotate runtime settings."""
+    _require_gateway_management_enabled()
     service = GatewayAdminLifecycleService(session)
     gateway = await service.require_gateway(
         gateway_id=gateway_id,
@@ -230,6 +249,7 @@ async def delete_gateway(
     ctx: OrganizationContext = ORG_ADMIN_DEP,
 ) -> OkResponse:
     """Delete a gateway in the caller's organization."""
+    _require_gateway_management_enabled()
     service = GatewayAdminLifecycleService(session)
     gateway = await service.require_gateway(
         gateway_id=gateway_id,

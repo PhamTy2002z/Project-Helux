@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 
 import { useAuth } from "@/auth/clerk";
+import { isSaasAuthProfile } from "@/auth/profile";
 import { ApiError } from "@/api/mutator";
 import { useOrganizationMembership } from "@/lib/use-organization-membership";
 import {
@@ -30,6 +31,7 @@ export function DashboardSidebar() {
   const pathname = usePathname();
   const { isSignedIn } = useAuth();
   const { isAdmin } = useOrganizationMembership(isSignedIn);
+  const isSaasMode = isSaasAuthProfile();
   const healthQuery = useHealthzHealthzGet<healthzHealthzGetResponse, ApiError>(
     {
       query: {
@@ -220,7 +222,7 @@ export function DashboardSidebar() {
                 <Building2 className="h-4 w-4" />
                 Organization
               </Link>
-              {isAdmin ? (
+              {isAdmin && !isSaasMode ? (
                 <Link
                   href="/gateways"
                   className={cn(

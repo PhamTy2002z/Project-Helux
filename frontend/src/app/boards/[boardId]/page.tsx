@@ -17,47 +17,34 @@ import {
   MessageSquare,
   Pause,
   Plus,
-  Pencil,
   Play,
   RefreshCcw,
   Settings,
   ShieldCheck,
-  X,
 } from "lucide-react";
 
-import { Markdown } from "@/components/atoms/Markdown";
 import { StatusDot } from "@/components/atoms/StatusDot";
 import { DashboardSidebar } from "@/components/organisms/DashboardSidebar";
 import { TaskBoard } from "@/components/organisms/TaskBoard";
-import {
-  DependencyBanner,
-  type DependencyBannerDependency,
-} from "@/components/molecules/DependencyBanner";
+import type { DependencyBannerDependency } from "@/components/molecules/DependencyBanner";
 import { DashboardShell } from "@/components/templates/DashboardShell";
-import { BoardChatComposer } from "@/components/BoardChatComposer";
-import { BoardChatPanel } from "@/components/boards/BoardChatPanel";
-import { TaskCustomFieldsEditor } from "./TaskCustomFieldsEditor";
+import nextDynamic from "next/dynamic";
+const BoardChatComposer = nextDynamic(
+  () => import("@/components/BoardChatComposer").then(m => m.BoardChatComposer),
+  { ssr: false }
+);
+const BoardChatPanel = nextDynamic(
+  () => import("@/components/boards/BoardChatPanel").then(m => m.BoardChatPanel),
+  { ssr: false }
+);
+import { TaskDetailPanel } from "./TaskDetailPanel";
+import { TaskCreateDialog } from "./TaskCreateDialog";
+import { TaskEditDialog } from "./TaskEditDialog";
+import { TaskDeleteDialog } from "./TaskDeleteDialog";
+import { AgentsControlDialog } from "./AgentsControlDialog";
+import { LiveFeedPanel } from "./LiveFeedPanel";
+import { BoardToasts } from "./BoardToasts";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import DropdownSelect, {
-  type DropdownSelectOption,
-} from "@/components/ui/dropdown-select";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import { ApiError } from "@/api/mutator";
 import { streamAgentsApiV1AgentsStreamGet } from "@/api/generated/agents/agents";
 import {
@@ -78,9 +65,7 @@ import {
   useGetMyMembershipApiV1OrganizationsMeMemberGet,
 } from "@/api/generated/organizations/organizations";
 import {
-  createTaskApiV1BoardsBoardIdTasksPost,
   createTaskCommentApiV1BoardsBoardIdTasksTaskIdCommentsPost,
-  deleteTaskApiV1BoardsBoardIdTasksTaskIdDelete,
   listTaskCommentsApiV1BoardsBoardIdTasksTaskIdCommentsGet,
   streamTasksApiV1BoardsBoardIdTasksStreamGet,
   updateTaskApiV1BoardsBoardIdTasksTaskIdPatch,
@@ -107,16 +92,13 @@ import type {
   TagRead,
   TaskRead,
 } from "@/api/generated/model";
-import { createExponentialBackoff } from "@/lib/backoff";
+import { useSSEStream } from "@/lib/hooks/use-sse-stream";
 import {
   apiDatetimeToMs,
-  localDateInputToUtcIso,
   parseApiDatetime,
-  toLocalDateInput,
 } from "@/lib/datetime";
 import {
   DEFAULT_HUMAN_LABEL,
-  resolveHumanActorName,
   resolveMemberDisplayName,
 } from "@/lib/display-name";
 import { AGENT_EMOJI_GLYPHS } from "@/lib/agent-emoji";
@@ -124,594 +106,51 @@ import { cn } from "@/lib/utils";
 import { usePageActive } from "@/hooks/usePageActive";
 import {
   boardCustomFieldValues,
-  canonicalizeCustomFieldValues,
-  customFieldPayload,
-  customFieldPatchPayload,
-  firstMissingRequiredCustomField,
-  formatCustomFieldDetailValue,
-  isCustomFieldVisible,
   type TaskCustomFieldValues,
 } from "./custom-field-utils";
-
-type Board = BoardRead;
-
-type TaskStatus = Exclude<TaskCardRead["status"], undefined>;
-
-type TaskCustomFieldPayload = {
-  custom_field_values?: TaskCustomFieldValues;
-};
-
-type Task = Omit<
-  TaskCardRead,
-  "status" | "priority" | "approvals_count" | "approvals_pending_count"
-> & {
-  status: TaskStatus;
-  priority: string;
-  approvals_count: number;
-  approvals_pending_count: number;
-  custom_field_values?: TaskCustomFieldValues | null;
-};
-
-type Agent = AgentRead & { status: string };
-
-type TaskComment = TaskCommentRead;
-
-type Approval = ApprovalRead & { status: string };
-
-type BoardChatMessage = BoardMemoryRead;
-
-type LiveFeedEventType =
-  | "task.comment"
-  | "task.created"
-  | "task.updated"
-  | "task.status_changed"
-  | "board.chat"
-  | "board.command"
-  | "agent.created"
-  | "agent.online"
-  | "agent.offline"
-  | "agent.updated"
-  | "approval.created"
-  | "approval.updated"
-  | "approval.approved"
-  | "approval.rejected";
-
-type LiveFeedItem = {
-  id: string;
-  created_at: string;
-  message: string | null;
-  agent_id: string | null;
-  actor_name?: string | null;
-  task_id: string | null;
-  title?: string | null;
-  event_type: LiveFeedEventType;
-};
-
-const LIVE_FEED_EVENT_TYPES = new Set<LiveFeedEventType>([
-  "task.comment",
-  "task.created",
-  "task.updated",
-  "task.status_changed",
-  "board.chat",
-  "board.command",
-  "agent.created",
-  "agent.online",
-  "agent.offline",
-  "agent.updated",
-  "approval.created",
-  "approval.updated",
-  "approval.approved",
-  "approval.rejected",
-]);
-
-const isLiveFeedEventType = (value: string): value is LiveFeedEventType =>
-  LIVE_FEED_EVENT_TYPES.has(value as LiveFeedEventType);
-
-type BoardTaskCreatePayload = Parameters<
-  typeof createTaskApiV1BoardsBoardIdTasksPost
->[1] &
-  TaskCustomFieldPayload;
-type BoardTaskUpdatePayload = Parameters<
-  typeof updateTaskApiV1BoardsBoardIdTasksTaskIdPatch
->[2] &
-  TaskCustomFieldPayload;
-
-const toLiveFeedFromActivity = (
-  event: ActivityEventRead,
-): LiveFeedItem | null => {
-  if (!isLiveFeedEventType(event.event_type)) {
-    return null;
-  }
-  return {
-    id: event.id,
-    created_at: event.created_at,
-    message: event.message ?? null,
-    agent_id: event.agent_id ?? null,
-    task_id: event.task_id ?? null,
-    title: null,
-    event_type: event.event_type,
-  };
-};
-
-const toLiveFeedFromComment = (comment: TaskCommentRead): LiveFeedItem => ({
-  id: comment.id,
-  created_at: comment.created_at,
-  message: comment.message ?? null,
-  agent_id: comment.agent_id ?? null,
-  actor_name: null,
-  task_id: comment.task_id ?? null,
-  title: null,
-  event_type: "task.comment",
-});
-
-const mergeCommentsById = (...collections: TaskComment[][]): TaskComment[] => {
-  const byId = new Map<string, TaskComment>();
-  for (const collection of collections) {
-    for (const comment of collection) {
-      const existing = byId.get(comment.id);
-      if (!existing) {
-        byId.set(comment.id, comment);
-        continue;
-      }
-      const existingTime = apiDatetimeToMs(existing.created_at) ?? 0;
-      const incomingTime = apiDatetimeToMs(comment.created_at) ?? 0;
-      byId.set(
-        comment.id,
-        incomingTime >= existingTime
-          ? { ...existing, ...comment }
-          : { ...comment, ...existing },
-      );
-    }
-  }
-  return [...byId.values()].sort((a, b) => {
-    const aTime = apiDatetimeToMs(a.created_at) ?? 0;
-    const bTime = apiDatetimeToMs(b.created_at) ?? 0;
-    return bTime - aTime;
-  });
-};
-
-const toLiveFeedFromBoardChat = (memory: BoardChatMessage): LiveFeedItem => {
-  const content = (memory.content ?? "").trim();
-  const actorName = resolveHumanActorName(memory.source, DEFAULT_HUMAN_LABEL);
-  const isCommand = content.startsWith("/");
-  return {
-    id: `chat:${memory.id}`,
-    created_at: memory.created_at,
-    message: content || null,
-    agent_id: null,
-    actor_name: actorName,
-    task_id: null,
-    title: isCommand ? "Board command" : "Board chat",
-    event_type: isCommand ? "board.command" : "board.chat",
-  };
-};
-
-const normalizeAgentStatus = (value?: string | null): string => {
-  const status = (value ?? "").trim().toLowerCase();
-  return status || "offline";
-};
-
-const humanizeAgentStatus = (value: string): string =>
-  value.replace(/_/g, " ").trim() || "offline";
-
-const toLiveFeedFromAgentSnapshot = (agent: Agent): LiveFeedItem => {
-  const status = normalizeAgentStatus(agent.status);
-  const stamp = agent.last_seen_at ?? agent.updated_at ?? agent.created_at;
-  const eventType: LiveFeedEventType =
-    status === "online"
-      ? "agent.online"
-      : status === "offline"
-        ? "agent.offline"
-        : "agent.updated";
-  return {
-    id: `agent:${agent.id}:snapshot:${status}:${stamp}`,
-    created_at: stamp,
-    message: `${agent.name} is ${humanizeAgentStatus(status)}.`,
-    agent_id: agent.id,
-    actor_name: null,
-    task_id: null,
-    title: `Agent · ${agent.name}`,
-    event_type: eventType,
-  };
-};
-
-const toLiveFeedFromAgentUpdate = (
-  agent: Agent,
-  previous: Agent | null,
-): LiveFeedItem | null => {
-  const nextStatus = normalizeAgentStatus(agent.status);
-  const previousStatus = previous
-    ? normalizeAgentStatus(previous.status)
-    : null;
-  const statusChanged =
-    previousStatus !== null && nextStatus !== previousStatus;
-  const isNew = previous === null;
-  const profileChanged =
-    Boolean(previous) &&
-    (previous?.name !== agent.name ||
-      previous?.is_board_lead !== agent.is_board_lead ||
-      JSON.stringify(previous?.identity_profile ?? {}) !==
-        JSON.stringify(agent.identity_profile ?? {}));
-
-  let eventType: LiveFeedEventType;
-  if (isNew) {
-    eventType = "agent.created";
-  } else if (statusChanged && nextStatus === "online") {
-    eventType = "agent.online";
-  } else if (statusChanged && nextStatus === "offline") {
-    eventType = "agent.offline";
-  } else if (statusChanged || profileChanged) {
-    eventType = "agent.updated";
-  } else {
-    return null;
-  }
-
-  const stamp = agent.last_seen_at ?? agent.updated_at ?? agent.created_at;
-  const message =
-    eventType === "agent.created"
-      ? `${agent.name} joined this board.`
-      : eventType === "agent.online"
-        ? `${agent.name} is online.`
-        : eventType === "agent.offline"
-          ? `${agent.name} is offline.`
-          : `${agent.name} updated (${humanizeAgentStatus(nextStatus)}).`;
-  return {
-    id: `agent:${agent.id}:${eventType}:${stamp}`,
-    created_at: stamp,
-    message,
-    agent_id: agent.id,
-    actor_name: null,
-    task_id: null,
-    title: `Agent · ${agent.name}`,
-    event_type: eventType,
-  };
-};
-
-const humanizeLiveFeedApprovalAction = (value: string): string => {
-  const cleaned = value.replace(/[._-]+/g, " ").trim();
-  if (!cleaned) return "Approval";
-  return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
-};
-
-const toLiveFeedFromApproval = (
-  approval: ApprovalRead,
-  previous: ApprovalRead | null = null,
-): LiveFeedItem => {
-  const nextStatus = approval.status ?? "pending";
-  const previousStatus = previous?.status ?? null;
-  const eventType: LiveFeedEventType =
-    previousStatus === null
-      ? nextStatus === "approved"
-        ? "approval.approved"
-        : nextStatus === "rejected"
-          ? "approval.rejected"
-          : "approval.created"
-      : nextStatus !== previousStatus
-        ? nextStatus === "approved"
-          ? "approval.approved"
-          : nextStatus === "rejected"
-            ? "approval.rejected"
-            : "approval.updated"
-        : "approval.updated";
-  const stamp =
-    eventType === "approval.created"
-      ? approval.created_at
-      : (approval.resolved_at ?? approval.created_at);
-  const action = humanizeLiveFeedApprovalAction(approval.action_type);
-  const statusText =
-    nextStatus === "approved"
-      ? "approved"
-      : nextStatus === "rejected"
-        ? "rejected"
-        : "pending";
-  const message =
-    eventType === "approval.created"
-      ? `${action} requested (${approval.confidence}% confidence).`
-      : eventType === "approval.approved"
-        ? `${action} approved (${approval.confidence}% confidence).`
-        : eventType === "approval.rejected"
-          ? `${action} rejected (${approval.confidence}% confidence).`
-          : `${action} updated (${statusText}, ${approval.confidence}% confidence).`;
-  return {
-    id: `approval:${approval.id}:${eventType}:${stamp}`,
-    created_at: stamp,
-    message,
-    agent_id: approval.agent_id ?? null,
-    actor_name: null,
-    task_id: approval.task_id ?? null,
-    title: `Approval · ${action}`,
-    event_type: eventType,
-  };
-};
-
-const liveFeedEventLabel = (eventType: LiveFeedEventType): string => {
-  if (eventType === "task.comment") return "Comment";
-  if (eventType === "task.created") return "Created";
-  if (eventType === "task.status_changed") return "Status";
-  if (eventType === "board.chat") return "Chat";
-  if (eventType === "board.command") return "Command";
-  if (eventType === "agent.created") return "Agent";
-  if (eventType === "agent.online") return "Online";
-  if (eventType === "agent.offline") return "Offline";
-  if (eventType === "agent.updated") return "Agent update";
-  if (eventType === "approval.created") return "Approval";
-  if (eventType === "approval.updated") return "Approval update";
-  if (eventType === "approval.approved") return "Approved";
-  if (eventType === "approval.rejected") return "Rejected";
-  return "Updated";
-};
-
-const liveFeedEventPillClass = (eventType: LiveFeedEventType): string => {
-  if (eventType === "task.comment") {
-    return "border-blue-200 bg-blue-50 text-blue-700";
-  }
-  if (eventType === "task.created") {
-    return "border-emerald-200 bg-emerald-50 text-emerald-700";
-  }
-  if (eventType === "task.status_changed") {
-    return "border-amber-200 bg-amber-50 text-amber-700";
-  }
-  if (eventType === "board.chat") {
-    return "border-teal-200 bg-teal-50 text-teal-700";
-  }
-  if (eventType === "board.command") {
-    return "border-fuchsia-200 bg-fuchsia-50 text-fuchsia-700";
-  }
-  if (eventType === "agent.created") {
-    return "border-violet-200 bg-violet-50 text-violet-700";
-  }
-  if (eventType === "agent.online") {
-    return "border-lime-200 bg-lime-50 text-lime-700";
-  }
-  if (eventType === "agent.offline") {
-    return "border-slate-300 bg-slate-100 text-slate-700";
-  }
-  if (eventType === "agent.updated") {
-    return "border-indigo-200 bg-indigo-50 text-indigo-700";
-  }
-  if (eventType === "approval.created") {
-    return "border-cyan-200 bg-cyan-50 text-cyan-700";
-  }
-  if (eventType === "approval.updated") {
-    return "border-sky-200 bg-sky-50 text-sky-700";
-  }
-  if (eventType === "approval.approved") {
-    return "border-emerald-200 bg-emerald-50 text-emerald-700";
-  }
-  if (eventType === "approval.rejected") {
-    return "border-rose-200 bg-rose-50 text-rose-700";
-  }
-  return "border-slate-200 bg-slate-100 text-slate-700";
-};
-
-const normalizeTask = (task: TaskCardRead): Task => ({
-  ...task,
-  status: task.status ?? "inbox",
-  priority: task.priority ?? "medium",
-  approvals_count: task.approvals_count ?? 0,
-  approvals_pending_count: task.approvals_pending_count ?? 0,
-});
-
-const normalizeAgent = (agent: AgentRead): Agent => ({
-  ...agent,
-  status: agent.status ?? "offline",
-});
-
-const normalizeApproval = (approval: ApprovalRead): Approval => ({
-  ...approval,
-  status: approval.status ?? "pending",
-});
-
-const normalizeTagColor = (value?: string | null) => {
-  const cleaned = (value ?? "").trim().replace(/^#/, "").toLowerCase();
-  if (!/^[0-9a-f]{6}$/.test(cleaned)) return "9e9e9e";
-  return cleaned;
-};
-
-const priorities = [
-  { value: "low", label: "Low" },
-  { value: "medium", label: "Medium" },
-  { value: "high", label: "High" },
-];
-const statusOptions = [
-  { value: "inbox", label: "Inbox" },
-  { value: "in_progress", label: "In progress" },
-  { value: "review", label: "Review" },
-  { value: "done", label: "Done" },
-];
-
-const SSE_RECONNECT_BACKOFF = {
-  baseMs: 1_000,
-  factor: 2,
-  jitter: 0.2,
-  maxMs: 5 * 60_000,
-} as const;
-
-const formatShortTimestamp = (value: string) => {
-  const date = parseApiDatetime(value);
-  if (!date) return "—";
-  return date.toLocaleString(undefined, {
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-};
-
-const commentElementId = (id: string): string =>
-  `task-comment-${id.replace(/[^a-zA-Z0-9_-]/g, "-")}`;
-
-type ToastMessage = {
-  id: number;
-  message: string;
-  tone: "error" | "success";
-};
-
-const formatActionError = (err: unknown, fallback: string) => {
-  if (err instanceof ApiError) {
-    if (err.status === 403) {
-      return "Read-only access. You do not have permission to make changes.";
-    }
-    return err.message || fallback;
-  }
-  if (err instanceof Error && err.message) {
-    return err.message;
-  }
-  return fallback;
-};
-
-const resolveBoardAccess = (
-  member: OrganizationMemberRead | null,
-  boardId?: string | null,
-) => {
-  if (!member || !boardId) {
-    return { canRead: false, canWrite: false };
-  }
-  if (member.all_boards_write) {
-    return { canRead: true, canWrite: true };
-  }
-  if (member.all_boards_read) {
-    return { canRead: true, canWrite: false };
-  }
-  const entry = member.board_access?.find(
-    (access) => access.board_id === boardId,
-  );
-  if (!entry) {
-    return { canRead: false, canWrite: false };
-  }
-  const canWrite = Boolean(entry.can_write);
-  const canRead = Boolean(entry.can_read || entry.can_write);
-  return { canRead, canWrite };
-};
-
-const TaskCommentCard = memo(function TaskCommentCard({
-  comment,
-  authorLabel,
-  isHighlighted = false,
-}: {
-  comment: TaskComment;
-  authorLabel: string;
-  isHighlighted?: boolean;
-}) {
-  const message = (comment.message ?? "").trim();
-  return (
-    <div
-      id={commentElementId(comment.id)}
-      className={cn(
-        "scroll-mt-28 rounded-xl border bg-white p-3 transition",
-        isHighlighted
-          ? "border-blue-300 ring-2 ring-blue-200"
-          : "border-slate-200",
-      )}
-    >
-      <div className="flex items-center justify-between text-xs text-slate-500">
-        <span>{authorLabel}</span>
-        <span>{formatShortTimestamp(comment.created_at)}</span>
-      </div>
-      {message ? (
-        <div className="mt-2 select-text cursor-text text-sm leading-relaxed text-slate-900 break-words">
-          <Markdown content={message} variant="comment" />
-        </div>
-      ) : (
-        <p className="mt-2 text-sm text-slate-900">—</p>
-      )}
-    </div>
-  );
-});
-
-TaskCommentCard.displayName = "TaskCommentCard";
-
-const LiveFeedCard = memo(function LiveFeedCard({
-  item,
-  taskTitle,
-  authorName,
-  authorRole,
-  authorAvatar,
-  onViewTask,
-  isNew,
-}: {
-  item: LiveFeedItem;
-  taskTitle: string;
-  authorName: string;
-  authorRole?: string | null;
-  authorAvatar: string;
-  onViewTask?: () => void;
-  isNew?: boolean;
-}) {
-  const message = (item.message ?? "").trim();
-  const eventLabel = liveFeedEventLabel(item.event_type);
-  const eventPillClass = liveFeedEventPillClass(item.event_type);
-  return (
-    <div
-      className={cn(
-        "rounded-xl border p-3 transition-colors duration-300",
-        isNew
-          ? "border-blue-200 bg-blue-50/70 shadow-sm hover:border-blue-300 motion-safe:animate-in motion-safe:fade-in motion-safe:zoom-in-95 motion-safe:slide-in-from-right-2 motion-safe:duration-300"
-          : "border-slate-200 bg-white hover:border-slate-300",
-      )}
-    >
-      <div className="flex items-start gap-3">
-        <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-700">
-          {authorAvatar}
-        </div>
-        <div className="min-w-0 flex-1">
-          <div className="flex items-start justify-between gap-2">
-            <button
-              type="button"
-              onClick={onViewTask}
-              disabled={!onViewTask}
-              className={cn(
-                "text-left text-sm font-semibold leading-snug text-slate-900",
-                onViewTask
-                  ? "cursor-pointer transition hover:text-slate-950 hover:underline"
-                  : "cursor-default",
-              )}
-              title={taskTitle}
-              style={{
-                display: "-webkit-box",
-                WebkitLineClamp: 2,
-                WebkitBoxOrient: "vertical",
-                overflow: "hidden",
-              }}
-            >
-              {taskTitle}
-            </button>
-          </div>
-          <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-slate-500">
-            <span
-              className={cn(
-                "rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
-                eventPillClass,
-              )}
-            >
-              {eventLabel}
-            </span>
-            <span className="font-medium text-slate-700">{authorName}</span>
-            {authorRole ? (
-              <>
-                <span className="text-slate-300">·</span>
-                <span className="text-slate-500">{authorRole}</span>
-              </>
-            ) : null}
-            <span className="text-slate-300">·</span>
-            <span className="text-slate-400">
-              {formatShortTimestamp(item.created_at)}
-            </span>
-          </div>
-        </div>
-      </div>
-      {message ? (
-        <div className="mt-3 select-text cursor-text text-sm leading-relaxed text-slate-900 break-words">
-          <Markdown content={message} variant="basic" />
-        </div>
-      ) : (
-        <p className="mt-3 text-sm text-slate-500">—</p>
-      )}
-    </div>
-  );
-});
-
-LiveFeedCard.displayName = "LiveFeedCard";
+import type {
+  Agent,
+  Approval,
+  Board,
+  BoardChatMessage,
+  LiveFeedEventType,
+  LiveFeedItem,
+  Task,
+  TaskComment,
+  TaskStatus,
+  ToastMessage,
+} from "./board-types";
+import {
+  isLiveFeedEventType,
+  SSE_RECONNECT_BACKOFF,
+} from "./board-constants";
+import {
+  commentElementId,
+  formatActionError,
+  formatShortTimestamp,
+  latestAgentTimestamp,
+  latestApprovalTimestamp,
+  latestChatTimestamp,
+  latestTaskTimestamp,
+  resolveBoardAccess,
+} from "./board-utils";
+import {
+  normalizeAgent,
+  normalizeApproval,
+  normalizeTagColor,
+  normalizeTask,
+} from "./board-normalizers";
+import {
+  liveFeedEventLabel,
+  liveFeedEventPillClass,
+  mergeCommentsById,
+  toLiveFeedFromActivity,
+  toLiveFeedFromAgentSnapshot,
+  toLiveFeedFromAgentUpdate,
+  toLiveFeedFromApproval,
+  toLiveFeedFromBoardChat,
+  toLiveFeedFromComment,
+} from "./live-feed-utils";
 
 export default function BoardDetailPage() {
   const router = useRouter();
@@ -877,12 +316,6 @@ export default function BoardDetailPage() {
   const [agentsControlAction, setAgentsControlAction] = useState<
     "pause" | "resume"
   >("pause");
-  const [isAgentsControlSending, setIsAgentsControlSending] = useState(false);
-  const [agentsControlError, setAgentsControlError] = useState<string | null>(
-    null,
-  );
-  const [isDeletingTask, setIsDeletingTask] = useState(false);
-  const [deleteTaskError, setDeleteTaskError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<"board" | "list">("board");
   const [isLiveFeedOpen, setIsLiveFeedOpen] = useState(false);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
@@ -1128,30 +561,6 @@ export default function BoardDetailPage() {
   ]);
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [priority, setPriority] = useState("medium");
-  const [createDueDate, setCreateDueDate] = useState("");
-  const [createTagIds, setCreateTagIds] = useState<string[]>([]);
-  const [createCustomFieldValues, setCreateCustomFieldValues] =
-    useState<TaskCustomFieldValues>({});
-  const [createError, setCreateError] = useState<string | null>(null);
-  const [isCreating, setIsCreating] = useState(false);
-
-  const [editTitle, setEditTitle] = useState("");
-  const [editDescription, setEditDescription] = useState("");
-  const [editStatus, setEditStatus] = useState<TaskStatus>("inbox");
-  const [editPriority, setEditPriority] = useState("medium");
-  const [editDueDate, setEditDueDate] = useState("");
-  const [editAssigneeId, setEditAssigneeId] = useState("");
-  const [editTagIds, setEditTagIds] = useState<string[]>([]);
-  const [editDependsOnTaskIds, setEditDependsOnTaskIds] = useState<string[]>(
-    [],
-  );
-  const [editCustomFieldValues, setEditCustomFieldValues] =
-    useState<TaskCustomFieldValues>({});
-  const [isSavingTask, setIsSavingTask] = useState(false);
-  const [saveTaskError, setSaveTaskError] = useState<string | null>(null);
 
   const isSidePanelOpen = isDetailOpen || isChatOpen || isLiveFeedOpen;
   const defaultCreateCustomFieldValues = useMemo(
@@ -1166,12 +575,6 @@ export default function BoardDetailPage() {
       ),
     [boardCustomFieldDefinitions, selectedTask?.custom_field_values],
   );
-
-  useEffect(() => {
-    setCreateCustomFieldValues((prev) =>
-      boardCustomFieldValues(boardCustomFieldDefinitions, prev),
-    );
-  }, [boardCustomFieldDefinitions]);
 
   const titleLabel = useMemo(
     () => (board ? `${board.name} board` : "Board"),
@@ -1200,45 +603,6 @@ export default function BoardDetailPage() {
       body.style.paddingRight = originalBodyPaddingRight;
     };
   }, [isSidePanelOpen]);
-
-  const latestTaskTimestamp = (items: Task[]) => {
-    let latestTime = 0;
-    items.forEach((task) => {
-      const value = task.updated_at ?? task.created_at;
-      if (!value) return;
-      const time = apiDatetimeToMs(value);
-      if (time !== null && time > latestTime) {
-        latestTime = time;
-      }
-    });
-    return latestTime ? new Date(latestTime).toISOString() : null;
-  };
-
-  const latestApprovalTimestamp = (items: Approval[]) => {
-    let latestTime = 0;
-    items.forEach((approval) => {
-      const value = approval.resolved_at ?? approval.created_at;
-      if (!value) return;
-      const time = apiDatetimeToMs(value);
-      if (time !== null && time > latestTime) {
-        latestTime = time;
-      }
-    });
-    return latestTime ? new Date(latestTime).toISOString() : null;
-  };
-
-  const latestAgentTimestamp = (items: Agent[]) => {
-    let latestTime = 0;
-    items.forEach((agent) => {
-      const value = agent.updated_at ?? agent.last_seen_at;
-      if (!value) return;
-      const time = apiDatetimeToMs(value);
-      if (time !== null && time > latestTime) {
-        latestTime = time;
-      }
-    });
-    return latestTime ? new Date(latestTime).toISOString() : null;
-  };
 
   const loadBoard = useCallback(async () => {
     if (!isSignedIn || !boardId) return;
@@ -1330,22 +694,6 @@ export default function BoardDetailPage() {
     isLiveFeedOpenRef.current = isLiveFeedOpen;
   }, [isLiveFeedOpen]);
 
-  /**
-   * Returns an ISO timestamp for the newest board chat message.
-   *
-   * Used as the `since` cursor when (re)connecting to the SSE endpoint so we
-   * don't re-stream the entire chat log.
-   */
-  const latestChatTimestamp = (items: BoardChatMessage[]) => {
-    if (!items.length) return undefined;
-    const latest = items.reduce((max, item) => {
-      const ts = apiDatetimeToMs(item.created_at);
-      return ts === null ? max : Math.max(max, ts);
-    }, 0);
-    if (!latest) return undefined;
-    return new Date(latest).toISOString();
-  };
-
   const lastAgentControlCommand = useMemo(() => {
     for (let i = chatMessages.length - 1; i >= 0; i -= 1) {
       const value = (chatMessages[i]?.content ?? "").trim().toLowerCase();
@@ -1358,654 +706,243 @@ export default function BoardDetailPage() {
 
   const isAgentsPaused = lastAgentControlCommand === "/pause";
 
-  useEffect(() => {
-    if (!isPageActive) return;
-    if (!isSignedIn || !boardId || !board) return;
-    if (!isChatOpen && !isLiveFeedOpen) return;
-    let isCancelled = false;
-    const abortController = new AbortController();
-    const backoff = createExponentialBackoff(SSE_RECONNECT_BACKOFF);
-    let reconnectTimeout: number | undefined;
-
-    const connect = async () => {
-      try {
-        const since = latestChatTimestamp(chatMessagesRef.current);
-        const params = { is_chat: true, ...(since ? { since } : {}) };
-        const streamResult =
-          await streamBoardMemoryApiV1BoardsBoardIdMemoryStreamGet(
-            boardId,
-            params,
-            {
-              headers: { Accept: "text/event-stream" },
-              signal: abortController.signal,
-            },
-          );
-        if (streamResult.status !== 200) {
-          throw new Error("Unable to connect board chat stream.");
-        }
-        const response = streamResult.data as Response;
-        if (!(response instanceof Response) || !response.body) {
-          throw new Error("Unable to connect board chat stream.");
-        }
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder();
-        let buffer = "";
-
-        while (!isCancelled) {
-          const { value, done } = await reader.read();
-          if (done) break;
-          // Consider the stream healthy once we receive any bytes (including pings)
-          // and reset the backoff so a later disconnect doesn't wait the full max.
-          if (value && value.length) {
-            backoff.reset();
+  useSSEStream({
+    enabled: !!isPageActive && !!isSignedIn && !!boardId && !!board && (isChatOpen || isLiveFeedOpen),
+    key: `chat-${boardId}`,
+    backoffConfig: SSE_RECONNECT_BACKOFF,
+    connect: async (signal) => {
+      const since = latestChatTimestamp(chatMessagesRef.current);
+      const params = { is_chat: true, ...(since ? { since } : {}) };
+      const streamResult =
+        await streamBoardMemoryApiV1BoardsBoardIdMemoryStreamGet(
+          boardId!,
+          params,
+          { headers: { Accept: "text/event-stream" }, signal },
+        );
+      if (streamResult.status !== 200) {
+        throw new Error("Unable to connect board chat stream.");
+      }
+      return streamResult.data as Response;
+    },
+    onEvent: (event) => {
+      if (event.eventType === "memory" && event.data) {
+        try {
+          const payload = JSON.parse(event.data) as { memory?: BoardChatMessage };
+          if (payload.memory?.tags?.includes("chat")) {
+            appendBoardChatMessage(payload.memory);
           }
-          buffer += decoder.decode(value, { stream: true });
-          buffer = buffer.replace(/\r\n/g, "\n");
-          let boundary = buffer.indexOf("\n\n");
-          while (boundary !== -1) {
-            const raw = buffer.slice(0, boundary);
-            buffer = buffer.slice(boundary + 2);
-            const lines = raw.split("\n");
-            let eventType = "message";
-            let data = "";
-            for (const line of lines) {
-              if (line.startsWith("event:")) {
-                eventType = line.slice(6).trim();
-              } else if (line.startsWith("data:")) {
-                data += line.slice(5).trim();
-              }
-            }
-            if (eventType === "memory" && data) {
-              try {
-                const payload = JSON.parse(data) as {
-                  memory?: BoardChatMessage;
-                };
-                if (payload.memory?.tags?.includes("chat")) {
-                  appendBoardChatMessage(payload.memory);
-                }
-              } catch {
-                // ignore malformed
-              }
-            }
-            boundary = buffer.indexOf("\n\n");
-          }
+        } catch {
+          // ignore malformed
         }
-      } catch {
-        // Reconnect handled below.
       }
+    },
+  });
 
-      if (!isCancelled) {
-        if (reconnectTimeout !== undefined) {
-          window.clearTimeout(reconnectTimeout);
-        }
-        const delay = backoff.nextDelayMs();
-        reconnectTimeout = window.setTimeout(() => {
-          reconnectTimeout = undefined;
-          void connect();
-        }, delay);
-      }
-    };
-
-    void connect();
-    return () => {
-      isCancelled = true;
-      abortController.abort();
-      if (reconnectTimeout !== undefined) {
-        window.clearTimeout(reconnectTimeout);
-      }
-    };
-  }, [
-    board,
-    boardId,
-    isChatOpen,
-    isLiveFeedOpen,
-    isPageActive,
-    isSignedIn,
-    appendBoardChatMessage,
-  ]);
-
-  useEffect(() => {
-    if (!isPageActive) return;
-    if (!isSignedIn || !boardId || !board) return;
-    let isCancelled = false;
-    const abortController = new AbortController();
-    const backoff = createExponentialBackoff(SSE_RECONNECT_BACKOFF);
-    let reconnectTimeout: number | undefined;
-
-    const connect = async () => {
-      try {
-        const since = latestApprovalTimestamp(approvalsRef.current);
-        const streamResult =
-          await streamApprovalsApiV1BoardsBoardIdApprovalsStreamGet(
-            boardId,
-            since ? { since } : undefined,
-            {
-              headers: { Accept: "text/event-stream" },
-              signal: abortController.signal,
-            },
-          );
-        if (streamResult.status !== 200) {
-          throw new Error("Unable to connect approvals stream.");
-        }
-        const response = streamResult.data as Response;
-        if (!(response instanceof Response) || !response.body) {
-          throw new Error("Unable to connect approvals stream.");
-        }
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder();
-        let buffer = "";
-
-        while (!isCancelled) {
-          const { value, done } = await reader.read();
-          if (done) break;
-          if (value && value.length) {
-            backoff.reset();
-          }
-          buffer += decoder.decode(value, { stream: true });
-          buffer = buffer.replace(/\r\n/g, "\n");
-          let boundary = buffer.indexOf("\n\n");
-          while (boundary !== -1) {
-            const raw = buffer.slice(0, boundary);
-            buffer = buffer.slice(boundary + 2);
-            const lines = raw.split("\n");
-            let eventType = "message";
-            let data = "";
-            for (const line of lines) {
-              if (line.startsWith("event:")) {
-                eventType = line.slice(6).trim();
-              } else if (line.startsWith("data:")) {
-                data += line.slice(5).trim();
-              }
-            }
-            if (eventType === "approval" && data) {
-              try {
-                const payload = JSON.parse(data) as {
-                  approval?: ApprovalRead;
-                  task_counts?:
-                    | {
-                        task_id?: string;
-                        approvals_count?: number;
-                        approvals_pending_count?: number;
-                      }
-                    | Array<{
-                        task_id?: string;
-                        approvals_count?: number;
-                        approvals_pending_count?: number;
-                      }>;
-                  pending_approvals_count?: number;
-                };
-                if (payload.approval) {
-                  const normalized = normalizeApproval(payload.approval);
-                  const previousApproval =
-                    approvalsRef.current.find(
-                      (item) => item.id === normalized.id,
-                    ) ?? null;
-                  pushLiveFeed(
-                    toLiveFeedFromApproval(normalized, previousApproval),
-                  );
-                  setApprovals((prev) => {
-                    const index = prev.findIndex(
-                      (item) => item.id === normalized.id,
-                    );
-                    if (index === -1) {
-                      return [normalized, ...prev];
-                    }
-                    const next = [...prev];
-                    next[index] = {
-                      ...next[index],
-                      ...normalized,
-                    };
-                    return next;
-                  });
-                }
-                const taskCounts = Array.isArray(payload.task_counts)
-                  ? payload.task_counts
-                  : payload.task_counts
-                    ? [payload.task_counts]
-                    : [];
-                if (taskCounts.length > 0) {
-                  setTasks((prev) => {
-                    const countsByTaskId = new Map(
-                      taskCounts
-                        .filter((row) => Boolean(row.task_id))
-                        .map((row) => [row.task_id as string, row]),
-                    );
-                    return prev.map((task) => {
-                      const counts = countsByTaskId.get(task.id);
-                      if (!counts) return task;
-                      return {
-                        ...task,
-                        approvals_count:
-                          counts.approvals_count ?? task.approvals_count,
-                        approvals_pending_count:
-                          counts.approvals_pending_count ??
-                          task.approvals_pending_count,
-                      };
-                    });
-                  });
-                }
-              } catch {
-                // Ignore malformed payloads.
-              }
-            }
-            boundary = buffer.indexOf("\n\n");
-          }
-        }
-      } catch {
-        // Reconnect handled below.
-      }
-
-      if (!isCancelled) {
-        if (reconnectTimeout !== undefined) {
-          window.clearTimeout(reconnectTimeout);
-        }
-        const delay = backoff.nextDelayMs();
-        reconnectTimeout = window.setTimeout(() => {
-          reconnectTimeout = undefined;
-          void connect();
-        }, delay);
-      }
-    };
-
-    void connect();
-    return () => {
-      isCancelled = true;
-      abortController.abort();
-      if (reconnectTimeout !== undefined) {
-        window.clearTimeout(reconnectTimeout);
-      }
-    };
-  }, [board, boardId, isPageActive, isSignedIn, pushLiveFeed]);
-
-  useEffect(() => {
-    if (!selectedTask) {
-      setEditTitle("");
-      setEditDescription("");
-      setEditStatus("inbox");
-      setEditPriority("medium");
-      setEditDueDate("");
-      setEditAssigneeId("");
-      setEditTagIds([]);
-      setEditDependsOnTaskIds([]);
-      setEditCustomFieldValues(
-        boardCustomFieldValues(boardCustomFieldDefinitions, {}),
-      );
-      setSaveTaskError(null);
-      return;
-    }
-    setEditTitle(selectedTask.title);
-    setEditDescription(selectedTask.description ?? "");
-    setEditStatus(selectedTask.status);
-    setEditPriority(selectedTask.priority);
-    setEditDueDate(toLocalDateInput(selectedTask.due_at));
-    setEditAssigneeId(selectedTask.assigned_agent_id ?? "");
-    setEditTagIds(selectedTask.tag_ids ?? []);
-    setEditDependsOnTaskIds(selectedTask.depends_on_task_ids ?? []);
-    setEditCustomFieldValues(
-      boardCustomFieldValues(
-        boardCustomFieldDefinitions,
-        selectedTask.custom_field_values,
-      ),
-    );
-    setSaveTaskError(null);
-  }, [boardCustomFieldDefinitions, selectedTask]);
-
-  useEffect(() => {
-    if (!isPageActive) return;
-    if (!isSignedIn || !boardId || !board) return;
-    let isCancelled = false;
-    const abortController = new AbortController();
-    const backoff = createExponentialBackoff(SSE_RECONNECT_BACKOFF);
-    let reconnectTimeout: number | undefined;
-
-    const connect = async () => {
-      try {
-        const since = latestTaskTimestamp(tasksRef.current);
-        const streamResult = await streamTasksApiV1BoardsBoardIdTasksStreamGet(
-          boardId,
+  useSSEStream({
+    enabled: !!isPageActive && !!isSignedIn && !!boardId && !!board,
+    key: `approvals-${boardId}`,
+    backoffConfig: SSE_RECONNECT_BACKOFF,
+    connect: async (signal) => {
+      const since = latestApprovalTimestamp(approvalsRef.current);
+      const streamResult =
+        await streamApprovalsApiV1BoardsBoardIdApprovalsStreamGet(
+          boardId!,
           since ? { since } : undefined,
-          {
-            headers: { Accept: "text/event-stream" },
-            signal: abortController.signal,
-          },
+          { headers: { Accept: "text/event-stream" }, signal },
         );
-        if (streamResult.status !== 200) {
-          throw new Error("Unable to connect task stream.");
-        }
-        const response = streamResult.data as Response;
-        if (!(response instanceof Response) || !response.body) {
-          throw new Error("Unable to connect task stream.");
-        }
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder();
-        let buffer = "";
-
-        while (!isCancelled) {
-          const { value, done } = await reader.read();
-          if (done) break;
-          if (value && value.length) {
-            backoff.reset();
-          }
-          buffer += decoder.decode(value, { stream: true });
-          buffer = buffer.replace(/\r\n/g, "\n");
-          let boundary = buffer.indexOf("\n\n");
-          while (boundary !== -1) {
-            const raw = buffer.slice(0, boundary);
-            buffer = buffer.slice(boundary + 2);
-            const lines = raw.split("\n");
-            let eventType = "message";
-            let data = "";
-            for (const line of lines) {
-              if (line.startsWith("event:")) {
-                eventType = line.slice(6).trim();
-              } else if (line.startsWith("data:")) {
-                data += line.slice(5).trim();
-              }
-            }
-            if (eventType === "task" && data) {
-              try {
-                const payload = JSON.parse(data) as {
-                  type?: string;
-                  activity?: ActivityEventRead;
-                  task?: TaskRead;
-                  comment?: TaskCommentRead;
-                };
-                const liveEvent = payload.activity
-                  ? toLiveFeedFromActivity(payload.activity)
-                  : payload.type === "task.comment" && payload.comment
-                    ? toLiveFeedFromComment(payload.comment)
-                    : null;
-                if (liveEvent) {
-                  pushLiveFeed(liveEvent);
-                }
-                if (
-                  payload.comment?.task_id &&
-                  payload.type === "task.comment"
-                ) {
-                  setComments((prev) => {
-                    if (
-                      selectedTaskIdRef.current !== payload.comment?.task_id
-                    ) {
-                      return prev;
-                    }
-                    return mergeCommentsById(prev, [
-                      payload.comment as TaskComment,
-                    ]);
-                  });
-                } else if (payload.task) {
-                  const incomingTask = payload.task;
-                  setTasks((prev) => {
-                    const index = prev.findIndex(
-                      (item) => item.id === incomingTask.id,
-                    );
-                    if (index === -1) {
-                      const assignee = incomingTask.assigned_agent_id
-                        ? (agentsRef.current.find(
-                            (agent) =>
-                              agent.id === incomingTask.assigned_agent_id,
-                          )?.name ?? null)
-                        : null;
-                      const created = normalizeTask({
-                        ...incomingTask,
-                        assignee,
-                        approvals_count: 0,
-                        approvals_pending_count: 0,
-                      } as TaskCardRead);
-                      return [created, ...prev];
-                    }
-                    const next = [...prev];
-                    const existing = next[index];
-                    const assignee = incomingTask.assigned_agent_id
-                      ? (agentsRef.current.find(
-                          (agent) =>
-                            agent.id === incomingTask.assigned_agent_id,
-                        )?.name ?? null)
-                      : null;
-                    const updated = normalizeTask({
-                      ...existing,
-                      ...incomingTask,
-                      assignee,
-                      approvals_count: existing.approvals_count,
-                      approvals_pending_count: existing.approvals_pending_count,
-                    } as TaskCardRead);
-                    next[index] = { ...existing, ...updated };
-                    return next;
-                  });
-                  if (selectedTaskIdRef.current === incomingTask.id) {
-                    setSelectedTask((prev) => {
-                      if (!prev || prev.id !== incomingTask.id) {
-                        return prev;
-                      }
-                      return {
-                        ...prev,
-                        ...incomingTask,
-                        custom_field_values:
-                          incomingTask.custom_field_values !== undefined
-                            ? incomingTask.custom_field_values
-                            : prev.custom_field_values,
-                      };
-                    });
-                  }
-                }
-              } catch {
-                // Ignore malformed payloads.
-              }
-            }
-            boundary = buffer.indexOf("\n\n");
-          }
-        }
-      } catch {
-        // Reconnect handled below.
+      if (streamResult.status !== 200) {
+        throw new Error("Unable to connect approvals stream.");
       }
-
-      if (!isCancelled) {
-        if (reconnectTimeout !== undefined) {
-          window.clearTimeout(reconnectTimeout);
-        }
-        const delay = backoff.nextDelayMs();
-        reconnectTimeout = window.setTimeout(() => {
-          reconnectTimeout = undefined;
-          void connect();
-        }, delay);
-      }
-    };
-
-    void connect();
-    return () => {
-      isCancelled = true;
-      abortController.abort();
-      if (reconnectTimeout !== undefined) {
-        window.clearTimeout(reconnectTimeout);
-      }
-    };
-  }, [board, boardId, isPageActive, isSignedIn, pushLiveFeed]);
-
-  useEffect(() => {
-    if (!isPageActive) return;
-    if (!isSignedIn || !boardId || !isOrgAdmin) return;
-    let isCancelled = false;
-    const abortController = new AbortController();
-    const backoff = createExponentialBackoff(SSE_RECONNECT_BACKOFF);
-    let reconnectTimeout: number | undefined;
-
-    const connect = async () => {
+      return streamResult.data as Response;
+    },
+    onEvent: (event) => {
+      if (event.eventType !== "approval" || !event.data) return;
       try {
-        const since = latestAgentTimestamp(agentsRef.current);
-        const streamResult = await streamAgentsApiV1AgentsStreamGet(
-          {
-            board_id: boardId,
-            since: since ?? null,
-          },
-          {
-            headers: { Accept: "text/event-stream" },
-            signal: abortController.signal,
-          },
-        );
-        if (streamResult.status !== 200) {
-          throw new Error("Unable to connect agent stream.");
+        const payload = JSON.parse(event.data) as {
+          approval?: ApprovalRead;
+          task_counts?:
+            | { task_id?: string; approvals_count?: number; approvals_pending_count?: number }
+            | Array<{ task_id?: string; approvals_count?: number; approvals_pending_count?: number }>;
+          pending_approvals_count?: number;
+        };
+        if (payload.approval) {
+          const normalized = normalizeApproval(payload.approval);
+          const previousApproval =
+            approvalsRef.current.find((item) => item.id === normalized.id) ?? null;
+          pushLiveFeed(toLiveFeedFromApproval(normalized, previousApproval));
+          setApprovals((prev) => {
+            const index = prev.findIndex((item) => item.id === normalized.id);
+            if (index === -1) return [normalized, ...prev];
+            const next = [...prev];
+            next[index] = { ...next[index], ...normalized };
+            return next;
+          });
         }
-        const response = streamResult.data as Response;
-        if (!(response instanceof Response) || !response.body) {
-          throw new Error("Unable to connect agent stream.");
+        const taskCounts = Array.isArray(payload.task_counts)
+          ? payload.task_counts
+          : payload.task_counts
+            ? [payload.task_counts]
+            : [];
+        if (taskCounts.length > 0) {
+          setTasks((prev) => {
+            const countsByTaskId = new Map(
+              taskCounts
+                .filter((row) => Boolean(row.task_id))
+                .map((row) => [row.task_id as string, row]),
+            );
+            return prev.map((task) => {
+              const counts = countsByTaskId.get(task.id);
+              if (!counts) return task;
+              return {
+                ...task,
+                approvals_count: counts.approvals_count ?? task.approvals_count,
+                approvals_pending_count:
+                  counts.approvals_pending_count ?? task.approvals_pending_count,
+              };
+            });
+          });
         }
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder();
-        let buffer = "";
+      } catch {
+        // Ignore malformed payloads.
+      }
+    },
+  });
 
-        while (!isCancelled) {
-          const { value, done } = await reader.read();
-          if (done) break;
-          if (value && value.length) {
-            backoff.reset();
-          }
-          buffer += decoder.decode(value, { stream: true });
-          buffer = buffer.replace(/\r\n/g, "\n");
-          let boundary = buffer.indexOf("\n\n");
-          while (boundary !== -1) {
-            const raw = buffer.slice(0, boundary);
-            buffer = buffer.slice(boundary + 2);
-            const lines = raw.split("\n");
-            let eventType = "message";
-            let data = "";
-            for (const line of lines) {
-              if (line.startsWith("event:")) {
-                eventType = line.slice(6).trim();
-              } else if (line.startsWith("data:")) {
-                data += line.slice(5).trim();
-              }
+  useSSEStream({
+    enabled: !!isPageActive && !!isSignedIn && !!boardId && !!board,
+    key: `tasks-${boardId}`,
+    backoffConfig: SSE_RECONNECT_BACKOFF,
+    connect: async (signal) => {
+      const since = latestTaskTimestamp(tasksRef.current);
+      const streamResult = await streamTasksApiV1BoardsBoardIdTasksStreamGet(
+        boardId!,
+        since ? { since } : undefined,
+        { headers: { Accept: "text/event-stream" }, signal },
+      );
+      if (streamResult.status !== 200) {
+        throw new Error("Unable to connect task stream.");
+      }
+      return streamResult.data as Response;
+    },
+    onEvent: (event) => {
+      if (event.eventType !== "task" || !event.data) return;
+      try {
+        const payload = JSON.parse(event.data) as {
+          type?: string;
+          activity?: ActivityEventRead;
+          task?: TaskRead;
+          comment?: TaskCommentRead;
+        };
+        const liveEvent = payload.activity
+          ? toLiveFeedFromActivity(payload.activity)
+          : payload.type === "task.comment" && payload.comment
+            ? toLiveFeedFromComment(payload.comment)
+            : null;
+        if (liveEvent) {
+          pushLiveFeed(liveEvent);
+        }
+        if (payload.comment?.task_id && payload.type === "task.comment") {
+          setComments((prev) => {
+            if (selectedTaskIdRef.current !== payload.comment?.task_id) {
+              return prev;
             }
-            if (eventType === "agent" && data) {
-              try {
-                const payload = JSON.parse(data) as { agent?: AgentRead };
-                if (payload.agent) {
-                  const normalized = normalizeAgent(payload.agent);
-                  const previousAgent =
-                    agentsRef.current.find(
-                      (item) => item.id === normalized.id,
-                    ) ?? null;
-                  const liveEvent = toLiveFeedFromAgentUpdate(
-                    normalized,
-                    previousAgent,
-                  );
-                  if (liveEvent) {
-                    pushLiveFeed(liveEvent);
-                  }
-                  setAgents((prev) => {
-                    const index = prev.findIndex(
-                      (item) => item.id === normalized.id,
-                    );
-                    if (index === -1) {
-                      return [normalized, ...prev];
-                    }
-                    const next = [...prev];
-                    next[index] = {
-                      ...next[index],
-                      ...normalized,
-                    };
-                    return next;
-                  });
-                }
-              } catch {
-                // Ignore malformed payloads.
-              }
+            return mergeCommentsById(prev, [payload.comment as TaskComment]);
+          });
+        } else if (payload.task) {
+          const incomingTask = payload.task;
+          setTasks((prev) => {
+            const index = prev.findIndex((item) => item.id === incomingTask.id);
+            if (index === -1) {
+              const assignee = incomingTask.assigned_agent_id
+                ? (agentsRef.current.find(
+                    (agent) => agent.id === incomingTask.assigned_agent_id,
+                  )?.name ?? null)
+                : null;
+              const created = normalizeTask({
+                ...incomingTask,
+                assignee,
+                approvals_count: 0,
+                approvals_pending_count: 0,
+              } as TaskCardRead);
+              return [created, ...prev];
             }
-            boundary = buffer.indexOf("\n\n");
+            const next = [...prev];
+            const existing = next[index];
+            const assignee = incomingTask.assigned_agent_id
+              ? (agentsRef.current.find(
+                  (agent) => agent.id === incomingTask.assigned_agent_id,
+                )?.name ?? null)
+              : null;
+            const updated = normalizeTask({
+              ...existing,
+              ...incomingTask,
+              assignee,
+              approvals_count: existing.approvals_count,
+              approvals_pending_count: existing.approvals_pending_count,
+            } as TaskCardRead);
+            next[index] = { ...existing, ...updated };
+            return next;
+          });
+          if (selectedTaskIdRef.current === incomingTask.id) {
+            setSelectedTask((prev) => {
+              if (!prev || prev.id !== incomingTask.id) return prev;
+              return {
+                ...prev,
+                ...incomingTask,
+                custom_field_values:
+                  incomingTask.custom_field_values !== undefined
+                    ? incomingTask.custom_field_values
+                    : prev.custom_field_values,
+              };
+            });
           }
         }
       } catch {
-        // Reconnect handled below.
+        // Ignore malformed payloads.
       }
+    },
+  });
 
-      if (!isCancelled) {
-        if (reconnectTimeout !== undefined) {
-          window.clearTimeout(reconnectTimeout);
+  useSSEStream({
+    enabled: !!isPageActive && !!isSignedIn && !!boardId && !!isOrgAdmin,
+    key: `agents-${boardId}`,
+    backoffConfig: SSE_RECONNECT_BACKOFF,
+    connect: async (signal) => {
+      const since = latestAgentTimestamp(agentsRef.current);
+      const streamResult = await streamAgentsApiV1AgentsStreamGet(
+        { board_id: boardId!, since: since ?? null },
+        { headers: { Accept: "text/event-stream" }, signal },
+      );
+      if (streamResult.status !== 200) {
+        throw new Error("Unable to connect agent stream.");
+      }
+      return streamResult.data as Response;
+    },
+    onEvent: (event) => {
+      if (event.eventType !== "agent" || !event.data) return;
+      try {
+        const payload = JSON.parse(event.data) as { agent?: AgentRead };
+        if (payload.agent) {
+          const normalized = normalizeAgent(payload.agent);
+          const previousAgent =
+            agentsRef.current.find((item) => item.id === normalized.id) ?? null;
+          const liveEvent = toLiveFeedFromAgentUpdate(normalized, previousAgent);
+          if (liveEvent) {
+            pushLiveFeed(liveEvent);
+          }
+          setAgents((prev) => {
+            const index = prev.findIndex((item) => item.id === normalized.id);
+            if (index === -1) return [normalized, ...prev];
+            const next = [...prev];
+            next[index] = { ...next[index], ...normalized };
+            return next;
+          });
         }
-        const delay = backoff.nextDelayMs();
-        reconnectTimeout = window.setTimeout(() => {
-          reconnectTimeout = undefined;
-          void connect();
-        }, delay);
+      } catch {
+        // Ignore malformed payloads.
       }
-    };
-
-    void connect();
-    return () => {
-      isCancelled = true;
-      abortController.abort();
-      if (reconnectTimeout !== undefined) {
-        window.clearTimeout(reconnectTimeout);
-      }
-    };
-  }, [board, boardId, isOrgAdmin, isPageActive, isSignedIn, pushLiveFeed]);
-
-  const resetForm = () => {
-    setTitle("");
-    setDescription("");
-    setPriority("medium");
-    setCreateDueDate("");
-    setCreateTagIds([]);
-    setCreateCustomFieldValues(defaultCreateCustomFieldValues);
-    setCreateError(null);
-  };
-
-  const handleCreateTask = async () => {
-    if (!isSignedIn || !boardId) return;
-    const trimmed = title.trim();
-    if (!trimmed) {
-      setCreateError("Add a task title to continue.");
-      return;
-    }
-    const createCustomFieldPayload = customFieldPayload(
-      boardCustomFieldDefinitions,
-      createCustomFieldValues,
-    );
-    const missingRequiredCustomField = firstMissingRequiredCustomField(
-      boardCustomFieldDefinitions,
-      createCustomFieldPayload,
-    );
-    if (missingRequiredCustomField) {
-      setCreateError(
-        `Custom field "${missingRequiredCustomField}" is required.`,
-      );
-      return;
-    }
-    setIsCreating(true);
-    setCreateError(null);
-    try {
-      const payload: BoardTaskCreatePayload = {
-        title: trimmed,
-        description: description.trim() || null,
-        status: "inbox",
-        priority,
-        due_at: localDateInputToUtcIso(createDueDate),
-        tag_ids: createTagIds,
-        custom_field_values: createCustomFieldPayload,
-      };
-      const result = await createTaskApiV1BoardsBoardIdTasksPost(
-        boardId,
-        payload,
-      );
-      if (result.status !== 200) throw new Error("Unable to create task.");
-
-      const created = normalizeTask({
-        ...result.data,
-        assignee: result.data.assigned_agent_id
-          ? (assigneeById.get(result.data.assigned_agent_id) ?? null)
-          : null,
-        approvals_count: 0,
-        approvals_pending_count: 0,
-      } as TaskCardRead);
-      setTasks((prev) => [created, ...prev]);
-      setIsDialogOpen(false);
-      resetForm();
-    } catch (err) {
-      const message = formatActionError(err, "Something went wrong.");
-      setCreateError(message);
-      pushToast(message);
-    } finally {
-      setIsCreating(false);
-    }
-  };
+    },
+  });
 
   const postBoardChatMessage = useCallback(
     async (content: string): Promise<{ ok: boolean; error: string | null }> => {
@@ -2040,27 +977,8 @@ export default function BoardDetailPage() {
 
   const openAgentsControlDialog = (action: "pause" | "resume") => {
     setAgentsControlAction(action);
-    setAgentsControlError(null);
     setIsAgentsControlDialogOpen(true);
   };
-
-  const handleConfirmAgentsControl = useCallback(async () => {
-    const command = agentsControlAction === "pause" ? "/pause" : "/resume";
-    setIsAgentsControlSending(true);
-    setAgentsControlError(null);
-    try {
-      const result = await postBoardChatMessage(command);
-      if (!result.ok) {
-        const message = result.error ?? `Unable to send ${command} command.`;
-        setAgentsControlError(message);
-        pushToast(message);
-        return;
-      }
-      setIsAgentsControlDialogOpen(false);
-    } finally {
-      setIsAgentsControlSending(false);
-    }
-  }, [agentsControlAction, postBoardChatMessage, pushToast]);
 
   const assigneeById = useMemo(() => {
     const map = new Map<string, string>();
@@ -2088,18 +1006,6 @@ export default function BoardDetailPage() {
     return map;
   }, [tasks]);
 
-  const orderedLiveFeed = useMemo(() => {
-    return [...liveFeed].sort((a, b) => {
-      const aTime = apiDatetimeToMs(a.created_at) ?? 0;
-      const bTime = apiDatetimeToMs(b.created_at) ?? 0;
-      return bTime - aTime;
-    });
-  }, [liveFeed]);
-
-  const assignableAgents = useMemo(
-    () => agents.filter((agent) => !agent.is_board_lead),
-    [agents],
-  );
   const boardChatMentionSuggestions = useMemo(() => {
     const options = new Set<string>(["lead"]);
     agents.forEach((agent) => {
@@ -2117,111 +1023,6 @@ export default function BoardDetailPage() {
     });
     return map;
   }, [tags]);
-
-  const createTagOptions = useMemo<DropdownSelectOption[]>(() => {
-    const selected = new Set(createTagIds);
-    return tags.map((tag) => ({
-      value: tag.id,
-      label: `${tag.name} (#${normalizeTagColor(tag.color).toUpperCase()})`,
-      disabled: selected.has(tag.id),
-    }));
-  }, [createTagIds, tags]);
-
-  const editTagOptions = useMemo<DropdownSelectOption[]>(() => {
-    const selected = new Set(editTagIds);
-    return tags.map((tag) => ({
-      value: tag.id,
-      label: `${tag.name} (#${normalizeTagColor(tag.color).toUpperCase()})`,
-      disabled: selected.has(tag.id),
-    }));
-  }, [editTagIds, tags]);
-
-  const dependencyOptions = useMemo<DropdownSelectOption[]>(() => {
-    if (!selectedTask) return [];
-    const alreadySelected = new Set(editDependsOnTaskIds);
-    return tasks
-      .filter((task) => task.id !== selectedTask.id)
-      .map((task) => ({
-        value: task.id,
-        label: `${task.title} (${task.status.replace(/_/g, " ")})`,
-        disabled: alreadySelected.has(task.id),
-      }));
-  }, [editDependsOnTaskIds, selectedTask, tasks]);
-
-  const addTaskDependency = useCallback((dependencyId: string) => {
-    setEditDependsOnTaskIds((prev) =>
-      prev.includes(dependencyId) ? prev : [...prev, dependencyId],
-    );
-  }, []);
-
-  const removeTaskDependency = useCallback((dependencyId: string) => {
-    setEditDependsOnTaskIds((prev) =>
-      prev.filter((value) => value !== dependencyId),
-    );
-  }, []);
-
-  const addEditTag = useCallback((tagId: string) => {
-    setEditTagIds((prev) => (prev.includes(tagId) ? prev : [...prev, tagId]));
-  }, []);
-
-  const removeEditTag = useCallback((tagId: string) => {
-    setEditTagIds((prev) => prev.filter((value) => value !== tagId));
-  }, []);
-
-  const addCreateTag = useCallback((tagId: string) => {
-    setCreateTagIds((prev) => (prev.includes(tagId) ? prev : [...prev, tagId]));
-  }, []);
-
-  const removeCreateTag = useCallback((tagId: string) => {
-    setCreateTagIds((prev) => prev.filter((value) => value !== tagId));
-  }, []);
-
-  const hasTaskChanges = useMemo(() => {
-    if (!selectedTask) return false;
-    const normalizedTitle = editTitle.trim();
-    const normalizedDescription = editDescription.trim();
-    const currentDescription = (selectedTask.description ?? "").trim();
-    const currentDueDate = toLocalDateInput(selectedTask.due_at);
-    const currentAssignee = selectedTask.assigned_agent_id ?? "";
-    const currentTags = [...(selectedTask.tag_ids ?? [])].sort().join("|");
-    const nextTags = [...editTagIds].sort().join("|");
-    const currentDeps = [...(selectedTask.depends_on_task_ids ?? [])]
-      .sort()
-      .join("|");
-    const nextDeps = [...editDependsOnTaskIds].sort().join("|");
-    const currentCustomFieldValues = canonicalizeCustomFieldValues(
-      boardCustomFieldValues(
-        boardCustomFieldDefinitions,
-        selectedTask.custom_field_values,
-      ),
-    );
-    const nextCustomFieldValues = canonicalizeCustomFieldValues(
-      customFieldPayload(boardCustomFieldDefinitions, editCustomFieldValues),
-    );
-    return (
-      normalizedTitle !== selectedTask.title ||
-      normalizedDescription !== currentDescription ||
-      editStatus !== selectedTask.status ||
-      editPriority !== selectedTask.priority ||
-      editDueDate !== currentDueDate ||
-      editAssigneeId !== currentAssignee ||
-      currentTags !== nextTags ||
-      currentDeps !== nextDeps ||
-      currentCustomFieldValues !== nextCustomFieldValues
-    );
-  }, [
-    editAssigneeId,
-    editDueDate,
-    editTagIds,
-    editDependsOnTaskIds,
-    editDescription,
-    editPriority,
-    editStatus,
-    editTitle,
-    editCustomFieldValues,
-    boardCustomFieldDefinitions,
-    selectedTask,
-  ]);
 
   const pendingApprovals = useMemo(
     () => approvals.filter((approval) => approval.status === "pending"),
@@ -2562,175 +1363,6 @@ export default function BoardDetailPage() {
     }
   };
 
-  const handleTaskSave = async (closeOnSuccess = false) => {
-    if (!selectedTask || !isSignedIn || !boardId) return;
-    const trimmedTitle = editTitle.trim();
-    if (!trimmedTitle) {
-      setSaveTaskError("Title is required.");
-      return;
-    }
-    const currentTaskCustomFieldValues = boardCustomFieldValues(
-      boardCustomFieldDefinitions,
-      selectedTask.custom_field_values,
-    );
-    const editCustomFieldPayload = customFieldPayload(
-      boardCustomFieldDefinitions,
-      editCustomFieldValues,
-    );
-    const editCustomFieldPatch = customFieldPatchPayload(
-      boardCustomFieldDefinitions,
-      currentTaskCustomFieldValues,
-      editCustomFieldPayload,
-    );
-    const missingRequiredCustomField = firstMissingRequiredCustomField(
-      boardCustomFieldDefinitions.filter((definition) =>
-        Object.prototype.hasOwnProperty.call(
-          editCustomFieldPatch,
-          definition.field_key,
-        ),
-      ),
-      editCustomFieldPatch,
-    );
-    if (missingRequiredCustomField) {
-      setSaveTaskError(
-        `Custom field "${missingRequiredCustomField}" is required.`,
-      );
-      return;
-    }
-    setIsSavingTask(true);
-    setSaveTaskError(null);
-    try {
-      const currentDeps = [...(selectedTask.depends_on_task_ids ?? [])]
-        .sort()
-        .join("|");
-      const nextDeps = [...editDependsOnTaskIds].sort().join("|");
-      const depsChanged = currentDeps !== nextDeps;
-      const currentTags = [...(selectedTask.tag_ids ?? [])].sort().join("|");
-      const nextTags = [...editTagIds].sort().join("|");
-      const tagsChanged = currentTags !== nextTags;
-      const currentDueDate = toLocalDateInput(selectedTask.due_at);
-      const dueDateChanged = editDueDate !== currentDueDate;
-      const customFieldValuesChanged =
-        Object.keys(editCustomFieldPatch).length > 0;
-
-      const updatePayload: BoardTaskUpdatePayload = {
-        title: trimmedTitle,
-        description: editDescription.trim() || null,
-        status: editStatus,
-        priority: editPriority,
-        assigned_agent_id: editAssigneeId || null,
-      };
-
-      if (depsChanged && selectedTask.status !== "done") {
-        updatePayload.depends_on_task_ids = editDependsOnTaskIds;
-      }
-      if (tagsChanged) {
-        updatePayload.tag_ids = editTagIds;
-      }
-      if (dueDateChanged) {
-        updatePayload.due_at = localDateInputToUtcIso(editDueDate);
-      }
-      if (
-        customFieldValuesChanged &&
-        Object.keys(editCustomFieldPatch).length > 0
-      ) {
-        updatePayload.custom_field_values = editCustomFieldPatch;
-      }
-
-      const result = await updateTaskApiV1BoardsBoardIdTasksTaskIdPatch(
-        boardId,
-        selectedTask.id,
-        updatePayload,
-      );
-      if (result.status === 409) {
-        const blockedIds = result.data.detail.blocked_by_task_ids ?? [];
-        const blockedTitles = blockedIds
-          .map((id) => taskTitleById.get(id) ?? id)
-          .join(", ");
-        setSaveTaskError(
-          blockedTitles
-            ? `${result.data.detail.message} Blocked by: ${blockedTitles}`
-            : result.data.detail.message,
-        );
-        return;
-      }
-      if (result.status === 422) {
-        setSaveTaskError(
-          result.data.detail?.[0]?.msg ?? "Validation error while saving task.",
-        );
-        return;
-      }
-      const previous =
-        tasksRef.current.find((task) => task.id === selectedTask.id) ??
-        selectedTask;
-      const updated = normalizeTask({
-        ...previous,
-        ...result.data,
-        assignee: result.data.assigned_agent_id
-          ? (assigneeById.get(result.data.assigned_agent_id) ?? null)
-          : null,
-        approvals_count: previous.approvals_count,
-        approvals_pending_count: previous.approvals_pending_count,
-      } as TaskCardRead);
-      setTasks((prev) =>
-        prev.map((task) =>
-          task.id === updated.id ? { ...task, ...updated } : task,
-        ),
-      );
-      setSelectedTask(updated);
-      if (closeOnSuccess) {
-        setIsEditDialogOpen(false);
-      }
-    } catch (err) {
-      const message = formatActionError(err, "Something went wrong.");
-      setSaveTaskError(message);
-      pushToast(message);
-    } finally {
-      setIsSavingTask(false);
-    }
-  };
-
-  const handleTaskReset = () => {
-    if (!selectedTask) return;
-    setEditTitle(selectedTask.title);
-    setEditDescription(selectedTask.description ?? "");
-    setEditStatus(selectedTask.status);
-    setEditPriority(selectedTask.priority);
-    setEditDueDate(toLocalDateInput(selectedTask.due_at));
-    setEditAssigneeId(selectedTask.assigned_agent_id ?? "");
-    setEditTagIds(selectedTask.tag_ids ?? []);
-    setEditDependsOnTaskIds(selectedTask.depends_on_task_ids ?? []);
-    setEditCustomFieldValues(
-      boardCustomFieldValues(
-        boardCustomFieldDefinitions,
-        selectedTask.custom_field_values,
-      ),
-    );
-    setSaveTaskError(null);
-  };
-
-  const handleDeleteTask = async () => {
-    if (!selectedTask || !boardId || !isSignedIn) return;
-    setIsDeletingTask(true);
-    setDeleteTaskError(null);
-    try {
-      const result = await deleteTaskApiV1BoardsBoardIdTasksTaskIdDelete(
-        boardId,
-        selectedTask.id,
-      );
-      if (result.status !== 200) throw new Error("Unable to delete task.");
-      setTasks((prev) => prev.filter((task) => task.id !== selectedTask.id));
-      setIsDeleteDialogOpen(false);
-      closeComments();
-    } catch (err) {
-      const message = formatActionError(err, "Something went wrong.");
-      setDeleteTaskError(message);
-      pushToast(message);
-    } finally {
-      setIsDeletingTask(false);
-    }
-  };
-
   const handleTaskMove = useCallback(
     async (taskId: string, status: TaskStatus) => {
       if (!isSignedIn || !boardId) return;
@@ -2886,99 +1518,6 @@ export default function BoardDetailPage() {
     }
   };
 
-  const formatApprovalTimestamp = (value?: string | null) => {
-    if (!value) return "—";
-    const date = parseApiDatetime(value);
-    if (!date) return value;
-    return date.toLocaleString(undefined, {
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
-
-  const humanizeApprovalAction = (value: string) =>
-    value
-      .split(".")
-      .map((part) =>
-        part.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase()),
-      )
-      .join(" · ");
-
-  const approvalPayloadValue = (payload: Approval["payload"], key: string) => {
-    if (!payload || typeof payload !== "object") return null;
-    const value = (payload as Record<string, unknown>)[key];
-    if (typeof value === "string" || typeof value === "number") {
-      return String(value);
-    }
-    return null;
-  };
-
-  const approvalPayloadValues = (payload: Approval["payload"], key: string) => {
-    if (!payload || typeof payload !== "object") return [];
-    const value = (payload as Record<string, unknown>)[key];
-    if (!Array.isArray(value)) return [];
-    return value.filter((item): item is string => typeof item === "string");
-  };
-
-  const approvalTaskIds = (approval: Approval) => {
-    const payload = approval.payload ?? {};
-    const linkedTaskIds = (
-      approval as Approval & { task_ids?: string[] | null }
-    ).task_ids;
-    const singleTaskId =
-      approval.task_id ??
-      approvalPayloadValue(payload, "task_id") ??
-      approvalPayloadValue(payload, "taskId") ??
-      approvalPayloadValue(payload, "taskID");
-    const manyTaskIds = [
-      ...approvalPayloadValues(payload, "task_ids"),
-      ...approvalPayloadValues(payload, "taskIds"),
-      ...approvalPayloadValues(payload, "taskIDs"),
-    ];
-    const merged = [
-      ...(Array.isArray(linkedTaskIds) ? linkedTaskIds : []),
-      ...manyTaskIds,
-      ...(singleTaskId ? [singleTaskId] : []),
-    ];
-    const deduped: string[] = [];
-    const seen = new Set<string>();
-    merged.forEach((value) => {
-      if (seen.has(value)) return;
-      seen.add(value);
-      deduped.push(value);
-    });
-    return deduped;
-  };
-
-  const approvalRows = (approval: Approval) => {
-    const payload = approval.payload ?? {};
-    const taskIds = approvalTaskIds(approval);
-    const assignedAgentId =
-      approvalPayloadValue(payload, "assigned_agent_id") ??
-      approvalPayloadValue(payload, "assignedAgentId");
-    const title = approvalPayloadValue(payload, "title");
-    const role = approvalPayloadValue(payload, "role");
-    const isAssign = approval.action_type.includes("assign");
-    const rows: Array<{ label: string; value: string }> = [];
-    if (taskIds.length === 1) rows.push({ label: "Task", value: taskIds[0] });
-    if (taskIds.length > 1)
-      rows.push({ label: "Tasks", value: taskIds.join(", ") });
-    if (isAssign) {
-      rows.push({
-        label: "Assignee",
-        value: assignedAgentId ?? "Unassigned",
-      });
-    }
-    if (title) rows.push({ label: "Title", value: title });
-    if (role) rows.push({ label: "Role", value: role });
-    return rows;
-  };
-
-  const approvalReason = (approval: Approval) =>
-    approvalPayloadValue(approval.payload ?? {}, "reason");
-
   const handleApprovalDecision = useCallback(
     async (approvalId: string, status: "approved" | "rejected") => {
       if (!isSignedIn || !boardId) return;
@@ -3113,7 +1652,6 @@ export default function BoardDetailPage() {
                       disabled={
                         !isSignedIn ||
                         !boardId ||
-                        isAgentsControlSending ||
                         !canWrite
                       }
                       className={cn(
@@ -3496,7 +2034,7 @@ export default function BoardDetailPage() {
                             variant="outline"
                             size="sm"
                             onClick={() => setIsDialogOpen(true)}
-                            disabled={isCreating || !canWrite}
+                            disabled={!canWrite}
                             title={canWrite ? "New task" : "Read-only access"}
                           >
                             New task
@@ -3615,318 +2153,36 @@ export default function BoardDetailPage() {
           }}
         />
       ) : null}
-      <aside
-        className={cn(
-          "fixed right-0 top-0 z-50 h-full w-[max(760px,45vw)] max-w-[99vw] transform bg-white shadow-2xl transition-transform",
-          isDetailOpen ? "transform-none" : "translate-x-full",
-        )}
-      >
-        <div className="flex h-full flex-col">
-          <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                Task detail
-              </p>
-              <p className="mt-1 text-sm font-medium text-slate-900">
-                {selectedTask?.title ?? "Task"}
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setIsEditDialogOpen(true)}
-                className="rounded-lg border border-slate-200 p-2 text-slate-500 transition hover:bg-slate-50"
-                disabled={!selectedTask || !canWrite}
-                title={canWrite ? "Edit task" : "Read-only access"}
-              >
-                <Pencil className="h-4 w-4" />
-              </button>
-              <button
-                type="button"
-                onClick={closeComments}
-                className="rounded-lg border border-slate-200 p-2 text-slate-500 transition hover:bg-slate-50"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
-          <div className="flex-1 space-y-6 overflow-y-auto px-6 py-5">
-            <div className="space-y-2">
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                Description
-              </p>
-              {selectedTask?.description ? (
-                <div className="prose prose-sm max-w-none text-slate-700">
-                  <Markdown
-                    content={selectedTask.description}
-                    variant="description"
-                  />
-                </div>
-              ) : (
-                <p className="text-sm text-slate-500">
-                  No description provided.
-                </p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                Custom fields
-              </p>
-              {customFieldDefinitionsQuery.isLoading ? (
-                <p className="text-sm text-slate-500">Loading custom fields…</p>
-              ) : boardCustomFieldDefinitions.length > 0 ? (
-                <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
-                  <dl className="space-y-2">
-                    {boardCustomFieldDefinitions.map((definition) => {
-                      const value =
-                        selectedTaskCustomFieldValues[definition.field_key];
-                      if (!isCustomFieldVisible(definition, value)) {
-                        return null;
-                      }
-                      return (
-                        <div
-                          key={definition.id}
-                          className="grid grid-cols-[160px_1fr] gap-3"
-                        >
-                          <dt className="text-xs font-semibold text-slate-600">
-                            {definition.label || definition.field_key}
-                            {definition.required === true ? (
-                              <span className="ml-1 text-rose-600">*</span>
-                            ) : null}
-                          </dt>
-                          <dd className="text-xs text-slate-800">
-                            {formatCustomFieldDetailValue(definition, value)}
-                          </dd>
-                        </div>
-                      );
-                    })}
-                  </dl>
-                </div>
-              ) : (
-                <p className="text-sm text-slate-500">No custom fields.</p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                Tags
-              </p>
-              {selectedTask?.tags?.length ? (
-                <div className="flex flex-wrap gap-2">
-                  {selectedTask.tags.map((tag) => (
-                    <span
-                      key={tag.id}
-                      className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700"
-                    >
-                      <span
-                        className="h-2 w-2 rounded-full"
-                        style={{
-                          backgroundColor: `#${normalizeTagColor(tag.color)}`,
-                        }}
-                      />
-                      {tag.name}
-                    </span>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-slate-500">No tags assigned.</p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                Dependencies
-              </p>
-              {(() => {
-                const hasDependencies =
-                  (selectedTask?.depends_on_task_ids?.length ?? 0) > 0;
-                const hasResolvedDependencies =
-                  selectedTaskResolvedDependencies.length > 0;
-                const isDependencyModeBlocked = hasDependencies
-                  ? selectedTask?.is_blocked === true
-                  : false;
-                const bannerVariant =
-                  hasDependencies || hasResolvedDependencies
-                    ? isDependencyModeBlocked
-                      ? "blocked"
-                      : "resolved"
-                    : "blocked";
-                const displayedDependencies =
-                  hasDependencies && selectedTask
-                    ? selectedTaskDependencies
-                    : selectedTaskResolvedDependencies;
-                const childrenMessage =
-                  hasDependencies && selectedTask?.is_blocked
-                    ? "Blocked by incomplete dependencies."
-                    : hasDependencies
-                      ? "Dependencies resolved."
-                      : hasResolvedDependencies
-                        ? "This task resolves these tasks."
-                        : null;
-
-                return (
-                  <DependencyBanner
-                    dependencies={displayedDependencies}
-                    variant={bannerVariant}
-                    emptyMessage="No dependencies."
-                  >
-                    {childrenMessage}
-                  </DependencyBanner>
-                );
-              })()}
-            </div>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                  Approvals
-                </p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => router.push(`/boards/${boardId}/approvals`)}
-                >
-                  View all
-                </Button>
-              </div>
-              {approvalsError ? (
-                <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs text-slate-500">
-                  {approvalsError}
-                </div>
-              ) : isApprovalsLoading ? (
-                <p className="text-sm text-slate-500">Loading approvals…</p>
-              ) : taskApprovals.length === 0 ? (
-                <p className="text-sm text-slate-500">
-                  No approvals tied to this task.{" "}
-                  {pendingApprovals.length > 0
-                    ? `${pendingApprovals.length} pending on this board.`
-                    : "No pending approvals on this board."}
-                </p>
-              ) : (
-                <div className="space-y-3">
-                  {taskApprovals.map((approval) => (
-                    <div
-                      key={approval.id}
-                      className="rounded-xl border border-slate-200 bg-white p-3"
-                    >
-                      <div className="flex flex-wrap items-start justify-between gap-2 text-xs text-slate-500">
-                        <div>
-                          <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                            {humanizeApprovalAction(approval.action_type)}
-                          </p>
-                          <p className="mt-1 text-xs text-slate-500">
-                            Requested{" "}
-                            {formatApprovalTimestamp(approval.created_at)}
-                          </p>
-                        </div>
-                        <span className="text-xs font-semibold text-slate-700">
-                          {approval.confidence}% confidence · {approval.status}
-                        </span>
-                      </div>
-                      {approvalRows(approval).length > 0 ? (
-                        <div className="mt-2 grid gap-2 text-xs text-slate-600 sm:grid-cols-2">
-                          {approvalRows(approval).map((row) => (
-                            <div key={`${approval.id}-${row.label}`}>
-                              <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-                                {row.label}
-                              </p>
-                              <p className="mt-1 text-xs text-slate-700">
-                                {row.value}
-                              </p>
-                            </div>
-                          ))}
-                        </div>
-                      ) : null}
-                      {approvalReason(approval) ? (
-                        <p className="mt-2 text-xs text-slate-600">
-                          {approvalReason(approval)}
-                        </p>
-                      ) : null}
-                      {approval.status === "pending" ? (
-                        <div className="mt-3 flex flex-wrap gap-2">
-                          <Button
-                            size="sm"
-                            onClick={() =>
-                              handleApprovalDecision(approval.id, "approved")
-                            }
-                            disabled={
-                              approvalsUpdatingId === approval.id || !canWrite
-                            }
-                            title={canWrite ? "Approve" : "Read-only access"}
-                          >
-                            Approve
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() =>
-                              handleApprovalDecision(approval.id, "rejected")
-                            }
-                            disabled={
-                              approvalsUpdatingId === approval.id || !canWrite
-                            }
-                            title={canWrite ? "Reject" : "Read-only access"}
-                            className="border-slate-300 text-slate-700"
-                          >
-                            Reject
-                          </Button>
-                        </div>
-                      ) : null}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-            <div className="space-y-3">
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                Comments
-              </p>
-              <div className="space-y-2 rounded-xl border border-slate-200 bg-slate-50 p-3">
-                <BoardChatComposer
-                  placeholder={
-                    canWrite
-                      ? "Write a message for the assigned agent. Tag @lead or @name."
-                      : "Read-only access. Comments are disabled."
-                  }
-                  isSending={isPostingComment}
-                  onSend={handlePostComment}
-                  disabled={!canWrite}
-                  mentionSuggestions={boardChatMentionSuggestions}
-                />
-                {postCommentError ? (
-                  <p className="text-xs text-rose-600">{postCommentError}</p>
-                ) : null}
-                {!canWrite ? (
-                  <p className="text-xs text-slate-500">
-                    Read-only access. You cannot post comments on this board.
-                  </p>
-                ) : null}
-              </div>
-              {isCommentsLoading ? (
-                <p className="text-sm text-slate-500">Loading comments…</p>
-              ) : commentsError ? (
-                <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs text-slate-500">
-                  {commentsError}
-                </div>
-              ) : comments.length === 0 ? (
-                <p className="text-sm text-slate-500">No comments yet.</p>
-              ) : (
-                <div className="space-y-3">
-                  {comments.map((comment) => (
-                    <TaskCommentCard
-                      key={comment.id}
-                      comment={comment}
-                      isHighlighted={highlightedCommentId === comment.id}
-                      authorLabel={
-                        comment.agent_id
-                          ? (assigneeById.get(comment.agent_id) ?? "Agent")
-                          : currentUserDisplayName
-                      }
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </aside>
+      <TaskDetailPanel
+        selectedTask={selectedTask}
+        isDetailOpen={isDetailOpen}
+        onClose={closeComments}
+        onEditOpen={() => setIsEditDialogOpen(true)}
+        canWrite={canWrite}
+        comments={comments}
+        highlightedCommentId={highlightedCommentId}
+        isCommentsLoading={isCommentsLoading}
+        commentsError={commentsError}
+        isPostingComment={isPostingComment}
+        postCommentError={postCommentError}
+        onPostComment={handlePostComment}
+        boardChatMentionSuggestions={boardChatMentionSuggestions}
+        assigneeById={assigneeById}
+        currentUserDisplayName={currentUserDisplayName}
+        taskApprovals={taskApprovals}
+        pendingApprovals={pendingApprovals}
+        approvalsError={approvalsError}
+        isApprovalsLoading={isApprovalsLoading}
+        approvalsUpdatingId={approvalsUpdatingId}
+        onApprovalDecision={handleApprovalDecision}
+        selectedTaskDependencies={selectedTaskDependencies}
+        selectedTaskResolvedDependencies={selectedTaskResolvedDependencies}
+        boardCustomFieldDefinitions={boardCustomFieldDefinitions}
+        selectedTaskCustomFieldValues={selectedTaskCustomFieldValues}
+        customFieldDefinitionsLoading={customFieldDefinitionsQuery.isLoading}
+        boardId={boardId}
+        onNavigate={router.push}
+      />
 
       <BoardChatPanel
         boardId={boardId}
@@ -3941,673 +2197,96 @@ export default function BoardDetailPage() {
         }}
       />
 
-      <aside
-        className={cn(
-          "fixed right-0 top-0 z-50 h-full w-[520px] max-w-[96vw] transform border-l border-slate-200 bg-white shadow-2xl transition-transform",
-          isLiveFeedOpen ? "transform-none" : "translate-x-full",
-        )}
-      >
-        <div className="flex h-full flex-col">
-          <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                Live feed
-              </p>
-              <p className="mt-1 text-sm font-medium text-slate-900">
-                Realtime task, approval, agent, and board-chat activity.
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={closeLiveFeed}
-              className="rounded-lg border border-slate-200 p-2 text-slate-500 transition hover:bg-slate-50"
-              aria-label="Close live feed"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-          <div className="flex-1 overflow-y-auto px-6 py-4">
-            {isLiveFeedHistoryLoading && orderedLiveFeed.length === 0 ? (
-              <p className="text-sm text-slate-500">Loading feed…</p>
-            ) : liveFeedHistoryError ? (
-              <div className="rounded-lg border border-slate-200 bg-white p-4 text-sm text-slate-700 shadow-sm">
-                {liveFeedHistoryError}
-              </div>
-            ) : orderedLiveFeed.length === 0 ? (
-              <p className="text-sm text-slate-500">
-                Waiting for new activity…
-              </p>
-            ) : (
-              <div className="space-y-3">
-                {orderedLiveFeed.map((item) => {
-                  const taskId = item.task_id;
-                  const authorAgent = item.agent_id
-                    ? (agents.find((agent) => agent.id === item.agent_id) ??
-                      null)
-                    : null;
-                  const authorName =
-                    authorAgent?.name ??
-                    resolveHumanActorName(
-                      item.actor_name,
-                      currentUserDisplayName,
-                    );
-                  const authorRole = authorAgent
-                    ? agentRoleLabel(authorAgent)
-                    : null;
-                  const authorAvatar = authorAgent
-                    ? agentAvatarLabel(authorAgent)
-                    : (authorName[0] ?? "A").toUpperCase();
-                  return (
-                    <LiveFeedCard
-                      key={item.id}
-                      item={item}
-                      isNew={Boolean(liveFeedFlashIds[item.id])}
-                      taskTitle={
-                        item.title
-                          ? item.title
-                          : taskId
-                            ? (taskTitleById.get(taskId) ?? "Unknown task")
-                            : "Activity"
-                      }
-                      authorName={authorName}
-                      authorRole={authorRole}
-                      authorAvatar={authorAvatar}
-                      onViewTask={
-                        taskId ? () => openComments({ id: taskId }) : undefined
-                      }
-                    />
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        </div>
-      </aside>
+      <LiveFeedPanel
+        isOpen={isLiveFeedOpen}
+        onClose={closeLiveFeed}
+        liveFeed={liveFeed}
+        liveFeedFlashIds={liveFeedFlashIds}
+        isLiveFeedHistoryLoading={isLiveFeedHistoryLoading}
+        liveFeedHistoryError={liveFeedHistoryError}
+        agents={agents}
+        taskTitleById={taskTitleById}
+        currentUserDisplayName={currentUserDisplayName}
+        agentAvatarLabel={agentAvatarLabel}
+        agentRoleLabel={agentRoleLabel}
+        onViewTask={(taskId) => openComments({ id: taskId })}
+      />
 
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent aria-label="Edit task">
-          <DialogHeader>
-            <DialogTitle>Edit task</DialogTitle>
-            <DialogDescription>
-              Update task details, priority, status, or assignment.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                Title
-              </label>
-              <Input
-                value={editTitle}
-                onChange={(event) => setEditTitle(event.target.value)}
-                placeholder="Task title"
-                disabled={!selectedTask || isSavingTask || !canWrite}
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                Description
-              </label>
-              <Textarea
-                value={editDescription}
-                onChange={(event) => setEditDescription(event.target.value)}
-                placeholder="Task details"
-                className="min-h-[140px]"
-                disabled={!selectedTask || isSavingTask || !canWrite}
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                Custom fields
-              </label>
-              <TaskCustomFieldsEditor
-                definitions={boardCustomFieldDefinitions}
-                values={editCustomFieldValues}
-                setValues={setEditCustomFieldValues}
-                isLoading={customFieldDefinitionsQuery.isLoading}
-                disabled={!selectedTask || isSavingTask || !canWrite}
-              />
-            </div>
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                  Status
-                </label>
-                <Select
-                  value={editStatus}
-                  onValueChange={(value) => setEditStatus(value as TaskStatus)}
-                  disabled={!selectedTask || isSavingTask || !canWrite}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {statusOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                  Priority
-                </label>
-                <Select
-                  value={editPriority}
-                  onValueChange={setEditPriority}
-                  disabled={!selectedTask || isSavingTask || !canWrite}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select priority" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {priorities.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                  Due date
-                </label>
-                <Input
-                  type="date"
-                  value={editDueDate}
-                  onChange={(event) => setEditDueDate(event.target.value)}
-                  disabled={!selectedTask || isSavingTask || !canWrite}
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                Assignee
-              </label>
-              <Select
-                value={editAssigneeId || "unassigned"}
-                onValueChange={(value) =>
-                  setEditAssigneeId(value === "unassigned" ? "" : value)
-                }
-                disabled={!selectedTask || isSavingTask || !canWrite}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Unassigned" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="unassigned">Unassigned</SelectItem>
-                  {assignableAgents.map((agent) => (
-                    <SelectItem key={agent.id} value={agent.id}>
-                      {agent.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {assignableAgents.length === 0 ? (
-                <p className="text-xs text-slate-500">
-                  Add agents to assign tasks.
-                </p>
-              ) : null}
-            </div>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between gap-2">
-                <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                  Tags
-                </label>
-                <button
-                  type="button"
-                  onClick={() => router.push("/tags")}
-                  className="text-xs font-medium text-slate-500 underline underline-offset-2 transition hover:text-slate-700"
-                >
-                  Manage tags
-                </button>
-              </div>
-              <DropdownSelect
-                ariaLabel="Add tag"
-                placeholder="Add tag"
-                options={editTagOptions}
-                onValueChange={addEditTag}
-                disabled={!selectedTask || isSavingTask || !canWrite}
-                emptyMessage="No tags configured."
-              />
-              {editTagIds.length === 0 ? (
-                <p className="text-xs text-slate-500">No tags assigned.</p>
-              ) : (
-                <div className="flex flex-wrap gap-2">
-                  {editTagIds.map((tagId) => {
-                    const tag = tagById.get(tagId);
-                    const label = tag?.name ?? tagId;
-                    const color = normalizeTagColor(tag?.color);
-                    return (
-                      <span
-                        key={tagId}
-                        className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs text-slate-700"
-                      >
-                        <span
-                          className="h-1.5 w-1.5 rounded-full"
-                          style={{ backgroundColor: `#${color}` }}
-                        />
-                        <span className="max-w-[16rem] truncate">{label}</span>
-                        <button
-                          type="button"
-                          onClick={() => removeEditTag(tagId)}
-                          className={cn(
-                            "rounded-full p-0.5 text-slate-500 transition",
-                            canWrite
-                              ? "hover:bg-white hover:text-slate-700"
-                              : "opacity-50 cursor-not-allowed",
-                          )}
-                          aria-label="Remove tag"
-                          disabled={!canWrite}
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      </span>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-            <div className="space-y-2">
-              <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                Dependencies
-              </label>
-              <p className="text-xs text-slate-500">
-                Tasks stay blocked until every dependency is marked done.
-              </p>
-              <DropdownSelect
-                ariaLabel="Add dependency"
-                placeholder="Add dependency"
-                options={dependencyOptions}
-                onValueChange={addTaskDependency}
-                disabled={
-                  !selectedTask ||
-                  isSavingTask ||
-                  selectedTask.status === "done" ||
-                  !canWrite
-                }
-                emptyMessage="No other tasks found."
-              />
-              {selectedTask?.status === "done" ? (
-                <p className="text-xs text-slate-500">
-                  Dependencies can only be edited until the task is done.
-                </p>
-              ) : null}
-              {editDependsOnTaskIds.length === 0 ? (
-                <p className="text-xs text-slate-500">No dependencies.</p>
-              ) : (
-                <div className="flex flex-wrap gap-2">
-                  {editDependsOnTaskIds.map((depId) => {
-                    const depTask = taskById.get(depId);
-                    const label = depTask?.title ?? depId;
-                    const statusLabel = depTask?.status
-                      ? depTask.status.replace(/_/g, " ")
-                      : null;
-                    const isDone = depTask?.status === "done";
-                    return (
-                      <span
-                        key={depId}
-                        className={cn(
-                          "inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs",
-                          isDone
-                            ? "border-emerald-200 bg-emerald-50 text-emerald-800"
-                            : "border-slate-200 bg-slate-50 text-slate-700",
-                        )}
-                      >
-                        <span className="max-w-[18rem] truncate">{label}</span>
-                        {statusLabel ? (
-                          <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
-                            {statusLabel}
-                          </span>
-                        ) : null}
-                        {selectedTask?.status !== "done" ? (
-                          <button
-                            type="button"
-                            onClick={() => removeTaskDependency(depId)}
-                            className={cn(
-                              "rounded-full p-0.5 text-slate-500 transition",
-                              canWrite
-                                ? "hover:bg-white hover:text-slate-700"
-                                : "opacity-50 cursor-not-allowed",
-                            )}
-                            aria-label="Remove dependency"
-                            disabled={!canWrite}
-                          >
-                            <X className="h-3 w-3" />
-                          </button>
-                        ) : null}
-                      </span>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-            {saveTaskError ? (
-              <div className="rounded-lg border border-slate-200 bg-white p-3 text-xs text-slate-600">
-                {saveTaskError}
-              </div>
-            ) : null}
-          </div>
-          <DialogFooter className="flex flex-wrap gap-2">
-            <Button
-              variant="outline"
-              onClick={() => setIsDeleteDialogOpen(true)}
-              disabled={!selectedTask || isSavingTask || !canWrite}
-              className="border-rose-200 text-rose-600 hover:border-rose-300 hover:text-rose-700"
-              title={canWrite ? "Delete task" : "Read-only access"}
-            >
-              Delete task
-            </Button>
-            <Button
-              variant="outline"
-              onClick={handleTaskReset}
-              disabled={
-                !selectedTask || isSavingTask || !hasTaskChanges || !canWrite
-              }
-            >
-              Reset
-            </Button>
-            <Button
-              onClick={() => handleTaskSave(true)}
-              disabled={
-                !selectedTask || isSavingTask || !hasTaskChanges || !canWrite
-              }
-            >
-              {isSavingTask ? "Saving…" : "Save changes"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent aria-label="Delete task">
-          <DialogHeader>
-            <DialogTitle>Delete task</DialogTitle>
-            <DialogDescription>
-              This removes the task permanently. This action cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-          {deleteTaskError ? (
-            <div className="rounded-lg border border-rose-200 bg-rose-50 p-3 text-xs text-rose-600">
-              {deleteTaskError}
-            </div>
-          ) : null}
-          <DialogFooter className="flex flex-wrap gap-2">
-            <Button
-              variant="outline"
-              onClick={() => setIsDeleteDialogOpen(false)}
-              disabled={isDeletingTask}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleDeleteTask}
-              disabled={isDeletingTask || !canWrite}
-              className="bg-rose-600 text-white hover:bg-rose-700"
-            >
-              {isDeletingTask ? "Deleting…" : "Delete task"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog
-        open={isDialogOpen}
-        onOpenChange={(nextOpen) => {
-          setIsDialogOpen(nextOpen);
-          if (!nextOpen) {
-            resetForm();
-          }
+      <TaskEditDialog
+        isOpen={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+        boardId={boardId}
+        isSignedIn={Boolean(isSignedIn)}
+        canWrite={canWrite}
+        selectedTask={selectedTask}
+        tasks={tasks}
+        agents={agents}
+        tags={tags}
+        boardCustomFieldDefinitions={boardCustomFieldDefinitions}
+        customFieldDefinitionsLoading={customFieldDefinitionsQuery.isLoading}
+        assigneeById={assigneeById}
+        onSaved={(updated) => {
+          setTasks((prev) =>
+            prev.map((task) =>
+              task.id === updated.id ? { ...task, ...updated } : task,
+            ),
+          );
+          setSelectedTask(updated);
         }}
-      >
-        <DialogContent aria-label={titleLabel}>
-          <DialogHeader>
-            <DialogTitle>New task</DialogTitle>
-            <DialogDescription>
-              Add a task to the inbox and triage it when you are ready.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-strong">Title</label>
-              <Input
-                value={title}
-                onChange={(event) => setTitle(event.target.value)}
-                placeholder="e.g. Prepare launch notes"
-                disabled={!canWrite || isCreating}
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-strong">
-                Description
-              </label>
-              <Textarea
-                value={description}
-                onChange={(event) => setDescription(event.target.value)}
-                placeholder="Optional details"
-                className="min-h-[120px]"
-                disabled={!canWrite || isCreating}
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-strong">
-                Custom fields
-              </label>
-              <TaskCustomFieldsEditor
-                definitions={boardCustomFieldDefinitions}
-                values={createCustomFieldValues}
-                setValues={setCreateCustomFieldValues}
-                isLoading={customFieldDefinitionsQuery.isLoading}
-                disabled={!canWrite || isCreating}
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-strong">
-                Priority
-              </label>
-              <Select
-                value={priority}
-                onValueChange={setPriority}
-                disabled={!canWrite || isCreating}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select priority" />
-                </SelectTrigger>
-                <SelectContent>
-                  {priorities.map((item) => (
-                    <SelectItem key={item.value} value={item.value}>
-                      {item.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-strong">
-                Due date
-              </label>
-              <Input
-                type="date"
-                value={createDueDate}
-                onChange={(event) => setCreateDueDate(event.target.value)}
-                disabled={!canWrite || isCreating}
-              />
-            </div>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between gap-2">
-                <label className="text-sm font-medium text-strong">Tags</label>
-                <button
-                  type="button"
-                  onClick={() => router.push("/tags")}
-                  className="text-xs font-medium text-slate-500 underline underline-offset-2 transition hover:text-slate-700"
-                >
-                  Manage tags
-                </button>
-              </div>
-              <DropdownSelect
-                ariaLabel="Add tag"
-                placeholder="Add tag"
-                options={createTagOptions}
-                onValueChange={addCreateTag}
-                disabled={!canWrite || isCreating}
-                emptyMessage="No tags configured."
-              />
-              {createTagIds.length ? (
-                <div className="flex flex-wrap gap-2">
-                  {createTagIds.map((tagId) => {
-                    const tag = tagById.get(tagId);
-                    const color = normalizeTagColor(tag?.color);
-                    return (
-                      <span
-                        key={tagId}
-                        className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs text-slate-700"
-                      >
-                        <span
-                          className="h-1.5 w-1.5 rounded-full"
-                          style={{ backgroundColor: `#${color}` }}
-                        />
-                        {tag?.name ?? tagId}
-                        <button
-                          type="button"
-                          onClick={() => removeCreateTag(tagId)}
-                          className="rounded-full p-0.5 text-slate-500 transition hover:bg-white hover:text-slate-700"
-                          aria-label="Remove tag"
-                          disabled={!canWrite || isCreating}
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      </span>
-                    );
-                  })}
-                </div>
-              ) : (
-                <p className="text-xs text-slate-500">No tags assigned.</p>
-              )}
-            </div>
-            {createError ? (
-              <div className="rounded-lg border border-[color:var(--border)] bg-[color:var(--surface-muted)] p-3 text-xs text-muted">
-                {createError}
-              </div>
-            ) : null}
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button
-              onClick={handleCreateTask}
-              disabled={!canWrite || isCreating}
-            >
-              {isCreating ? "Creating…" : "Create task"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        onDeleteOpen={() => setIsDeleteDialogOpen(true)}
+        onError={pushToast}
+        onNavigate={router.push}
+      />
+
+      <TaskDeleteDialog
+        isOpen={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        boardId={boardId}
+        isSignedIn={Boolean(isSignedIn)}
+        canWrite={canWrite}
+        selectedTask={selectedTask}
+        onDeleted={(taskId) => {
+          setTasks((prev) => prev.filter((task) => task.id !== taskId));
+          closeComments();
+        }}
+        onError={pushToast}
+      />
+
+      <TaskCreateDialog
+        isOpen={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+        boardId={boardId}
+        isSignedIn={Boolean(isSignedIn)}
+        canWrite={canWrite}
+        tags={tags}
+        boardCustomFieldDefinitions={boardCustomFieldDefinitions}
+        customFieldDefinitionsLoading={customFieldDefinitionsQuery.isLoading}
+        defaultCreateCustomFieldValues={defaultCreateCustomFieldValues}
+        assigneeById={assigneeById}
+        onTaskCreated={(task) => setTasks((prev) => [task, ...prev])}
+        onError={pushToast}
+        boardLabel={titleLabel}
+        onNavigate={router.push}
+      />
 
       {isOrgAdmin ? (
-        <Dialog
-          open={isAgentsControlDialogOpen}
-          onOpenChange={(nextOpen) => {
-            setIsAgentsControlDialogOpen(nextOpen);
-            if (!nextOpen) {
-              setAgentsControlError(null);
+        <AgentsControlDialog
+          isOpen={isAgentsControlDialogOpen}
+          onOpenChange={setIsAgentsControlDialogOpen}
+          action={agentsControlAction}
+          onConfirmed={async () => {
+            const command =
+              agentsControlAction === "pause" ? "/pause" : "/resume";
+            const result = await postBoardChatMessage(command);
+            if (!result.ok) {
+              pushToast(result.error ?? `Unable to send ${command} command.`);
             }
+            return result;
           }}
-        >
-          <DialogContent aria-label="Agent controls">
-            <DialogHeader>
-              <DialogTitle>
-                {agentsControlAction === "pause"
-                  ? "Pause agents"
-                  : "Resume agents"}
-              </DialogTitle>
-              <DialogDescription>
-                {agentsControlAction === "pause"
-                  ? "Send /pause to every agent on this board."
-                  : "Send /resume to every agent on this board."}
-              </DialogDescription>
-            </DialogHeader>
-
-            {agentsControlError ? (
-              <div className="rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">
-                {agentsControlError}
-              </div>
-            ) : null}
-
-            <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">
-              <p className="font-semibold text-slate-900">What happens</p>
-              <ul className="mt-2 list-disc space-y-1 pl-5">
-                <li>
-                  This posts{" "}
-                  <span className="font-mono">
-                    {agentsControlAction === "pause" ? "/pause" : "/resume"}
-                  </span>{" "}
-                  to board chat.
-                </li>
-                <li>
-                  Mission Control forwards it to all agents on this board.
-                </li>
-              </ul>
-            </div>
-
-            <DialogFooter className="flex flex-wrap gap-2">
-              <Button
-                variant="outline"
-                onClick={() => setIsAgentsControlDialogOpen(false)}
-                disabled={isAgentsControlSending}
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleConfirmAgentsControl}
-                disabled={isAgentsControlSending}
-              >
-                {isAgentsControlSending
-                  ? "Sending…"
-                  : agentsControlAction === "pause"
-                    ? "Pause agents"
-                    : "Resume agents"}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        />
       ) : null}
 
-      {toasts.length ? (
-        <div className="fixed bottom-6 right-6 z-[60] flex w-[320px] max-w-[90vw] flex-col gap-3">
-          {toasts.map((toast) => (
-            <div
-              key={toast.id}
-              className={cn(
-                "rounded-xl border bg-white px-4 py-3 text-sm shadow-lush",
-                toast.tone === "error"
-                  ? "border-rose-200 text-rose-700"
-                  : "border-emerald-200 text-emerald-700",
-              )}
-            >
-              <div className="flex items-start gap-3">
-                <span
-                  className={cn(
-                    "mt-1 h-2 w-2 rounded-full",
-                    toast.tone === "error" ? "bg-rose-500" : "bg-emerald-500",
-                  )}
-                />
-                <p className="flex-1 text-sm text-slate-700">{toast.message}</p>
-                <button
-                  type="button"
-                  className="text-xs text-slate-400 hover:text-slate-600"
-                  onClick={() => dismissToast(toast.id)}
-                >
-                  Dismiss
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : null}
+      <BoardToasts toasts={toasts} onDismiss={dismissToast} />
 
       {/* onboarding moved to board settings */}
     </DashboardShell>

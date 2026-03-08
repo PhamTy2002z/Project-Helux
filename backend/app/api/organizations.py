@@ -57,6 +57,7 @@ from app.schemas.organizations import (
 from app.schemas.pagination import DefaultLimitOffsetPage
 from app.services.activity_log import record_admin_audit
 from app.services.entitlements import assign_organization_plan, get_or_create_organization_plan
+from app.services.openclaw.managed_gateway_bootstrap import ensure_managed_gateway_for_organization
 from app.services.organizations import (
     OrganizationContext,
     accept_invite,
@@ -158,6 +159,7 @@ async def create_organization(
     )
     session.add(member)
     await session.flush()
+    await ensure_managed_gateway_for_organization(session, organization_id=org.id)
     await set_active_organization(session, user=auth.user, organization_id=org.id)
     await get_or_create_organization_plan(session, organization_id=org.id)
     await session.commit()

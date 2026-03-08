@@ -1,4 +1,4 @@
-import { type ReactNode } from "react";
+import { type ReactNode, memo } from "react";
 
 import { cn } from "@/lib/utils";
 
@@ -27,7 +27,7 @@ const toneClassByVariant: Record<DependencyBannerVariant, string> = {
   resolved: "border-blue-200 bg-blue-50 text-blue-700",
 };
 
-export function DependencyBanner({
+export const DependencyBanner = memo(function DependencyBanner({
   variant = "blocked",
   dependencies = [],
   children,
@@ -91,4 +91,4 @@ export function DependencyBanner({
       ) : null}
     </div>
   );
-}
+});

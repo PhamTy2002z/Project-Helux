@@ -35,6 +35,7 @@ class _AgentStub:
     id: UUID
     name: str
     gateway_id: UUID
+    organization_id: UUID
     board_id: UUID | None = None
     is_board_lead: bool = False
 
@@ -68,6 +69,7 @@ async def test_delete_agent_as_lead_removes_board_agent(
         id=uuid4(),
         name="Lead Agent",
         gateway_id=gateway_id,
+        organization_id=uuid4(),
         board_id=board.id,
         is_board_lead=True,
     )
@@ -75,6 +77,7 @@ async def test_delete_agent_as_lead_removes_board_agent(
         id=uuid4(),
         name="Worker Agent",
         gateway_id=gateway_id,
+        organization_id=lead.organization_id,
         board_id=board.id,
         is_board_lead=False,
     )
@@ -152,6 +155,7 @@ async def test_delete_agent_as_lead_rejects_gateway_main(
         id=uuid4(),
         name="Lead Agent",
         gateway_id=gateway_id,
+        organization_id=uuid4(),
         board_id=board_id,
         is_board_lead=True,
     )
@@ -159,6 +163,7 @@ async def test_delete_agent_as_lead_rejects_gateway_main(
         id=uuid4(),
         name="Gateway Main",
         gateway_id=gateway_id,
+        organization_id=lead.organization_id,
         board_id=None,
         is_board_lead=False,
     )

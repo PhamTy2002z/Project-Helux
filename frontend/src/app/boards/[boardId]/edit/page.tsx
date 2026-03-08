@@ -6,6 +6,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 
 import { useAuth } from "@/auth/clerk";
+import { isSaasAuthProfile } from "@/auth/profile";
 import { X } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -43,7 +44,11 @@ import type {
   BoardRead,
   BoardUpdate,
 } from "@/api/generated/model";
-import { BoardOnboardingChat } from "@/components/BoardOnboardingChat";
+import nextDynamic from "next/dynamic";
+const BoardOnboardingChat = nextDynamic(
+  () => import("@/components/BoardOnboardingChat").then(m => m.BoardOnboardingChat),
+  { ssr: false }
+);
 import { DashboardPageLayout } from "@/components/templates/DashboardPageLayout";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogContent } from "@/components/ui/dialog";
@@ -265,6 +270,7 @@ function WebhookCard({
 
 export default function EditBoardPage() {
   const { isSignedIn } = useAuth();
+  const isSaasMode = isSaasAuthProfile();
   const queryClient = useQueryClient();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -367,7 +373,7 @@ export default function EditBoardPage() {
     ApiError
   >(undefined, {
     query: {
-      enabled: Boolean(isSignedIn && isAdmin),
+      enabled: Boolean(isSignedIn && isAdmin && !isSaasMode),
       refetchOnMount: "always",
       retry: false,
     },
@@ -557,7 +563,9 @@ export default function EditBoardPage() {
     null;
 
   const isFormReady = Boolean(
-    resolvedName.trim() && resolvedDescription.trim() && displayGatewayId,
+    resolvedName.trim() &&
+      resolvedDescription.trim() &&
+      (isSaasMode || displayGatewayId),
   );
 
   const gatewayOptions = useMemo(
@@ -619,8 +627,10 @@ export default function EditBoardPage() {
     }
     const resolvedGatewayId = displayGatewayId;
     if (!resolvedGatewayId) {
-      setError("Select a gateway before saving.");
-      return;
+      if (!isSaasMode) {
+        setError("Select a gateway before saving.");
+        return;
+      }
     }
     const trimmedDescription = resolvedDescription.trim();
     if (!trimmedDescription) {
@@ -652,7 +662,7 @@ export default function EditBoardPage() {
       name: trimmedName,
       slug: slugify(trimmedName),
       description: trimmedDescription,
-      gateway_id: resolvedGatewayId || null,
+      ...(!isSaasMode ? { gateway_id: resolvedGatewayId || null } : {}),
       board_group_id:
         resolvedBoardGroupId === "none" ? null : resolvedBoardGroupId,
       board_type: resolvedBoardType,
@@ -761,7 +771,7 @@ export default function EditBoardPage() {
           signUpForceRedirectUrl: `/boards/${boardId}/edit`,
         }}
         title="Edit board"
-        description="Update board settings and gateway."
+        description="Update board settings and workflow."
         isAdmin={isAdmin}
         adminOnlyMessage="Only organization owners and admins can edit board settings."
         mainRef={mainRef}
@@ -805,23 +815,25 @@ export default function EditBoardPage() {
                   disabled={isLoading || !baseBoard}
                 />
               </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-900">
-                  Gateway <span className="text-red-500">*</span>
-                </label>
-                <SearchableSelect
-                  ariaLabel="Select gateway"
-                  value={displayGatewayId}
-                  onValueChange={setGatewayId}
-                  options={gatewayOptions}
-                  placeholder="Select gateway"
-                  searchPlaceholder="Search gateways..."
-                  emptyMessage="No gateways found."
-                  triggerClassName="w-full h-11 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                  contentClassName="rounded-xl border border-slate-200 shadow-lg"
-                  itemClassName="px-4 py-3 text-sm text-slate-700 data-[selected=true]:bg-slate-50 data-[selected=true]:text-slate-900"
-                />
-              </div>
+              {!isSaasMode ? (
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-slate-900">
+                    Gateway <span className="text-red-500">*</span>
+                  </label>
+                  <SearchableSelect
+                    ariaLabel="Select gateway"
+                    value={displayGatewayId}
+                    onValueChange={setGatewayId}
+                    options={gatewayOptions}
+                    placeholder="Select gateway"
+                    searchPlaceholder="Search gateways..."
+                    emptyMessage="No gateways found."
+                    triggerClassName="w-full h-11 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                    contentClassName="rounded-xl border border-slate-200 shadow-lg"
+                    itemClassName="px-4 py-3 text-sm text-slate-700 data-[selected=true]:bg-slate-50 data-[selected=true]:text-slate-900"
+                  />
+                </div>
+              ) : null}
             </div>
 
             <div className="grid gap-6 md:grid-cols-2">
@@ -1130,7 +1142,7 @@ export default function EditBoardPage() {
               </div>
             </section>
 
-            {gateways.length === 0 ? (
+            {!isSaasMode && gateways.length === 0 ? (
               <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
                 <p>
                   No gateways available. Create one in Gateways to continue.

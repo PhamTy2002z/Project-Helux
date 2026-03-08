@@ -259,7 +259,7 @@ class GatewayAdminLifecycleService(OpenClawDBService):
     async def ensure_main_agent(
         self,
         gateway: Gateway,
-        auth: AuthContext,
+        auth: AuthContext | None,
         *,
         action: str = "provision",
     ) -> Agent:
@@ -270,10 +270,11 @@ class GatewayAdminLifecycleService(OpenClawDBService):
             action,
         )
         agent, _ = await self.upsert_main_agent_record(gateway)
+        user = auth.user if auth is not None else None
         return await self.provision_main_agent_record(
             gateway,
             agent,
-            user=auth.user,
+            user=user,
             action=action,
             notify=True,
         )

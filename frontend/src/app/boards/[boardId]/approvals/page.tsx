@@ -6,7 +6,11 @@ import { useParams } from "next/navigation";
 
 import { SignInButton, SignedIn, SignedOut } from "@/auth/clerk";
 
-import { BoardApprovalsPanel } from "@/components/BoardApprovalsPanel";
+import nextDynamic from "next/dynamic";
+const BoardApprovalsPanel = nextDynamic(
+  () => import("@/components/BoardApprovalsPanel").then(m => m.BoardApprovalsPanel),
+  { ssr: false }
+);
 import { DashboardSidebar } from "@/components/organisms/DashboardSidebar";
 import { DashboardShell } from "@/components/templates/DashboardShell";
 import { Button } from "@/components/ui/button";

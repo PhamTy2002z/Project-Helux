@@ -1,3 +1,5 @@
+import { memo } from "react";
+
 import { CalendarClock, UserCircle } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -22,7 +24,7 @@ interface TaskCardProps {
   onDragEnd?: (event: React.DragEvent<HTMLDivElement>) => void;
 }
 
-export function TaskCard({
+export const TaskCard = memo(function TaskCard({
   title,
   status,
   priority,
@@ -177,4 +179,4 @@ export function TaskCard({
       </div>
     </div>
   );
-}
+});

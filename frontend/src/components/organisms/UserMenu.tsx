@@ -13,7 +13,6 @@ import {
   LayoutDashboard,
   LogOut,
   Plus,
-  Server,
   Settings,
   Store,
   Trello,
@@ -151,21 +150,18 @@ export function UserMenu({
 
           <div className="my-2 h-px bg-[color:var(--neutral-200,var(--border))]" />
 
-          {(
-            [
-              { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-              { href: "/activity", label: "Activity", icon: Activity },
-              { href: "/agents", label: "Agents", icon: Bot },
-              { href: "/gateways", label: "Gateways", icon: Server },
-              {
-                href: "/skills/marketplace",
-                label: "Skills marketplace",
-                icon: Store,
-              },
-              { href: "/skills/packs", label: "Skill packs", icon: Boxes },
-              { href: "/settings", label: "Settings", icon: Settings },
-            ] as const
-          ).map((item) => (
+          {[
+            { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+            { href: "/activity", label: "Activity", icon: Activity },
+            { href: "/agents", label: "Agents", icon: Bot },
+            {
+              href: "/skills/marketplace",
+              label: "Skills marketplace",
+              icon: Store,
+            },
+            { href: "/skills/packs", label: "Skill packs", icon: Boxes },
+            { href: "/settings", label: "Settings", icon: Settings },
+          ].map((item) => (
             <Link
               key={item.href}
               href={item.href}

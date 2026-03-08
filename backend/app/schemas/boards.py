@@ -10,7 +10,6 @@ from pydantic import model_validator
 from sqlmodel import Field, SQLModel
 
 _ERR_GOAL_FIELDS_REQUIRED = "Confirmed goal boards require objective and success_metrics"
-_ERR_GATEWAY_REQUIRED = "gateway_id is required"
 _ERR_DESCRIPTION_REQUIRED = "description is required"
 RUNTIME_ANNOTATION_TYPES = (datetime, UUID)
 
@@ -44,13 +43,11 @@ class BoardCreate(BoardBase):
 
     @model_validator(mode="after")
     def validate_goal_fields(self) -> Self:
-        """Require gateway and goal details when creating a confirmed goal board."""
+        """Require description and confirmed-goal details for board creation."""
         description = self.description.strip()
         if not description:
             raise ValueError(_ERR_DESCRIPTION_REQUIRED)
         self.description = description
-        if self.gateway_id is None:
-            raise ValueError(_ERR_GATEWAY_REQUIRED)
         if (
             self.board_type == "goal"
             and self.goal_confirmed
@@ -86,7 +83,7 @@ class BoardUpdate(SQLModel):
         """Reject explicit null gateway IDs in patch payloads."""
         # Treat explicit null like "unset" is invalid for patch updates.
         if "gateway_id" in self.model_fields_set and self.gateway_id is None:
-            raise ValueError(_ERR_GATEWAY_REQUIRED)
+            raise ValueError("gateway_id is required")
         if "description" in self.model_fields_set:
             if self.description is None:
                 raise ValueError(_ERR_DESCRIPTION_REQUIRED)

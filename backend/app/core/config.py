@@ -80,6 +80,16 @@ class Settings(BaseSettings):
 
     # OpenClaw gateway runtime compatibility
     gateway_min_version: str = "2026.02.9"
+    gateway_rpc_connect_timeout_seconds: float = Field(default=10.0, gt=0)
+    gateway_rpc_response_timeout_seconds: float = Field(default=20.0, gt=0)
+    gateway_lifecycle_timeout_seconds: float = Field(default=90.0, gt=0)
+    managed_gateway_auto_provision: bool = True
+    managed_gateway_name: str = "Managed Gateway"
+    managed_gateway_url: str = "ws://127.0.0.1:18789/ws"
+    managed_gateway_token: str = ""
+    managed_gateway_workspace_root: str = "~/.openclaw/managed"
+    managed_gateway_disable_device_pairing: bool = True
+    managed_gateway_allow_insecure_tls: bool = False
 
     # Logging
     log_level: str = "INFO"
@@ -128,6 +138,10 @@ class Settings(BaseSettings):
             self.db_auto_migrate = True
         self.worker_heartbeat_key = self.worker_heartbeat_key.strip()
         self.readiness_worker_heartbeat_key = self.readiness_worker_heartbeat_key.strip()
+        self.managed_gateway_name = self.managed_gateway_name.strip() or "Managed Gateway"
+        self.managed_gateway_url = self.managed_gateway_url.strip()
+        self.managed_gateway_token = self.managed_gateway_token.strip()
+        self.managed_gateway_workspace_root = self.managed_gateway_workspace_root.strip()
         return self
 
 

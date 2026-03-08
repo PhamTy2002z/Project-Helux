@@ -24,6 +24,8 @@ type BoardChatThreadProps = {
 };
 
 const NEAR_BOTTOM_THRESHOLD = 80;
+const EMBEDDED_TIMESTAMP_PATTERN =
+  /^[A-Za-z]{3,9}\s+\d{1,2},\s+\d{1,2}:\d{2}\s*(?:AM|PM)(?:\s+[A-Z]{2,5})?$/i;
 
 const formatShortTimestamp = (value: string) => {
   const timestamp = Date.parse(value);
@@ -34,6 +36,24 @@ const formatShortTimestamp = (value: string) => {
     hour: "2-digit",
     minute: "2-digit",
   });
+};
+
+const sanitizeMessageContent = (content: string, sourceLabel: string): string => {
+  const normalized = content.replace(/\r\n?/g, "\n");
+  const lines = normalized.split("\n");
+  const nonEmptyIndexes = lines
+    .map((line, index) => ({ line: line.trim(), index }))
+    .filter(({ line }) => line.length > 0);
+
+  if (nonEmptyIndexes.length < 2) return normalized;
+  const first = nonEmptyIndexes[0];
+  const second = nonEmptyIndexes[1];
+  const isEmbeddedHeader =
+    first.line.toLowerCase() === sourceLabel.trim().toLowerCase() &&
+    EMBEDDED_TIMESTAMP_PATTERN.test(second.line);
+  if (!isEmbeddedHeader) return normalized;
+
+  return lines.slice(second.index + 1).join("\n").trimStart();
 };
 
 const MessageCard = ({
@@ -48,6 +68,10 @@ const MessageCard = ({
     DEFAULT_HUMAN_LABEL,
   );
   const isCurrentUser = sourceLabel === currentUserDisplayName;
+  const cleanedContent = sanitizeMessageContent(
+    message.content ?? "",
+    sourceLabel,
+  );
 
   return (
     <div className={cn("flex", isCurrentUser ? "justify-end" : "justify-start")}>
@@ -66,7 +90,7 @@ const MessageCard = ({
           </span>
         </div>
         <div className="mt-1 select-text cursor-text text-sm leading-6 break-words text-slate-900">
-          <Markdown content={message.content ?? ""} variant="basic" />
+          <Markdown content={cleanedContent} variant="chat" />
         </div>
       </div>
     </div>

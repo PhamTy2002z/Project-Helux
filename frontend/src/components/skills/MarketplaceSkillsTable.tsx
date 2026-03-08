@@ -226,12 +226,7 @@ export function MarketplaceSkillsTable({
                     className="inline-flex items-center gap-1 text-sm text-slate-700"
                     title={gateway.name}
                   >
-                    <Link
-                      href={`/gateways/${gateway.id}`}
-                      className="text-blue-700 hover:text-blue-600 hover:underline"
-                    >
-                      {gateway.name}
-                    </Link>
+                    {gateway.name}
                     {!isLast ? "," : ""}
                   </span>
                 );

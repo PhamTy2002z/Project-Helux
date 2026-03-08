@@ -43,6 +43,7 @@ class _BoardStub:
     id: UUID
     gateway_id: UUID | None
     name: str
+    organization_id: UUID = field(default_factory=uuid4)
 
 
 @pytest.mark.asyncio
@@ -95,6 +96,11 @@ async def test_gateway_coordination_nudge_success(monkeypatch: pytest.MonkeyPatc
         coordination_lifecycle.GatewayDispatchService,
         "send_agent_message",
         _fake_send_agent_message,
+    )
+    monkeypatch.setattr(
+        coordination_lifecycle.AbstractGatewayMessagingService,
+        "_with_gateway_retry",
+        staticmethod(lambda fn: fn()),
     )
 
     await service.nudge_board_agent(
@@ -162,6 +168,11 @@ async def test_gateway_coordination_nudge_maps_gateway_error(
         coordination_lifecycle.GatewayDispatchService,
         "send_agent_message",
         _fake_send_agent_message,
+    )
+    monkeypatch.setattr(
+        coordination_lifecycle.AbstractGatewayMessagingService,
+        "_with_gateway_retry",
+        staticmethod(lambda fn: fn()),
     )
 
     with pytest.raises(HTTPException) as exc_info:

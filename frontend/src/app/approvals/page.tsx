@@ -14,7 +14,11 @@ import {
 } from "@/api/generated/approvals/approvals";
 import { useListBoardsApiV1BoardsGet } from "@/api/generated/boards/boards";
 import type { ApprovalRead, BoardRead } from "@/api/generated/model";
-import { BoardApprovalsPanel } from "@/components/BoardApprovalsPanel";
+import nextDynamic from "next/dynamic";
+const BoardApprovalsPanel = nextDynamic(
+  () => import("@/components/BoardApprovalsPanel").then(m => m.BoardApprovalsPanel),
+  { ssr: false }
+);
 import { DashboardSidebar } from "@/components/organisms/DashboardSidebar";
 import { DashboardShell } from "@/components/templates/DashboardShell";
 import { Button } from "@/components/ui/button";

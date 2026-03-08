@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import asyncio
+
 import pytest
 
 import app.services.openclaw.gateway_rpc as gateway_rpc
@@ -221,7 +223,14 @@ async def test_openclaw_call_once_does_not_pass_ssl_none_for_wss(
     ) -> None:
         return None
 
-    async def _fake_send_request(_ws: object, _method: str, _params: object) -> object:
+    async def _fake_send_request(
+        _ws: object,
+        _method: str,
+        _params: object,
+        *,
+        timeout_s: float,
+    ) -> object:
+        _ = timeout_s
         return {"ok": True}
 
     monkeypatch.setattr(gateway_rpc.websockets, "connect", _fake_connect)
@@ -262,7 +271,14 @@ async def test_openclaw_call_once_passes_ssl_context_for_insecure_wss(
     ) -> None:
         return None
 
-    async def _fake_send_request(_ws: object, _method: str, _params: object) -> object:
+    async def _fake_send_request(
+        _ws: object,
+        _method: str,
+        _params: object,
+        *,
+        timeout_s: float,
+    ) -> object:
+        _ = timeout_s
         return {"ok": True}
 
     monkeypatch.setattr(gateway_rpc.websockets, "connect", _fake_connect)
@@ -282,3 +298,19 @@ async def test_openclaw_call_once_passes_ssl_context_for_insecure_wss(
     kwargs = captured["kwargs"]
     assert isinstance(kwargs, dict)
     assert kwargs.get("ssl") is not None
+
+
+class _SilentWS:
+    async def recv(self) -> str:
+        await asyncio.sleep(1)
+        return "{}"
+
+
+@pytest.mark.asyncio
+async def test_await_response_times_out_when_gateway_silent() -> None:
+    with pytest.raises(OpenClawGatewayError, match="timed out"):
+        await gateway_rpc._await_response(
+            _SilentWS(),  # type: ignore[arg-type]
+            "request-1",
+            timeout_s=0.01,
+        )
