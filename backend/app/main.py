@@ -18,6 +18,7 @@ from app.api.auth import router as auth_router
 from app.api.board_chat_sessions import router as board_chat_sessions_router
 from app.api.board_group_memory import router as board_group_memory_router
 from app.api.board_groups import router as board_groups_router
+from app.api.billing import router as billing_router
 from app.api.board_memory import router as board_memory_router
 from app.api.board_onboarding import router as board_onboarding_router
 from app.api.board_webhooks import router as board_webhooks_router
@@ -25,6 +26,7 @@ from app.api.boards import router as boards_router
 from app.api.gateway import router as gateway_router
 from app.api.gateways import router as gateways_router
 from app.api.metrics import router as metrics_router
+from app.api.onboarding_progress import router as onboarding_progress_router
 from app.api.organizations import router as organizations_router
 from app.api.skills_marketplace import router as skills_marketplace_router
 from app.api.souls_directory import router as souls_directory_router
@@ -77,6 +79,14 @@ OPENAPI_TAGS = [
     {
         "name": "metrics",
         "description": "Aggregated operational and board analytics metrics endpoints.",
+    },
+    {
+        "name": "billing",
+        "description": "Subscription state and simulated checkout endpoints.",
+    },
+    {
+        "name": "onboarding-progress",
+        "description": "Step-based onboarding progress and product-led onboarding telemetry.",
     },
     {
         "name": "organizations",
@@ -174,6 +184,8 @@ _OPENAPI_EXAMPLE_TAGS = {
     "activity",
     "gateways",
     "metrics",
+    "billing",
+    "onboarding-progress",
     "organizations",
     "souls-directory",
     "skills",
@@ -463,7 +475,18 @@ app = MissionControlFastAPI(
 )
 
 origins = [o.strip() for o in settings.cors_origins.split(",") if o.strip()]
+app.add_middleware(
+    SecurityHeadersMiddleware,
+    x_content_type_options=settings.security_header_x_content_type_options,
+    x_frame_options=settings.security_header_x_frame_options,
+    referrer_policy=settings.security_header_referrer_policy,
+    permissions_policy=settings.security_header_permissions_policy,
+)
+app.add_middleware(RateLimitMiddleware)
 if origins:
+    # Add CORS last so it wraps all downstream middleware responses.
+    # This ensures short-circuit responses (e.g. 429 from rate limiting)
+    # still include Access-Control-Allow-Origin headers for browsers.
     app.add_middleware(
         CORSMiddleware,
         allow_origins=origins,
@@ -475,15 +498,6 @@ if origins:
     logger.info("app.cors.enabled origins_count=%s", len(origins))
 else:
     logger.info("app.cors.disabled")
-
-app.add_middleware(
-    SecurityHeadersMiddleware,
-    x_content_type_options=settings.security_header_x_content_type_options,
-    x_frame_options=settings.security_header_x_frame_options,
-    referrer_policy=settings.security_header_referrer_policy,
-    permissions_policy=settings.security_header_permissions_policy,
-)
-app.add_middleware(RateLimitMiddleware)
 install_error_handling(app)
 
 
@@ -566,6 +580,8 @@ api_v1.include_router(activity_router)
 api_v1.include_router(gateway_router)
 api_v1.include_router(gateways_router)
 api_v1.include_router(metrics_router)
+api_v1.include_router(billing_router)
+api_v1.include_router(onboarding_progress_router)
 api_v1.include_router(organizations_router)
 api_v1.include_router(souls_directory_router)
 api_v1.include_router(skills_marketplace_router)

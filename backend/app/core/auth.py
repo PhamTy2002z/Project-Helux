@@ -345,10 +345,8 @@ async def _get_or_sync_user(
 ) -> User:
     clerk_user_id_log = clerk_user_id[-6:] if clerk_user_id else ""
     claim_email = _extract_claim_email(claims)
-    claim_name = _extract_claim_name(claims)
     defaults: dict[str, object | None] = {
         "email": claim_email,
-        "name": claim_name,
     }
     user, created = await crud.get_or_create(
         session,
@@ -358,22 +356,16 @@ async def _get_or_sync_user(
     )
 
     profile_email: str | None = None
-    profile_name: str | None = None
-    # Avoid a network roundtrip to Clerk on every request once core profile
-    # fields are present in our DB.
-    should_fetch_profile = created or not user.email or not user.name
+    # Avoid a network roundtrip to Clerk unless we still cannot resolve email.
+    should_fetch_profile = not user.email and not claim_email
     if should_fetch_profile:
-        profile_email, profile_name = await _fetch_clerk_profile(clerk_user_id)
+        profile_email, _profile_name = await _fetch_clerk_profile(clerk_user_id)
 
     email = profile_email or claim_email
-    name = profile_name or claim_name
 
     changed = False
     if email and user.email != email:
         user.email = email
-        changed = True
-    if not user.name and name:
-        user.name = name
         changed = True
     if changed:
         session.add(user)

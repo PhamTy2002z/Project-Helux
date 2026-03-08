@@ -23,6 +23,8 @@ LOCAL_AUTH_TOKEN_PLACEHOLDERS = frozenset(
         "replace-with-strong-random-token",
     },
 )
+BILLING_MODES = frozenset({"simulated", "provider"})
+PAYMENT_PROVIDERS = frozenset({"none", "stripe", "paddle"})
 
 
 class Settings(BaseSettings):
@@ -88,7 +90,7 @@ class Settings(BaseSettings):
     managed_gateway_url: str = "ws://127.0.0.1:18789/ws"
     managed_gateway_token: str = ""
     managed_gateway_workspace_root: str = "~/.openclaw/managed"
-    managed_gateway_disable_device_pairing: bool = True
+    managed_gateway_disable_device_pairing: bool = False
     managed_gateway_allow_insecure_tls: bool = False
 
     # Logging
@@ -103,6 +105,8 @@ class Settings(BaseSettings):
     rate_limit_prefix: str = "api-rl"
     rate_limit_ip_limit_per_minute: int = Field(default=240, ge=1)
     rate_limit_actor_limit_per_minute: int = Field(default=480, ge=1)
+    billing_mode: str = "simulated"
+    payment_provider: str = "none"
 
     @model_validator(mode="after")
     def _defaults(self) -> Self:
@@ -142,6 +146,12 @@ class Settings(BaseSettings):
         self.managed_gateway_url = self.managed_gateway_url.strip()
         self.managed_gateway_token = self.managed_gateway_token.strip()
         self.managed_gateway_workspace_root = self.managed_gateway_workspace_root.strip()
+        self.billing_mode = self.billing_mode.strip().lower()
+        if self.billing_mode not in BILLING_MODES:
+            raise ValueError("BILLING_MODE must be one of: simulated, provider.")
+        self.payment_provider = self.payment_provider.strip().lower()
+        if self.payment_provider not in PAYMENT_PROVIDERS:
+            raise ValueError("PAYMENT_PROVIDER must be one of: none, stripe, paddle.")
         return self
 
 

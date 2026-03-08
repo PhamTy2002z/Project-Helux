@@ -18,6 +18,7 @@ from app.models.approval_task_links import ApprovalTaskLink
 from app.models.approvals import Approval
 from app.models.board_memory import BoardMemory
 from app.models.board_onboarding import BoardOnboardingSession
+from app.models.board_chat_sessions import BoardChatSession
 from app.models.board_webhook_payloads import BoardWebhookPayload
 from app.models.board_webhooks import BoardWebhook
 from app.models.organization_board_access import OrganizationBoardAccess
@@ -121,6 +122,11 @@ async def delete_board(session: AsyncSession, *, board: Board) -> OkResponse:
     await crud.delete_where(session, Approval, col(Approval.board_id) == board.id)
 
     await crud.delete_where(session, BoardMemory, col(BoardMemory.board_id) == board.id)
+    await crud.delete_where(
+        session,
+        BoardChatSession,
+        col(BoardChatSession.board_id) == board.id,
+    )
     await crud.delete_where(
         session,
         BoardWebhookPayload,

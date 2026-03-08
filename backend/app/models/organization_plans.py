@@ -25,7 +25,7 @@ class OrganizationPlan(QueryModel, table=True):
 
     id: UUID = Field(default_factory=uuid4, primary_key=True)
     organization_id: UUID = Field(foreign_key="organizations.id", index=True)
-    tier: str = Field(default="free", index=True)
+    tier: str = Field(default="trial_7d", index=True)
     effective_from: datetime = Field(default_factory=utcnow)
     effective_until: datetime | None = None
     plan_metadata: dict[str, Any] | None = Field(

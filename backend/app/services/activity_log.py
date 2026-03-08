@@ -14,6 +14,7 @@ from app.models.activity_events import ActivityEvent
 
 ADMIN_AUDIT_EVENT_BY_ACTION: dict[str, str] = {
     "organization.plan.assign": "admin.organization.plan_assigned",
+    "billing.simulate.checkout": "admin.billing.simulated_checkout",
     "organization.member.update": "admin.organization.member_updated",
     "organization.member.access.update": "admin.organization.member_access_updated",
     "organization.member.remove": "admin.organization.member_removed",

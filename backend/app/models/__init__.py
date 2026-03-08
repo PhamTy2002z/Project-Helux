@@ -7,6 +7,7 @@ from app.models.approvals import Approval
 from app.models.board_chat_sessions import BoardChatSession
 from app.models.board_group_memory import BoardGroupMemory
 from app.models.board_groups import BoardGroup
+from app.models.billing_checkout_attempts import BillingCheckoutAttempt
 from app.models.board_memory import BoardMemory
 from app.models.board_onboarding import BoardOnboardingSession
 from app.models.board_webhook_payloads import BoardWebhookPayload
@@ -31,6 +32,7 @@ from app.models.task_dependencies import TaskDependency
 from app.models.task_fingerprints import TaskFingerprint
 from app.models.tasks import Task
 from app.models.users import User
+from app.models.user_onboarding_progress import UserOnboardingProgress
 
 __all__ = [
     "ActivityEvent",
@@ -41,6 +43,7 @@ __all__ = [
     "BoardWebhook",
     "BoardWebhookPayload",
     "BoardChatSession",
+    "BillingCheckoutAttempt",
     "BoardMemory",
     "BoardOnboardingSession",
     "BoardGroup",
@@ -64,4 +67,5 @@ __all__ = [
     "Tag",
     "TagAssignment",
     "User",
+    "UserOnboardingProgress",
 ]

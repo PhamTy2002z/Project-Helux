@@ -10,6 +10,7 @@ from fastapi import HTTPException, status
 from sqlmodel import col
 
 from app.core.auth import AuthContext
+from app.core.config import settings
 from app.core.logging import TRACE_LEVEL
 from app.core.time import utcnow
 from app.db import crud
@@ -56,6 +57,8 @@ class DefaultGatewayMainAgentManager(AbstractGatewayMainAgentManager):
     """Default naming/profile strategy for gateway-main agents."""
 
     def build_main_agent_name(self, gateway: Gateway) -> str:
+        if gateway.name.strip() == settings.managed_gateway_name:
+            return f"Managed GateWay Agent - {gateway.id}"
         return f"{gateway.name} Gateway Agent"
 
     def build_identity_profile(self) -> dict[str, str]:

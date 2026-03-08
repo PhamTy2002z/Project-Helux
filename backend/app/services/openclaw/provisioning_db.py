@@ -46,7 +46,7 @@ from app.schemas.agents import (
 from app.schemas.common import OkResponse
 from app.schemas.gateways import GatewayTemplatesSyncError, GatewayTemplatesSyncResult
 from app.services.activity_log import record_activity
-from app.services.entitlements import enforce_agent_quota
+from app.services.entitlements import enforce_agent_quota, enforce_agents_per_board_quota
 from app.services.openclaw.constants import (
     _TOOLS_KV_RE,
     DEFAULT_HEARTBEAT_CONFIG,
@@ -97,6 +97,9 @@ if TYPE_CHECKING:
 
 
 _T = TypeVar("_T")
+_PROTECTED_GATEWAY_MAIN_AGENT_DETAIL = (
+    "Gateway main agents are system-managed and cannot be edited or deleted."
+)
 
 
 @dataclass(frozen=True)
@@ -936,6 +939,14 @@ class AgentLifecycleService(OpenClawDBService):
         return agent.board_id is None
 
     @classmethod
+    def raise_if_gateway_main_protected(cls, *, agent: Agent) -> None:
+        if cls.is_gateway_main(agent):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=_PROTECTED_GATEWAY_MAIN_AGENT_DETAIL,
+            )
+
+    @classmethod
     def to_agent_read(cls, agent: Agent) -> AgentRead:
         model = AgentRead.model_validate(agent, from_attributes=True)
         return model.model_copy(
@@ -1454,6 +1465,11 @@ class AgentLifecycleService(OpenClawDBService):
             write=True,
         )
         await enforce_agent_quota(self.session, organization_id=board.organization_id)
+        await enforce_agents_per_board_quota(
+            self.session,
+            organization_id=board.organization_id,
+            board_id=board.id,
+        )
         gateway, _client_config = await self.require_gateway(board)
         data: dict[str, Any] = {
             "name": payload.name,
@@ -1658,6 +1674,11 @@ class AgentLifecycleService(OpenClawDBService):
         )
         await self.enforce_board_spawn_limit_for_lead(board=board, actor=actor)
         await enforce_agent_quota(self.session, organization_id=board.organization_id)
+        await enforce_agents_per_board_quota(
+            self.session,
+            organization_id=board.organization_id,
+            board_id=board.id,
+        )
         gateway, _client_config = await self.require_gateway(board)
         data = payload.model_dump()
         data["organization_id"] = board.organization_id
@@ -1709,6 +1730,7 @@ class AgentLifecycleService(OpenClawDBService):
         if agent is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
         await self.require_agent_access(agent=agent, ctx=options.context, write=True)
+        self.raise_if_gateway_main_protected(agent=agent)
         updates = payload.model_dump(exclude_unset=True)
         make_main = updates.pop("is_gateway_main", None)
         await self.validate_agent_update_inputs(
@@ -1833,6 +1855,7 @@ class AgentLifecycleService(OpenClawDBService):
         if agent is None:
             return OkResponse()
         await self.require_agent_access(agent=agent, ctx=ctx, write=True)
+        self.raise_if_gateway_main_protected(agent=agent)
         return await self._delete_agent_record(agent=agent)
 
     async def delete_agent_as_lead(
