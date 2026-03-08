@@ -24,5 +24,10 @@ class BoardMemory(QueryModel, table=True):
     content: str
     tags: list[str] | None = Field(default=None, sa_column=Column(JSON))
     is_chat: bool = Field(default=False, index=True)
+    chat_session_id: UUID | None = Field(
+        default=None,
+        foreign_key="board_chat_sessions.id",
+        index=True,
+    )
     source: str | None = None
     created_at: datetime = Field(default_factory=utcnow)

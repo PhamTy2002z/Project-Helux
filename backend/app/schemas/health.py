@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+from datetime import datetime
 from uuid import UUID
 
 from pydantic import Field
 from sqlmodel import SQLModel
+
+RUNTIME_ANNOTATION_TYPES = (UUID, datetime)
 
 
 class HealthStatusResponse(SQLModel):
@@ -14,6 +17,44 @@ class HealthStatusResponse(SQLModel):
     ok: bool = Field(
         description="Indicates whether the probe check succeeded.",
         examples=[True],
+    )
+
+
+class ReadinessComponentStatus(SQLModel):
+    """Single dependency check result returned by `/readyz`."""
+
+    component: str = Field(
+        description="Dependency component name.",
+        examples=["database"],
+    )
+    ok: bool = Field(
+        description="Whether this dependency is currently healthy.",
+        examples=[True],
+    )
+    required: bool = Field(
+        description="Whether this dependency gates readiness.",
+        examples=[True],
+    )
+    latency_ms: int | None = Field(
+        default=None,
+        description="Observed check latency in milliseconds when available.",
+        examples=[7],
+    )
+    detail: str | None = Field(
+        default=None,
+        description="Optional diagnostic detail for operators.",
+        examples=["pong"],
+    )
+
+
+class ReadinessStatusResponse(HealthStatusResponse):
+    """Structured readiness response with per-dependency status."""
+
+    checked_at: datetime = Field(
+        description="UTC timestamp when dependency checks completed.",
+    )
+    components: list[ReadinessComponentStatus] = Field(
+        description="Dependency check statuses included in readiness evaluation.",
     )
 
 

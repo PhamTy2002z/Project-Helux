@@ -5,7 +5,7 @@ from __future__ import annotations
 from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING, Any
 
-from fastapi import APIRouter, FastAPI, status
+from fastapi import APIRouter, FastAPI, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
 from fastapi_pagination import add_pagination
@@ -15,6 +15,7 @@ from app.api.agent import router as agent_router
 from app.api.agents import router as agents_router
 from app.api.approvals import router as approvals_router
 from app.api.auth import router as auth_router
+from app.api.board_chat_sessions import router as board_chat_sessions_router
 from app.api.board_group_memory import router as board_group_memory_router
 from app.api.board_groups import router as board_groups_router
 from app.api.board_memory import router as board_memory_router
@@ -34,9 +35,14 @@ from app.api.users import router as users_router
 from app.core.config import settings
 from app.core.error_handling import install_error_handling
 from app.core.logging import configure_logging, get_logger
+from app.core.rate_limit import RateLimitMiddleware
 from app.core.security_headers import SecurityHeadersMiddleware
-from app.db.session import init_db
-from app.schemas.health import HealthStatusResponse
+from app.db.session import evaluate_readiness, init_db
+from app.schemas.health import (
+    HealthStatusResponse,
+    ReadinessComponentStatus,
+    ReadinessStatusResponse,
+)
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator
@@ -99,6 +105,10 @@ OPENAPI_TAGS = [
     {
         "name": "board-memory",
         "description": "Board-scoped memory read/write endpoints for persistent context.",
+    },
+    {
+        "name": "board-chat-sessions",
+        "description": "Board chat session CRUD endpoints for multi-thread chat history.",
     },
     {
         "name": "board-webhooks",
@@ -171,6 +181,7 @@ _OPENAPI_EXAMPLE_TAGS = {
     "board-group-memory",
     "boards",
     "board-memory",
+    "board-chat-sessions",
     "board-webhooks",
     "board-onboarding",
     "approvals",
@@ -472,6 +483,7 @@ app.add_middleware(
     referrer_policy=settings.security_header_referrer_policy,
     permissions_policy=settings.security_header_permissions_policy,
 )
+app.add_middleware(RateLimitMiddleware)
 install_error_handling(app)
 
 
@@ -514,19 +526,36 @@ def healthz() -> HealthStatusResponse:
 @app.get(
     "/readyz",
     tags=["health"],
-    response_model=HealthStatusResponse,
+    response_model=ReadinessStatusResponse,
     summary="Readiness Check",
-    description="Readiness probe endpoint for service orchestration checks.",
+    description="Dependency-aware readiness probe endpoint for service orchestration checks.",
     responses={
         status.HTTP_200_OK: {
-            "description": "Service is ready.",
-            "content": {"application/json": {"example": {"ok": True}}},
-        }
+            "description": "All required dependencies are ready.",
+        },
+        status.HTTP_503_SERVICE_UNAVAILABLE: {
+            "description": "One or more required dependencies are not ready.",
+        },
     },
 )
-def readyz() -> HealthStatusResponse:
+async def readyz(response: Response) -> ReadinessStatusResponse:
     """Readiness probe endpoint for service orchestration checks."""
-    return HealthStatusResponse(ok=True)
+    ready, checks, checked_at = await evaluate_readiness()
+    response.status_code = status.HTTP_200_OK if ready else status.HTTP_503_SERVICE_UNAVAILABLE
+    return ReadinessStatusResponse(
+        ok=ready,
+        checked_at=checked_at,
+        components=[
+            ReadinessComponentStatus(
+                component=check.component,
+                ok=check.ok,
+                required=check.required,
+                latency_ms=check.latency_ms,
+                detail=check.detail,
+            )
+            for check in checks
+        ],
+    )
 
 
 api_v1 = APIRouter(prefix="/api/v1")
@@ -544,6 +573,7 @@ api_v1.include_router(board_groups_router)
 api_v1.include_router(board_group_memory_router)
 api_v1.include_router(boards_router)
 api_v1.include_router(board_memory_router)
+api_v1.include_router(board_chat_sessions_router)
 api_v1.include_router(board_webhooks_router)
 api_v1.include_router(board_onboarding_router)
 api_v1.include_router(approvals_router)

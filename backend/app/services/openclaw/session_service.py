@@ -147,7 +147,14 @@ class GatewaySessionService(OpenClawDBService):
                 status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                 detail="board_id or gateway_url is required",
             )
-        board = await Board.objects.by_id(params.board_id).first(self.session)
+        try:
+            board_id = UUID(str(params.board_id))
+        except ValueError as exc:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                detail="board_id must be a valid UUID",
+            ) from exc
+        board = await Board.objects.by_id(board_id).first(self.session)
         if board is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -378,9 +385,11 @@ class GatewaySessionService(OpenClawDBService):
         session_id: str,
         payload: GatewaySessionMessageRequest,
         board_id: str | None,
+        organization_id: UUID,
         user: User | None,
     ) -> None:
         board, config, main_session = await self.require_gateway(board_id, user=user)
+        self._require_same_org(board, organization_id)
         if user is None:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
         await require_board_access(self.session, user=user, board=board, write=True)

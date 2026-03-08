@@ -35,6 +35,7 @@ import {
 } from "@/components/molecules/DependencyBanner";
 import { DashboardShell } from "@/components/templates/DashboardShell";
 import { BoardChatComposer } from "@/components/BoardChatComposer";
+import { BoardChatPanel } from "@/components/boards/BoardChatPanel";
 import { TaskCustomFieldsEditor } from "./TaskCustomFieldsEditor";
 import { Button } from "@/components/ui/button";
 import {
@@ -620,42 +621,6 @@ const TaskCommentCard = memo(function TaskCommentCard({
 
 TaskCommentCard.displayName = "TaskCommentCard";
 
-const ChatMessageCard = memo(function ChatMessageCard({
-  message,
-  fallbackSource,
-  isCurrentUser,
-}: {
-  message: BoardChatMessage;
-  fallbackSource: string;
-  isCurrentUser: boolean;
-}) {
-  const sourceLabel = resolveHumanActorName(message.source, fallbackSource);
-  return (
-    <div className={cn("flex", isCurrentUser ? "justify-end" : "justify-start")}>
-      <div
-        className={cn(
-          "w-fit max-w-[84%] rounded-2xl border px-4 py-3 shadow-sm",
-          "border-slate-200 bg-white text-slate-900",
-        )}
-      >
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="text-[13px] font-semibold text-slate-900">
-            {sourceLabel}
-          </p>
-          <span className="text-[11px] text-slate-400">
-            {formatShortTimestamp(message.created_at)}
-          </span>
-        </div>
-        <div className="mt-1 select-text cursor-text text-sm leading-6 break-words text-slate-900">
-          <Markdown content={message.content} variant="basic" />
-        </div>
-      </div>
-    </div>
-  );
-});
-
-ChatMessageCard.displayName = "ChatMessageCard";
-
 const LiveFeedCard = memo(function LiveFeedCard({
   item,
   taskTitle,
@@ -872,7 +837,9 @@ export default function BoardDetailPage() {
   const openedTaskIdFromUrlRef = useRef<string | null>(null);
   const openedPanelFromUrlRef = useRef<string | null>(null);
   const [comments, setComments] = useState<TaskComment[]>([]);
-  const [highlightedCommentId, setHighlightedCommentId] = useState<string | null>(null);
+  const [highlightedCommentId, setHighlightedCommentId] = useState<
+    string | null
+  >(null);
   const [liveFeed, setLiveFeed] = useState<LiveFeedItem[]>([]);
   const liveFeedRef = useRef<LiveFeedItem[]>([]);
   const liveFeedFlashTimersRef = useRef<Record<string, number>>({});
@@ -904,10 +871,7 @@ export default function BoardDetailPage() {
   );
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [chatMessages, setChatMessages] = useState<BoardChatMessage[]>([]);
-  const [isChatSending, setIsChatSending] = useState(false);
-  const [chatError, setChatError] = useState<string | null>(null);
   const chatMessagesRef = useRef<BoardChatMessage[]>([]);
-  const chatEndRef = useRef<HTMLDivElement | null>(null);
   const [isAgentsControlDialogOpen, setIsAgentsControlDialogOpen] =
     useState(false);
   const [agentsControlAction, setAgentsControlAction] = useState<
@@ -983,6 +947,25 @@ export default function BoardDetailPage() {
       }
     },
     [dismissToast],
+  );
+
+  const appendBoardChatMessage = useCallback(
+    (message: BoardChatMessage) => {
+      if (!message.tags?.includes("chat")) return;
+      pushLiveFeed(toLiveFeedFromBoardChat(message));
+      setChatMessages((prev) => {
+        const exists = prev.some((item) => item.id === message.id);
+        if (exists) return prev;
+        const next = [...prev, message];
+        next.sort((a, b) => {
+          const aTime = apiDatetimeToMs(a.created_at) ?? 0;
+          const bTime = apiDatetimeToMs(b.created_at) ?? 0;
+          return aTime - bTime;
+        });
+        return next;
+      });
+    },
+    [pushLiveFeed],
   );
 
   useEffect(() => {
@@ -1264,7 +1247,6 @@ export default function BoardDetailPage() {
     setIsApprovalsLoading(true);
     setError(null);
     setApprovalsError(null);
-    setChatError(null);
     setGroupSnapshotError(null);
     try {
       const snapshotResult =
@@ -1307,7 +1289,6 @@ export default function BoardDetailPage() {
         err instanceof Error ? err.message : "Something went wrong.";
       setError(message);
       setApprovalsError(message);
-      setChatError(message);
       setGroupSnapshotError(message);
       setGroupSnapshot(null);
     } finally {
@@ -1348,14 +1329,6 @@ export default function BoardDetailPage() {
   useEffect(() => {
     isLiveFeedOpenRef.current = isLiveFeedOpen;
   }, [isLiveFeedOpen]);
-
-  useEffect(() => {
-    if (!isChatOpen) return;
-    const timeout = window.setTimeout(() => {
-      chatEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-    }, 50);
-    return () => window.clearTimeout(timeout);
-  }, [chatMessages, isChatOpen]);
 
   /**
    * Returns an ISO timestamp for the newest board chat message.
@@ -1448,20 +1421,7 @@ export default function BoardDetailPage() {
                   memory?: BoardChatMessage;
                 };
                 if (payload.memory?.tags?.includes("chat")) {
-                  pushLiveFeed(toLiveFeedFromBoardChat(payload.memory));
-                  setChatMessages((prev) => {
-                    const exists = prev.some(
-                      (item) => item.id === payload.memory?.id,
-                    );
-                    if (exists) return prev;
-                    const next = [...prev, payload.memory as BoardChatMessage];
-                    next.sort((a, b) => {
-                      const aTime = apiDatetimeToMs(a.created_at) ?? 0;
-                      const bTime = apiDatetimeToMs(b.created_at) ?? 0;
-                      return aTime - bTime;
-                    });
-                    return next;
-                  });
+                  appendBoardChatMessage(payload.memory);
                 }
               } catch {
                 // ignore malformed
@@ -1501,7 +1461,7 @@ export default function BoardDetailPage() {
     isLiveFeedOpen,
     isPageActive,
     isSignedIn,
-    pushLiveFeed,
+    appendBoardChatMessage,
   ]);
 
   useEffect(() => {
@@ -2068,50 +2028,14 @@ export default function BoardDetailPage() {
           throw new Error("Unable to send message.");
         }
         const created = result.data;
-        if (created.tags?.includes("chat")) {
-          pushLiveFeed(toLiveFeedFromBoardChat(created));
-          setChatMessages((prev) => {
-            const exists = prev.some((item) => item.id === created.id);
-            if (exists) return prev;
-            const next = [...prev, created];
-            next.sort((a, b) => {
-              const aTime = apiDatetimeToMs(a.created_at) ?? 0;
-              const bTime = apiDatetimeToMs(b.created_at) ?? 0;
-              return aTime - bTime;
-            });
-            return next;
-          });
-        }
+        appendBoardChatMessage(created);
         return { ok: true, error: null };
       } catch (err) {
         const message = formatActionError(err, "Unable to send message.");
         return { ok: false, error: message };
       }
     },
-    [boardId, currentUserDisplayName, isSignedIn, pushLiveFeed],
-  );
-
-  const handleSendChat = useCallback(
-    async (content: string): Promise<boolean> => {
-      const trimmed = content.trim();
-      if (!trimmed) return false;
-      setIsChatSending(true);
-      setChatError(null);
-      try {
-        const result = await postBoardChatMessage(trimmed);
-        if (!result.ok) {
-          if (result.error) {
-            setChatError(result.error);
-            pushToast(result.error);
-          }
-          return false;
-        }
-        return true;
-      } finally {
-        setIsChatSending(false);
-      }
-    },
-    [postBoardChatMessage, pushToast],
+    [appendBoardChatMessage, boardId, currentUserDisplayName, isSignedIn],
   );
 
   const openAgentsControlDialog = (action: "pause" | "resume") => {
@@ -2418,9 +2342,12 @@ export default function BoardDetailPage() {
         currentTaskIdFromUrl !== fullTask.id ||
         currentCommentIdFromUrl !== targetCommentId
       ) {
-        router.replace(buildUrlWithTaskAndComment(fullTask.id, targetCommentId), {
-          scroll: false,
-        });
+        router.replace(
+          buildUrlWithTaskAndComment(fullTask.id, targetCommentId),
+          {
+            scroll: false,
+          },
+        );
       }
       selectedTaskIdRef.current = fullTask.id;
       setSelectedTask(fullTask);
@@ -2589,7 +2516,6 @@ export default function BoardDetailPage() {
       });
     }
     setIsChatOpen(false);
-    setChatError(null);
   };
 
   const openLiveFeed = () => {
@@ -4002,76 +3928,18 @@ export default function BoardDetailPage() {
         </div>
       </aside>
 
-      <aside
-        className={cn(
-          "fixed right-0 top-0 z-50 h-full w-[680px] max-w-[96vw] transform border-l border-slate-200 bg-white shadow-2xl transition-transform",
-          isChatOpen ? "transform-none" : "translate-x-full",
-        )}
-      >
-        <div className="flex h-full flex-col">
-          <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                Board chat
-              </p>
-              <p className="mt-1 text-sm font-medium text-slate-900">
-                Talk to the lead agent. Tag others with @name.
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={closeBoardChat}
-              className="rounded-lg border border-slate-200 p-2 text-slate-500 transition hover:bg-slate-50"
-              aria-label="Close board chat"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-          <div className="flex flex-1 flex-col overflow-hidden px-6 py-4">
-            <div className="flex-1 space-y-3 overflow-y-auto rounded-2xl border border-slate-200 bg-slate-50/60 p-4">
-              {chatError ? (
-                <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-                  {chatError}
-                </div>
-              ) : null}
-              {chatMessages.length === 0 ? (
-                <p className="text-sm text-slate-500">
-                  No messages yet. Start the conversation with your lead agent.
-                </p>
-              ) : (
-                chatMessages.map((message) => {
-                  const sourceLabel = resolveHumanActorName(
-                    message.source,
-                    currentUserDisplayName,
-                  );
-                  const isCurrentUser =
-                    sourceLabel === currentUserDisplayName;
-                  return (
-                    <ChatMessageCard
-                      key={message.id}
-                      message={message}
-                      fallbackSource={currentUserDisplayName}
-                      isCurrentUser={isCurrentUser}
-                    />
-                  );
-                })
-              )}
-              <div ref={chatEndRef} />
-            </div>
-            <BoardChatComposer
-              isSending={isChatSending}
-              onSend={handleSendChat}
-              disabled={!canWrite}
-              mentionSuggestions={boardChatMentionSuggestions}
-              placeholder={
-                canWrite
-                  ? "Message the board lead. Tag agents with @name."
-                  : "Read-only access. Chat is disabled."
-              }
-            />
-          </div>
-        </div>
-      </aside>
+      <BoardChatPanel
+        boardId={boardId}
+        isOpen={isChatOpen}
+        canWrite={canWrite}
+        currentUserDisplayName={currentUserDisplayName}
+        mentionSuggestions={boardChatMentionSuggestions}
+        onClose={closeBoardChat}
+        onMessageCreated={appendBoardChatMessage}
+        onError={(message) => {
+          pushToast(message);
+        }}
+      />
 
       <aside
         className={cn(

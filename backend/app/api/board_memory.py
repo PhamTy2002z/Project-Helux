@@ -8,7 +8,7 @@ from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy import func
 from sqlmodel import col
 from sse_starlette.sse import EventSourceResponse
@@ -27,6 +27,11 @@ from app.models.agents import Agent
 from app.models.board_memory import BoardMemory
 from app.schemas.board_memory import BoardMemoryCreate, BoardMemoryRead
 from app.schemas.pagination import DefaultLimitOffsetPage
+from app.services.board_chat_sessions import (
+    get_chat_session_for_board,
+    get_or_create_default_chat_session,
+    maybe_auto_title_chat_session,
+)
 from app.services.mentions import extract_mentions, matches_agent_mention
 from app.services.openclaw.gateway_dispatch import GatewayDispatchService
 from app.services.openclaw.gateway_rpc import GatewayConfig as GatewayClientConfig
@@ -37,6 +42,7 @@ if TYPE_CHECKING:
     from fastapi_pagination.limit_offset import LimitOffsetPage
     from sqlmodel.ext.asyncio.session import AsyncSession
 
+    from app.models.board_chat_sessions import BoardChatSession
     from app.models.boards import Board
 
 router = APIRouter(prefix="/boards/{board_id}/memory", tags=["board-memory"])
@@ -44,6 +50,7 @@ MAX_SNIPPET_LENGTH = 800
 STREAM_POLL_SECONDS = 2
 IS_CHAT_QUERY = Query(default=None)
 SINCE_QUERY = Query(default=None)
+CHAT_SESSION_ID_QUERY = Query(default=None)
 BOARD_READ_DEP = Depends(get_board_for_actor_read)
 BOARD_WRITE_DEP = Depends(get_board_for_actor_write)
 SESSION_DEP = Depends(get_session)
@@ -67,6 +74,62 @@ def _parse_since(value: str | None) -> datetime | None:
     return parsed
 
 
+def _actor_identifier(actor: ActorContext) -> str | None:
+    if actor.actor_type == "agent" and actor.agent:
+        return str(actor.agent.id)
+    if actor.user:
+        return str(actor.user.id)
+    return None
+
+
+async def _resolve_chat_session_for_read(
+    *,
+    session: AsyncSession,
+    board: Board,
+    actor: ActorContext,
+    chat_session_id: UUID | None,
+) -> BoardChatSession:
+    if chat_session_id is not None:
+        chat_session = await get_chat_session_for_board(
+            session,
+            board_id=board.id,
+            chat_session_id=chat_session_id,
+            include_archived=True,
+        )
+        if chat_session is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+        return chat_session
+    return await get_or_create_default_chat_session(
+        session,
+        board_id=board.id,
+        created_by=_actor_identifier(actor),
+    )
+
+
+async def _resolve_chat_session_for_write(
+    *,
+    session: AsyncSession,
+    board: Board,
+    actor: ActorContext,
+    chat_session_id: UUID | None,
+) -> BoardChatSession:
+    if chat_session_id is not None:
+        chat_session = await get_chat_session_for_board(
+            session,
+            board_id=board.id,
+            chat_session_id=chat_session_id,
+            include_archived=False,
+        )
+        if chat_session is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+        return chat_session
+    return await get_or_create_default_chat_session(
+        session,
+        board_id=board.id,
+        created_by=_actor_identifier(actor),
+    )
+
+
 def _serialize_memory(memory: BoardMemory) -> dict[str, object]:
     return BoardMemoryRead.model_validate(
         memory,
@@ -79,6 +142,7 @@ async def _fetch_memory_events(
     board_id: UUID,
     since: datetime,
     is_chat: bool | None = None,
+    chat_session_id: UUID | None = None,
 ) -> list[BoardMemory]:
     statement = (
         BoardMemory.objects.filter_by(board_id=board_id)
@@ -88,6 +152,8 @@ async def _fetch_memory_events(
     )
     if is_chat is not None:
         statement = statement.filter(col(BoardMemory.is_chat) == is_chat)
+    if chat_session_id is not None:
+        statement = statement.filter(col(BoardMemory.chat_session_id) == chat_session_id)
     statement = statement.filter(col(BoardMemory.created_at) >= since).order_by(
         col(BoardMemory.created_at),
     )
@@ -220,11 +286,27 @@ async def _notify_chat_targets(
 async def list_board_memory(
     *,
     is_chat: bool | None = IS_CHAT_QUERY,
+    chat_session_id: UUID | None = CHAT_SESSION_ID_QUERY,
     board: Board = BOARD_READ_DEP,
     session: AsyncSession = SESSION_DEP,
-    _actor: ActorContext = ACTOR_DEP,
+    actor: ActorContext = ACTOR_DEP,
 ) -> LimitOffsetPage[BoardMemoryRead]:
     """List board memory entries, optionally filtering chat entries."""
+    resolved_chat_session_id: UUID | None = None
+    if chat_session_id is not None and is_chat is not True:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="chat_session_id requires is_chat=true",
+        )
+    if is_chat is True:
+        chat_session = await _resolve_chat_session_for_read(
+            session=session,
+            board=board,
+            actor=actor,
+            chat_session_id=chat_session_id,
+        )
+        resolved_chat_session_id = chat_session.id
+
     statement = (
         BoardMemory.objects.filter_by(board_id=board.id)
         # Old/invalid rows (empty/whitespace-only content) can exist; exclude them to
@@ -233,6 +315,8 @@ async def list_board_memory(
     )
     if is_chat is not None:
         statement = statement.filter(col(BoardMemory.is_chat) == is_chat)
+    if resolved_chat_session_id is not None:
+        statement = statement.filter(col(BoardMemory.chat_session_id) == resolved_chat_session_id)
     statement = statement.order_by(col(BoardMemory.created_at).desc())
     return await paginate(session, statement.statement)
 
@@ -242,11 +326,27 @@ async def stream_board_memory(
     request: Request,
     *,
     board: Board = BOARD_READ_DEP,
-    _actor: ActorContext = ACTOR_DEP,
+    actor: ActorContext = ACTOR_DEP,
     since: str | None = SINCE_QUERY,
     is_chat: bool | None = IS_CHAT_QUERY,
+    chat_session_id: UUID | None = CHAT_SESSION_ID_QUERY,
 ) -> EventSourceResponse:
     """Stream board memory events over server-sent events."""
+    if chat_session_id is not None and is_chat is not True:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="chat_session_id requires is_chat=true",
+        )
+    resolved_chat_session_id: UUID | None = None
+    if is_chat is True:
+        async with async_session_maker() as bootstrap_session:
+            chat_session = await _resolve_chat_session_for_read(
+                session=bootstrap_session,
+                board=board,
+                actor=actor,
+                chat_session_id=chat_session_id,
+            )
+        resolved_chat_session_id = chat_session.id
     since_dt = _parse_since(since) or utcnow()
     last_seen = since_dt
 
@@ -261,6 +361,7 @@ async def stream_board_memory(
                     board.id,
                     last_seen,
                     is_chat=is_chat,
+                    chat_session_id=resolved_chat_session_id,
                 )
             for memory in memories:
                 last_seen = max(memory.created_at, last_seen)
@@ -280,6 +381,19 @@ async def create_board_memory(
 ) -> BoardMemory:
     """Create a board memory entry and notify chat targets when needed."""
     is_chat = payload.tags is not None and "chat" in payload.tags
+    if payload.chat_session_id is not None and not is_chat:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="chat_session_id requires chat-tagged memory",
+        )
+    resolved_chat_session: BoardChatSession | None = None
+    if is_chat:
+        resolved_chat_session = await _resolve_chat_session_for_write(
+            session=session,
+            board=board,
+            actor=actor,
+            chat_session_id=payload.chat_session_id,
+        )
     source = payload.source
     if is_chat and not source:
         if actor.actor_type == "agent" and actor.agent:
@@ -291,12 +405,19 @@ async def create_board_memory(
         content=payload.content,
         tags=payload.tags,
         is_chat=is_chat,
+        chat_session_id=resolved_chat_session.id if resolved_chat_session else None,
         source=source,
     )
     session.add(memory)
     await session.commit()
     await session.refresh(memory)
     if is_chat:
+        if resolved_chat_session is not None:
+            await maybe_auto_title_chat_session(
+                session,
+                chat_session=resolved_chat_session,
+                content=payload.content,
+            )
         await _notify_chat_targets(
             session=session,
             board=board,

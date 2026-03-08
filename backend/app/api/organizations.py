@@ -32,12 +32,14 @@ from app.models.organization_board_access import OrganizationBoardAccess
 from app.models.organization_invite_board_access import OrganizationInviteBoardAccess
 from app.models.organization_invites import OrganizationInvite
 from app.models.organization_members import OrganizationMember
+from app.models.organization_plans import OrganizationPlan
 from app.models.organizations import Organization
 from app.models.task_dependencies import TaskDependency
 from app.models.task_fingerprints import TaskFingerprint
 from app.models.tasks import Task
 from app.models.users import User
 from app.schemas.common import OkResponse
+from app.schemas.entitlements import OrganizationPlanAssign, OrganizationPlanRead
 from app.schemas.organizations import (
     OrganizationActiveUpdate,
     OrganizationBoardAccessRead,
@@ -53,6 +55,8 @@ from app.schemas.organizations import (
     OrganizationUserRead,
 )
 from app.schemas.pagination import DefaultLimitOffsetPage
+from app.services.activity_log import record_admin_audit
+from app.services.entitlements import assign_organization_plan, get_or_create_organization_plan
 from app.services.organizations import (
     OrganizationContext,
     accept_invite,
@@ -127,7 +131,7 @@ async def create_organization(
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
     name = payload.name.strip()
     if not name:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT)
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY)
     existing = (
         await session.exec(
             select(Organization).where(
@@ -155,9 +159,51 @@ async def create_organization(
     session.add(member)
     await session.flush()
     await set_active_organization(session, user=auth.user, organization_id=org.id)
+    await get_or_create_organization_plan(session, organization_id=org.id)
     await session.commit()
     await session.refresh(org)
     return OrganizationRead.model_validate(org, from_attributes=True)
+
+
+@router.get("/me/plan", response_model=OrganizationPlanRead)
+async def get_my_org_plan(
+    session: AsyncSession = SESSION_DEP,
+    ctx: OrganizationContext = ORG_MEMBER_DEP,
+) -> OrganizationPlanRead:
+    """Return the active organization's manual plan assignment."""
+    plan = await get_or_create_organization_plan(session, organization_id=ctx.organization.id)
+    return OrganizationPlanRead.model_validate(plan, from_attributes=True)
+
+
+@router.patch("/me/plan", response_model=OrganizationPlanRead)
+async def set_my_org_plan(
+    payload: OrganizationPlanAssign,
+    session: AsyncSession = SESSION_DEP,
+    ctx: OrganizationContext = ORG_ADMIN_DEP,
+) -> OrganizationPlanRead:
+    """Manually assign the active organization plan tier (no payment flow)."""
+    plan = await assign_organization_plan(
+        session,
+        organization_id=ctx.organization.id,
+        payload=payload,
+    )
+    record_admin_audit(
+        session,
+        audit_action="organization.plan.assign",
+        endpoint="/api/v1/organizations/me/plan",
+        organization_id=ctx.organization.id,
+        actor_id=ctx.member.user_id,
+        target_id=ctx.organization.id,
+        details={
+            "tier": plan.tier,
+            "effective_from": plan.effective_from.isoformat(),
+            "effective_until": (
+                plan.effective_until.isoformat() if plan.effective_until is not None else None
+            ),
+        },
+    )
+    await session.commit()
+    return OrganizationPlanRead.model_validate(plan, from_attributes=True)
 
 
 @router.get("/me/list", response_model=list[OrganizationListItem])
@@ -238,8 +284,6 @@ async def delete_my_org(
 
     org_id = ctx.organization.id
     board_ids = select(Board.id).where(col(Board.organization_id) == org_id)
-    task_ids = select(Task.id).where(col(Task.board_id).in_(board_ids))
-    agent_ids = select(Agent.id).where(col(Agent.board_id).in_(board_ids))
     member_ids = select(OrganizationMember.id).where(
         col(OrganizationMember.organization_id) == org_id,
     )
@@ -251,13 +295,7 @@ async def delete_my_org(
     await crud.delete_where(
         session,
         ActivityEvent,
-        col(ActivityEvent.task_id).in_(task_ids),
-        commit=False,
-    )
-    await crud.delete_where(
-        session,
-        ActivityEvent,
-        col(ActivityEvent.agent_id).in_(agent_ids),
+        col(ActivityEvent.organization_id) == org_id,
         commit=False,
     )
     await crud.delete_where(
@@ -276,14 +314,14 @@ async def delete_my_org(
         session,
         ApprovalTaskLink,
         col(ApprovalTaskLink.approval_id).in_(
-            select(Approval.id).where(col(Approval.board_id).in_(board_ids))
+            select(Approval.id).where(col(Approval.organization_id) == org_id)
         ),
         commit=False,
     )
     await crud.delete_where(
         session,
         Approval,
-        col(Approval.board_id).in_(board_ids),
+        col(Approval.organization_id) == org_id,
         commit=False,
     )
     await crud.delete_where(
@@ -337,13 +375,13 @@ async def delete_my_org(
     await crud.delete_where(
         session,
         Task,
-        col(Task.board_id).in_(board_ids),
+        col(Task.organization_id) == org_id,
         commit=False,
     )
     await crud.delete_where(
         session,
         Agent,
-        col(Agent.board_id).in_(board_ids),
+        col(Agent.organization_id) == org_id,
         commit=False,
     )
     await crud.delete_where(
@@ -372,6 +410,12 @@ async def delete_my_org(
     )
     await crud.delete_where(
         session,
+        OrganizationPlan,
+        col(OrganizationPlan.organization_id) == org_id,
+        commit=False,
+    )
+    await crud.delete_where(
+        session,
         OrganizationInvite,
         col(OrganizationInvite.organization_id) == org_id,
         commit=False,
@@ -394,6 +438,15 @@ async def delete_my_org(
         Organization,
         col(Organization.id) == org_id,
         commit=False,
+    )
+    record_admin_audit(
+        session,
+        audit_action="organization.delete",
+        endpoint="/api/v1/organizations/me",
+        organization_id=None,
+        actor_id=ctx.member.user_id,
+        target_id=org_id,
+        details={"actor_role": ctx.member.role},
     )
     await session.commit()
     return OkResponse()
@@ -483,7 +536,17 @@ async def update_org_member(
     if "role" in updates and updates["role"] is not None:
         updates["role"] = normalize_role(updates["role"])
     updates["updated_at"] = utcnow()
-    member = await crud.patch(session, member, updates)
+    member = await crud.patch(session, member, updates, commit=False, refresh=False)
+    record_admin_audit(
+        session,
+        audit_action="organization.member.update",
+        endpoint="/api/v1/organizations/me/members/{member_id}",
+        organization_id=ctx.organization.id,
+        actor_id=ctx.member.user_id,
+        target_id=member.id,
+        details={"role": member.role},
+    )
+    await session.commit()
     user = await User.objects.by_id(member.user_id).first(session)
     return _member_to_read(member, user)
 
@@ -513,9 +576,22 @@ async def update_member_access(
             .all(session)
         }
         if valid_board_ids != board_ids:
-            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT)
+            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY)
 
     await apply_member_access_update(session, member=member, update=payload)
+    record_admin_audit(
+        session,
+        audit_action="organization.member.access.update",
+        endpoint="/api/v1/organizations/me/members/{member_id}/access",
+        organization_id=ctx.organization.id,
+        actor_id=ctx.member.user_id,
+        target_id=member.id,
+        details={
+            "all_boards_read": payload.all_boards_read,
+            "all_boards_write": payload.all_boards_write,
+            "board_access_entries": len(payload.board_access),
+        },
+    )
     await session.commit()
     await session.refresh(member)
     user = await User.objects.by_id(member.user_id).first(session)
@@ -554,7 +630,7 @@ async def remove_org_member(
         )
         if len(owners) <= 1:
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail="Organization must have at least one owner",
             )
 
@@ -583,7 +659,17 @@ async def remove_org_member(
             )
         session.add(user)
 
-    await crud.delete(session, member)
+    await crud.delete(session, member, commit=False)
+    record_admin_audit(
+        session,
+        audit_action="organization.member.remove",
+        endpoint="/api/v1/organizations/me/members/{member_id}",
+        organization_id=ctx.organization.id,
+        actor_id=ctx.member.user_id,
+        target_id=member.id,
+        details={"removed_user_id": str(member.user_id)},
+    )
+    await session.commit()
     return OkResponse()
 
 
@@ -614,7 +700,7 @@ async def create_org_invite(
     """Create an organization invite for an email address."""
     email = normalize_invited_email(payload.invited_email)
     if not email:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT)
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY)
 
     existing_user = (
         await session.exec(select(User).where(func.lower(col(User.email)) == email))
@@ -654,11 +740,26 @@ async def create_org_invite(
             .all(session)
         }
         if valid_board_ids != board_ids:
-            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT)
+            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY)
     await apply_invite_board_access(
         session,
         invite=invite,
         entries=payload.board_access,
+    )
+    record_admin_audit(
+        session,
+        audit_action="organization.invite.create",
+        endpoint="/api/v1/organizations/me/invites",
+        organization_id=ctx.organization.id,
+        actor_id=ctx.member.user_id,
+        target_id=invite.id,
+        details={
+            "invited_email": invite.invited_email,
+            "role": invite.role,
+            "all_boards_read": invite.all_boards_read,
+            "all_boards_write": invite.all_boards_write,
+            "board_access_entries": len(payload.board_access),
+        },
     )
     await session.commit()
     await session.refresh(invite)
@@ -683,7 +784,17 @@ async def revoke_org_invite(
         col(OrganizationInviteBoardAccess.organization_invite_id) == invite.id,
         commit=False,
     )
-    await crud.delete(session, invite)
+    await crud.delete(session, invite, commit=False)
+    record_admin_audit(
+        session,
+        audit_action="organization.invite.revoke",
+        endpoint="/api/v1/organizations/me/invites/{invite_id}",
+        organization_id=ctx.organization.id,
+        actor_id=ctx.member.user_id,
+        target_id=invite.id,
+        details={"invited_email": invite.invited_email},
+    )
+    await session.commit()
     return OrganizationInviteRead.model_validate(invite, from_attributes=True)
 
 

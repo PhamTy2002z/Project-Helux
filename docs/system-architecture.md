@@ -150,6 +150,30 @@ OpenClaw Mission Control follows a three-tier architecture with clear separation
 
 ## Data Flow Patterns
 
+### Board Chat Multi-Session Flow
+
+```
+BoardChatPanel (frontend)
+    │
+    ├─→ /api/v1/boards/{board_id}/chat-sessions
+    │     - list/create/rename/archive session metadata
+    │
+    ├─→ /api/v1/boards/{board_id}/memory?is_chat=true&chat_session_id=...
+    │     - latest-first paged message reads
+    │
+    ├─→ /api/v1/boards/{board_id}/memory/stream?is_chat=true&chat_session_id=...
+    │     - session-scoped SSE updates
+    │
+    └─→ /api/v1/boards/{board_id}/memory (POST)
+          - chat message write with chat_session_id
+          - auto-title when untouched title is "New chat"
+
+PostgreSQL
+    ├─ board_chat_sessions
+    │   (id, board_id, title, created_by, created_at, updated_at, archived_at)
+    └─ board_memory.chat_session_id (nullable FK)
+```
+
 ### Standard CRUD Operation Flow
 
 ```
@@ -561,24 +585,28 @@ Organizations
 ## Security Architecture
 
 ### Network Security
+
 - All services bind to localhost in development
 - Production deployment behind reverse proxy (nginx/traefik)
 - HTTPS termination at reverse proxy
 - CORS configuration for allowed origins
 
 ### Authentication Security
+
 - JWT tokens with expiration (Clerk mode)
 - Secure token storage (httpOnly cookies preferred)
 - Bearer token validation (local mode)
 - Environment-based secret management
 
 ### Database Security
+
 - Connection pooling with max connections limit
 - Parameterized queries (SQLModel/SQLAlchemy)
 - Row-level security for multi-tenant isolation
 - Regular automated backups
 
 ### API Security
+
 - Rate limiting per endpoint
 - Input validation with Pydantic
 - SQL injection prevention (ORM)
@@ -587,6 +615,7 @@ Organizations
 ## Performance Considerations
 
 ### Backend Performance
+
 - Async database operations (asyncpg)
 - Connection pooling (SQLAlchemy)
 - Redis caching for frequently accessed data
@@ -594,6 +623,7 @@ Organizations
 - Database indexes on foreign keys and query columns
 
 ### Frontend Performance
+
 - Server-side rendering (Next.js)
 - Code splitting (dynamic imports)
 - Image optimization (Next.js Image)
@@ -601,6 +631,7 @@ Organizations
 - Optimistic UI updates
 
 ### Database Performance
+
 - Indexes on frequently queried columns
 - Pagination for large result sets
 - Eager loading to prevent N+1 queries
@@ -609,17 +640,20 @@ Organizations
 ## Scalability Patterns
 
 ### Horizontal Scaling
+
 - Stateless backend API (multiple instances behind load balancer)
 - Shared PostgreSQL database
 - Shared Redis instance for job queue
 - Session storage in database or Redis (not in-memory)
 
 ### Vertical Scaling
+
 - Increase database resources (CPU, RAM, storage)
 - Increase Redis memory for larger cache
 - Increase backend worker processes (uvicorn workers)
 
 ### Future Scaling Considerations
+
 - Database read replicas for read-heavy workloads
 - Redis cluster for distributed caching
 - Message queue (RabbitMQ/Kafka) for event streaming
@@ -628,12 +662,14 @@ Organizations
 ## Monitoring and Observability
 
 ### Health Checks
+
 - `/healthz` endpoint for backend health
 - Database connection check
 - Redis connection check
 - Gateway connectivity status
 
 ### Metrics
+
 - API request latency (P50, P95, P99)
 - Database query performance
 - Job queue length and processing time
@@ -641,6 +677,7 @@ Organizations
 - Error rates by endpoint
 
 ### Logging
+
 - Structured logging (JSON format)
 - Log levels (DEBUG, INFO, WARNING, ERROR)
 - Request/response logging

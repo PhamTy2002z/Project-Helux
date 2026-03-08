@@ -36,6 +36,7 @@ from app.services.activity_log import record_activity
 from app.services.board_group_snapshot import build_board_group_snapshot
 from app.services.board_lifecycle import delete_board as delete_board_service
 from app.services.board_snapshot import build_board_snapshot
+from app.services.entitlements import enforce_board_quota
 from app.services.openclaw.gateway_dispatch import GatewayDispatchService
 from app.services.openclaw.gateway_rpc import GatewayConfig as GatewayClientConfig
 from app.services.openclaw.gateway_rpc import OpenClawGatewayError
@@ -346,6 +347,7 @@ async def _notify_agents_on_board_group_change(
                 ),
                 agent_id=agent.id,
                 board_id=recipient_board.id,
+                organization_id=recipient_board.organization_id,
             )
         else:
             failed += 1
@@ -358,6 +360,7 @@ async def _notify_agents_on_board_group_change(
                 ),
                 agent_id=agent.id,
                 board_id=recipient_board.id,
+                organization_id=recipient_board.organization_id,
             )
 
     if notified or failed:
@@ -444,6 +447,7 @@ async def _notify_lead_on_board_update(
             message=f"Lead agent notified for board update: {board.name}.",
             agent_id=lead.id,
             board_id=board.id,
+            organization_id=board.organization_id,
         )
     else:
         record_activity(
@@ -452,6 +456,7 @@ async def _notify_lead_on_board_update(
             message=f"Lead board update notify failed for {board.name}: {error}",
             agent_id=lead.id,
             board_id=board.id,
+            organization_id=board.organization_id,
         )
     await session.commit()
 
@@ -485,6 +490,7 @@ async def create_board(
     ctx: OrganizationContext = ORG_ADMIN_DEP,
 ) -> Board:
     """Create a board in the active organization."""
+    await enforce_board_quota(session, organization_id=ctx.organization.id)
     data = payload.model_dump()
     data["organization_id"] = ctx.organization.id
     return await crud.create(session, Board, **data)

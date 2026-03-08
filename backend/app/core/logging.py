@@ -21,6 +21,12 @@ logging.addLevelName(TRACE_LEVEL, "TRACE")
 _REQUEST_ID_CONTEXT: ContextVar[str | None] = ContextVar("request_id", default=None)
 _REQUEST_METHOD_CONTEXT: ContextVar[str | None] = ContextVar("request_method", default=None)
 _REQUEST_PATH_CONTEXT: ContextVar[str | None] = ContextVar("request_path", default=None)
+_REQUEST_ACTOR_ID_CONTEXT: ContextVar[str | None] = ContextVar("request_actor_id", default=None)
+_REQUEST_ORGANIZATION_ID_CONTEXT: ContextVar[str | None] = ContextVar(
+    "request_organization_id",
+    default=None,
+)
+_REQUEST_ENDPOINT_CONTEXT: ContextVar[str | None] = ContextVar("request_endpoint", default=None)
 
 
 def _coerce_exc_info(
@@ -126,6 +132,62 @@ def get_request_path() -> str | None:
     return _REQUEST_PATH_CONTEXT.get()
 
 
+def set_request_actor_context(
+    actor_id: str | None,
+    organization_id: str | None,
+    endpoint: str | None,
+) -> tuple[Token[str | None], Token[str | None], Token[str | None]]:
+    """Bind actor and tenant context for the current request task."""
+    normalized_actor_id = (actor_id or "").strip() or None
+    normalized_organization_id = (organization_id or "").strip() or None
+    normalized_endpoint = (endpoint or "").strip() or None
+    return (
+        _REQUEST_ACTOR_ID_CONTEXT.set(normalized_actor_id),
+        _REQUEST_ORGANIZATION_ID_CONTEXT.set(normalized_organization_id),
+        _REQUEST_ENDPOINT_CONTEXT.set(normalized_endpoint),
+    )
+
+
+def reset_request_actor_context(
+    tokens: tuple[Token[str | None], Token[str | None], Token[str | None]],
+) -> None:
+    """Reset actor and tenant context for the current request task."""
+    actor_token, organization_token, endpoint_token = tokens
+    _REQUEST_ACTOR_ID_CONTEXT.reset(actor_token)
+    _REQUEST_ORGANIZATION_ID_CONTEXT.reset(organization_token)
+    _REQUEST_ENDPOINT_CONTEXT.reset(endpoint_token)
+
+
+def bind_request_actor_context(
+    *,
+    actor_id: str | None = None,
+    organization_id: str | None = None,
+    endpoint: str | None = None,
+) -> None:
+    """Update actor and tenant context fields without token management."""
+    if actor_id is not None:
+        _REQUEST_ACTOR_ID_CONTEXT.set((actor_id or "").strip() or None)
+    if organization_id is not None:
+        _REQUEST_ORGANIZATION_ID_CONTEXT.set((organization_id or "").strip() or None)
+    if endpoint is not None:
+        _REQUEST_ENDPOINT_CONTEXT.set((endpoint or "").strip() or None)
+
+
+def get_request_actor_id() -> str | None:
+    """Return actor id currently bound to logging context."""
+    return _REQUEST_ACTOR_ID_CONTEXT.get()
+
+
+def get_request_organization_id() -> str | None:
+    """Return organization id currently bound to logging context."""
+    return _REQUEST_ORGANIZATION_ID_CONTEXT.get()
+
+
+def get_request_endpoint() -> str | None:
+    """Return endpoint path currently bound to logging context."""
+    return _REQUEST_ENDPOINT_CONTEXT.get()
+
+
 _STANDARD_LOG_RECORD_ATTRS = {
     "args",
     "asctime",
@@ -180,6 +242,18 @@ class AppLogFilter(logging.Filter):
             path = get_request_path()
             if path:
                 record.path = path
+        if not getattr(record, "actor_id", None):
+            actor_id = get_request_actor_id()
+            if actor_id:
+                record.actor_id = actor_id
+        if not getattr(record, "organization_id", None):
+            organization_id = get_request_organization_id()
+            if organization_id:
+                record.organization_id = organization_id
+        if not getattr(record, "endpoint", None):
+            endpoint = get_request_endpoint() or get_request_path()
+            if endpoint:
+                record.endpoint = endpoint
         return True
 
 

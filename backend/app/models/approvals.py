@@ -20,6 +20,7 @@ class Approval(QueryModel, table=True):
     __tablename__ = "approvals"  # pyright: ignore[reportAssignmentType]
 
     id: UUID = Field(default_factory=uuid4, primary_key=True)
+    organization_id: UUID | None = Field(default=None, foreign_key="organizations.id", index=True)
     board_id: UUID = Field(foreign_key="boards.id", index=True)
     task_id: UUID | None = Field(default=None, foreign_key="tasks.id", index=True)
     agent_id: UUID | None = Field(default=None, foreign_key="agents.id", index=True)

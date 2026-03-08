@@ -9,12 +9,18 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Query, Request
 from sse_starlette.sse import EventSourceResponse
 
-from app.api.deps import ActorContext, require_admin_or_agent, require_org_admin
+from app.api.deps import (
+    ActorContext,
+    get_agent_for_org_admin,
+    require_admin_or_agent,
+    require_org_admin,
+)
 from app.core.agent_tokens import generate_agent_token, hash_agent_token
 from app.core.auth import AuthContext, get_auth_context
 from app.core.logging import get_logger
 from app.db.session import get_session
 from app.models.agents import Agent
+from app.models.gateways import Gateway
 from app.schemas.agents import (
     AgentCreate,
     AgentHeartbeat,
@@ -24,7 +30,6 @@ from app.schemas.agents import (
 )
 from app.schemas.common import OkResponse
 from app.schemas.pagination import DefaultLimitOffsetPage
-from app.models.gateways import Gateway
 from app.services.openclaw.gateway_resolver import optional_gateway_client_config
 from app.services.openclaw.gateway_rpc import OpenClawGatewayError, openclaw_call
 from app.services.openclaw.provisioning_db import AgentLifecycleService, AgentUpdateOptions
@@ -177,20 +182,14 @@ async def delete_agent(
 
 @router.post("/{agent_id}/rotate-token")
 async def rotate_agent_token(
-    agent_id: str,
+    agent: Agent = Depends(get_agent_for_org_admin),
     session: AsyncSession = SESSION_DEP,
-    auth: AuthContext = AUTH_DEP,
 ) -> dict[str, str]:
     """Generate a new auth token for an agent. Returns the plaintext token once.
 
     Only available to authenticated admin users. Store the returned token
     securely — it cannot be retrieved again after this response.
     """
-    from fastapi import HTTPException, status
-
-    agent = await session.get(Agent, agent_id)
-    if agent is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Agent not found")
     raw_token = generate_agent_token()
     agent.agent_token_hash = hash_agent_token(raw_token)
     session.add(agent)
@@ -198,7 +197,7 @@ async def rotate_agent_token(
 
     await _sync_token_to_gateway(agent, raw_token, session)
 
-    return {"agent_id": agent_id, "agent_name": agent.name or "", "token": raw_token}
+    return {"agent_id": str(agent.id), "agent_name": agent.name or "", "token": raw_token}
 
 
 async def _sync_token_to_gateway(agent: Agent, raw_token: str, session: object) -> None:
@@ -217,7 +216,7 @@ async def _sync_token_to_gateway(agent: Agent, raw_token: str, session: object) 
 
     session_id: str = agent.openclaw_session_id
     if session_id.startswith("agent:") and session_id.endswith(":main"):
-        gw_agent_id = session_id[len("agent:"):-len(":main")]
+        gw_agent_id = session_id[len("agent:") : -len(":main")]
     else:
         gw_agent_id = session_id
 

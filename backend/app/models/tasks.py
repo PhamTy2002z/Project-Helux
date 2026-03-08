@@ -19,6 +19,7 @@ class Task(TenantScoped, table=True):
     __tablename__ = "tasks"  # pyright: ignore[reportAssignmentType]
 
     id: UUID = Field(default_factory=uuid4, primary_key=True)
+    organization_id: UUID | None = Field(default=None, foreign_key="organizations.id", index=True)
     board_id: UUID | None = Field(default=None, foreign_key="boards.id", index=True)
 
     title: str

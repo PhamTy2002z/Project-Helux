@@ -21,6 +21,7 @@ from app.models.agents import Agent
 from app.models.approvals import Approval
 from app.models.boards import Board
 from app.models.tasks import Task
+from app.schemas.entitlements import EntitlementUsageRead
 from app.schemas.metrics import (
     DashboardBucketKey,
     DashboardKpis,
@@ -34,7 +35,9 @@ from app.schemas.metrics import (
     DashboardWipPoint,
     DashboardWipRangeSeries,
     DashboardWipSeriesSet,
+    TenantSloMetrics,
 )
+from app.services.entitlements import get_entitlement_usage
 from app.services.organizations import OrganizationContext, list_accessible_board_ids
 
 router = APIRouter(prefix="/metrics", tags=["metrics"])
@@ -448,6 +451,25 @@ async def _pending_approvals_snapshot(
     return DashboardPendingApprovals(total=total, items=items)
 
 
+async def _pending_approval_queue_lag_seconds(
+    session: AsyncSession,
+    board_ids: list[UUID],
+) -> float:
+    if not board_ids:
+        return 0.0
+    statement = (
+        select(func.min(col(Approval.created_at)))
+        .where(col(Approval.board_id).in_(board_ids))
+        .where(col(Approval.status) == "pending")
+    )
+    oldest = (await session.exec(statement)).one_or_none()
+    if isinstance(oldest, tuple):
+        oldest = oldest[0]
+    if oldest is None:
+        return 0.0
+    return max((utcnow() - oldest).total_seconds(), 0.0)
+
+
 async def _resolve_dashboard_board_ids(
     session: AsyncSession,
     *,
@@ -548,4 +570,42 @@ async def dashboard_metrics(
         error_rate=error_rate,
         wip=wip,
         pending_approvals=pending_approvals,
+    )
+
+
+@router.get("/quotas", response_model=EntitlementUsageRead)
+async def quota_usage(
+    session: AsyncSession = SESSION_DEP,
+    ctx: OrganizationContext = ORG_MEMBER_DEP,
+) -> EntitlementUsageRead:
+    """Return organization plan tier and current quota usage snapshot."""
+    return await get_entitlement_usage(session, organization_id=ctx.organization.id)
+
+
+@router.get("/tenant-slo", response_model=TenantSloMetrics)
+async def tenant_slo_metrics(
+    range_key: DashboardRangeKey = RANGE_QUERY,
+    session: AsyncSession = SESSION_DEP,
+    ctx: OrganizationContext = ORG_MEMBER_DEP,
+) -> TenantSloMetrics:
+    """Return tenant-scoped SaaS SLO metrics for support and alert workflows."""
+    primary = _resolve_range(range_key)
+    board_ids = await _resolve_dashboard_board_ids(
+        session,
+        ctx=ctx,
+        board_id=None,
+        group_id=None,
+    )
+    return TenantSloMetrics(
+        organization_id=ctx.organization.id,
+        range=primary.key,
+        generated_at=utcnow(),
+        dimensions={
+            "organization_id": str(ctx.organization.id),
+            "endpoint_class": "tenant_slo",
+        },
+        error_rate_pct=await _error_rate_kpi(session, primary, board_ids),
+        median_cycle_time_hours=await _median_cycle_time_for_range(session, primary, board_ids),
+        approval_queue_lag_seconds=await _pending_approval_queue_lag_seconds(session, board_ids),
+        quota_usage=await get_entitlement_usage(session, organization_id=ctx.organization.id),
     )

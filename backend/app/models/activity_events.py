@@ -19,6 +19,7 @@ class ActivityEvent(QueryModel, table=True):
     __tablename__ = "activity_events"  # pyright: ignore[reportAssignmentType]
 
     id: UUID = Field(default_factory=uuid4, primary_key=True)
+    organization_id: UUID | None = Field(default=None, foreign_key="organizations.id", index=True)
     event_type: str = Field(index=True)
     message: str | None = None
     agent_id: UUID | None = Field(default=None, foreign_key="agents.id", index=True)

@@ -104,7 +104,9 @@ async def test_remove_org_member_deletes_member_access_and_member() -> None:
     assert session.deleted == [member]
     assert session.committed == 1
     assert user.active_organization_id == fallback_org_id
-    assert session.added == [user]
+    assert session.added[0] == user
+    assert len(session.added) == 2
+    assert getattr(session.added[1], "event_type", "") == "admin.organization.member_removed"
 
 
 @pytest.mark.asyncio
@@ -170,7 +172,7 @@ async def test_remove_org_member_rejects_removing_last_owner() -> None:
     with pytest.raises(HTTPException) as exc_info:
         await organizations.remove_org_member(member_id=member.id, session=session, ctx=ctx)
 
-    assert exc_info.value.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
+    assert exc_info.value.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
     assert session.executed == []
     assert session.deleted == []
     assert session.committed == 0

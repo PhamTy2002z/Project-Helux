@@ -1,37 +1,41 @@
 # Release checklist
 
-This is a lightweight, operator-friendly checklist for releasing Mission Control.
+Use this checklist to release Mission Control with SaaS hardening gates enabled.
+This checklist is for beta releases that prioritize tenant isolation, reliability,
+and safe rollback.
 
-> Goal: **no data loss** and **near-zero (ideally zero) user-visible downtime**.
+## Before release
 
-## Before you release
+Complete these checks before deploying a candidate:
 
-- [ ] Confirm the target version/commit SHA.
-- [ ] Review merged PRs since last release (especially DB schema/auth changes).
-- [ ] Ensure CI is green on the target SHA.
-- [ ] Confirm you have:
-  - [ ] access to the host(s)
-  - [ ] access to Postgres backups (or snapshots)
-  - [ ] a rollback plan
+- [ ] Confirm release commit SHA and build artifacts
+- [ ] Confirm CI is green, including `backend-saas-gates`
+- [ ] Confirm latest restore drill evidence is available
+- [ ] Confirm rollback owner and incident channel are assigned
 
-## Database safety
+## SaaS hardening gates
 
-- [ ] Verify migrations are **backward compatible** with the current running app (if doing rolling deploys).
-- [ ] Take a backup / snapshot.
-- [ ] If migrations are risky or not backward compatible, schedule a maintenance window.
+A release is blocked if any gate fails.
 
-## Deploy (Docker Compose)
+- [ ] Security gates pass
+  - [ ] Auth profile strictness tests
+  - [ ] Authz regression tests
+- [ ] Isolation gates pass
+  - [ ] Tenant invariant tests
+- [ ] Reliability gates pass
+  - [ ] `/readyz` dependency checks
+  - [ ] Backup/restore drill validation
+- [ ] Anti-abuse gates pass
+  - [ ] Rate-limit tests
+  - [ ] Quota enforcement tests
 
-- [ ] Pull / build the new images (or update the repo checkout).
-- [ ] Apply migrations (if you run them manually):
+Run targeted gates locally:
 
 ```bash
-# example: if running backend locally on the host
-cd backend
-uv run alembic upgrade head
+make backend-saas-gates
 ```
 
-- [ ] Restart services with minimal disruption:
+## Deploy (Docker Compose)
 
 ```bash
 docker compose -f compose.yml --env-file .env up -d --build
@@ -39,24 +43,29 @@ docker compose -f compose.yml --env-file .env up -d --build
 
 ## Post-deploy verification
 
-- [ ] Backend health: `GET /healthz` returns 200
-- [ ] Backend readiness: `GET /readyz` returns 200
-- [ ] Frontend loads (no console spam)
-- [ ] Login works (local/clerk mode)
-- [ ] Core flows work end-to-end:
-  - [ ] View board
-  - [ ] Create/update a task
-  - [ ] Post a comment
-  - [ ] Heartbeat check-in succeeds
+- [ ] `GET /healthz` returns HTTP `200`
+- [ ] `GET /readyz` returns HTTP `200`
+- [ ] `GET /api/v1/metrics/tenant-slo` returns tenant SLO payload
+- [ ] Admin mutation endpoints emit `admin.*` audit events
 
-## Rollback (if needed)
+## Rollback criteria
 
-- [ ] Roll back the app version (compose / images).
-- [ ] If migrations were applied and are not reversible, rollbacks may require a DB restore.
+Trigger rollback immediately when any criterion is true:
 
-## Notes to keep this honest
+- Cross-tenant authorization or data isolation regression
+- Sustained `/readyz` failure for required dependencies
+- High-error incident affecting beta cohort with no immediate mitigation
 
-- If you add a new operational dependency (e.g., redis), update:
-  - `README.md` (overview + quickstart)
-  - `docs/deployment/README.md`
-  - this checklist
+## Rollback actions
+
+1. Roll back to last known-good image and restart services.
+2. If schema or data corruption is suspected, run restore from latest validated
+   backup.
+3. Rotate tokens if compromise is suspected.
+4. Re-run SaaS hardening gates before resuming rollout.
+
+## Go-live checklist
+
+Use the staged rollout checklist for internal, partner, and wider beta phases:
+
+- [SaaS beta go-live checklist](./saas-beta-go-live-checklist.md)

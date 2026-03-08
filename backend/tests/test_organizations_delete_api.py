@@ -19,6 +19,7 @@ from app.services.organizations import OrganizationContext
 @dataclass
 class _FakeSession:
     executed: list[object] = field(default_factory=list)
+    added: list[object] = field(default_factory=list)
     committed: int = 0
 
     async def exec(self, statement: object) -> None:
@@ -26,6 +27,9 @@ class _FakeSession:
 
     async def execute(self, statement: object) -> None:
         self.executed.append(statement)
+
+    def add(self, value: object) -> None:
+        self.added.append(value)
 
     async def commit(self) -> None:
         self.committed += 1
@@ -53,7 +57,6 @@ async def test_delete_my_org_cleans_dependents_before_organization_delete() -> N
     executed_tables = [statement.table.name for statement in session.executed]
     assert executed_tables == [
         "activity_events",
-        "activity_events",
         "task_dependencies",
         "task_fingerprints",
         "approval_task_links",
@@ -72,11 +75,14 @@ async def test_delete_my_org_cleans_dependents_before_organization_delete() -> N
         "board_group_memory",
         "board_groups",
         "gateways",
+        "organization_plans",
         "organization_invites",
         "organization_members",
         "users",
         "organizations",
     ]
+    assert len(session.added) == 1
+    assert getattr(session.added[0], "event_type", "") == "admin.organization.deleted"
     assert session.committed == 1
 
 

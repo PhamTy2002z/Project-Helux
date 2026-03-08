@@ -4,7 +4,7 @@
 
 **Version**: 0.1.0 (Active Development)
 **Status**: Pre-release, under active development
-**Last Updated**: 2026-03-07
+**Last Updated**: 2026-03-08
 
 ## Project Phases
 
@@ -14,6 +14,7 @@
 **Timeline**: Q3 2024 - Q4 2024
 
 #### Completed Features
+
 - ✅ FastAPI backend with async SQLAlchemy/SQLModel
 - ✅ Next.js 16 frontend with React 19
 - ✅ PostgreSQL database with Alembic migrations
@@ -24,6 +25,7 @@
 - ✅ OpenAPI documentation generation
 
 #### Key Deliverables
+
 - Working backend API with 24 route modules
 - Functional frontend with 40+ pages
 - Database schema with 28 models
@@ -38,6 +40,7 @@
 **Timeline**: Q4 2024 - Q1 2025
 
 #### Completed Features
+
 - ✅ Organization management with multi-tenancy
 - ✅ Board groups and boards hierarchy
 - ✅ Task management with custom fields
@@ -46,8 +49,10 @@
 - ✅ Activity event logging and audit trail
 - ✅ User management and organization invites
 - ✅ Board-level and board-group-level memory
+- ✅ Multi-session board chat (create, rename, archive-hide, auto-title, session-scoped paging)
 
 #### Key Deliverables
+
 - Complete work orchestration system
 - Multi-tenant organization structure
 - Flexible task metadata with custom fields
@@ -62,6 +67,7 @@
 **Timeline**: Q1 2025 - Q2 2025
 
 #### Completed Features
+
 - ✅ Agent lifecycle management (create, start, stop, delete)
 - ✅ Agent assignment to boards
 - ✅ Agent configuration and metadata
@@ -72,12 +78,14 @@
 - ✅ Gateway health checks
 
 #### In Progress
+
 - 🔄 Advanced agent scheduling and orchestration
 - 🔄 Agent performance metrics and analytics
 - 🔄 Multi-agent coordination patterns
 - 🔄 Agent failure recovery and retry logic
 
 #### Planned Features
+
 - ⏳ Agent resource limits and quotas
 - ⏳ Agent execution history and logs
 - ⏳ Agent templates and presets
@@ -91,6 +99,7 @@
 **Timeline**: Q2 2025 - Q3 2025
 
 #### Completed Features
+
 - ✅ Approval workflow creation
 - ✅ Approval request submission
 - ✅ Approval/rejection actions
@@ -98,12 +107,14 @@
 - ✅ Task-approval linking
 
 #### In Progress
+
 - 🔄 Multi-stage approval chains
 - 🔄 Conditional approval routing
 - 🔄 Approval delegation
 - 🔄 Approval notifications
 
 #### Planned Features
+
 - ⏳ Approval policy templates
 - ⏳ Time-based approval expiration
 - ⏳ Approval analytics and reporting
@@ -117,6 +128,7 @@
 **Timeline**: Q2 2025 - Q3 2025
 
 #### Completed Features
+
 - ✅ Gateway registration and configuration
 - ✅ WebSocket-based gateway communication
 - ✅ Gateway health monitoring
@@ -124,11 +136,13 @@
 - ✅ Gateway metadata and status tracking
 
 #### In Progress
+
 - 🔄 Gateway load balancing
 - 🔄 Gateway failover and redundancy
 - 🔄 Gateway metrics and performance monitoring
 
 #### Planned Features
+
 - ⏳ Multi-gateway agent distribution
 - ⏳ Gateway resource utilization tracking
 - ⏳ Gateway authentication and security
@@ -142,6 +156,7 @@
 **Timeline**: Q3 2025 - Q4 2025
 
 #### Planned Features
+
 - ⏳ Enhanced metrics dashboard
 - ⏳ Real-time system health monitoring
 - ⏳ Performance analytics and insights
@@ -152,6 +167,7 @@
 - ⏳ SLA monitoring and reporting
 
 #### Success Criteria
+
 - Comprehensive metrics for all operations
 - Real-time dashboard with key indicators
 - Alerting for critical system events
@@ -165,6 +181,7 @@
 **Timeline**: Q4 2025 - Q1 2026
 
 #### Planned Features
+
 - ⏳ Workflow templates and board cloning
 - ⏳ Advanced search with full-text indexing
 - ⏳ Scheduled task execution (cron-like)
@@ -175,6 +192,7 @@
 - ⏳ Advanced filtering and saved views
 
 #### Success Criteria
+
 - Reusable workflow templates
 - Fast full-text search across all entities
 - Reliable scheduled task execution
@@ -188,6 +206,7 @@
 **Timeline**: Q1 2026 - Q2 2026
 
 #### Planned Features
+
 - ⏳ Slack/Discord integration
 - ⏳ GitHub/GitLab integration
 - ⏳ Jira/Linear synchronization
@@ -198,6 +217,7 @@
 - ⏳ SSO providers beyond Clerk
 
 #### Success Criteria
+
 - Seamless integration with popular tools
 - Extensible plugin architecture
 - Standard metrics export formats
@@ -211,6 +231,7 @@
 **Timeline**: Q2 2026 - Q3 2026
 
 #### Planned Features
+
 - ⏳ Database read replicas
 - ⏳ Redis cluster support
 - ⏳ Multi-region deployment support
@@ -221,6 +242,7 @@
 - ⏳ Compliance certifications (SOC 2, ISO 27001)
 
 #### Success Criteria
+
 - 99.9% uptime SLA
 - Sub-second API response times
 - Automated disaster recovery
@@ -234,6 +256,7 @@
 **Timeline**: Q3 2026 - Q4 2026
 
 #### Planned Features
+
 - ⏳ Mobile-responsive UI improvements
 - ⏳ Internationalization (i18n)
 - ⏳ Accessibility enhancements (WCAG 2.1 AA)
@@ -244,6 +267,7 @@
 - ⏳ Cost optimization recommendations
 
 #### Success Criteria
+
 - Mobile-friendly interface
 - Multi-language support
 - WCAG 2.1 AA compliance
@@ -254,6 +278,7 @@
 ## Feature Roadmap by Category
 
 ### Work Orchestration
+
 - ✅ Organizations, board groups, boards, tasks
 - ✅ Custom fields for tasks
 - ✅ Task dependencies
@@ -264,6 +289,7 @@
 - ⏳ Bulk operations
 
 ### Agent Operations
+
 - ✅ Agent lifecycle management
 - ✅ Skills marketplace
 - ✅ Gateway integration
@@ -274,6 +300,7 @@
 - ⏳ Cost tracking
 
 ### Governance
+
 - ✅ Basic approval workflows
 - 🔄 Multi-stage approvals
 - 🔄 Approval delegation
@@ -282,6 +309,7 @@
 - ⏳ Approval analytics
 
 ### Observability
+
 - ✅ Activity event logging
 - ✅ Basic metrics endpoint
 - 🔄 Gateway health monitoring
@@ -291,6 +319,7 @@
 - ⏳ Log aggregation
 
 ### Integration
+
 - ✅ Webhook support
 - ⏳ Slack/Discord
 - ⏳ GitHub/GitLab
@@ -299,6 +328,7 @@
 - ⏳ Additional SSO providers
 
 ### Infrastructure
+
 - ✅ Docker deployment
 - ✅ Local development mode
 - ✅ CI/CD pipeline
@@ -312,15 +342,18 @@
 ## Milestones
 
 ### Milestone 1: MVP Release (Target: Q2 2025)
+
 **Status**: 🔄 In Progress
 
 **Goals**:
+
 - Complete agent operations features
 - Stable approval workflows
 - Production-ready gateway management
 - Comprehensive documentation
 
 **Blockers**:
+
 - Agent scheduling implementation
 - Multi-stage approval testing
 - Gateway load balancing
@@ -328,15 +361,18 @@
 ---
 
 ### Milestone 2: Production Ready (Target: Q3 2025)
+
 **Status**: ⏳ Planned
 
 **Goals**:
+
 - Enhanced observability and metrics
 - Security hardening
 - Performance optimization
 - Production deployment guide
 
 **Dependencies**:
+
 - Milestone 1 completion
 - Security audit
 - Load testing results
@@ -344,15 +380,18 @@
 ---
 
 ### Milestone 3: Enterprise Features (Target: Q4 2025)
+
 **Status**: ⏳ Planned
 
 **Goals**:
+
 - Advanced integrations
 - Workflow templates
 - Enhanced analytics
 - Multi-region support
 
 **Dependencies**:
+
 - Milestone 2 completion
 - Customer feedback
 - Scalability testing
@@ -362,6 +401,7 @@
 ## Version History
 
 ### v0.1.0 (Current - In Development)
+
 - Initial release with core features
 - Organization and board management
 - Task orchestration with custom fields
@@ -373,18 +413,21 @@
 ### Planned Releases
 
 #### v0.2.0 (Target: Q2 2025)
+
 - Enhanced agent scheduling
 - Multi-stage approvals
 - Gateway load balancing
 - Improved metrics dashboard
 
 #### v0.3.0 (Target: Q3 2025)
+
 - Workflow templates
 - Advanced search
 - Scheduled tasks
 - Integration framework
 
 #### v1.0.0 (Target: Q4 2025)
+
 - Production-ready release
 - Full feature set
 - Comprehensive documentation
@@ -395,6 +438,7 @@
 ## Success Metrics
 
 ### Current Metrics (as of v0.1.0)
+
 - Backend API routes: 24 modules
 - Frontend pages: 40+ routes
 - Database models: 28 entities
@@ -402,6 +446,7 @@
 - Documentation pages: 20+ files
 
 ### Target Metrics (v1.0.0)
+
 - API response time: P95 < 200ms
 - Test coverage: Backend > 80%, Frontend > 70%
 - System uptime: 99.9%
@@ -413,12 +458,14 @@
 ## Community and Contribution
 
 ### Current State
+
 - Open source (MIT License)
 - Active development on GitHub
 - Issue tracking and pull requests
 - Contributing guide available
 
 ### Future Plans
+
 - Community forum or Discord server
 - Regular release cadence (monthly)
 - Public roadmap with voting
@@ -430,6 +477,7 @@
 ## Known Limitations
 
 ### Current Limitations
+
 - Single-region deployment only
 - No multi-database support (PostgreSQL only)
 - English-only UI
@@ -437,6 +485,7 @@
 - No real-time collaboration features
 
 ### Planned Improvements
+
 - Multi-region support (Phase 9)
 - Internationalization (Phase 10)
 - Mobile-responsive UI (Phase 10)
@@ -447,6 +496,7 @@
 ## Dependencies and Risks
 
 ### Technical Dependencies
+
 - PostgreSQL 14+ availability
 - Redis 6+ availability
 - Docker/Docker Compose for deployment
@@ -454,12 +504,14 @@
 - Python 3.12+ for backend development
 
 ### Key Risks
+
 - **Scalability**: Need to validate performance at scale
 - **Security**: Ongoing security audits required
 - **Gateway Stability**: WebSocket connection reliability
 - **Breaking Changes**: API stability during active development
 
 ### Mitigation Strategies
+
 - Regular load testing and performance profiling
 - Security audits and penetration testing
 - Gateway connection retry and failover logic

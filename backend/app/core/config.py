@@ -10,6 +10,7 @@ from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from app.core.auth_mode import AuthMode
+from app.core.auth_profile import AuthProfile
 
 BACKEND_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_ENV_FILE = BACKEND_ROOT / ".env"
@@ -37,6 +38,9 @@ class Settings(BaseSettings):
 
     environment: str = "dev"
     database_url: str = "postgresql+psycopg://postgres:postgres@localhost:5432/openclaw_agency"
+
+    # Auth profile controls auth strictness by deployment type.
+    auth_profile: AuthProfile = AuthProfile.DEV
 
     # Auth mode: "clerk" for Clerk JWT auth, "local" for shared bearer token auth.
     auth_mode: AuthMode
@@ -66,6 +70,13 @@ class Settings(BaseSettings):
     rq_dispatch_max_retries: int = 3
     rq_dispatch_retry_base_seconds: float = 10.0
     rq_dispatch_retry_max_seconds: float = 120.0
+    worker_heartbeat_key: str = ""
+    worker_heartbeat_ttl_seconds: int = Field(default=300, ge=5)
+
+    # Readiness checks
+    readiness_check_timeout_seconds: float = Field(default=1.5, gt=0)
+    readiness_worker_heartbeat_key: str = ""
+    readiness_worker_heartbeat_max_age_seconds: int = Field(default=120, ge=1)
 
     # OpenClaw gateway runtime compatibility
     gateway_min_version: str = "2026.02.9"
@@ -77,8 +88,16 @@ class Settings(BaseSettings):
     request_log_slow_ms: int = Field(default=1000, ge=0)
     request_log_include_health: bool = False
 
+    # API rate limiting
+    rate_limit_enabled: bool = True
+    rate_limit_prefix: str = "api-rl"
+    rate_limit_ip_limit_per_minute: int = Field(default=240, ge=1)
+    rate_limit_actor_limit_per_minute: int = Field(default=480, ge=1)
+
     @model_validator(mode="after")
     def _defaults(self) -> Self:
+        if self.auth_profile == AuthProfile.SAAS and self.auth_mode != AuthMode.CLERK:
+            raise ValueError("AUTH_PROFILE=saas requires AUTH_MODE=clerk.")
         if self.auth_mode == AuthMode.CLERK:
             if not self.clerk_secret_key.strip():
                 raise ValueError(
@@ -107,6 +126,8 @@ class Settings(BaseSettings):
         # schema drift (e.g. missing newly-added columns).
         if "db_auto_migrate" not in self.model_fields_set and self.environment == "dev":
             self.db_auto_migrate = True
+        self.worker_heartbeat_key = self.worker_heartbeat_key.strip()
+        self.readiness_worker_heartbeat_key = self.readiness_worker_heartbeat_key.strip()
         return self
 
 

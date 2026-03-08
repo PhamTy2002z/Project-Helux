@@ -36,8 +36,10 @@ from app.core.config import settings
 from app.core.logging import (
     TRACE_LEVEL,
     get_logger,
+    reset_request_actor_context,
     reset_request_id,
     reset_request_route_context,
+    set_request_actor_context,
     set_request_id,
     set_request_route_context,
 )
@@ -83,6 +85,7 @@ class RequestIdMiddleware:
         request_id = self._get_or_create_request_id(scope)
         context_token = set_request_id(request_id)
         route_context_tokens = set_request_route_context(method, path)
+        actor_context_tokens = set_request_actor_context(None, None, path)
         if should_log:
             logger.log(
                 TRACE_LEVEL,
@@ -142,6 +145,7 @@ class RequestIdMiddleware:
                         "client_ip": client_ip,
                     },
                 )
+            reset_request_actor_context(actor_context_tokens)
             reset_request_route_context(route_context_tokens)
             reset_request_id(context_token)
 

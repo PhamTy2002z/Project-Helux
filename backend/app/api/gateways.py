@@ -24,6 +24,7 @@ from app.schemas.gateways import (
     GatewayUpdate,
 )
 from app.schemas.pagination import DefaultLimitOffsetPage
+from app.services.activity_log import record_admin_audit
 from app.services.openclaw.admin_service import GatewayAdminLifecycleService
 from app.services.openclaw.session_service import GatewayTemplateSyncQuery
 
@@ -106,6 +107,16 @@ async def create_gateway(
     data["organization_id"] = ctx.organization.id
     gateway = await crud.create(session, Gateway, **data)
     await service.ensure_main_agent(gateway, auth, action="provision")
+    record_admin_audit(
+        session,
+        audit_action="gateway.create",
+        endpoint="/api/v1/gateways",
+        organization_id=ctx.organization.id,
+        actor_id=auth.user.id if auth.user is not None else None,
+        target_id=gateway.id,
+        details={"name": gateway.name, "url": gateway.url},
+    )
+    await session.commit()
     return gateway
 
 
@@ -163,6 +174,16 @@ async def update_gateway(
             )
     await crud.patch(session, gateway, updates)
     await service.ensure_main_agent(gateway, auth, action="update")
+    record_admin_audit(
+        session,
+        audit_action="gateway.update",
+        endpoint="/api/v1/gateways/{gateway_id}",
+        organization_id=ctx.organization.id,
+        actor_id=auth.user.id if auth.user is not None else None,
+        target_id=gateway.id,
+        details={"updated_fields": sorted(updates.keys())},
+    )
+    await session.commit()
     return gateway
 
 
@@ -180,7 +201,26 @@ async def sync_gateway_templates(
         gateway_id=gateway_id,
         organization_id=ctx.organization.id,
     )
-    return await service.sync_templates(gateway, query=sync_query, auth=auth)
+    result = await service.sync_templates(gateway, query=sync_query, auth=auth)
+    record_admin_audit(
+        session,
+        audit_action="gateway.templates.sync",
+        endpoint="/api/v1/gateways/{gateway_id}/templates/sync",
+        organization_id=ctx.organization.id,
+        actor_id=auth.user.id if auth.user is not None else None,
+        target_id=gateway.id,
+        details={
+            "include_main": sync_query.include_main,
+            "lead_only": sync_query.lead_only,
+            "reset_sessions": sync_query.reset_sessions,
+            "rotate_tokens": sync_query.rotate_tokens,
+            "force_bootstrap": sync_query.force_bootstrap,
+            "overwrite": sync_query.overwrite,
+            "board_id": str(sync_query.board_id) if sync_query.board_id is not None else None,
+        },
+    )
+    await session.commit()
+    return result
 
 
 @router.delete("/{gateway_id}", response_model=OkResponse)
@@ -219,6 +259,15 @@ async def delete_gateway(
     for installed_skill in installed_skills:
         await session.delete(installed_skill)
 
+    record_admin_audit(
+        session,
+        audit_action="gateway.delete",
+        endpoint="/api/v1/gateways/{gateway_id}",
+        organization_id=ctx.organization.id,
+        actor_id=ctx.member.user_id,
+        target_id=gateway.id,
+        details={"name": gateway.name},
+    )
     await session.delete(gateway)
     await session.commit()
     return OkResponse()

@@ -39,6 +39,7 @@ from app.services.approval_task_links import (
     task_counts_for_board,
 )
 from app.services.openclaw.gateway_dispatch import GatewayDispatchService
+from app.services.tenant_invariants import require_agent_in_organization, require_tasks_in_board
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Sequence
@@ -267,6 +268,7 @@ async def _notify_lead_on_approval_resolution(
             agent_id=lead.id,
             task_id=approval.task_id,
             board_id=approval.board_id,
+            organization_id=board.organization_id,
         )
     else:
         record_activity(
@@ -276,6 +278,7 @@ async def _notify_lead_on_approval_resolution(
             agent_id=lead.id,
             task_id=approval.task_id,
             board_id=approval.board_id,
+            organization_id=board.organization_id,
         )
     await session.commit()
 
@@ -402,6 +405,19 @@ async def create_approval(
         payload=payload.payload,
     )
     task_id = task_ids[0] if task_ids else None
+    if task_ids:
+        await require_tasks_in_board(
+            session,
+            task_ids=task_ids,
+            board_id=board.id,
+            organization_id=board.organization_id,
+        )
+    if payload.agent_id is not None:
+        await require_agent_in_organization(
+            session,
+            agent_id=payload.agent_id,
+            organization_id=board.organization_id,
+        )
     if payload.status == "pending":
         await _ensure_no_pending_approval_conflicts(
             session,
@@ -409,6 +425,7 @@ async def create_approval(
             task_ids=task_ids,
         )
     approval = Approval(
+        organization_id=board.organization_id,
         board_id=board.id,
         task_id=task_id,
         agent_id=payload.agent_id,

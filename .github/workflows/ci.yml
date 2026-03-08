@@ -99,6 +99,18 @@ jobs:
 
           make backend-migration-check
 
+      - name: Validate ops scripts
+        run: |
+          ./scripts/ci/validate_ops_scripts.sh
+
+      - name: Run SaaS hardening gates
+        env:
+          AUTH_MODE: "local"
+          LOCAL_AUTH_TOKEN: "ci-local-auth-token-0123456789-0123456789-0123456789x"
+          BASE_URL: "http://localhost:8000"
+        run: |
+          make backend-saas-gates
+
       - name: Run backend checks
         env:
           # Keep CI builds deterministic.
