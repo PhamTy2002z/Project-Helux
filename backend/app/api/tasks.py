@@ -121,7 +121,7 @@ class _BoardCustomFieldDefinition:
 
 def _comment_validation_error() -> HTTPException:
     return HTTPException(
-        status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
         detail="Comment is required.",
     )
 
@@ -2121,31 +2121,44 @@ async def _lead_apply_status(
     lead_agent = update.actor.agent
     if "status" not in update.updates:
         return
-    if update.task.status != "review":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=(
-                "Lead status gate failed: board leads can only change status when the current "
-                f"task status is `review` (current: `{update.task.status}`)."
-            ),
-        )
     target_status = _required_status_value(update.updates["status"])
-    if target_status not in {"done", "inbox"}:
+    if target_status == update.task.status:
+        return
+    if update.task.status == "review":
+        if target_status not in {"done", "inbox"}:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=(
+                    "Lead status target gate failed: review tasks can only move to `done` or "
+                    f"`inbox` (requested: `{target_status}`)."
+                ),
+            )
+    elif target_status not in {"inbox", "in_progress", "review"}:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail=(
-                "Lead status target gate failed: review tasks can only move to `done` or "
-                f"`inbox` (requested: `{target_status}`)."
+                "Lead status target gate failed: non-review tasks can only move to "
+                f"`inbox`, `in_progress`, or `review` (requested: `{target_status}`)."
             ),
         )
     if target_status == "inbox":
-        update.task.assigned_agent_id = await _last_worker_who_moved_task_to_review(
-            session,
-            task_id=update.task.id,
-            board_id=update.board_id,
-            lead_agent_id=lead_agent.id,
-        )
+        if update.task.status == "review":
+            update.task.assigned_agent_id = await _last_worker_who_moved_task_to_review(
+                session,
+                task_id=update.task.id,
+                board_id=update.board_id,
+                lead_agent_id=lead_agent.id,
+            )
+        else:
+            update.task.assigned_agent_id = None
+        update.task.previous_in_progress_at = update.task.in_progress_at
         update.task.in_progress_at = None
+    elif target_status == "review":
+        update.task.previous_in_progress_at = update.task.in_progress_at
+        update.task.assigned_agent_id = None
+        update.task.in_progress_at = None
+    elif target_status == "in_progress":
+        update.task.in_progress_at = utcnow()
     update.task.status = target_status
 
 
@@ -2169,6 +2182,12 @@ async def _lead_notify_new_assignee(
         session,
     )
     if assigned_agent is None:
+        return
+    if (
+        update.actor.actor_type == "agent"
+        and update.actor.agent
+        and assigned_agent.id == update.actor.agent.id
+    ):
         return
     board = (
         await Board.objects.by_id(update.task.board_id).first(session)
@@ -2249,6 +2268,7 @@ async def _apply_lead_task_update(
         previous_status=update.previous_status,
         target_status=update.task.status,
     )
+    await _assign_review_task_to_lead(session, update=update)
 
     if normalized_tag_ids is not None:
         await replace_tags(
