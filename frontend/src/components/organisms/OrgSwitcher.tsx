@@ -30,6 +30,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { withQueryPolicy } from "@/lib/query-policy";
 
 export function OrgSwitcher() {
   const { isSignedIn } = useAuth();
@@ -55,8 +56,8 @@ export function OrgSwitcher() {
     ApiError
   >({
     query: {
+      ...withQueryPolicy("interactive"),
       enabled: Boolean(isSignedIn),
-      refetchOnMount: "always",
       retry: false,
     },
   });

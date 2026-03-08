@@ -22,6 +22,7 @@ export type DataTableRowAction<TData> = {
   label: string;
   href?: (row: TData) => string | null;
   onClick?: (row: TData) => void;
+  shouldShow?: (row: TData) => boolean;
   className?: string;
 };
 
@@ -157,7 +158,9 @@ export function DataTable<TData>({
                 {hasRowActions ? (
                   <td className={rowActions?.cellClassName ?? cellClassName}>
                     <div className="flex justify-end gap-2">
-                      {resolvedRowActions.map((action) => {
+                      {resolvedRowActions
+                        .filter((action) => action.shouldShow?.(row.original) ?? true)
+                        .map((action) => {
                         const href = action.href?.(row.original) ?? null;
                         if (href) {
                           return (

@@ -12,6 +12,7 @@ import { UserMenu } from "./UserMenu";
 
 const useUserMock = vi.hoisted(() => vi.fn());
 const clearLocalAuthTokenMock = vi.hoisted(() => vi.fn());
+const destroyLocalAuthSessionMock = vi.hoisted(() => vi.fn());
 const isLocalAuthModeMock = vi.hoisted(() => vi.fn());
 type LinkProps = PropsWithChildren<{
   href: string | { pathname?: string };
@@ -44,13 +45,22 @@ vi.mock("@/auth/clerk", () => ({
 
 vi.mock("@/auth/localAuth", () => ({
   clearLocalAuthToken: clearLocalAuthTokenMock,
+  destroyLocalAuthSession: destroyLocalAuthSessionMock,
   isLocalAuthMode: isLocalAuthModeMock,
+}));
+
+vi.mock("@/lib/billing", () => ({
+  useBillingSubscription: () => ({
+    data: { plan_tier: "trial_7d" },
+  }),
 }));
 
 describe("UserMenu", () => {
   beforeEach(() => {
     useUserMock.mockReset();
     clearLocalAuthTokenMock.mockReset();
+    destroyLocalAuthSessionMock.mockReset();
+    destroyLocalAuthSessionMock.mockResolvedValue(undefined);
     isLocalAuthModeMock.mockReset();
   });
   afterEach(() => {
@@ -66,6 +76,7 @@ describe("UserMenu", () => {
 
     await user.click(screen.getByRole("button", { name: /open user menu/i }));
 
+    expect(screen.getByText(/plan: trial 7 days/i)).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: /open boards/i }),
     ).toBeInTheDocument();
@@ -93,6 +104,7 @@ describe("UserMenu", () => {
     await user.click(screen.getByRole("button", { name: /sign out/i }));
 
     expect(clearLocalAuthTokenMock).toHaveBeenCalledTimes(1);
+    expect(destroyLocalAuthSessionMock).toHaveBeenCalledTimes(1);
     expect(reloadSpy).toHaveBeenCalledTimes(1);
   });
 });

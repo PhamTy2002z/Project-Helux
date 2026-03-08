@@ -1,28 +1,58 @@
 "use client";
 
 import { ClerkProvider } from "@clerk/nextjs";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
 import { isLikelyValidClerkPublishableKey } from "@/auth/clerkKey";
 import {
   clearLocalAuthToken,
   getLocalAuthToken,
   isLocalAuthMode,
+  verifyLocalAuthSession,
 } from "@/auth/localAuth";
 import { LocalAuthLogin } from "@/components/organisms/LocalAuthLogin";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const localMode = isLocalAuthMode();
+  const initialLocalAuthenticated = localMode ? Boolean(getLocalAuthToken()) : false;
+  const [localAuthReady, setLocalAuthReady] = useState(
+    !localMode || !initialLocalAuthenticated,
+  );
+  const [localAuthenticated, setLocalAuthenticated] = useState(initialLocalAuthenticated);
 
   useEffect(() => {
-    if (!localMode) {
-      clearLocalAuthToken();
-    }
+    if (localMode) return;
+    clearLocalAuthToken();
   }, [localMode]);
 
+  useEffect(() => {
+    if (!localMode || localAuthReady || !localAuthenticated) return;
+    let active = true;
+
+    void verifyLocalAuthSession().then((authenticated) => {
+      if (!active) return;
+      setLocalAuthenticated(authenticated);
+      setLocalAuthReady(true);
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [localAuthReady, localAuthenticated, localMode]);
+
   if (localMode) {
-    if (!getLocalAuthToken()) {
-      return <LocalAuthLogin />;
+    if (!localAuthReady) {
+      return null;
+    }
+    if (!localAuthenticated) {
+      return (
+        <LocalAuthLogin
+          onAuthenticated={() => {
+            setLocalAuthenticated(true);
+            setLocalAuthReady(true);
+          }}
+        />
+      );
     }
     return <>{children}</>;
   }

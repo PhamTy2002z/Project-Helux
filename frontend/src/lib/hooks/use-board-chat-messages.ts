@@ -30,24 +30,78 @@ type UseBoardChatMessagesResult = {
   sendMessage: (content: string) => Promise<boolean>;
 };
 
-const sortAsc = (items: BoardMemoryRead[]): BoardMemoryRead[] => {
-  return [...items].sort((a, b) => {
-    const aTime = apiDatetimeToMs(a.created_at) ?? 0;
-    const bTime = apiDatetimeToMs(b.created_at) ?? 0;
-    return aTime - bTime;
-  });
+const compareMessagesAsc = (
+  left: BoardMemoryRead,
+  right: BoardMemoryRead,
+): number => {
+  const leftTime = apiDatetimeToMs(left.created_at) ?? 0;
+  const rightTime = apiDatetimeToMs(right.created_at) ?? 0;
+  if (leftTime !== rightTime) return leftTime - rightTime;
+  return left.id.localeCompare(right.id);
+};
+
+const sortAsc = (items: BoardMemoryRead[]): BoardMemoryRead[] =>
+  [...items].sort(compareMessagesAsc);
+
+const findInsertionIndex = (
+  items: BoardMemoryRead[],
+  incoming: BoardMemoryRead,
+): number => {
+  let low = 0;
+  let high = items.length;
+  while (low < high) {
+    const middle = Math.floor((low + high) / 2);
+    const candidate = items[middle];
+    if (compareMessagesAsc(candidate, incoming) <= 0) {
+      low = middle + 1;
+    } else {
+      high = middle;
+    }
+  }
+  return low;
+};
+
+const upsertSortedMessage = (
+  items: BoardMemoryRead[],
+  incoming: BoardMemoryRead,
+): BoardMemoryRead[] => {
+  const existingIndex = items.findIndex((message) => message.id === incoming.id);
+  if (existingIndex === -1) {
+    const insertionIndex = findInsertionIndex(items, incoming);
+    return [
+      ...items.slice(0, insertionIndex),
+      incoming,
+      ...items.slice(insertionIndex),
+    ];
+  }
+
+  if (items[existingIndex] === incoming) {
+    return items;
+  }
+
+  const withoutExisting = [
+    ...items.slice(0, existingIndex),
+    ...items.slice(existingIndex + 1),
+  ];
+  const insertionIndex = findInsertionIndex(withoutExisting, incoming);
+  return [
+    ...withoutExisting.slice(0, insertionIndex),
+    incoming,
+    ...withoutExisting.slice(insertionIndex),
+  ];
 };
 
 const mergeMessagesById = (
+  base: BoardMemoryRead[],
   ...collections: BoardMemoryRead[][]
 ): BoardMemoryRead[] => {
-  const byId = new Map<string, BoardMemoryRead>();
+  let merged = base;
   for (const collection of collections) {
     for (const message of collection) {
-      byId.set(message.id, message);
+      merged = upsertSortedMessage(merged, message);
     }
   }
-  return sortAsc([...byId.values()]);
+  return merged;
 };
 
 const latestTimestamp = (items: BoardMemoryRead[]): string | undefined => {
@@ -140,13 +194,13 @@ export const useBoardChatMessages = ({
       if (result.status !== 200) {
         throw new Error("Unable to load older messages.");
       }
-      const incoming = sortAsc(result.data.items ?? []);
+      const incoming = result.data.items ?? [];
       fetchedCountRef.current += incoming.length;
       setHasMore(
         (result.data.total ?? fetchedCountRef.current) >
           fetchedCountRef.current,
       );
-      setMessages((prev) => mergeMessagesById(incoming, prev));
+      setMessages((prev) => mergeMessagesById(prev, incoming));
     } catch (nextError) {
       setError(
         nextError instanceof Error

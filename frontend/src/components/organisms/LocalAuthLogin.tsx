@@ -3,13 +3,12 @@
 import { useState } from "react";
 import { Lock } from "lucide-react";
 
-import { setLocalAuthToken } from "@/auth/localAuth";
+import { LOCAL_AUTH_TOKEN_MIN_LENGTH } from "@/auth/local-auth-shared";
+import { establishLocalAuthSession } from "@/auth/localAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { getApiBaseUrl } from "@/lib/api-base";
-
-const LOCAL_AUTH_TOKEN_MIN_LENGTH = 50;
 
 async function validateLocalToken(token: string): Promise<string | null> {
   let baseUrl: string;
@@ -73,9 +72,17 @@ export function LocalAuthLogin({ onAuthenticated }: LocalAuthLoginProps) {
       return;
     }
 
-    setLocalAuthToken(cleaned);
-    setError(null);
-    (onAuthenticated ?? defaultOnAuthenticated)();
+    try {
+      await establishLocalAuthSession(cleaned);
+      setError(null);
+      (onAuthenticated ?? defaultOnAuthenticated)();
+    } catch (persistError) {
+      if (persistError instanceof Error) {
+        setError(persistError.message);
+      } else {
+        setError("Unable to persist local auth session.");
+      }
+    }
   };
 
   return (

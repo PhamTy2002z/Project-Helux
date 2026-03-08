@@ -87,6 +87,29 @@ describe("AgentsTable", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("hides edit and delete actions for gateway main agents", () => {
+    render(
+      <AgentsTable
+        agents={[
+          buildAgent({
+            id: "gateway-main",
+            board_id: null,
+            is_gateway_main: true,
+          }),
+        ]}
+        boards={[buildBoard()]}
+        onDelete={vi.fn()}
+      />,
+    );
+
+    expect(
+      screen.queryByRole("link", { name: "Edit" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Delete" }),
+    ).not.toBeInTheDocument();
+  });
+
   it("supports hiddenColumns and columnOrder", () => {
     render(
       <AgentsTable

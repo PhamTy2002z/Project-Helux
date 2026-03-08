@@ -144,7 +144,7 @@ export function TagForm({
           </p>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-[1fr_auto]">
+        <div className="grid gap-4 md:grid-cols-[1fr_auto] md:items-end">
           <div className="space-y-2">
             <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">
               Color
@@ -161,10 +161,10 @@ export function TagForm({
             </div>
           </div>
           <div className="space-y-2">
-            <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500">
               Preview
             </label>
-            <div className="inline-flex h-[42px] items-center gap-2 rounded-lg border border-slate-200 bg-white px-3">
+            <div className="inline-flex h-11 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3">
               <span
                 className="h-4 w-4 rounded border border-slate-300"
                 style={{ backgroundColor: `#${previewColor}` }}

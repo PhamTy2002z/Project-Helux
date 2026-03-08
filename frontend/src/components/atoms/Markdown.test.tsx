@@ -2,6 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import { Markdown } from "./Markdown";
+import { MarkdownLite } from "./MarkdownLite";
 
 describe("Markdown", () => {
   it("renders single-line breaks for chat variant", () => {
@@ -86,5 +87,15 @@ describe("Markdown", () => {
     expect(container).toHaveTextContent("Line one");
     expect(container).toHaveTextContent("Line two");
     expect(container.querySelectorAll("p")).toHaveLength(2);
+  });
+
+  it("highlights mentions in markdown lite chat rendering", () => {
+    const { container } = render(
+      <MarkdownLite content="@lead Check task status" variant="chat" />,
+    );
+
+    const mention = screen.getByText("@lead");
+    expect(mention).toHaveClass("text-cyan-700");
+    expect(container).toHaveTextContent("Check task status");
   });
 });

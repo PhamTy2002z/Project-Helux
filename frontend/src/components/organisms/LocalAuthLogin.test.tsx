@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event";
 
 import { LocalAuthLogin } from "./LocalAuthLogin";
 
-const setLocalAuthTokenMock = vi.hoisted(() => vi.fn());
+const establishLocalAuthSessionMock = vi.hoisted(() => vi.fn());
 const fetchMock = vi.hoisted(() => vi.fn());
 
 vi.mock("@/auth/localAuth", async () => {
@@ -14,14 +14,15 @@ vi.mock("@/auth/localAuth", async () => {
     );
   return {
     ...actual,
-    setLocalAuthToken: setLocalAuthTokenMock,
+    establishLocalAuthSession: establishLocalAuthSessionMock,
   };
 });
 
 describe("LocalAuthLogin", () => {
   beforeEach(() => {
     fetchMock.mockReset();
-    setLocalAuthTokenMock.mockReset();
+    establishLocalAuthSessionMock.mockReset();
+    establishLocalAuthSessionMock.mockResolvedValue(undefined);
     vi.stubGlobal("fetch", fetchMock);
     vi.stubEnv("NEXT_PUBLIC_API_URL", "http://localhost:8000/");
   });
@@ -40,7 +41,7 @@ describe("LocalAuthLogin", () => {
 
     expect(screen.getByText("Bearer token is required.")).toBeInTheDocument();
     expect(fetchMock).not.toHaveBeenCalled();
-    expect(setLocalAuthTokenMock).not.toHaveBeenCalled();
+    expect(establishLocalAuthSessionMock).not.toHaveBeenCalled();
   });
 
   it("requires token length of at least 50 characters", async () => {
@@ -54,7 +55,7 @@ describe("LocalAuthLogin", () => {
       screen.getByText("Bearer token must be at least 50 characters."),
     ).toBeInTheDocument();
     expect(fetchMock).not.toHaveBeenCalled();
-    expect(setLocalAuthTokenMock).not.toHaveBeenCalled();
+    expect(establishLocalAuthSessionMock).not.toHaveBeenCalled();
   });
 
   it("rejects invalid token values", async () => {
@@ -76,7 +77,7 @@ describe("LocalAuthLogin", () => {
         headers: { Authorization: `Bearer ${"x".repeat(50)}` },
       }),
     );
-    expect(setLocalAuthTokenMock).not.toHaveBeenCalled();
+    expect(establishLocalAuthSessionMock).not.toHaveBeenCalled();
     expect(onAuthenticatedMock).not.toHaveBeenCalled();
   });
 
@@ -91,7 +92,7 @@ describe("LocalAuthLogin", () => {
     await user.click(screen.getByRole("button", { name: "Continue" }));
 
     await waitFor(() =>
-      expect(setLocalAuthTokenMock).toHaveBeenCalledWith("g".repeat(50)),
+      expect(establishLocalAuthSessionMock).toHaveBeenCalledWith("g".repeat(50)),
     );
     expect(onAuthenticatedMock).toHaveBeenCalledTimes(1);
   });
@@ -110,7 +111,7 @@ describe("LocalAuthLogin", () => {
         screen.getByText("Unable to reach backend to validate token."),
       ).toBeInTheDocument(),
     );
-    expect(setLocalAuthTokenMock).not.toHaveBeenCalled();
+    expect(establishLocalAuthSessionMock).not.toHaveBeenCalled();
     expect(onAuthenticatedMock).not.toHaveBeenCalled();
   });
 });

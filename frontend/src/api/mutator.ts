@@ -1,4 +1,4 @@
-import { getLocalAuthToken, isLocalAuthMode } from "@/auth/localAuth";
+import { isLocalAuthMode } from "@/auth/localAuth";
 import { getApiBaseUrl } from "@/lib/api-base";
 
 type ClerkSession = {
@@ -40,29 +40,28 @@ export const customFetch = async <T>(
   url: string,
   options: RequestInit,
 ): Promise<T> => {
-  const baseUrl = getApiBaseUrl();
-
   const headers = new Headers(options.headers);
   const hasBody = options.body !== undefined && options.body !== null;
   if (hasBody && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
-  if (isLocalAuthMode() && !headers.has("Authorization")) {
-    const token = getLocalAuthToken();
-    if (token) {
-      headers.set("Authorization", `Bearer ${token}`);
-    }
-  }
+  const normalizedPath = url.startsWith("/") ? url : `/${url}`;
+  const localModeWithoutAuthHeader =
+    isLocalAuthMode() && !headers.has("Authorization");
   if (!headers.has("Authorization")) {
     const token = await resolveClerkToken();
     if (token) {
       headers.set("Authorization", `Bearer ${token}`);
     }
   }
+  const targetUrl = localModeWithoutAuthHeader
+    ? `/api/local-auth/proxy${normalizedPath}`
+    : `${getApiBaseUrl()}${normalizedPath}`;
 
-  const response = await fetch(`${baseUrl}${url}`, {
+  const response = await fetch(targetUrl, {
     ...options,
     headers,
+    credentials: localModeWithoutAuthHeader ? "same-origin" : options.credentials,
   });
 
   if (!response.ok) {

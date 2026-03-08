@@ -4,7 +4,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { SignOutButton, useUser } from "@/auth/clerk";
-import { clearLocalAuthToken, isLocalAuthMode } from "@/auth/localAuth";
+import {
+  clearLocalAuthToken,
+  destroyLocalAuthSession,
+  isLocalAuthMode,
+} from "@/auth/localAuth";
 import {
   Activity,
   Bot,
@@ -23,6 +27,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { useBillingSubscription } from "@/lib/billing";
 import { cn } from "@/lib/utils";
 
 type UserMenuProps = {
@@ -38,6 +43,7 @@ export function UserMenu({
 }: UserMenuProps) {
   const [open, setOpen] = useState(false);
   const { user } = useUser();
+  const subscriptionQuery = useBillingSubscription(open);
   const localMode = isLocalAuthMode();
   if (!user && !localMode) return null;
 
@@ -49,6 +55,12 @@ export function UserMenu({
     displayNameFromDb ?? (localMode ? "Local User" : "Account");
   const displayEmail =
     displayEmailFromDb ?? (localMode ? "local@localhost" : "");
+  const currentPlanLabel =
+    subscriptionQuery.data?.plan_tier === "pro"
+      ? "Pro"
+      : subscriptionQuery.data?.plan_tier === "trial_7d"
+        ? "Trial 7 days"
+        : null;
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -125,6 +137,11 @@ export function UserMenu({
                   {displayEmail}
                 </div>
               ) : null}
+              {currentPlanLabel ? (
+                <div className="mt-1 inline-flex rounded-full border border-blue-100 bg-blue-50/80 px-2.5 py-0.5 text-[11px] font-semibold text-blue-700">
+                  Plan: {currentPlanLabel}
+                </div>
+              ) : null}
             </div>
           </div>
         </div>
@@ -181,6 +198,7 @@ export function UserMenu({
               className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-[color:var(--neutral-800,var(--text))] transition hover:bg-[color:var(--neutral-100,var(--surface-muted))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--accent-teal,var(--accent))] focus-visible:ring-offset-2"
               onClick={() => {
                 clearLocalAuthToken();
+                void destroyLocalAuthSession();
                 setOpen(false);
                 window.location.reload();
               }}

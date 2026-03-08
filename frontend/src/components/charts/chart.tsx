@@ -260,7 +260,7 @@ function ChartTooltipContent({
                     item.name as ChartTooltipName,
                     item,
                     index,
-                    payload as unknown as any[],
+                    payload,
                   )
                 ) : (
                   <>

@@ -181,8 +181,25 @@ export function AgentsTable({
       rowActions={
         showActions
           ? {
-              getEditHref: (agent) => `/agents/${agent.id}/edit`,
-              onDelete,
+              actions: [
+                {
+                  key: "edit",
+                  label: "Edit",
+                  href: (agent: AgentRead) =>
+                    agent.is_gateway_main ? null : `/agents/${agent.id}/edit`,
+                },
+                ...(onDelete
+                  ? [
+                      {
+                        key: "delete",
+                        label: "Delete",
+                        onClick: onDelete,
+                        shouldShow: (agent: AgentRead) =>
+                          !Boolean(agent.is_gateway_main),
+                      },
+                    ]
+                  : []),
+              ],
             }
           : undefined
       }

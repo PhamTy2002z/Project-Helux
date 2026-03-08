@@ -3,6 +3,7 @@ import {
   type getMyMembershipApiV1OrganizationsMeMemberGetResponse,
   useGetMyMembershipApiV1OrganizationsMeMemberGet,
 } from "@/api/generated/organizations/organizations";
+import { withQueryPolicy } from "@/lib/query-policy";
 
 export const isOrganizationAdminRole = (
   role: string | null | undefined,
@@ -16,8 +17,8 @@ export function useOrganizationMembership(
     ApiError
   >({
     query: {
+      ...withQueryPolicy("interactive"),
       enabled: Boolean(isSignedIn),
-      refetchOnMount: "always",
       retry: false,
     },
   });

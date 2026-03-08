@@ -1,7 +1,7 @@
-import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 
 import type { BoardMemoryRead } from "@/api/generated/model";
-import { Markdown } from "@/components/atoms/Markdown";
+import { LazyMarkdown } from "@/components/atoms/LazyMarkdown";
 import { BoardChatComposer } from "@/components/BoardChatComposer";
 import { Button } from "@/components/ui/button";
 import { DEFAULT_HUMAN_LABEL, resolveHumanActorName } from "@/lib/display-name";
@@ -90,7 +90,7 @@ const MessageCard = ({
           </span>
         </div>
         <div className="mt-1 select-text cursor-text text-sm leading-6 break-words text-slate-900">
-          <Markdown content={cleanedContent} variant="chat" />
+          <LazyMarkdown content={cleanedContent} variant="chat" />
         </div>
       </div>
     </div>
@@ -117,14 +117,6 @@ export function BoardChatThread({
   const lastSessionIdRef = useRef<string | null>(null);
   const lastMessageCountRef = useRef(0);
 
-  const sortedMessages = useMemo(() => {
-    return [...messages].sort((a, b) => {
-      const aTime = Date.parse(a.created_at) || 0;
-      const bTime = Date.parse(b.created_at) || 0;
-      return aTime - bTime;
-    });
-  }, [messages]);
-
   useEffect(() => {
     const node = containerRef.current;
     if (!node) return;
@@ -146,18 +138,18 @@ export function BoardChatThread({
 
     if (activeSessionId !== lastSessionIdRef.current) {
       lastSessionIdRef.current = activeSessionId;
-      lastMessageCountRef.current = sortedMessages.length;
+      lastMessageCountRef.current = messages.length;
       node.scrollTop = node.scrollHeight;
       nearBottomRef.current = true;
       return;
     }
 
     const previousCount = lastMessageCountRef.current;
-    lastMessageCountRef.current = sortedMessages.length;
-    if (sortedMessages.length <= previousCount) return;
+    lastMessageCountRef.current = messages.length;
+    if (messages.length <= previousCount) return;
     if (!nearBottomRef.current) return;
     node.scrollTop = node.scrollHeight;
-  }, [activeSessionId, sortedMessages]);
+  }, [activeSessionId, messages]);
 
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col">
@@ -188,12 +180,12 @@ export function BoardChatThread({
           </div>
         ) : null}
 
-        {!isLoading && sortedMessages.length === 0 ? (
+        {!isLoading && messages.length === 0 ? (
           <p className="text-sm text-slate-500">
             No messages yet. Start the conversation with your lead agent.
           </p>
         ) : (
-          sortedMessages.map((message) => (
+          messages.map((message) => (
             <MessageCard
               key={message.id}
               message={message}

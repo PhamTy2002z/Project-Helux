@@ -14,35 +14,55 @@ import {
 import { BrandMark } from "@/components/atoms/BrandMark";
 import { OrgSwitcher } from "@/components/organisms/OrgSwitcher";
 import { UserMenu } from "@/components/organisms/UserMenu";
-import { isOnboardingComplete } from "@/lib/onboarding";
+import { useBillingSubscription } from "@/lib/billing";
+import { isOnboardingComplete, useOnboardingProgress } from "@/lib/onboarding";
+import { withQueryPolicy } from "@/lib/query-policy";
 
 export function DashboardShell({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const { isSignedIn } = useAuth();
-  const isOnboardingPath = pathname === "/onboarding";
+  const isOnboardingPath = pathname.startsWith("/onboarding");
 
   const meQuery = useGetMeApiV1UsersMeGet<
     getMeApiV1UsersMeGetResponse,
     ApiError
   >({
     query: {
+      ...withQueryPolicy("interactive"),
       enabled: Boolean(isSignedIn) && !isOnboardingPath,
       retry: false,
-      refetchOnMount: "always",
     },
   });
   const profile = meQuery.data?.status === 200 ? meQuery.data.data : null;
   const displayName = profile?.name ?? profile?.preferred_name ?? "Operator";
   const displayEmail = profile?.email ?? "";
+  const billingQuery = useBillingSubscription(Boolean(isSignedIn) && !isOnboardingPath);
+  const currentPlanLabel =
+    billingQuery.data?.plan_tier === "pro"
+      ? "Pro"
+      : billingQuery.data?.plan_tier === "trial_7d"
+        ? "Trial 7 days"
+        : null;
+  const onboardingQuery = useOnboardingProgress(Boolean(isSignedIn) && !isOnboardingPath);
+  const onboardingProgress = onboardingQuery.data ?? null;
 
   useEffect(() => {
     if (!isSignedIn || isOnboardingPath) return;
-    if (!profile) return;
-    if (!isOnboardingComplete(profile)) {
+    if (onboardingQuery.isLoading || onboardingQuery.isError || !onboardingProgress) return;
+    if (!isOnboardingComplete(onboardingProgress)) {
+      if (pathname.startsWith("/onboarding")) return;
       router.replace("/onboarding");
     }
-  }, [isOnboardingPath, isSignedIn, profile, router]);
+  }, [
+    pathname,
+    isOnboardingPath,
+    isSignedIn,
+    onboardingProgress,
+    onboardingQuery.isError,
+    onboardingQuery.isLoading,
+    router,
+  ]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -88,7 +108,10 @@ export function DashboardShell({ children }: { children: ReactNode }) {
                 <p className="text-sm font-semibold text-slate-900">
                   {displayName}
                 </p>
-                <p className="text-xs text-slate-500">Operator</p>
+                <p className="text-xs text-slate-500">
+                  Current plan:{" "}
+                  <span className="font-medium text-slate-700">{currentPlanLabel ?? "—"}</span>
+                </p>
               </div>
               <UserMenu displayName={displayName} displayEmail={displayEmail} />
             </div>
