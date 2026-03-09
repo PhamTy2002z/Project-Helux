@@ -50,7 +50,7 @@ const INDIVIDUAL_PLANS = [
 
 export default function PricingCards() {
   return (
-    <section id="pricing" className="relative overflow-hidden bg-black px-[5%] py-16 sm:py-20">
+    <section id="pricing" className="relative overflow-hidden bg-black px-[5%] pb-16 pt-8 sm:pb-20 sm:pt-10">
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute -left-28 top-6 h-72 w-72 rounded-full bg-white/10 blur-[120px]" />
         <div className="absolute -right-20 bottom-0 h-72 w-72 rounded-full bg-white/5 blur-[130px]" />
@@ -58,16 +58,10 @@ export default function PricingCards() {
       </div>
 
       <div className="relative mx-auto max-w-7xl">
-        <ScrollReveal className="mb-14 text-center">
-          <p className="mb-3 text-sm font-medium uppercase tracking-[0.2em] text-white/40">
-            Pricing
-          </p>
+        <ScrollReveal className="mb-10 text-center">
           <h2 className="text-balance text-4xl font-bold leading-[1.05] tracking-tight text-white sm:text-5xl md:text-6xl lg:text-7xl">
             Pick the Plan for Your Mission
           </h2>
-          <p className="mx-auto mt-5 text-sm font-medium uppercase tracking-[0.18em] text-white/45">
-            Individual Plans
-          </p>
           <p className="mx-auto mt-4 max-w-2xl text-center text-base leading-relaxed text-white/60 md:text-lg">
             Select the plan that matches your board complexity, agent volume,
             and runtime throughput needs.
