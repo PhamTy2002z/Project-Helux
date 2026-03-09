@@ -14,21 +14,26 @@ import { LocalAuthLogin } from "@/components/organisms/LocalAuthLogin";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const localMode = isLocalAuthMode();
-  const initialLocalAuthenticated = localMode ? Boolean(getLocalAuthToken()) : false;
-  const [localAuthReady, setLocalAuthReady] = useState(
-    !localMode || !initialLocalAuthenticated,
-  );
-  const [localAuthenticated, setLocalAuthenticated] = useState(initialLocalAuthenticated);
+  // Always start with server-safe defaults (no cookie access) to avoid hydration mismatch.
+  // Cookie reading is deferred to useEffect below.
+  const [localAuthReady, setLocalAuthReady] = useState(!localMode);
+  const [localAuthenticated, setLocalAuthenticated] = useState(false);
 
   useEffect(() => {
     if (localMode) return;
     clearLocalAuthToken();
   }, [localMode]);
 
+  // Read cookie on client mount and verify session if needed
   useEffect(() => {
-    if (!localMode || localAuthReady || !localAuthenticated) return;
-    let active = true;
+    if (!localMode) return;
+    const hasToken = Boolean(getLocalAuthToken());
+    if (!hasToken) {
+      setLocalAuthReady(true);
+      return;
+    }
 
+    let active = true;
     void verifyLocalAuthSession().then((authenticated) => {
       if (!active) return;
       setLocalAuthenticated(authenticated);
@@ -38,7 +43,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       active = false;
     };
-  }, [localAuthReady, localAuthenticated, localMode]);
+  }, [localMode]);
 
   if (localMode) {
     if (!localAuthReady) {

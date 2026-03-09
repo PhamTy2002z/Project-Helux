@@ -1,12 +1,25 @@
 "use client";
 
 import { motion, useReducedMotion } from "framer-motion";
+import { useId } from "react";
 
 import { BlurReveal, WordByWordReveal } from "./animated-text";
 import HlsVideo from "./hls-video";
 import Logo from "./logo";
 
 const EASING: [number, number, number, number] = [0.25, 0.1, 0.25, 1];
+const LOW_MARKER_SIZE = 10;
+const MID_MARKER_SIZE = 12;
+const UPPER_MARKER_SIZE = 13;
+const HIGH_MARKER_SIZE = 14;
+const LOW_MARKER_HALO_SIZE = 48;
+const MID_MARKER_HALO_SIZE = 56;
+const UPPER_MARKER_HALO_SIZE = 60;
+const HIGH_MARKER_HALO_SIZE = 64;
+const LOW_MARKER_LABEL_SIZE = "clamp(14px, 1.4vw, 22px)";
+const MID_MARKER_LABEL_SIZE = "clamp(20px, 2vw, 34px)";
+const UPPER_MARKER_LABEL_SIZE = "clamp(26px, 2.8vw, 46px)";
+const HIGH_MARKER_LABEL_SIZE = "clamp(32px, 4vw, 64px)";
 
 const years = ["2018", "2019", "2020", "2021", "2022", "2023", "2024", "2025"];
 const curvePath =
@@ -16,12 +29,14 @@ type GradientDotProps = {
   size?: number;
 };
 
-function GradientDot({ size = 12 }: GradientDotProps) {
+function GradientDot({ size = MID_MARKER_SIZE }: GradientDotProps) {
+  const gradientId = `dot-grad-${useId().replace(/:/g, "")}`;
+
   return (
     <div style={{ width: size, height: size }}>
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="block">
         <defs>
-          <radialGradient id={`dot-grad-${size}`}>
+          <radialGradient id={gradientId}>
             <stop offset="0%" stopColor="var(--slide-blue-light)" />
             <stop offset="100%" stopColor="var(--slide-blue-dark)" />
           </radialGradient>
@@ -30,7 +45,7 @@ function GradientDot({ size = 12 }: GradientDotProps) {
           cx={size / 2}
           cy={size / 2}
           r={size / 2 - 1}
-          fill={`url(#dot-grad-${size})`}
+          fill={`url(#${gradientId})`}
           stroke="white"
           strokeWidth="1.5"
         />
@@ -118,23 +133,55 @@ export default function Slide3() {
           </div>
 
           <div className="absolute bottom-[22%] left-[44%] flex flex-col items-center">
-            <span className="mb-1 text-[18px] font-medium text-white">32%</span>
+            <span className="mb-1 font-medium text-white" style={{ fontSize: LOW_MARKER_LABEL_SIZE }}>
+              32%
+            </span>
             <div className="h-[40px] w-[2px] bg-white" />
-            <div className="mt-1 flex h-[100px] w-[100px] items-center justify-center rounded-full bg-white/[0.08]">
-              <GradientDot size={16} />
+            <div
+              className="mt-1 flex items-center justify-center rounded-full bg-white/[0.08]"
+              style={{ width: LOW_MARKER_HALO_SIZE, height: LOW_MARKER_HALO_SIZE }}
+            >
+              <GradientDot size={LOW_MARKER_SIZE} />
             </div>
           </div>
 
-          <div className="absolute right-[5%] top-[2%] flex flex-col items-center">
-            <span className="tracking-tight text-white" style={{ fontSize: "clamp(32px, 4vw, 64px)" }}>
+          <div className="absolute right-[5%] top-[-1%] flex flex-col items-center">
+            <span className="tracking-tight text-white" style={{ fontSize: HIGH_MARKER_LABEL_SIZE }}>
               127%
             </span>
             <div className="h-[50px] w-[2px] bg-white" />
-            <GradientDot size={12} />
+            <div
+              className="mt-1 flex items-center justify-center rounded-full bg-white/[0.08]"
+              style={{ width: HIGH_MARKER_HALO_SIZE, height: HIGH_MARKER_HALO_SIZE }}
+            >
+              <GradientDot size={HIGH_MARKER_SIZE} />
+            </div>
           </div>
 
-          <div className="absolute right-[35%] top-[40%]">
-            <GradientDot size={10} />
+          <div className="absolute right-[20%] top-[24%] flex flex-col items-center">
+            <span className="mb-1 font-medium text-white" style={{ fontSize: UPPER_MARKER_LABEL_SIZE }}>
+              102%
+            </span>
+            <div className="h-[38px] w-[2px] bg-white" />
+            <div
+              className="mt-1 flex items-center justify-center rounded-full bg-white/[0.08]"
+              style={{ width: UPPER_MARKER_HALO_SIZE, height: UPPER_MARKER_HALO_SIZE }}
+            >
+              <GradientDot size={UPPER_MARKER_SIZE} />
+            </div>
+          </div>
+
+          <div className="absolute right-[37%] top-[40%] flex flex-col items-center">
+            <span className="mb-1 font-medium text-white" style={{ fontSize: MID_MARKER_LABEL_SIZE }}>
+              73%
+            </span>
+            <div className="h-[30px] w-[2px] bg-white" />
+            <div
+              className="mt-1 flex items-center justify-center rounded-full bg-white/[0.08]"
+              style={{ width: MID_MARKER_HALO_SIZE, height: MID_MARKER_HALO_SIZE }}
+            >
+              <GradientDot size={MID_MARKER_SIZE} />
+            </div>
           </div>
 
           <div className="absolute bottom-0 left-0 right-0">

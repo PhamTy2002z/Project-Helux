@@ -1,5 +1,5 @@
-import { LandingHero } from "@/components/organisms/LandingHero";
+import LandingPage from "@/components/organisms/landing-page/landing-page";
 
 export default function Page() {
-  return <LandingHero />;
+  return <LandingPage />;
 }

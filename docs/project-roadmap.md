@@ -8,6 +8,13 @@
 
 ## Recent Updates
 
+- ✅ Landing page redesign plan (`260309-1128`) all phases completed:
+  - Converted fullscreen slideshow to CrewAI-inspired long-scroll landing page
+  - 11 new UI components created: ScrollProvider, LandingNavbar, LandingHeroSection, ScrollReveal, LogoMarquee, FeatureCards, ProductTabs, TestimonialCarousel, PricingCards, LandingFooter, LandingPage orchestrator
+  - Added Lenis smooth scroll library with responsive navbar transition
+  - Implemented Framer Motion scroll-triggered animations with scroll reveal wrapper
+  - Full responsive design with dark/light section alternation
+  - Accessibility audit: ARIA labels, focus states, keyboard navigation, prefers-reduced-motion support
 - ✅ SaaS payment scaffold + PLG onboarding plan (`260308-2053`) phases 1-4 completed:
   - Billing v1 scope locked (`trial_7d`, `pro`) with explicit out-of-scope boundaries
   - Simulated checkout API added (`/api/v1/billing/simulate/checkout`, `/api/v1/billing/me/subscription`)
