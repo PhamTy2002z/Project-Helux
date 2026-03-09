@@ -118,8 +118,6 @@ class AgentTokenUsageReadModel:
             used_today = max(int(row.billed_tokens_used), 0) if row is not None else 0
             remaining_today = max(limit_today - used_today, 0) if limit_today is not None else None
             blocked = bool(row and row.blocked_at is not None)
-            if limit_today is not None and remaining_today is not None and remaining_today <= 0:
-                blocked = True
             snapshots[agent.id] = AgentTokenUsageSnapshot(
                 used_today=used_today,
                 limit_today=limit_today,

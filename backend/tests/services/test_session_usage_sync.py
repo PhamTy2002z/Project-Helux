@@ -173,6 +173,61 @@ async def test_resolve_board_scoped_agent_obeys_organization_scope() -> None:
 
 
 @pytest.mark.asyncio
+async def test_resolve_board_scoped_agent_returns_none_when_session_is_shared() -> None:
+    engine = await _make_engine()
+    try:
+        async with AsyncSession(engine, expire_on_commit=False) as session:
+            org = Organization(id=uuid4(), name="Org")
+            gateway = Gateway(
+                id=uuid4(),
+                organization_id=org.id,
+                name="Gateway",
+                url="ws://gateway.example/ws",
+                workspace_root="/workspace",
+            )
+            board = Board(
+                id=uuid4(),
+                organization_id=org.id,
+                gateway_id=gateway.id,
+                name="Board",
+                slug="board",
+            )
+            session_key = f"agent:lead-{uuid4()}:main"
+            agent_a = Agent(
+                id=uuid4(),
+                organization_id=org.id,
+                board_id=board.id,
+                gateway_id=gateway.id,
+                name="A",
+                openclaw_session_id=session_key,
+            )
+            agent_b = Agent(
+                id=uuid4(),
+                organization_id=org.id,
+                board_id=board.id,
+                gateway_id=gateway.id,
+                name="B",
+                openclaw_session_id=session_key,
+            )
+            session.add(org)
+            session.add(gateway)
+            session.add(board)
+            session.add(agent_a)
+            session.add(agent_b)
+            await session.commit()
+
+            service = SessionUsageSyncService(session)
+            resolved = await service.resolve_board_scoped_agent(
+                session_key=session_key,
+                organization_id=org.id,
+            )
+
+            assert resolved is None
+    finally:
+        await engine.dispose()
+
+
+@pytest.mark.asyncio
 async def test_sync_session_usage_charges_after_initial_non_zero_baseline(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

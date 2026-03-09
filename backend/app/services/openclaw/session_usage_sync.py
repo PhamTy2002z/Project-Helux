@@ -69,10 +69,11 @@ class SessionUsageSyncService(OpenClawDBService):
         agents = list(await self.session.exec(statement))
         if not agents:
             return None
-        if organization_id is None and len({agent.organization_id for agent in agents}) > 1:
+        if len(agents) > 1:
             self.logger.warning(
-                "usage.sync.agent_resolution_ambiguous session_key=%s matches=%s",
+                "usage.sync.agent_resolution_ambiguous session_key=%s organization_id=%s matches=%s",
                 normalized_key,
+                organization_id,
                 len(agents),
             )
             return None

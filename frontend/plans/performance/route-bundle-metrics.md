@@ -1,29 +1,29 @@
 # Route Bundle Metrics
 
-Generated: 2026-03-09T17:32:04.119Z
+Generated: 2026-03-09T17:34:15.636Z
 
-Shared root main JS: **400.8 KB** (6 chunks)
+Shared root main JS: **400.9 KB** (7 chunks)
 
 | Route | Entry JS (KB) | Total Initial JS (KB) | Chunks |
 | --- | ---: | ---: | ---: |
-| /boards/[boardId] | 598.4 | 999.2 | 17 |
-| /skills/marketplace | 550.4 | 951.2 | 16 |
-| /organization | 546.7 | 947.5 | 16 |
-| /gateways/[gatewayId] | 543 | 943.8 | 16 |
-| /agents | 537.9 | 938.7 | 16 |
-| /boards | 536.9 | 937.7 | 16 |
-| /custom-fields | 536.6 | 937.3 | 16 |
-| /skills/packs | 534.6 | 935.4 | 16 |
-| /board-groups | 533.2 | 934 | 16 |
-| /gateways | 533.1 | 933.9 | 16 |
-| /tags | 532.1 | 932.9 | 16 |
-| /boards/[boardId]/edit | 529.4 | 930.2 | 15 |
-| /boards/new | 502.3 | 903.1 | 15 |
-| /agents/[agentId]/edit | 501.9 | 902.7 | 15 |
-| /activity | 501.7 | 902.5 | 16 |
-| /board-groups/[groupId] | 501.2 | 902 | 15 |
-| /agents/new | 499.6 | 900.4 | 15 |
-| /dashboard | 497.7 | 898.5 | 16 |
-| /settings | 495.7 | 896.5 | 15 |
-| /custom-fields/[fieldId]/edit | 486 | 886.8 | 15 |
+| /boards/[boardId] | 584.5 | 985.5 | 17 |
+| /skills/marketplace | 536.5 | 937.5 | 16 |
+| /organization | 532.9 | 933.8 | 16 |
+| /gateways/[gatewayId] | 529.1 | 930 | 16 |
+| /agents | 524 | 924.9 | 16 |
+| /boards | 523 | 924 | 16 |
+| /custom-fields | 522.7 | 923.6 | 16 |
+| /skills/packs | 520.7 | 921.6 | 16 |
+| /board-groups | 519.3 | 920.3 | 16 |
+| /gateways | 519.2 | 920.1 | 16 |
+| /tags | 518.2 | 919.1 | 16 |
+| /boards/[boardId]/edit | 515.5 | 916.4 | 15 |
+| /boards/new | 488.4 | 889.3 | 15 |
+| /agents/[agentId]/edit | 488 | 888.9 | 15 |
+| /activity | 487.8 | 888.8 | 16 |
+| /board-groups/[groupId] | 487.3 | 888.3 | 15 |
+| /agents/new | 485.8 | 886.7 | 15 |
+| /dashboard | 483.8 | 884.7 | 16 |
+| /settings | 481.9 | 882.8 | 15 |
+| /custom-fields/[fieldId]/edit | 472.1 | 873.1 | 15 |
 

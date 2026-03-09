@@ -128,7 +128,7 @@ export default function LandingNavbar() {
           <Link href="/sign-in" prefetch={false} className={BTN_SIGNIN}>
             Sign in
           </Link>
-          <Link href="/sign-up" prefetch={false} className={BTN_SIGNUP}>
+          <Link href="/onboarding" prefetch={false} className={BTN_SIGNUP}>
             Sign up
           </Link>
         </div>
@@ -195,7 +195,7 @@ export default function LandingNavbar() {
               <Link href="/sign-in" prefetch={false} className={`${BTN_SIGNIN} justify-center`}>
                 Sign in
               </Link>
-              <Link href="/sign-up" prefetch={false} className={`${BTN_SIGNUP} text-center`}>
+              <Link href="/onboarding" prefetch={false} className={`${BTN_SIGNUP} text-center`}>
                 Sign up
               </Link>
             </div>

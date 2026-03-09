@@ -103,6 +103,10 @@ class AgentTokenQuotaService(OpenClawDBService):
         )
         if agent is None:
             return None
+        if bool(agent.is_board_lead):
+            # Board lead sessions aggregate board-level orchestration traffic and
+            # are not suitable for per-agent hard-cap enforcement.
+            return None
 
         capability = await check_gateway_sessions_usage_capability(config)
         if not capability.supported:
@@ -155,6 +159,23 @@ class AgentTokenQuotaService(OpenClawDBService):
 
         quota_reached = sync_result.billed_total >= limit
         if quota_reached:
+            if not self._enforce_mode_enabled():
+                self.logger.warning(
+                    "agent.quota.observe_mode.quota_reached agent_id=%s organization_id=%s usage_date_vn=%s used=%s limit=%s",
+                    agent.id,
+                    organization_id,
+                    sync_result.usage_date_vn,
+                    sync_result.billed_total,
+                    limit,
+                )
+                return AgentQuotaSyncOutcome(
+                    agent_id=agent.id,
+                    organization_id=organization_id,
+                    billed_total=sync_result.billed_total,
+                    billed_delta=sync_result.billed_delta,
+                    limit=limit,
+                    quota_reached=True,
+                )
             await self._mark_blocked_if_needed(
                 organization_id=organization_id,
                 agent_id=agent.id,

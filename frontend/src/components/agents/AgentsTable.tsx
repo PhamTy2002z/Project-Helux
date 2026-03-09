@@ -149,7 +149,7 @@ export function AgentsTable({
             return <span className="text-sm text-slate-700">—</span>;
           }
           const safeRemaining = Math.max(remaining, 0);
-          const isBlocked = Boolean(agent.token_blocked) || safeRemaining <= 0;
+          const isBlocked = Boolean(agent.token_blocked);
           return (
             <div className="flex min-w-[120px] flex-col gap-1">
               <span className="text-sm text-slate-700">
