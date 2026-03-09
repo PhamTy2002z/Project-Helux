@@ -54,7 +54,7 @@ export default function LandingNavbar() {
             <a
               key={link.href}
               href={link.href}
-              className="text-sm text-white/70 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+              className="text-[15px] font-medium text-white/90 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black"
             >
               {link.label}
             </a>
@@ -119,7 +119,7 @@ export default function LandingNavbar() {
               <a
                 key={link.href}
                 href={link.href}
-                className="text-base text-white/70 transition-colors hover:text-white"
+                className="text-base text-white/90 transition-colors hover:text-white"
                 onClick={() => setMobileOpen(false)}
               >
                 {link.label}

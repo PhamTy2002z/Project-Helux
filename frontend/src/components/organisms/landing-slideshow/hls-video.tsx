@@ -4,11 +4,13 @@ import { useEffect, useRef } from "react";
 
 type HlsVideoProps = {
   src: string;
+  /** Mux poster URL or any image URL shown while video loads */
+  poster?: string;
   className?: string;
   style?: React.CSSProperties;
 };
 
-export default function HlsVideo({ src, className, style }: HlsVideoProps) {
+export default function HlsVideo({ src, poster, className, style }: HlsVideoProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const mergedStyle: React.CSSProperties = {
     ...style,
@@ -51,11 +53,10 @@ export default function HlsVideo({ src, className, style }: HlsVideoProps) {
       hls.loadSource(src);
       hls.attachMedia(video);
       hls.on(Hls.Events.MANIFEST_PARSED, (_, data) => {
+        // Force highest quality from start — poster covers the load time
         const highestLevel = data.levels.length - 1;
-        const startupLevel = Math.max(0, highestLevel - 1);
-        // Start near-high quality to avoid the initial blurry ramp-up.
-        hls.startLevel = startupLevel;
-        hls.nextLevel = startupLevel;
+        hls.startLevel = highestLevel;
+        hls.nextLevel = highestLevel;
         playVideo();
       });
       hlsCleanup = () => hls.destroy();
@@ -78,6 +79,7 @@ export default function HlsVideo({ src, className, style }: HlsVideoProps) {
       loop
       playsInline
       preload="auto"
+      poster={poster}
       className={className}
       style={mergedStyle}
       aria-hidden="true"

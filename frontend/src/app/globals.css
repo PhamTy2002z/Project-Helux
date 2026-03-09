@@ -132,36 +132,50 @@ body {
   --slide-bg-alt: #131318;
 }
 
-/* Marquee animations for logo bar */
-@keyframes marquee {
+/* Hero section — glass & button styles (synapse-inspired) */
+.hero-glass-card {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.hero-btn-primary {
+  @apply rounded-full border border-white/10 bg-black px-6 py-3 text-sm font-medium text-white transition-all duration-300;
+}
+
+.hero-btn-primary:hover {
+  @apply border-white/30;
+}
+
+.hero-btn-secondary {
+  @apply rounded-full px-6 py-3 text-sm font-medium text-white transition-all duration-300;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(16px);
+}
+
+.hero-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Marquee animation — translates -50% so duplicated content loops seamlessly */
+@keyframes marquee-loop {
   0% {
     transform: translateX(0);
   }
   100% {
-    transform: translateX(-100%);
+    transform: translateX(-50%);
   }
 }
 
-@keyframes marquee-reverse {
-  0% {
-    transform: translateX(-100%);
-  }
-  100% {
-    transform: translateX(0);
-  }
-}
-
-.animate-marquee {
-  animation: marquee 30s linear infinite;
-}
-
-.animate-marquee-reverse {
-  animation: marquee-reverse 35s linear infinite;
+.animate-marquee-loop {
+  animation: marquee-loop 25s linear infinite;
+  will-change: transform;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .animate-marquee,
-  .animate-marquee-reverse {
+  .animate-marquee-loop {
     animation: none;
   }
 }

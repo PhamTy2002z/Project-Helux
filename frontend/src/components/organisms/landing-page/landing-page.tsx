@@ -1,7 +1,7 @@
 import { ScrollProvider } from "@/components/providers/scroll-provider";
 import LandingNavbar from "./landing-navbar";
 import LandingHeroSection from "./landing-hero-section";
-import LogoMarquee from "./logo-marquee";
+
 import FeatureCards from "./feature-cards";
 import ProductTabs from "./product-tabs";
 import TestimonialCarousel from "./testimonial-carousel";
@@ -15,7 +15,6 @@ export default function LandingPage() {
       <LandingNavbar />
       <main>
         <LandingHeroSection />
-        <LogoMarquee />
         <FeatureCards />
         <ProductTabs />
         <TestimonialCarousel />
