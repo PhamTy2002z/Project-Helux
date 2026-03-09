@@ -1,40 +1,76 @@
 import Link from "next/link";
-import { Github, Twitter, MessageCircle } from "lucide-react";
+import { Github, MessageCircle } from "lucide-react";
 import Logo from "@/components/organisms/landing-slideshow/logo";
 
-const COLUMNS = [
+type FooterLink = {
+  label: string;
+  href: string;
+  external?: boolean;
+};
+
+const COLUMNS: { title: string; links: FooterLink[] }[] = [
   {
     title: "Product",
     links: [
       { label: "Boards", href: "/boards" },
       { label: "Agents", href: "/agents" },
       { label: "Gateways", href: "/gateways" },
-      { label: "Skills", href: "/skills" },
+      { label: "Pricing", href: "/pricing" },
     ],
   },
   {
     title: "Resources",
     links: [
-      { label: "Documentation", href: "/docs" },
-      { label: "Blog", href: "/blog" },
-      { label: "Changelog", href: "/changelog" },
-      { label: "API Reference", href: "/api" },
+      {
+        label: "Documentation",
+        href: "https://github.com/abhi1693/openclaw-mission-control/tree/master/docs",
+        external: true,
+      },
+      {
+        label: "Deployment Guide",
+        href: "https://github.com/abhi1693/openclaw-mission-control/blob/master/docs/deployment-guide.md",
+        external: true,
+      },
+      {
+        label: "API Reference",
+        href: "https://github.com/abhi1693/openclaw-mission-control/blob/master/docs/reference/api.md",
+        external: true,
+      },
     ],
   },
   {
     title: "Help",
     links: [
-      { label: "FAQ", href: "/faq" },
-      { label: "Support", href: "/support" },
-      { label: "Contact", href: "/contact" },
+      {
+        label: "GitHub Issues",
+        href: "https://github.com/abhi1693/openclaw-mission-control/issues",
+        external: true,
+      },
+      {
+        label: "Discussions",
+        href: "https://github.com/abhi1693/openclaw-mission-control/discussions",
+        external: true,
+      },
+      {
+        label: "Slack Community",
+        href: "https://join.slack.com/t/oc-mission-control/shared_invite/zt-3qpcm57xh-AI9C~smc3MDBVzEhvwf7gg",
+        external: true,
+      },
     ],
   },
 ];
 
 const SOCIAL_LINKS = [
-  { icon: Github, href: "https://github.com", label: "GitHub" },
-  { icon: Twitter, href: "https://x.com", label: "X (Twitter)" },
-  { icon: MessageCircle, href: "https://discord.gg", label: "Discord" },
+  {
+    icon: Github,
+    href: "https://github.com/abhi1693/openclaw-mission-control",
+    label: "GitHub",
+  },
+  {
+    icon: MessageCircle,
+    href: "https://join.slack.com/t/oc-mission-control/shared_invite/zt-3qpcm57xh-AI9C~smc3MDBVzEhvwf7gg",
+    label: "Slack",
+  },
 ];
 
 export default function LandingFooter() {
@@ -64,12 +100,23 @@ export default function LandingFooter() {
               <ul className="space-y-3">
                 {col.links.map((link) => (
                   <li key={link.label}>
-                    <Link
-                      href={link.href}
-                      className="inline-flex rounded-full px-3 py-1 text-sm text-white/50 transition-all hover:bg-white/[0.08] hover:text-white/85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
-                    >
-                      {link.label}
-                    </Link>
+                    {link.external ? (
+                      <a
+                        href={link.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex rounded-full px-3 py-1 text-sm text-white/50 transition-all hover:bg-white/[0.08] hover:text-white/85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                      >
+                        {link.label}
+                      </a>
+                    ) : (
+                      <Link
+                        href={link.href}
+                        className="inline-flex rounded-full px-3 py-1 text-sm text-white/50 transition-all hover:bg-white/[0.08] hover:text-white/85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                      >
+                        {link.label}
+                      </Link>
+                    )}
                   </li>
                 ))}
               </ul>
