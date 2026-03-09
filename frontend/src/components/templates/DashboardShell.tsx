@@ -2,67 +2,20 @@
 
 import { useEffect } from "react";
 import type { ReactNode } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 
-import { SignedIn, useAuth } from "@/auth/clerk";
+import { SignedIn } from "@/auth/clerk";
 
-import { ApiError } from "@/api/mutator";
-import {
-  type getMeApiV1UsersMeGetResponse,
-  useGetMeApiV1UsersMeGet,
-} from "@/api/generated/users/users";
 import { BrandMark } from "@/components/atoms/BrandMark";
 import { OrgSwitcher } from "@/components/organisms/OrgSwitcher";
-import { UserMenu } from "@/components/organisms/UserMenu";
-import { useBillingSubscription } from "@/lib/billing";
-import { isOnboardingComplete, useOnboardingProgress } from "@/lib/onboarding";
-import { withQueryPolicy } from "@/lib/query-policy";
+import { DashboardHeaderUserInfo } from "./dashboard-header-user-info";
+import { useOnboardingGuard } from "./use-onboarding-guard";
 
 export function DashboardShell({ children }: { children: ReactNode }) {
-  const router = useRouter();
   const pathname = usePathname();
-  const { isSignedIn } = useAuth();
   const isOnboardingPath = pathname.startsWith("/onboarding");
 
-  const meQuery = useGetMeApiV1UsersMeGet<
-    getMeApiV1UsersMeGetResponse,
-    ApiError
-  >({
-    query: {
-      ...withQueryPolicy("interactive"),
-      enabled: Boolean(isSignedIn) && !isOnboardingPath,
-      retry: false,
-    },
-  });
-  const profile = meQuery.data?.status === 200 ? meQuery.data.data : null;
-  const displayName = profile?.name ?? profile?.preferred_name ?? "Operator";
-  const displayEmail = profile?.email ?? "";
-  const billingQuery = useBillingSubscription(Boolean(isSignedIn) && !isOnboardingPath);
-  const currentPlanLabel =
-    billingQuery.data?.plan_tier === "pro"
-      ? "Pro"
-      : billingQuery.data?.plan_tier === "trial_7d"
-        ? "Trial 7 days"
-        : null;
-  const onboardingQuery = useOnboardingProgress(Boolean(isSignedIn) && !isOnboardingPath);
-  const onboardingProgress = onboardingQuery.data ?? null;
-
-  useEffect(() => {
-    if (!isSignedIn || isOnboardingPath) return;
-    if (onboardingQuery.isLoading || onboardingQuery.isError || !onboardingProgress) return;
-    if (!isOnboardingComplete(onboardingProgress)) {
-      if (pathname.startsWith("/onboarding")) return;
-      router.replace("/onboarding");
-    }
-  }, [
-    pathname,
-    isOnboardingPath,
-    isSignedIn,
-    onboardingProgress,
-    onboardingQuery.isError,
-    onboardingQuery.isLoading,
-    router,
-  ]);
+  useOnboardingGuard(isOnboardingPath);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -103,18 +56,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
             </div>
           </SignedIn>
           <SignedIn>
-            <div className="flex items-center gap-3 px-6">
-              <div className="hidden text-right lg:block">
-                <p className="text-sm font-semibold text-slate-900">
-                  {displayName}
-                </p>
-                <p className="text-xs text-slate-500">
-                  Current plan:{" "}
-                  <span className="font-medium text-slate-700">{currentPlanLabel ?? "—"}</span>
-                </p>
-              </div>
-              <UserMenu displayName={displayName} displayEmail={displayEmail} />
-            </div>
+            <DashboardHeaderUserInfo isOnboardingPath={isOnboardingPath} />
           </SignedIn>
         </div>
       </header>

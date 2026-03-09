@@ -104,7 +104,7 @@ const BRANDS: { name: string; Icon: ComponentType<SVGProps<SVGSVGElement>> }[] =
 function BrandItem({ name, Icon }: { name: string; Icon: ComponentType<SVGProps<SVGSVGElement>> }) {
   return (
     <span className="inline-flex shrink-0 items-center gap-2.5">
-      <Icon className="h-7 w-7 text-white/90" aria-hidden="true" />
+      <Icon className="h-7 w-7 text-white/85" aria-hidden="true" />
       <span className="text-lg font-semibold text-white/90">{name}</span>
     </span>
   );
@@ -117,9 +117,9 @@ function BrandItem({ name, Icon }: { name: string; Icon: ComponentType<SVGProps<
  */
 export default function TrustMarquee() {
   return (
-    <div className="relative z-10 mb-10 border-t border-white/10 pt-8 pb-6">
+    <div className="relative z-10 min-h-[124px] border-t border-white/10 px-6 pb-10 pt-8 md:min-h-[136px] md:pt-10">
       <BlurReveal delay={1.0}>
-        <p className="mb-6 text-center text-lg font-medium text-white">
+        <p className="mb-7 text-center text-xl font-medium text-white md:text-2xl">
           Loved by AI builders. Trusted by AI leaders.
         </p>
         <div className="relative overflow-hidden">
@@ -130,12 +130,12 @@ export default function TrustMarquee() {
           {/* Two identical strips side-by-side, each animates -50% so the seam is invisible */}
           <div className="animate-marquee-loop flex w-max items-center">
             {BRANDS.map((b) => (
-              <span key={b.name} className="mx-9">
+              <span key={b.name} className="mx-8 md:mx-9">
                 <BrandItem {...b} />
               </span>
             ))}
             {BRANDS.map((b) => (
-              <span key={`dup-${b.name}`} aria-hidden="true" className="mx-9">
+              <span key={`dup-${b.name}`} aria-hidden="true" className="mx-8 md:mx-9">
                 <BrandItem {...b} />
               </span>
             ))}

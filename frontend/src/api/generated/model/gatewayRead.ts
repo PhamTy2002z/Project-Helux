@@ -17,6 +17,10 @@ export interface GatewayRead {
   id: string;
   organization_id: string;
   token?: string | null;
+  activation_status?: string;
+  activation_error?: string | null;
+  activation_attempts?: number;
+  last_activation_at?: string | null;
   created_at: string;
   updated_at: string;
 }

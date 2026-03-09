@@ -362,6 +362,7 @@ async def _notify_agents_on_board_group_change(
             agent_name=agent.name,
             message=message,
             deliver=False,
+            organization_id=recipient_board.organization_id,
         )
         if error is None:
             notified += 1
@@ -466,6 +467,7 @@ async def _notify_lead_on_board_update(
         agent_name=lead.name,
         message=message,
         deliver=False,
+        organization_id=board.organization_id,
     )
     if error is None:
         record_activity(

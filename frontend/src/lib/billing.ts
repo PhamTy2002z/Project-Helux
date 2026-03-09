@@ -105,7 +105,36 @@ export const createIdempotencyKey = (): string => {
   return `idem-${Date.now()}`;
 };
 
-export const getApiErrorCode = (error: unknown): string | null => {
+type BillingApiErrorDetail = {
+  code: string | null;
+  message: string | null;
+  resource: string | null;
+  plan: string | null;
+  used: number | null;
+  limit: number | null;
+  effectiveUntil: string | null;
+};
+
+const QUOTA_RESOURCE_LABELS: Record<string, string> = {
+  board_groups: "board groups",
+  boards: "boards",
+  agents_total: "total agents",
+  agents_per_board: "agents per board",
+  tasks_created_monthly: "monthly tasks",
+  org_daily_tokens: "daily org tokens",
+  agent_daily_tokens: "daily agent tokens",
+  org_monthly_tokens: "monthly org tokens",
+  trial_total_tokens: "trial total tokens",
+  max_tokens_per_run: "tokens per run",
+};
+
+const toStringOrNull = (value: unknown): string | null =>
+  typeof value === "string" && value.trim().length > 0 ? value : null;
+
+const toNumberOrNull = (value: unknown): number | null =>
+  typeof value === "number" && Number.isFinite(value) ? value : null;
+
+export const getApiErrorDetail = (error: unknown): BillingApiErrorDetail | null => {
   if (!(error instanceof ApiError)) {
     return null;
   }
@@ -117,6 +146,56 @@ export const getApiErrorCode = (error: unknown): string | null => {
   if (!detail || typeof detail !== "object") {
     return null;
   }
-  const code = (detail as { code?: unknown }).code;
-  return typeof code === "string" ? code : null;
+  const typedDetail = detail as {
+    code?: unknown;
+    message?: unknown;
+    resource?: unknown;
+    plan?: unknown;
+    used?: unknown;
+    limit?: unknown;
+    effective_until?: unknown;
+  };
+  return {
+    code: toStringOrNull(typedDetail.code),
+    message: toStringOrNull(typedDetail.message),
+    resource: toStringOrNull(typedDetail.resource),
+    plan: toStringOrNull(typedDetail.plan),
+    used: toNumberOrNull(typedDetail.used),
+    limit: toNumberOrNull(typedDetail.limit),
+    effectiveUntil: toStringOrNull(typedDetail.effective_until),
+  };
+};
+
+export const getApiErrorCode = (error: unknown): string | null =>
+  getApiErrorDetail(error)?.code ?? null;
+
+const formatLimit = (value: number): string => Intl.NumberFormat("en-US").format(value);
+
+export const getUpgradeReasonFromError = (
+  error: unknown,
+  fallbackReason: string,
+): string => {
+  const detail = getApiErrorDetail(error);
+  if (!detail?.code) {
+    return fallbackReason;
+  }
+  if (detail.code === "blocked_for_payment") {
+    return "Trial period has ended. Runtime actions are blocked until upgrade.";
+  }
+  if (detail.code !== "quota_exceeded") {
+    return fallbackReason;
+  }
+
+  const resource =
+    (detail.resource && QUOTA_RESOURCE_LABELS[detail.resource]) ||
+    detail.resource?.replace(/_/g, " ") ||
+    "current";
+
+  if (detail.used !== null && detail.limit !== null) {
+    return `You've reached the ${resource} limit for your current plan (${formatLimit(detail.used)}/${formatLimit(detail.limit)}). Upgrade to continue.`;
+  }
+  if (detail.limit !== null) {
+    return `You've reached the ${resource} limit for your current plan (limit ${formatLimit(detail.limit)}). Upgrade to continue.`;
+  }
+  return `You've reached the ${resource} limit for your current plan. Upgrade to continue.`;
 };

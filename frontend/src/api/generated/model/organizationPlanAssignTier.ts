@@ -9,7 +9,6 @@ export type OrganizationPlanAssignTier =
   (typeof OrganizationPlanAssignTier)[keyof typeof OrganizationPlanAssignTier];
 
 export const OrganizationPlanAssignTier = {
-  free: "free",
-  beta: "beta",
+  trial_7d: "trial_7d",
   pro: "pro",
 } as const;

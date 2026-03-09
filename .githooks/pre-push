@@ -1,0 +1,24 @@
+#!/bin/sh
+# Prevent direct push to master/main branch
+protected_branches="master main"
+current_branch=$(git symbolic-ref HEAD 2>/dev/null | sed 's|refs/heads/||')
+
+for branch in $protected_branches; do
+  if [ "$current_branch" = "$branch" ]; then
+    echo "🚫 Direct push to '$branch' is blocked!"
+    echo "   Use 'develop' branch and create a PR to merge into '$branch'."
+    exit 1
+  fi
+done
+
+while read local_ref local_sha remote_ref remote_sha; do
+  for branch in $protected_branches; do
+    if echo "$remote_ref" | grep -q "refs/heads/$branch$"; then
+      echo "🚫 Push to remote '$branch' is blocked!"
+      echo "   Create a PR instead: gh pr create --base $branch"
+      exit 1
+    fi
+  done
+done
+
+exit 0

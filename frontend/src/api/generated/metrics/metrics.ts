@@ -22,6 +22,8 @@ import type {
   DashboardMetricsApiV1MetricsDashboardGetParams,
   EntitlementUsageRead,
   HTTPValidationError,
+  SaasBillingHealthMetrics,
+  SaasBillingHealthMetricsApiV1MetricsSaasBillingHealthGetParams,
   TenantSloMetrics,
   TenantSloMetricsApiV1MetricsTenantSloGetParams,
 } from "../model";
@@ -626,6 +628,293 @@ export function useTenantSloMetricsApiV1MetricsTenantSloGet<
     params,
     options,
   );
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * Return lightweight SaaS billing observability metrics for support workflows.
+ * @summary Saas Billing Health Metrics
+ */
+export type saasBillingHealthMetricsApiV1MetricsSaasBillingHealthGetResponse200 =
+  {
+    data: SaasBillingHealthMetrics;
+    status: 200;
+  };
+
+export type saasBillingHealthMetricsApiV1MetricsSaasBillingHealthGetResponse422 =
+  {
+    data: HTTPValidationError;
+    status: 422;
+  };
+
+export type saasBillingHealthMetricsApiV1MetricsSaasBillingHealthGetResponseSuccess =
+  saasBillingHealthMetricsApiV1MetricsSaasBillingHealthGetResponse200 & {
+    headers: Headers;
+  };
+export type saasBillingHealthMetricsApiV1MetricsSaasBillingHealthGetResponseError =
+  saasBillingHealthMetricsApiV1MetricsSaasBillingHealthGetResponse422 & {
+    headers: Headers;
+  };
+
+export type saasBillingHealthMetricsApiV1MetricsSaasBillingHealthGetResponse =
+  | saasBillingHealthMetricsApiV1MetricsSaasBillingHealthGetResponseSuccess
+  | saasBillingHealthMetricsApiV1MetricsSaasBillingHealthGetResponseError;
+
+export const getSaasBillingHealthMetricsApiV1MetricsSaasBillingHealthGetUrl = (
+  params?: SaasBillingHealthMetricsApiV1MetricsSaasBillingHealthGetParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/v1/metrics/saas-billing-health?${stringifiedParams}`
+    : `/api/v1/metrics/saas-billing-health`;
+};
+
+export const saasBillingHealthMetricsApiV1MetricsSaasBillingHealthGet = async (
+  params?: SaasBillingHealthMetricsApiV1MetricsSaasBillingHealthGetParams,
+  options?: RequestInit,
+): Promise<saasBillingHealthMetricsApiV1MetricsSaasBillingHealthGetResponse> => {
+  return customFetch<saasBillingHealthMetricsApiV1MetricsSaasBillingHealthGetResponse>(
+    getSaasBillingHealthMetricsApiV1MetricsSaasBillingHealthGetUrl(params),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getSaasBillingHealthMetricsApiV1MetricsSaasBillingHealthGetQueryKey =
+  (params?: SaasBillingHealthMetricsApiV1MetricsSaasBillingHealthGetParams) => {
+    return [
+      `/api/v1/metrics/saas-billing-health`,
+      ...(params ? [params] : []),
+    ] as const;
+  };
+
+export const getSaasBillingHealthMetricsApiV1MetricsSaasBillingHealthGetQueryOptions =
+  <
+    TData = Awaited<
+      ReturnType<
+        typeof saasBillingHealthMetricsApiV1MetricsSaasBillingHealthGet
+      >
+    >,
+    TError = HTTPValidationError,
+  >(
+    params?: SaasBillingHealthMetricsApiV1MetricsSaasBillingHealthGetParams,
+    options?: {
+      query?: Partial<
+        UseQueryOptions<
+          Awaited<
+            ReturnType<
+              typeof saasBillingHealthMetricsApiV1MetricsSaasBillingHealthGet
+            >
+          >,
+          TError,
+          TData
+        >
+      >;
+      request?: SecondParameter<typeof customFetch>;
+    },
+  ) => {
+    const { query: queryOptions, request: requestOptions } = options ?? {};
+
+    const queryKey =
+      queryOptions?.queryKey ??
+      getSaasBillingHealthMetricsApiV1MetricsSaasBillingHealthGetQueryKey(
+        params,
+      );
+
+    const queryFn: QueryFunction<
+      Awaited<
+        ReturnType<
+          typeof saasBillingHealthMetricsApiV1MetricsSaasBillingHealthGet
+        >
+      >
+    > = ({ signal }) =>
+      saasBillingHealthMetricsApiV1MetricsSaasBillingHealthGet(params, {
+        signal,
+        ...requestOptions,
+      });
+
+    return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+      Awaited<
+        ReturnType<
+          typeof saasBillingHealthMetricsApiV1MetricsSaasBillingHealthGet
+        >
+      >,
+      TError,
+      TData
+    > & { queryKey: DataTag<QueryKey, TData, TError> };
+  };
+
+export type SaasBillingHealthMetricsApiV1MetricsSaasBillingHealthGetQueryResult =
+  NonNullable<
+    Awaited<
+      ReturnType<
+        typeof saasBillingHealthMetricsApiV1MetricsSaasBillingHealthGet
+      >
+    >
+  >;
+export type SaasBillingHealthMetricsApiV1MetricsSaasBillingHealthGetQueryError =
+  HTTPValidationError;
+
+export function useSaasBillingHealthMetricsApiV1MetricsSaasBillingHealthGet<
+  TData = Awaited<
+    ReturnType<typeof saasBillingHealthMetricsApiV1MetricsSaasBillingHealthGet>
+  >,
+  TError = HTTPValidationError,
+>(
+  params:
+    | undefined
+    | SaasBillingHealthMetricsApiV1MetricsSaasBillingHealthGetParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<
+          ReturnType<
+            typeof saasBillingHealthMetricsApiV1MetricsSaasBillingHealthGet
+          >
+        >,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<
+            ReturnType<
+              typeof saasBillingHealthMetricsApiV1MetricsSaasBillingHealthGet
+            >
+          >,
+          TError,
+          Awaited<
+            ReturnType<
+              typeof saasBillingHealthMetricsApiV1MetricsSaasBillingHealthGet
+            >
+          >
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useSaasBillingHealthMetricsApiV1MetricsSaasBillingHealthGet<
+  TData = Awaited<
+    ReturnType<typeof saasBillingHealthMetricsApiV1MetricsSaasBillingHealthGet>
+  >,
+  TError = HTTPValidationError,
+>(
+  params?: SaasBillingHealthMetricsApiV1MetricsSaasBillingHealthGetParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<
+          ReturnType<
+            typeof saasBillingHealthMetricsApiV1MetricsSaasBillingHealthGet
+          >
+        >,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<
+            ReturnType<
+              typeof saasBillingHealthMetricsApiV1MetricsSaasBillingHealthGet
+            >
+          >,
+          TError,
+          Awaited<
+            ReturnType<
+              typeof saasBillingHealthMetricsApiV1MetricsSaasBillingHealthGet
+            >
+          >
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useSaasBillingHealthMetricsApiV1MetricsSaasBillingHealthGet<
+  TData = Awaited<
+    ReturnType<typeof saasBillingHealthMetricsApiV1MetricsSaasBillingHealthGet>
+  >,
+  TError = HTTPValidationError,
+>(
+  params?: SaasBillingHealthMetricsApiV1MetricsSaasBillingHealthGetParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<
+          ReturnType<
+            typeof saasBillingHealthMetricsApiV1MetricsSaasBillingHealthGet
+          >
+        >,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+/**
+ * @summary Saas Billing Health Metrics
+ */
+
+export function useSaasBillingHealthMetricsApiV1MetricsSaasBillingHealthGet<
+  TData = Awaited<
+    ReturnType<typeof saasBillingHealthMetricsApiV1MetricsSaasBillingHealthGet>
+  >,
+  TError = HTTPValidationError,
+>(
+  params?: SaasBillingHealthMetricsApiV1MetricsSaasBillingHealthGetParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<
+          ReturnType<
+            typeof saasBillingHealthMetricsApiV1MetricsSaasBillingHealthGet
+          >
+        >,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions =
+    getSaasBillingHealthMetricsApiV1MetricsSaasBillingHealthGetQueryOptions(
+      params,
+      options,
+    );
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<
     TData,

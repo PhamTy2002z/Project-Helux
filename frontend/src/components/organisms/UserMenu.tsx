@@ -28,6 +28,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { useBillingSubscription } from "@/lib/billing";
+import { planLabelFromTier } from "@/lib/plan-labels";
 import { cn } from "@/lib/utils";
 
 type UserMenuProps = {
@@ -55,12 +56,7 @@ export function UserMenu({
     displayNameFromDb ?? (localMode ? "Local User" : "Account");
   const displayEmail =
     displayEmailFromDb ?? (localMode ? "local@localhost" : "");
-  const currentPlanLabel =
-    subscriptionQuery.data?.plan_tier === "pro"
-      ? "Pro"
-      : subscriptionQuery.data?.plan_tier === "trial_7d"
-        ? "Trial 7 days"
-        : null;
+  const currentPlanLabel = planLabelFromTier(subscriptionQuery.data?.plan_tier);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>

@@ -33,6 +33,7 @@ import { useUrlSorting } from "@/lib/use-url-sorting";
 const AGENT_SORTABLE_COLUMNS = [
   "name",
   "status",
+  "token_remaining_today",
   "openclaw_session_id",
   "board_id",
   "last_seen_at",

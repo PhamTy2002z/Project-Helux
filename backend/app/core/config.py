@@ -25,6 +25,7 @@ LOCAL_AUTH_TOKEN_PLACEHOLDERS = frozenset(
 )
 BILLING_MODES = frozenset({"simulated", "provider"})
 PAYMENT_PROVIDERS = frozenset({"none", "stripe", "paddle"})
+OPENCLAW_USAGE_ENFORCEMENT_MODES = frozenset({"observe", "enforce"})
 
 
 class Settings(BaseSettings):
@@ -84,6 +85,10 @@ class Settings(BaseSettings):
     gateway_min_version: str = "2026.02.9"
     gateway_rpc_connect_timeout_seconds: float = Field(default=10.0, gt=0)
     gateway_rpc_response_timeout_seconds: float = Field(default=20.0, gt=0)
+    openclaw_usage_enforcement_mode: str = "observe"
+    openclaw_usage_capability_ttl_seconds: int = Field(default=300, ge=0)
+    openclaw_usage_utc_offset: str = "UTC+7"
+    openclaw_usage_day_timezone: str = "Asia/Ho_Chi_Minh"
     gateway_lifecycle_timeout_seconds: float = Field(default=90.0, gt=0)
     managed_gateway_auto_provision: bool = True
     managed_gateway_name: str = "Managed Gateway"
@@ -152,6 +157,13 @@ class Settings(BaseSettings):
         self.payment_provider = self.payment_provider.strip().lower()
         if self.payment_provider not in PAYMENT_PROVIDERS:
             raise ValueError("PAYMENT_PROVIDER must be one of: none, stripe, paddle.")
+        self.openclaw_usage_enforcement_mode = self.openclaw_usage_enforcement_mode.strip().lower()
+        if self.openclaw_usage_enforcement_mode not in OPENCLAW_USAGE_ENFORCEMENT_MODES:
+            raise ValueError("OPENCLAW_USAGE_ENFORCEMENT_MODE must be one of: observe, enforce.")
+        self.openclaw_usage_utc_offset = self.openclaw_usage_utc_offset.strip() or "UTC+7"
+        self.openclaw_usage_day_timezone = (
+            self.openclaw_usage_day_timezone.strip() or "Asia/Ho_Chi_Minh"
+        )
         return self
 
 

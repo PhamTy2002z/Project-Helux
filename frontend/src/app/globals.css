@@ -31,6 +31,10 @@ body {
   color: var(--text);
 }
 
+html {
+  scrollbar-gutter: stable;
+}
+
 * {
   border-color: var(--border);
 }
@@ -141,7 +145,7 @@ body {
 }
 
 .hero-btn-primary {
-  @apply rounded-full border border-white/10 bg-black px-6 py-3 text-sm font-medium text-white transition-all duration-300;
+  @apply inline-flex items-center justify-center rounded-full border border-white/10 bg-black px-6 py-3 text-sm font-medium text-white transition-all duration-300;
 }
 
 .hero-btn-primary:hover {
@@ -157,6 +161,18 @@ body {
 
 .hero-btn-secondary:hover {
   background: rgba(255, 255, 255, 0.1);
+}
+
+.hero-btn-demo {
+  @apply inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold text-white transition-all duration-300;
+  background: #ff5b35;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow: 0 12px 28px rgba(255, 91, 53, 0.35);
+}
+
+.hero-btn-demo:hover {
+  background: #ff6f4b;
+  transform: translateY(-1px);
 }
 
 /* Marquee animation — translates -50% so duplicated content loops seamlessly */

@@ -248,6 +248,7 @@ async def _notify_lead_on_webhook_payload(
         agent_name=target_agent.name,
         message=message,
         deliver=False,
+        organization_id=board.organization_id,
     )
 
 

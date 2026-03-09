@@ -26,6 +26,7 @@ import { ConfirmActionDialog } from "@/components/ui/confirm-action-dialog";
 import { Input } from "@/components/ui/input";
 import SearchableSelect from "@/components/ui/searchable-select";
 import { useBillingSubscription } from "@/lib/billing";
+import { planLabelFromTier } from "@/lib/plan-labels";
 import { withQueryPolicy } from "@/lib/query-policy";
 import { getSupportedTimezones } from "@/lib/timezones";
 
@@ -150,7 +151,10 @@ export default function SettingsPage() {
   };
 
   const isSaving = updateMeMutation.isPending;
-  const isBlockedForPayment = subscriptionQuery.data?.status === "blocked_for_payment";
+  const isBlockedForPayment =
+    subscriptionQuery.data?.status === "blocked_for_payment";
+  const currentPlanLabel =
+    planLabelFromTier(subscriptionQuery.data?.plan_tier) ?? "—";
   const isUpgradeModalOpen = upgradeOpen || isBlockedForPayment;
 
   return (
@@ -264,9 +268,7 @@ export default function SettingsPage() {
                 <p className="mt-1 text-sm text-slate-500">
                   Current plan:{" "}
                   <span className="font-medium text-slate-800">
-                    {subscriptionQuery.data?.plan_tier === "pro"
-                      ? "Pro"
-                      : "Trial 7 days"}
+                    {currentPlanLabel}
                   </span>
                   {isBlockedForPayment ? " (runtime blocked)" : ""}
                 </p>
@@ -277,7 +279,10 @@ export default function SettingsPage() {
             </div>
 
             {quotaQuery.data?.data.quotas ? (
-              <QuotaSummary className="mt-4" quotas={quotaQuery.data.data.quotas} />
+              <QuotaSummary
+                className="mt-4"
+                quotas={quotaQuery.data.data.quotas}
+              />
             ) : null}
           </section>
 

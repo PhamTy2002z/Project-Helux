@@ -61,6 +61,22 @@ const DEFAULT_EMPTY_ICON = (
   </svg>
 );
 
+const TOKEN_NUMBER_FORMATTER = new Intl.NumberFormat("en-US");
+
+const formatTokenCount = (value: number): string =>
+  TOKEN_NUMBER_FORMATTER.format(Math.max(Math.trunc(value), 0));
+
+const tokenResetHint = (value: string | null | undefined): string => {
+  if (!value) {
+    return "Resets at next VN midnight.";
+  }
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return "Resets at next VN midnight.";
+  }
+  return `Resets ${parsed.toLocaleString()}.`;
+};
+
 export function AgentsTable({
   agents,
   boards = [],
@@ -115,6 +131,41 @@ export function AgentsTable({
         accessorKey: "status",
         header: "Status",
         cell: ({ row }) => pillCell(row.original.status),
+      },
+      {
+        accessorKey: "token_remaining_today",
+        header: "Tokens left",
+        cell: ({ row }) => {
+          const agent = row.original;
+          const used = agent.token_used_today;
+          const limit = agent.token_limit_today;
+          const remaining = agent.token_remaining_today;
+          if (
+            agent.is_gateway_main ||
+            typeof used !== "number" ||
+            typeof limit !== "number" ||
+            typeof remaining !== "number"
+          ) {
+            return <span className="text-sm text-slate-700">—</span>;
+          }
+          const safeRemaining = Math.max(remaining, 0);
+          const isBlocked = Boolean(agent.token_blocked) || safeRemaining <= 0;
+          return (
+            <div className="flex min-w-[120px] flex-col gap-1">
+              <span className="text-sm text-slate-700">
+                {formatTokenCount(safeRemaining)} / {formatTokenCount(limit)}
+              </span>
+              {isBlocked ? (
+                <span
+                  className="inline-flex w-fit rounded-full border border-red-200 bg-red-50 px-2 py-0.5 text-[11px] font-semibold text-red-700"
+                  title={tokenResetHint(agent.token_reset_at)}
+                >
+                  Blocked
+                </span>
+              ) : null}
+            </div>
+          );
+        },
       },
       {
         accessorKey: "openclaw_session_id",

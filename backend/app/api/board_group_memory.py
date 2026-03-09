@@ -288,6 +288,7 @@ async def _notify_group_target(
         config=config,
         agent_name=agent.name,
         message=message,
+        organization_id=board.organization_id,
     )
     if error is not None:
         return

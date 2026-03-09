@@ -27,7 +27,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import SearchableSelect from "@/components/ui/searchable-select";
 import { Textarea } from "@/components/ui/textarea";
-import { getApiErrorCode } from "@/lib/billing";
+import { getApiErrorCode, getUpgradeReasonFromError } from "@/lib/billing";
 
 const slugify = (value: string) =>
   value
@@ -35,6 +35,9 @@ const slugify = (value: string) =>
     .trim()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/(^-|-$)/g, "") || "board";
+
+const BOARD_UPGRADE_REASON =
+  "Board creation is blocked by your current plan. Upgrade to continue.";
 
 export default function NewBoardPage() {
   const router = useRouter();
@@ -50,6 +53,7 @@ export default function NewBoardPage() {
 
   const [error, setError] = useState<string | null>(null);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
+  const [upgradeReason, setUpgradeReason] = useState(BOARD_UPGRADE_REASON);
 
   const gatewaysQuery = useListGatewaysApiV1GatewaysGet<
     listGatewaysApiV1GatewaysGetResponse,
@@ -83,6 +87,7 @@ export default function NewBoardPage() {
       onError: (err) => {
         const errorCode = getApiErrorCode(err);
         if (errorCode === "blocked_for_payment" || errorCode === "quota_exceeded") {
+          setUpgradeReason(getUpgradeReasonFromError(err, BOARD_UPGRADE_REASON));
           setUpgradeOpen(true);
         }
         setError(err.message || "Something went wrong.");
@@ -176,7 +181,11 @@ export default function NewBoardPage() {
           className="space-y-6 rounded-xl border border-slate-200 bg-white p-6 shadow-sm"
         >
         <div className="space-y-4">
-          <div className="grid gap-6 md:grid-cols-2">
+          <div
+            className={`grid gap-6 ${
+              isSaasMode ? "md:grid-cols-2" : "md:grid-cols-3"
+            }`}
+          >
             <div className="space-y-2">
               <label className="text-sm font-medium text-slate-900">
                 Board name <span className="text-red-500">*</span>
@@ -207,9 +216,6 @@ export default function NewBoardPage() {
                 />
               </div>
             ) : null}
-          </div>
-
-          <div className="grid gap-6 md:grid-cols-2">
             <div className="space-y-2">
               <label className="text-sm font-medium text-slate-900">
                 Board group
@@ -284,7 +290,7 @@ export default function NewBoardPage() {
       <UpgradeModal
         open={upgradeOpen}
         onOpenChange={setUpgradeOpen}
-        reason="Board creation is blocked by your current plan. Upgrade to continue."
+        reason={upgradeReason}
         source="boards_new"
       />
     </>

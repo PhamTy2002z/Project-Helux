@@ -4,17 +4,20 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
-from datetime import datetime, timedelta
-from typing import Any, cast
+from datetime import UTC, date, datetime, timedelta
+from typing import cast
 from uuid import UUID
+from zoneinfo import ZoneInfo
 
 from fastapi import HTTPException, status
-from sqlalchemy import func
+from sqlalchemy import case, func
 from sqlmodel import col, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from app.core.config import settings
 from app.core.logging import get_request_endpoint, get_request_id
 from app.core.time import utcnow
+from app.models.agent_token_daily_usage import AgentTokenDailyUsage
 from app.models.agents import Agent
 from app.models.board_groups import BoardGroup
 from app.models.boards import Board
@@ -181,7 +184,9 @@ async def _count_board_groups(session: AsyncSession, *, organization_id: UUID) -
 
 
 async def _count_boards(session: AsyncSession, *, organization_id: UUID) -> int:
-    statement = select(func.count(col(Board.id))).where(col(Board.organization_id) == organization_id)
+    statement = select(func.count(col(Board.id))).where(
+        col(Board.organization_id) == organization_id
+    )
     return int((await session.exec(statement)).one() or 0)
 
 
@@ -251,6 +256,72 @@ def _token_usage_from_metadata(plan: OrganizationPlan) -> dict[str, int]:
     return values
 
 
+def _vn_date_from_utc(value: datetime) -> date:
+    aware_utc = value if value.tzinfo else value.replace(tzinfo=UTC)
+    return aware_utc.astimezone(ZoneInfo(settings.openclaw_usage_day_timezone)).date()
+
+
+def _next_month_start(value: date) -> date:
+    if value.month == 12:
+        return date(value.year + 1, 1, 1)
+    return date(value.year, value.month + 1, 1)
+
+
+async def _token_usage_from_ledger(
+    session: AsyncSession,
+    *,
+    organization_id: UUID,
+    now: datetime,
+) -> tuple[dict[str, int], bool]:
+    today_vn = _vn_date_from_utc(now)
+    month_start_vn = today_vn.replace(day=1)
+    next_month_start_vn = _next_month_start(month_start_vn)
+    usage_date_col = col(AgentTokenDailyUsage.usage_date_vn)
+    billed_col = col(AgentTokenDailyUsage.billed_tokens_used)
+
+    statement = select(
+        func.count(col(AgentTokenDailyUsage.id)),
+        func.coalesce(
+            func.sum(
+                case((usage_date_col == today_vn, billed_col), else_=0),
+            ),
+            0,
+        ),
+        func.coalesce(
+            func.max(
+                case((usage_date_col == today_vn, billed_col), else_=None),
+            ),
+            0,
+        ),
+        func.coalesce(
+            func.sum(
+                case(
+                    (
+                        (usage_date_col >= month_start_vn) & (usage_date_col < next_month_start_vn),
+                        billed_col,
+                    ),
+                    else_=0,
+                ),
+            ),
+            0,
+        ),
+        func.coalesce(func.sum(billed_col), 0),
+    ).where(col(AgentTokenDailyUsage.organization_id) == organization_id)
+    row = cast(tuple[object, object, object, object, object], (await session.exec(statement)).one())
+    ledger_rows = int(row[0] or 0)
+    if ledger_rows <= 0:
+        return {}, False
+    return (
+        {
+            "org_daily": max(int(row[1] or 0), 0),
+            "agent_daily": max(int(row[2] or 0), 0),
+            "org_monthly": max(int(row[3] or 0), 0),
+            "trial_total": max(int(row[4] or 0), 0),
+        },
+        True,
+    )
+
+
 def _usage_entry(*, resource: str, used: int, limit: int | None) -> QuotaUsage:
     remaining = None if limit is None else max(limit - used, 0)
     exceeded = limit is not None and used >= limit
@@ -285,12 +356,22 @@ async def get_entitlement_usage(
         organization_id=organization_id,
         now=now,
     )
-    token_usage = _token_usage_from_metadata(plan)
+    metadata_token_usage = _token_usage_from_metadata(plan)
+    ledger_token_usage, ledger_has_rows = await _token_usage_from_ledger(
+        session,
+        organization_id=organization_id,
+        now=now,
+    )
+    token_usage = ledger_token_usage if ledger_has_rows else metadata_token_usage
 
     quotas = [
-        _usage_entry(resource="board_groups", used=board_groups_count, limit=policy.max_board_groups),
+        _usage_entry(
+            resource="board_groups", used=board_groups_count, limit=policy.max_board_groups
+        ),
         _usage_entry(resource="boards", used=boards_count, limit=policy.max_boards),
-        _usage_entry(resource="agents_total", used=agents_total_count, limit=policy.max_agents_total),
+        _usage_entry(
+            resource="agents_total", used=agents_total_count, limit=policy.max_agents_total
+        ),
         _usage_entry(
             resource="agents_per_board",
             used=agents_per_board_max_used,
@@ -395,6 +476,15 @@ async def _resolve_policy_for_runtime(
         await session.commit()
         raise _payment_blocked_error(tier=tier, effective_until=plan.effective_until)
     return tier, policy_for_tier(tier)
+
+
+async def resolve_runtime_policy(
+    session: AsyncSession,
+    *,
+    organization_id: UUID,
+) -> tuple[PlanTier, EntitlementPolicy]:
+    """Resolve active plan tier and policy, including trial-expiry blocking rules."""
+    return await _resolve_policy_for_runtime(session, organization_id=organization_id)
 
 
 async def enforce_board_group_quota(session: AsyncSession, *, organization_id: UUID) -> None:

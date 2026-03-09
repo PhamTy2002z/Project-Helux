@@ -13,6 +13,10 @@ from app.services.openclaw.gateway_rpc import (
     openclaw_call,
     openclaw_connect_metadata,
 )
+from app.services.openclaw.usage_capability import (
+    GatewayUsageCapabilityResult,
+    check_sessions_usage_capability,
+)
 
 _CALVER_PATTERN = re.compile(
     r"^v?(?P<year>\d{4})\.(?P<month>\d{1,2})\.(?P<day>\d{1,2})(?:-(?P<rev>\d+))?$",
@@ -179,3 +183,12 @@ async def check_gateway_version_compatibility(
         current_version=current_version,
         minimum_version=minimum_version,
     )
+
+
+async def check_gateway_sessions_usage_capability(
+    config: GatewayConfig,
+    *,
+    force_refresh: bool = False,
+) -> GatewayUsageCapabilityResult:
+    """Return cached capability verdict for `sessions.usage` on a gateway runtime."""
+    return await check_sessions_usage_capability(config, force_refresh=force_refresh)

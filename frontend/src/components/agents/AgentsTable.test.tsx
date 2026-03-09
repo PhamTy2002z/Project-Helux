@@ -27,6 +27,11 @@ const buildAgent = (overrides: Partial<AgentRead> = {}): AgentRead => ({
   board_id: "board-1",
   status: "online",
   openclaw_session_id: "session-1234",
+  token_used_today: 5_000,
+  token_limit_today: 15_000,
+  token_remaining_today: 10_000,
+  token_blocked: false,
+  token_reset_at: "2026-01-02T00:00:00Z",
   last_seen_at: "2026-01-01T00:00:00Z",
   created_at: "2026-01-01T00:00:00Z",
   updated_at: "2026-01-01T00:00:00Z",
@@ -108,6 +113,31 @@ describe("AgentsTable", () => {
     expect(
       screen.queryByRole("button", { name: "Delete" }),
     ).not.toBeInTheDocument();
+  });
+
+  it("renders token remaining and blocked state badge", () => {
+    render(
+      <AgentsTable
+        agents={[
+          buildAgent({
+            token_used_today: 15_000,
+            token_limit_today: 15_000,
+            token_remaining_today: 0,
+            token_blocked: true,
+          }),
+        ]}
+        boards={[buildBoard()]}
+        showActions={false}
+      />,
+    );
+
+    expect(screen.getByText("0 / 15,000")).toBeInTheDocument();
+    const blockedBadge = screen.getByText("Blocked");
+    expect(blockedBadge).toBeInTheDocument();
+    expect(blockedBadge).toHaveAttribute(
+      "title",
+      expect.stringContaining("Resets"),
+    );
   });
 
   it("supports hiddenColumns and columnOrder", () => {

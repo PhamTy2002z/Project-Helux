@@ -40,6 +40,16 @@ export interface AgentRead {
   openclaw_session_id?: string | null;
   /** Last heartbeat timestamp. */
   last_seen_at?: string | null;
+  /** Billed token usage for current VN-local day. */
+  token_used_today?: number | null;
+  /** Daily token limit for this agent under current plan tier. */
+  token_limit_today?: number | null;
+  /** Remaining billed tokens before the daily cap is reached. */
+  token_remaining_today?: number | null;
+  /** Whether the agent is currently blocked by daily token quota. */
+  token_blocked?: boolean | null;
+  /** UTC timestamp for next VN-local day reset. */
+  token_reset_at?: string | null;
   /** Creation timestamp. */
   created_at: string;
   /** Last update timestamp. */

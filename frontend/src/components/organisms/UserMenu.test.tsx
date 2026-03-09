@@ -27,11 +27,7 @@ vi.mock("next/image", () => ({
 }));
 
 vi.mock("next/link", () => ({
-  default: ({
-    children,
-    href,
-    ...rest
-  }: LinkProps) => (
+  default: ({ children, href, ...rest }: LinkProps) => (
     <a href={typeof href === "string" ? href : "#"} {...rest}>
       {children}
     </a>
@@ -76,7 +72,7 @@ describe("UserMenu", () => {
 
     await user.click(screen.getByRole("button", { name: /open user menu/i }));
 
-    expect(screen.getByText(/plan: trial 7 days/i)).toBeInTheDocument();
+    expect(screen.getByText(/plan: basic/i)).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: /open boards/i }),
     ).toBeInTheDocument();

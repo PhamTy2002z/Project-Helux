@@ -25,6 +25,7 @@ from app.services.openclaw.error_messages import normalize_gateway_error_message
 from app.services.openclaw.gateway_compat import check_gateway_version_compatibility
 from app.services.openclaw.gateway_resolver import gateway_client_config, require_gateway_for_board
 from app.services.openclaw.gateway_rpc import GatewayConfig as GatewayClientConfig
+from app.services.agent_token_quota_service import AgentTokenQuotaService
 from app.services.openclaw.gateway_rpc import (
     OpenClawGatewayError,
     ensure_session,
@@ -393,6 +394,19 @@ class GatewaySessionService(OpenClawDBService):
         if user is None:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
         await require_board_access(self.session, user=user, board=board, write=True)
+        try:
+            await AgentTokenQuotaService(self.session).sync_and_enforce(
+                session_key=session_id,
+                organization_id=organization_id,
+                config=config,
+            )
+            if self.session.in_transaction():
+                await self.session.commit()
+        except HTTPException:
+            # Persist usage ledger updates before surfacing quota/auth failures.
+            if self.session.in_transaction():
+                await self.session.commit()
+            raise
         try:
             if main_session and session_id == main_session:
                 await ensure_session(main_session, config=config, label="Gateway Agent")

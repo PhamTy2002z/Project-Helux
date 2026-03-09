@@ -5,7 +5,6 @@ import type { ReactNode } from "react";
 
 import { DM_Serif_Display, IBM_Plex_Sans, Sora } from "next/font/google";
 
-import { Agentation } from "agentation";
 import { getSiteOrigin } from "@/lib/site-url";
 
 const siteOrigin = getSiteOrigin();
@@ -83,12 +82,16 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="en">
       <head>
         <link rel="preconnect" href="https://stream.mux.com" crossOrigin="" />
+        <link
+          rel="preconnect"
+          href="https://d8j0ntlcm91z4.cloudfront.net"
+          crossOrigin=""
+        />
       </head>
       <body
         className={`${bodyFont.variable} ${headingFont.variable} ${displayFont.variable} min-h-screen bg-app text-strong antialiased`}
       >
         {children}
-        {process.env.NODE_ENV === "development" && <Agentation />}
       </body>
     </html>
   );

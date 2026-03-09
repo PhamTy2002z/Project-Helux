@@ -46,6 +46,7 @@ from app.schemas.agents import (
 from app.schemas.common import OkResponse
 from app.schemas.gateways import GatewayTemplatesSyncError, GatewayTemplatesSyncResult
 from app.services.activity_log import record_activity
+from app.services.agent_usage_read_model import AgentTokenUsageReadModel, AgentTokenUsageSnapshot
 from app.services.entitlements import enforce_agent_quota, enforce_agents_per_board_quota
 from app.services.openclaw.constants import (
     _TOOLS_KV_RE,
@@ -947,11 +948,25 @@ class AgentLifecycleService(OpenClawDBService):
             )
 
     @classmethod
-    def to_agent_read(cls, agent: Agent) -> AgentRead:
+    def to_agent_read(
+        cls,
+        agent: Agent,
+        *,
+        token_snapshot: AgentTokenUsageSnapshot | None = None,
+    ) -> AgentRead:
         model = AgentRead.model_validate(agent, from_attributes=True)
-        return model.model_copy(
-            update={"is_gateway_main": cls.is_gateway_main(agent)},
-        )
+        updates: dict[str, object] = {"is_gateway_main": cls.is_gateway_main(agent)}
+        if token_snapshot is not None:
+            updates.update(
+                {
+                    "token_used_today": token_snapshot.used_today,
+                    "token_limit_today": token_snapshot.limit_today,
+                    "token_remaining_today": token_snapshot.remaining_today,
+                    "token_blocked": token_snapshot.blocked,
+                    "token_reset_at": token_snapshot.reset_at,
+                },
+            )
+        return model.model_copy(update=updates)
 
     @staticmethod
     def coerce_agent_items(items: Sequence[Any]) -> list[Agent]:
@@ -962,6 +977,16 @@ class AgentLifecycleService(OpenClawDBService):
                 raise TypeError(msg)
             agents.append(item)
         return agents
+
+    @staticmethod
+    def _normalize_uuid_lookup(value: UUID | str) -> UUID | str:
+        if isinstance(value, UUID):
+            return value
+        candidate = value.strip()
+        try:
+            return UUID(candidate)
+        except ValueError:
+            return candidate
 
     async def get_main_agent_gateway(self, agent: Agent) -> Gateway | None:
         if agent.board_id is not None:
@@ -1605,9 +1630,21 @@ class AgentLifecycleService(OpenClawDBService):
         statement = statement.where(col(Agent.organization_id) == ctx.organization.id)
         statement = statement.order_by(col(Agent.created_at).desc())
 
-        def _transform(items: Sequence[Any]) -> Sequence[Any]:
+        usage_read_model = AgentTokenUsageReadModel(self.session)
+
+        async def _transform(items: Sequence[Any]) -> Sequence[Any]:
             agents = self.coerce_agent_items(items)
-            return [self.to_agent_read(self.with_computed_status(agent)) for agent in agents]
+            token_snapshots = await usage_read_model.snapshots_for_agents(
+                organization_id=ctx.organization.id,
+                agents=agents,
+            )
+            return [
+                self.to_agent_read(
+                    self.with_computed_status(agent),
+                    token_snapshot=token_snapshots.get(agent.id),
+                )
+                for agent in agents
+            ]
 
         return await paginate(self.session, statement, transformer=_transform)
 
@@ -1707,11 +1744,15 @@ class AgentLifecycleService(OpenClawDBService):
         agent_id: str,
         ctx: OrganizationContext,
     ) -> AgentRead:
-        agent = await Agent.objects.by_id(agent_id).first(self.session)
+        agent = await Agent.objects.by_id(self._normalize_uuid_lookup(agent_id)).first(self.session)
         if agent is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
         await self.require_agent_access(agent=agent, ctx=ctx, write=False)
-        return self.to_agent_read(self.with_computed_status(agent))
+        token_snapshot = await AgentTokenUsageReadModel(self.session).snapshot_for_agent(
+            organization_id=ctx.organization.id,
+            agent=agent,
+        )
+        return self.to_agent_read(self.with_computed_status(agent), token_snapshot=token_snapshot)
 
     async def update_agent(
         self,

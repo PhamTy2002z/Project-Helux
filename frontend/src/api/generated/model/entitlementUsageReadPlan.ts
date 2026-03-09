@@ -9,7 +9,6 @@ export type EntitlementUsageReadPlan =
   (typeof EntitlementUsageReadPlan)[keyof typeof EntitlementUsageReadPlan];
 
 export const EntitlementUsageReadPlan = {
-  free: "free",
-  beta: "beta",
+  trial_7d: "trial_7d",
   pro: "pro",
 } as const;

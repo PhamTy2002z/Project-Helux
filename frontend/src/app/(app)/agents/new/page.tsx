@@ -29,7 +29,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { getApiErrorCode } from "@/lib/billing";
+import { getApiErrorCode, getUpgradeReasonFromError } from "@/lib/billing";
 import { AGENT_EMOJI_OPTIONS } from "@/lib/agent-emoji";
 import { DEFAULT_IDENTITY_PROFILE } from "@/lib/agent-templates";
 
@@ -57,6 +57,9 @@ const normalizeIdentityProfile = (
   return hasValue ? normalized : null;
 };
 
+const AGENT_UPGRADE_REASON =
+  "Agent creation is blocked by your current plan. Upgrade to continue.";
+
 export default function NewAgentPage() {
   const router = useRouter();
   const { isSignedIn } = useAuth();
@@ -71,6 +74,7 @@ export default function NewAgentPage() {
   });
   const [error, setError] = useState<string | null>(null);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
+  const [upgradeReason, setUpgradeReason] = useState(AGENT_UPGRADE_REASON);
 
   const boardsQuery = useListBoardsApiV1BoardsGet<
     listBoardsApiV1BoardsGetResponse,
@@ -92,6 +96,7 @@ export default function NewAgentPage() {
       onError: (err) => {
         const errorCode = getApiErrorCode(err);
         if (errorCode === "blocked_for_payment" || errorCode === "quota_exceeded") {
+          setUpgradeReason(getUpgradeReasonFromError(err, AGENT_UPGRADE_REASON));
           setUpgradeOpen(true);
         }
         setError(err.message || "Something went wrong.");
@@ -308,7 +313,7 @@ export default function NewAgentPage() {
       <UpgradeModal
         open={upgradeOpen}
         onOpenChange={setUpgradeOpen}
-        reason="Agent creation is blocked by your current plan. Upgrade to continue."
+        reason={upgradeReason}
         source="agents_new"
       />
     </>

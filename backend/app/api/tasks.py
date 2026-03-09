@@ -565,6 +565,7 @@ async def _send_lead_task_message(
     session_key: str,
     config: GatewayClientConfig,
     message: str,
+    organization_id: UUID | None = None,
 ) -> OpenClawGatewayError | None:
     return await dispatch.try_send_agent_message(
         session_key=session_key,
@@ -572,6 +573,7 @@ async def _send_lead_task_message(
         agent_name="Lead Agent",
         message=message,
         deliver=False,
+        organization_id=organization_id,
     )
 
 
@@ -582,6 +584,7 @@ async def _send_agent_task_message(
     config: GatewayClientConfig,
     agent_name: str,
     message: str,
+    organization_id: UUID | None = None,
 ) -> OpenClawGatewayError | None:
     return await dispatch.try_send_agent_message(
         session_key=session_key,
@@ -589,6 +592,7 @@ async def _send_agent_task_message(
         agent_name=agent_name,
         message=message,
         deliver=False,
+        organization_id=organization_id,
     )
 
 
@@ -681,6 +685,7 @@ async def _notify_agent_on_task_assign(
         config=config,
         agent_name=agent.name,
         message=message,
+        organization_id=board.organization_id,
     )
     if error is None:
         record_activity(
@@ -736,6 +741,7 @@ async def _notify_agent_on_task_rework(
         config=config,
         agent_name=agent.name,
         message=message,
+        organization_id=board.organization_id,
     )
     if error is None:
         record_activity(
@@ -813,6 +819,7 @@ async def _notify_lead_on_task_create(
         session_key=lead.openclaw_session_id,
         config=config,
         message=message,
+        organization_id=board.organization_id,
     )
     if error is None:
         record_activity(
@@ -874,6 +881,7 @@ async def _notify_lead_on_task_unassigned(
         session_key=lead.openclaw_session_id,
         config=config,
         message=message,
+        organization_id=board.organization_id,
     )
     if error is None:
         record_activity(
@@ -1853,6 +1861,7 @@ async def _notify_task_comment_targets(
             config=config,
             agent_name=agent.name,
             message=notification,
+            organization_id=board.organization_id,
         )
 
 

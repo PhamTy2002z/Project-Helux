@@ -9,7 +9,6 @@ export type OrganizationPlanReadTier =
   (typeof OrganizationPlanReadTier)[keyof typeof OrganizationPlanReadTier];
 
 export const OrganizationPlanReadTier = {
-  free: "free",
-  beta: "beta",
+  trial_7d: "trial_7d",
   pro: "pro",
 } as const;

@@ -61,9 +61,6 @@ export default function FeatureCards() {
 
       <div className="mx-auto max-w-7xl">
         <ScrollReveal className="mb-14 text-center">
-          <p className="mb-3 text-sm font-medium uppercase tracking-[0.2em] text-white/45">
-            Core capabilities
-          </p>
           <h2
             className="text-balance text-white"
             style={{ fontSize: "clamp(28px, 4vw, 56px)" }}
@@ -91,6 +88,7 @@ export default function FeatureCards() {
                 </p>
                 <Link
                   href={feature.ctaHref}
+                  prefetch={false}
                   className="mt-7 inline-flex w-fit items-center gap-2 text-sm font-medium text-[#f97316] transition-colors hover:text-[#fb923c] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
                 >
                   {feature.ctaLabel}

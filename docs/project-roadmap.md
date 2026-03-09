@@ -4,10 +4,16 @@
 
 **Version**: 0.1.0 (Active Development)
 **Status**: Pre-release, under active development
-**Last Updated**: 2026-03-08
+**Last Updated**: 2026-03-09
 
 ## Recent Updates
 
+- ✅ Token ledger + quota enforcement plan (`260309-2123`) phases 4-6 completed first:
+  - Backend agent read surfaces now expose token fields (`token_used_today`, `token_limit_today`, `token_remaining_today`, `token_blocked`, `token_reset_at`)
+  - `/api/v1/metrics/quotas` token resources now derive from `agent_token_daily_usage` ledger with metadata fallback when ledger is empty
+  - Agents UI now shows `Tokens left` column with blocked badge/reset hint
+  - Plan-tier label normalization now displays `Basic` for `trial_7d` across shell/menu/settings/plan cards
+  - Added backend API+service tests and frontend component tests for new token/quota surfaces
 - ✅ Landing page redesign plan (`260309-1128`) all phases completed:
   - Converted fullscreen slideshow to CrewAI-inspired long-scroll landing page
   - 11 new UI components created: ScrollProvider, LandingNavbar, LandingHeroSection, ScrollReveal, LogoMarquee, FeatureCards, ProductTabs, TestimonialCarousel, PricingCards, LandingFooter, LandingPage orchestrator

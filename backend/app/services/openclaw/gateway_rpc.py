@@ -90,6 +90,7 @@ GATEWAY_METHODS = [
     "voicewake.get",
     "voicewake.set",
     "sessions.list",
+    "sessions.usage",
     "sessions.preview",
     "sessions.patch",
     "sessions.reset",

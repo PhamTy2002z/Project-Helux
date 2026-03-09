@@ -90,6 +90,11 @@ export const customFetch = async <T>(
         ) {
           message = first.msg;
         }
+      } else if (detail && typeof detail === "object") {
+        const detailMessage = (detail as { message?: unknown }).message;
+        if (typeof detailMessage === "string" && detailMessage) {
+          message = detailMessage;
+        }
       }
     }
     throw new ApiError(response.status, message, errorData);

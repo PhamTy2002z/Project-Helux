@@ -245,6 +245,26 @@ class AgentRead(AgentBase):
         default=None,
         description="Last heartbeat timestamp.",
     )
+    token_used_today: int | None = Field(
+        default=None,
+        description="Billed token usage for current VN-local day.",
+    )
+    token_limit_today: int | None = Field(
+        default=None,
+        description="Daily token limit for this agent under current plan tier.",
+    )
+    token_remaining_today: int | None = Field(
+        default=None,
+        description="Remaining billed tokens before the daily cap is reached.",
+    )
+    token_blocked: bool | None = Field(
+        default=None,
+        description="Whether the agent is currently blocked by daily token quota.",
+    )
+    token_reset_at: datetime | None = Field(
+        default=None,
+        description="UTC timestamp for next VN-local day reset.",
+    )
     created_at: datetime = Field(description="Creation timestamp.")
     updated_at: datetime = Field(description="Last update timestamp.")
 

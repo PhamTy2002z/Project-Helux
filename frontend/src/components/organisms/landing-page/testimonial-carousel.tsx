@@ -56,9 +56,6 @@ export default function TestimonialCarousel() {
 
       <div className="mx-auto max-w-4xl">
         <ScrollReveal className="mb-16 text-center">
-          <p className="mb-3 text-sm font-medium uppercase tracking-[0.2em] text-white/45">
-            Testimonials
-          </p>
           <h2
             className="text-balance text-white"
             style={{ fontSize: "clamp(28px, 4vw, 56px)" }}

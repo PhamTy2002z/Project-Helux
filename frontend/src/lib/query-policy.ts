@@ -27,7 +27,7 @@ export const queryPolicies: Record<QueryProfile, QueryPolicyOptions> = {
     gcTime: 10 * 60_000,
     refetchOnWindowFocus: true,
     refetchOnReconnect: true,
-    refetchOnMount: false,
+    refetchOnMount: true,
     retry: 1,
   },
   realtime: {
@@ -35,7 +35,7 @@ export const queryPolicies: Record<QueryProfile, QueryPolicyOptions> = {
     gcTime: 5 * 60_000,
     refetchOnWindowFocus: true,
     refetchOnReconnect: true,
-    refetchOnMount: false,
+    refetchOnMount: "always",
     retry: 1,
   },
 };
