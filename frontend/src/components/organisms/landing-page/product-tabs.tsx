@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { LayoutDashboard, Bot, Router, Boxes } from "lucide-react";
 import { ScrollReveal } from "./scroll-reveal";
@@ -11,6 +12,7 @@ const TABS = [
     label: "Boards",
     icon: LayoutDashboard,
     tags: ["Tasks", "Approvals", "Realtime"],
+    href: "/boards",
     description:
       "Manage tasks, approvals, and real-time execution signals from a unified command surface. No more context switching between tools.",
   },
@@ -19,6 +21,7 @@ const TABS = [
     label: "Agents",
     icon: Bot,
     tags: ["Workflows", "Health", "Logs"],
+    href: "/agents",
     description:
       "Coordinate humans and AI agents in one execution loop. Monitor agent health, review logs, and manage automated workflows.",
   },
@@ -27,6 +30,7 @@ const TABS = [
     label: "Gateways",
     icon: Router,
     tags: ["Routing", "Config", "Webhooks"],
+    href: "/gateways",
     description:
       "Configure gateway routing, manage webhooks, and control how data flows between your boards, agents, and external services.",
   },
@@ -35,6 +39,7 @@ const TABS = [
     label: "Skills",
     icon: Boxes,
     tags: ["Packs", "Marketplace", "Deploy"],
+    href: "/skills",
     description:
       "Browse the skill marketplace, deploy capability packs to your agents, and extend your platform with community contributions.",
   },
@@ -149,12 +154,12 @@ export default function ProductTabs() {
                       ))}
                     </div>
 
-                    {/* Screenshot placeholder */}
+                    {/* Product surface preview card */}
                     <div className="mb-8 flex h-[320px] w-full max-w-4xl items-center justify-center rounded-2xl border border-white/15 bg-gradient-to-b from-white/[0.08] to-white/[0.02]">
                       <div className="text-center">
                         <tab.icon size={48} className="mx-auto mb-3 text-white/30" />
                         <p className="text-sm text-white/45">
-                          {tab.label} screenshot
+                          {tab.label} workspace preview
                         </p>
                       </div>
                     </div>
@@ -163,6 +168,12 @@ export default function ProductTabs() {
                     <p className="max-w-2xl text-center text-base leading-relaxed text-white/70">
                       {tab.description}
                     </p>
+                    <Link
+                      href={tab.href}
+                      className="mt-6 inline-flex rounded-full border border-white/25 bg-white/10 px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                    >
+                      Explore {tab.label}
+                    </Link>
                   </motion.div>
                 )
             )}

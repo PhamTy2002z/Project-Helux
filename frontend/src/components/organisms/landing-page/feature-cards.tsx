@@ -9,7 +9,7 @@ const FEATURES = [
     title: "Boards",
     description: "Unified task dashboard with real-time sync",
     bullets: [
-      "Visual task management — no context switching",
+      "Visual task management with fewer tool switches",
       "Real-time approval routing",
       "Live execution signals across teams",
     ],
@@ -56,8 +56,8 @@ export default function FeatureCards() {
             Everything you need to run operations
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-balance text-sm leading-relaxed text-white/55 md:text-base">
-            Every module below follows the same hero language: high-contrast
-            typography, glass surfaces, and sharp visual hierarchy.
+            Run boards, agents, and gateways from one interface with clear
+            ownership, approval controls, and live execution visibility.
           </p>
         </ScrollReveal>
 

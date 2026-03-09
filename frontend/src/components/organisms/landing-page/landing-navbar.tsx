@@ -15,6 +15,7 @@ import Logo from "@/components/organisms/landing-slideshow/logo";
 const NAV_LINKS = [
   { label: "Features", href: "/#features" },
   { label: "Product", href: "/#product" },
+  { label: "Testimonials", href: "/#testimonials" },
   { label: "Pricing", href: "/pricing" },
 ];
 

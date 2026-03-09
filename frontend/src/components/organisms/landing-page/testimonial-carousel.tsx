@@ -43,6 +43,7 @@ export default function TestimonialCarousel() {
 
   return (
     <section
+      id="testimonials"
       className="relative overflow-hidden bg-black px-[5%] py-24"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}

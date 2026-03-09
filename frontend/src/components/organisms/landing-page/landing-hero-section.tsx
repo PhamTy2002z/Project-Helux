@@ -42,6 +42,8 @@ export default function LandingHeroSection() {
         loop
         muted
         playsInline
+        preload="metadata"
+        aria-hidden="true"
       />
 
       {/* Content */}
@@ -55,7 +57,7 @@ export default function LandingHeroSection() {
             variants={fadeUp}
             custom={1}
           >
-            Run Every Board in One Place
+            AI Agent Mission Control for Every Board
           </motion.h1>
 
           {/* Subtext */}
@@ -66,8 +68,8 @@ export default function LandingHeroSection() {
             variants={fadeUp}
             custom={2}
           >
-            Track tasks, approvals, and agent health in realtime so teams ship
-            faster with clear ownership and audit trails.
+            Manage tasks, approvals, agent health, and gateway activity in one
+            secure workspace with full audit history.
           </motion.p>
 
           {/* Buttons */}
