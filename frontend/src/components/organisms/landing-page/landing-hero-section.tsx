@@ -8,7 +8,6 @@ import {
   SignedOut,
   isClerkEnabled,
 } from "@/auth/clerk";
-import HlsVideo from "@/components/organisms/landing-slideshow/hls-video";
 import TrustMarquee from "./trust-marquee";
 
 const fadeUp = {
@@ -24,6 +23,9 @@ const fadeUp = {
   }),
 };
 
+const HERO_ANIMATION_VIDEO_SRC =
+  "https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260306_074215_04640ca7-042c-45d6-bb56-58b1e8a42489.mp4";
+
 export default function LandingHeroSection() {
   const clerkEnabled = isClerkEnabled();
 
@@ -32,14 +34,15 @@ export default function LandingHeroSection() {
       id="hero"
       className="relative min-h-screen overflow-hidden bg-black"
     >
-      {/* Video — dark wave/aurora background, floats in the middle area */}
-      <div className="absolute bottom-[35vh] left-0 right-0 h-[80vh] z-0">
-        <HlsVideo
-          src="https://stream.mux.com/9JXDljEVWYwWu01PUkAemafDugK89o01BR6zqJ3aS9u00A.m3u8"
-          poster="https://image.mux.com/9JXDljEVWYwWu01PUkAemafDugK89o01BR6zqJ3aS9u00A/thumbnail.webp?time=0&width=1920"
-          className="h-full w-full object-cover"
-        />
-      </div>
+      {/* Background animation video from viral-vision-hero */}
+      <video
+        className="absolute inset-0 z-0 h-full w-full object-cover"
+        src={HERO_ANIMATION_VIDEO_SRC}
+        autoPlay
+        loop
+        muted
+        playsInline
+      />
 
       {/* Content */}
       <div className="relative z-10 flex min-h-screen flex-col">

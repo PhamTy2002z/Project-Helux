@@ -39,14 +39,18 @@ const SOCIAL_LINKS = [
 
 export default function LandingFooter() {
   return (
-    <footer className="border-t border-white/10 bg-black px-[5%] pt-16 pb-8">
+    <footer className="relative overflow-hidden border-t border-white/10 bg-black px-[5%] pt-16 pb-8">
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute -bottom-16 left-1/4 h-64 w-64 rounded-full bg-white/[0.05] blur-3xl" />
+      </div>
+
       <div className="mx-auto max-w-7xl">
         {/* Top: Logo + link columns */}
-        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="hero-glass-card grid gap-10 rounded-3xl border border-white/15 p-8 md:p-10 sm:grid-cols-2 lg:grid-cols-4">
           {/* Logo column */}
           <div>
             <Logo />
-            <p className="mt-4 max-w-[240px] text-sm leading-relaxed text-white/40">
+            <p className="mt-4 max-w-[240px] text-sm leading-relaxed text-white/55">
               The mission control platform for boards, agents, and operations.
             </p>
           </div>
@@ -62,7 +66,7 @@ export default function LandingFooter() {
                   <li key={link.label}>
                     <Link
                       href={link.href}
-                      className="text-sm text-white/40 transition-colors hover:text-white/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                      className="inline-flex rounded-full px-3 py-1 text-sm text-white/50 transition-all hover:bg-white/[0.08] hover:text-white/85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
                     >
                       {link.label}
                     </Link>
@@ -74,8 +78,8 @@ export default function LandingFooter() {
         </div>
 
         {/* Bottom: copyright + social */}
-        <div className="mt-16 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-8 sm:flex-row">
-          <p className="text-xs text-white/30">
+        <div className="mt-8 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-8 sm:flex-row">
+          <p className="text-xs text-white/35">
             &copy; {new Date().getFullYear()} OpenClaw. All rights reserved.
           </p>
           <div className="flex gap-4">
@@ -88,7 +92,7 @@ export default function LandingFooter() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={social.label}
-                  className="text-white/30 transition-colors hover:text-white/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                  className="hero-glass-card inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/15 text-white/55 transition-all hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
                 >
                   <Icon size={18} />
                 </a>

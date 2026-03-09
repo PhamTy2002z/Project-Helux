@@ -13,9 +13,9 @@ import {
 import Logo from "@/components/organisms/landing-slideshow/logo";
 
 const NAV_LINKS = [
-  { label: "Features", href: "#features" },
-  { label: "Product", href: "#product" },
-  { label: "Pricing", href: "#pricing" },
+  { label: "Features", href: "/#features" },
+  { label: "Product", href: "/#product" },
+  { label: "Pricing", href: "/pricing" },
 ];
 
 const BTN_SIGNIN =
@@ -51,13 +51,13 @@ export default function LandingNavbar() {
         {/* Desktop nav links */}
         <div className="hidden items-center gap-8 md:flex">
           {NAV_LINKS.map((link) => (
-            <a
+            <Link
               key={link.href}
               href={link.href}
               className="text-[15px] font-medium text-white/90 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black"
             >
               {link.label}
-            </a>
+            </Link>
           ))}
         </div>
 
@@ -116,14 +116,14 @@ export default function LandingNavbar() {
         <div className="border-t border-white/10 bg-black/95 backdrop-blur-md md:hidden">
           <div className="flex flex-col gap-4 px-[5%] py-6">
             {NAV_LINKS.map((link) => (
-              <a
+              <Link
                 key={link.href}
                 href={link.href}
                 className="text-base text-white/90 transition-colors hover:text-white"
                 onClick={() => setMobileOpen(false)}
               >
                 {link.label}
-              </a>
+              </Link>
             ))}
             <div className="mt-2 flex flex-col gap-3">
               <SignedOut>

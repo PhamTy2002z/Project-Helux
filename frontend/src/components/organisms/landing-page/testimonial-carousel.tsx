@@ -43,15 +43,19 @@ export default function TestimonialCarousel() {
 
   return (
     <section
-      className="bg-[var(--slide-bg-alt,#131318)] px-[5%] py-24"
+      className="relative overflow-hidden bg-black px-[5%] py-24"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       onFocus={() => setPaused(true)}
       onBlur={() => setPaused(false)}
     >
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute top-10 left-1/2 h-64 w-64 -translate-x-1/2 rounded-full bg-white/[0.05] blur-3xl" />
+      </div>
+
       <div className="mx-auto max-w-4xl">
         <ScrollReveal className="mb-16 text-center">
-          <p className="mb-3 text-sm font-medium uppercase tracking-[0.2em] text-white/40">
+          <p className="mb-3 text-sm font-medium uppercase tracking-[0.2em] text-white/45">
             Testimonials
           </p>
           <h2
@@ -60,6 +64,10 @@ export default function TestimonialCarousel() {
           >
             Loved by teams worldwide
           </h2>
+          <p className="mx-auto mt-4 max-w-2xl text-balance text-sm leading-relaxed text-white/55 md:text-base">
+            Proof from operators running real boards, real agents, and real
+            approvals in production.
+          </p>
         </ScrollReveal>
 
         {/* Quote area */}
@@ -71,7 +79,7 @@ export default function TestimonialCarousel() {
               animate={{ opacity: 1, x: 0 }}
               exit={shouldReduceMotion ? undefined : { opacity: 0, x: -40 }}
               transition={{ duration: 0.4, ease: "easeOut" }}
-              className="text-center"
+              className="hero-glass-card rounded-3xl border border-white/15 px-6 py-10 text-center md:px-10"
             >
               <p
                 className="mb-8 text-balance text-white/90"
@@ -79,8 +87,8 @@ export default function TestimonialCarousel() {
               >
                 &ldquo;{TESTIMONIALS[active].quote}&rdquo;
               </p>
-              <footer className="text-sm text-white/50">
-                <span className="font-medium text-white/70">
+              <footer className="text-sm text-white/60">
+                <span className="font-medium text-white/80">
                   {TESTIMONIALS[active].author}
                 </span>
                 {" — "}
@@ -114,10 +122,10 @@ export default function TestimonialCarousel() {
               aria-selected={active === index}
               aria-label={`Testimonial ${index + 1}`}
               tabIndex={active === index ? 0 : -1}
-              className={`h-2 cursor-pointer rounded-full transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white ${
+              className={`cursor-pointer rounded-full border transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white ${
                 active === index
-                  ? "w-6 bg-white"
-                  : "w-2 bg-white/30 hover:bg-white/50"
+                  ? "h-2 w-7 border-white bg-white"
+                  : "h-2 w-2 border-white/30 bg-white/20 hover:border-white/50 hover:bg-white/40"
               }`}
               onClick={() => setActive(index)}
             />

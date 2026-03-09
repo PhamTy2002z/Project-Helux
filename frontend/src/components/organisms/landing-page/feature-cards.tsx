@@ -38,10 +38,15 @@ const FEATURES = [
 
 export default function FeatureCards() {
   return (
-    <section id="features" className="bg-[var(--slide-bg-alt,#131318)] px-[5%] py-24">
+    <section id="features" className="relative overflow-hidden bg-black px-[5%] py-24">
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute -top-32 left-1/4 h-72 w-72 rounded-full bg-white/[0.06] blur-3xl" />
+        <div className="absolute bottom-0 right-0 h-80 w-80 rounded-full bg-white/[0.05] blur-3xl" />
+      </div>
+
       <div className="mx-auto max-w-7xl">
         <ScrollReveal className="mb-16 text-center">
-          <p className="mb-3 text-sm font-medium uppercase tracking-[0.2em] text-white/40">
+          <p className="mb-3 text-sm font-medium uppercase tracking-[0.2em] text-white/45">
             Core capabilities
           </p>
           <h2
@@ -50,6 +55,10 @@ export default function FeatureCards() {
           >
             Everything you need to run operations
           </h2>
+          <p className="mx-auto mt-4 max-w-2xl text-balance text-sm leading-relaxed text-white/55 md:text-base">
+            Every module below follows the same hero language: high-contrast
+            typography, glass surfaces, and sharp visual hierarchy.
+          </p>
         </ScrollReveal>
 
         <div className="grid gap-6 md:grid-cols-3">
@@ -57,28 +66,28 @@ export default function FeatureCards() {
             const Icon = feature.icon;
             return (
               <ScrollReveal key={feature.title} delay={index * 0.1}>
-                <div className="group h-full rounded-2xl border border-white/10 bg-white/5 p-8 transition-all duration-200 hover:border-white/20 hover:bg-white/[0.08]">
-                  <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl bg-white/10">
-                    <Icon size={24} className="text-white/80" />
+                <article className="hero-glass-card group relative h-full rounded-3xl p-8 transition-all duration-300 hover:border-white/20 hover:bg-white/[0.08]">
+                  <div className="mb-5 inline-flex h-12 w-12 items-center justify-center rounded-xl border border-white/15 bg-white/10">
+                    <Icon size={24} className="text-white/85" />
                   </div>
                   <h3 className="mb-2 text-xl font-semibold text-white">
                     {feature.title}
                   </h3>
-                  <p className="mb-5 text-sm leading-relaxed text-white/60">
+                  <p className="mb-5 text-sm leading-relaxed text-white/65">
                     {feature.description}
                   </p>
                   <ul className="space-y-3">
                     {feature.bullets.map((bullet) => (
                       <li
                         key={bullet}
-                        className="flex items-start gap-2 text-sm text-white/50"
+                        className="flex items-start gap-2 text-sm text-white/55"
                       >
-                        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-white/30" />
+                        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-white/40" />
                         {bullet}
                       </li>
                     ))}
                   </ul>
-                </div>
+                </article>
               </ScrollReveal>
             );
           })}

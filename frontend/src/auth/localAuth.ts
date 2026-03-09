@@ -6,6 +6,8 @@ import { LOCAL_AUTH_STATE_COOKIE } from "@/auth/local-auth-shared";
 
 let localSessionActive: boolean | null = null;
 const SESSION_MARKER = "local-session";
+const LOCAL_SESSION_ENDPOINT = "/api/local-auth/session";
+const LOCAL_AUTH_VALIDATE_ENDPOINT = "/api/local-auth/proxy/api/v1/users/me";
 
 export function isLocalAuthMode(): boolean {
   if (isSaasAuthProfile()) return false;
@@ -49,7 +51,7 @@ export async function verifyLocalAuthSession(): Promise<boolean> {
   if (!getLocalAuthToken()) return false;
 
   try {
-    const response = await fetch("/api/local-auth/session", {
+    const response = await fetch(LOCAL_SESSION_ENDPOINT, {
       method: "GET",
       cache: "no-store",
       credentials: "same-origin",
@@ -62,6 +64,22 @@ export async function verifyLocalAuthSession(): Promise<boolean> {
       | { authenticated?: unknown }
       | null;
     const authenticated = payload?.authenticated === true;
+    if (!authenticated) {
+      localSessionActive = false;
+      setStateCookie(false);
+      return false;
+    }
+
+    const backendValidation = await fetch(LOCAL_AUTH_VALIDATE_ENDPOINT, {
+      method: "GET",
+      cache: "no-store",
+      credentials: "same-origin",
+    });
+    if (!backendValidation.ok) {
+      clearLocalAuthToken();
+      return false;
+    }
+
     localSessionActive = authenticated;
     setStateCookie(authenticated);
     return authenticated;

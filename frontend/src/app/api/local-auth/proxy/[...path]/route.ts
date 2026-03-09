@@ -48,13 +48,21 @@ async function proxyRequest(request: NextRequest): Promise<NextResponse> {
   const hasBody = method !== "GET" && method !== "HEAD";
   const body = hasBody ? await request.arrayBuffer() : undefined;
 
-  const upstream = await fetch(targetUrl, {
-    method,
-    headers,
-    body: body && body.byteLength > 0 ? body : undefined,
-    redirect: "manual",
-    cache: "no-store",
-  });
+  let upstream: Response;
+  try {
+    upstream = await fetch(targetUrl, {
+      method,
+      headers,
+      body: body && body.byteLength > 0 ? body : undefined,
+      redirect: "manual",
+      cache: "no-store",
+    });
+  } catch {
+    return NextResponse.json(
+      { detail: "Unable to reach backend service." },
+      { status: 503 },
+    );
+  }
 
   const responseHeaders = new Headers(upstream.headers);
   responseHeaders.delete("content-encoding");

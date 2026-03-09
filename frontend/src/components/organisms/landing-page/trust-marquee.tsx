@@ -104,8 +104,8 @@ const BRANDS: { name: string; Icon: ComponentType<SVGProps<SVGSVGElement>> }[] =
 function BrandItem({ name, Icon }: { name: string; Icon: ComponentType<SVGProps<SVGSVGElement>> }) {
   return (
     <span className="inline-flex shrink-0 items-center gap-2.5">
-      <Icon className="h-6 w-6 text-white/90" aria-hidden="true" />
-      <span className="text-base font-medium text-white/90">{name}</span>
+      <Icon className="h-7 w-7 text-white/90" aria-hidden="true" />
+      <span className="text-lg font-semibold text-white/90">{name}</span>
     </span>
   );
 }

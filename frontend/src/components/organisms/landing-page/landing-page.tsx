@@ -5,7 +5,6 @@ import LandingHeroSection from "./landing-hero-section";
 import FeatureCards from "./feature-cards";
 import ProductTabs from "./product-tabs";
 import TestimonialCarousel from "./testimonial-carousel";
-import PricingCards from "./pricing-cards";
 import LandingFooter from "./landing-footer";
 
 export default function LandingPage() {
@@ -18,7 +17,6 @@ export default function LandingPage() {
         <FeatureCards />
         <ProductTabs />
         <TestimonialCarousel />
-        <PricingCards />
       </main>
       <LandingFooter />
       </div>
