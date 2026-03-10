@@ -202,7 +202,7 @@ export function AgentsTable({
                         label: "Delete",
                         onClick: onDelete,
                         shouldShow: (agent: AgentRead) =>
-                          !Boolean(agent.is_gateway_main),
+                          !Boolean(agent.is_gateway_main) && !Boolean(agent.is_board_lead),
                       },
                     ]
                   : []),

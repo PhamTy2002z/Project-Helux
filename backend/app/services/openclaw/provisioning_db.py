@@ -1900,6 +1900,11 @@ class AgentLifecycleService(OpenClawDBService):
             return OkResponse()
         await self.require_agent_access(agent=agent, ctx=ctx, write=True)
         self.raise_if_gateway_main_protected(agent=agent)
+        if agent.is_board_lead:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Board lead agents can only be removed by deleting the board.",
+            )
         return await self._delete_agent_record(agent=agent)
 
     async def delete_agent_as_lead(

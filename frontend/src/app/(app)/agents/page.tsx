@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/auth/clerk";
 import { useQueryClient } from "@tanstack/react-query";
 
+import { useQuotaUsageApiV1MetricsQuotasGet } from "@/api/generated/metrics/metrics";
 import { AgentsTable } from "@/components/agents/AgentsTable";
 import { DashboardPageLayout } from "@/components/templates/DashboardPageLayout";
 import { Button } from "@/components/ui/button";
@@ -27,6 +28,7 @@ import {
 } from "@/api/generated/boards/boards";
 import { type AgentRead } from "@/api/generated/model";
 import { createOptimisticListDeleteMutation } from "@/lib/list-delete";
+import { withQueryPolicy } from "@/lib/query-policy";
 import { useOrganizationMembership } from "@/lib/use-organization-membership";
 import { useUrlSorting } from "@/lib/use-url-sorting";
 
@@ -89,10 +91,24 @@ export default function AgentsPage() {
   const agents = useMemo(
     () =>
       agentsQuery.data?.status === 200
-        ? (agentsQuery.data.data.items ?? [])
+        ? (agentsQuery.data.data.items ?? []).filter((a) => !a.is_gateway_main)
         : [],
     [agentsQuery.data],
   );
+
+  const quotaQuery = useQuotaUsageApiV1MetricsQuotasGet({
+    query: {
+      ...withQueryPolicy("static"),
+      enabled: Boolean(isSignedIn && isAdmin),
+      retry: false,
+    },
+  });
+
+  const agentQuota = useMemo(() => {
+    const quotas = quotaQuery.data?.data?.quotas;
+    if (!quotas) return null;
+    return quotas.find((q) => q.resource === "agents_total") ?? null;
+  }, [quotaQuery.data]);
 
   const deleteMutation = useDeleteAgentApiV1AgentsAgentIdDelete<
     ApiError,
@@ -131,7 +147,11 @@ export default function AgentsPage() {
           signUpForceRedirectUrl: "/agents",
         }}
         title="Agents"
-        description={`${agents.length} agent${agents.length === 1 ? "" : "s"} total.`}
+        description={
+          agentQuota?.limit
+            ? `${agents.length} / ${agentQuota.limit} agents used.`
+            : `${agents.length} agent${agents.length === 1 ? "" : "s"} total.`
+        }
         headerActions={
           agents.length > 0 ? (
             <Button onClick={() => router.push("/agents/new")}>

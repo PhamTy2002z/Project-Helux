@@ -140,9 +140,11 @@ export default function AgentDetailPage() {
   const isDeleting = deleteMutation.isPending;
   const agentStatus = agent?.status ?? "unknown";
   const isProtectedGatewayMain = Boolean(agent?.is_gateway_main);
+  const isProtectedBoardLead = Boolean(agent?.is_board_lead);
+  const isDeleteProtected = isProtectedGatewayMain || isProtectedBoardLead;
 
   const handleDelete = () => {
-    if (!agentId || !isSignedIn || isProtectedGatewayMain) return;
+    if (!agentId || !isSignedIn || isDeleteProtected) return;
     setDeleteError(null);
     deleteMutation.mutate({ agentId });
   };
@@ -198,7 +200,7 @@ export default function AgentDetailPage() {
                     Edit
                   </Link>
                 ) : null}
-                {agent && !isProtectedGatewayMain ? (
+                {agent && !isDeleteProtected ? (
                   <Button variant="outline" onClick={() => setDeleteOpen(true)}>
                     Delete
                   </Button>
