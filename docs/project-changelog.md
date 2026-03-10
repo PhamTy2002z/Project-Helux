@@ -2,6 +2,20 @@
 
 ## 2026-03-10
 
+### Board chat file upload core (phases 1-7)
+- Added file upload endpoint (`POST /api/v1/boards/{id}/chat-files/upload`) with multipart handling.
+- Added file list, detail, and reports endpoints (`GET /api/v1/boards/{id}/chat-files*`) with pagination and filters.
+- Added agent content endpoint (`GET /api/v1/agent/boards/{id}/chat-files/{file_id}/content`) for full text access with auth + task ownership guard.
+- Extended `BoardMemoryRead` schema with lightweight attachment metadata for chat messages.
+- Implemented frontend file picker with allowlist (`txt`, `md`, `csv`, `json`, `pdf`) and max-size validation (3 files/message).
+- Implemented upload + send orchestration with optimistic state and error retry UX.
+- Implemented message attachment chips rendering with extraction/report status badges.
+- Added client-side file status polling (`GET /boards/{id}/chat-files?status=pending` every 10s) while files have non-terminal status.
+- Backend models: `BoardChatFileAsset`, `BoardChatFileReport`, `BoardChatFileTask`, `BoardChatMessageFile` with proper indexing.
+- Phase 8 (tests, observability, rollout) in progress.
+
+## 2026-03-10 (earlier)
+
 ### Landing page responsive hardening for FHD, QHD, UHD, and mobile
 - Expanded landing page layout shells and media surfaces for `1920`, `2560`, and `3840` width checkpoints instead of keeping every section capped at the same desktop width.
 - Reworked the hero section to scale typography more cleanly on large screens while disabling heavy autoplay video on mobile, reduced-motion, and save-data scenarios.
