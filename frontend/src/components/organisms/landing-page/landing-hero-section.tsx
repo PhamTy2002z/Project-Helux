@@ -1,9 +1,11 @@
 "use client";
 
 import type { CSSProperties } from "react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+
+import { useAuth } from "@/auth/clerk";
 import TrustMarquee from "./trust-marquee";
 
 const HERO_ANIMATION_VIDEO_SRC =
@@ -26,6 +28,11 @@ type NetworkAwareNavigator = Navigator & {
 };
 
 export default function LandingHeroSection() {
+  const hasHydrated = useSyncExternalStore(
+    () => () => undefined,
+    () => true,
+    () => false,
+  );
   const [shouldReduceMotion, setShouldReduceMotion] = useState(false);
   const sectionRef = useRef<HTMLElement | null>(null);
   const videoRefs = useRef<Array<HTMLVideoElement | null>>([null, null]);
@@ -36,6 +43,8 @@ export default function LandingHeroSection() {
   const [canBlendHeroVideo, setCanBlendHeroVideo] = useState(false);
   const [isHeroVisible, setIsHeroVisible] = useState(true);
   const [activeVideoIndex, setActiveVideoIndex] = useState(0);
+  const { isSignedIn } = useAuth();
+  const showOpenBoardCta = hasHydrated && Boolean(isSignedIn);
   const visibleVideoIndex =
     canBlendHeroVideo && canPlayHeroVideo && isHeroVisible ? activeVideoIndex : 0;
 
@@ -269,14 +278,21 @@ export default function LandingHeroSection() {
               } as CSSProperties
             }
           >
-            <Link
-              href="/onboarding"
-              prefetch={false}
-              className="hero-btn-demo min-h-12 px-8 text-base"
-            >
-              Request a Demo
-              <ArrowRight size={18} aria-hidden="true" />
-            </Link>
+            {!showOpenBoardCta ? (
+              <Link
+                href="/onboarding"
+                prefetch={false}
+                className="hero-btn-demo min-h-12 px-8 text-base"
+              >
+                Request a Demo
+                <ArrowRight size={18} aria-hidden="true" />
+              </Link>
+            ) : (
+              <Link href="/boards" className="hero-btn-demo min-h-12 px-8 text-base">
+                Open Board
+                <ArrowRight size={18} aria-hidden="true" />
+              </Link>
+            )}
           </div>
         </div>
 

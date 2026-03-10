@@ -7,8 +7,6 @@ import type { ReactNode, ComponentProps } from "react";
 
 import {
   ClerkProvider,
-  SignedIn as ClerkSignedIn,
-  SignedOut as ClerkSignedOut,
   SignInButton as ClerkSignInButton,
   SignOutButton as ClerkSignOutButton,
   useAuth as clerkUseAuth,
@@ -22,9 +20,27 @@ function hasLocalAuthToken(): boolean {
   return Boolean(getLocalAuthToken());
 }
 
+function isMissingClerkProviderError(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+  return error.message.includes("can only be used within the <ClerkProvider />");
+}
+
+function getSignedOutAuthState() {
+  return {
+    isLoaded: true,
+    isSignedIn: false,
+    userId: null,
+    sessionId: null,
+    getToken: async () => null,
+  } as const;
+}
+
+function getSignedOutUserState() {
+  return { isLoaded: true, isSignedIn: false, user: null } as const;
+}
+
 export function isClerkEnabled(): boolean {
-  // IMPORTANT: keep this in sync with AuthProvider; otherwise components like
-  // <SignedOut/> may render without a <ClerkProvider/> and crash during prerender.
+  // IMPORTANT: keep this in sync with AuthProvider.
   if (isLocalAuthMode()) return false;
   return isLikelyValidClerkPublishableKey(
     process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
@@ -32,19 +48,15 @@ export function isClerkEnabled(): boolean {
 }
 
 export function SignedIn(props: { children: ReactNode }) {
-  if (isLocalAuthMode()) {
-    return hasLocalAuthToken() ? <>{props.children}</> : null;
-  }
-  if (!isClerkEnabled()) return null;
-  return <ClerkSignedIn>{props.children}</ClerkSignedIn>;
+  const auth = useAuth();
+  if (!auth.isLoaded || !auth.isSignedIn) return null;
+  return <>{props.children}</>;
 }
 
 export function SignedOut(props: { children: ReactNode }) {
-  if (isLocalAuthMode()) {
-    return hasLocalAuthToken() ? null : <>{props.children}</>;
-  }
-  if (!isClerkEnabled()) return <>{props.children}</>;
-  return <ClerkSignedOut>{props.children}</ClerkSignedOut>;
+  const auth = useAuth();
+  if (!auth.isLoaded || auth.isSignedIn) return null;
+  return <>{props.children}</>;
 }
 
 // Keep the same prop surface as Clerk components so call sites don't need edits.
@@ -68,10 +80,14 @@ export function useUser() {
       user: null,
     } as const;
   }
-  if (!isClerkEnabled()) {
-    return { isLoaded: true, isSignedIn: false, user: null } as const;
+  if (!isClerkEnabled()) return getSignedOutUserState();
+
+  try {
+    return clerkUseUser();
+  } catch (error: unknown) {
+    if (isMissingClerkProviderError(error)) return getSignedOutUserState();
+    throw error;
   }
-  return clerkUseUser();
 }
 
 export function useAuth() {
@@ -85,16 +101,14 @@ export function useAuth() {
       getToken: async () => token,
     } as const;
   }
-  if (!isClerkEnabled()) {
-    return {
-      isLoaded: true,
-      isSignedIn: false,
-      userId: null,
-      sessionId: null,
-      getToken: async () => null,
-    } as const;
+  if (!isClerkEnabled()) return getSignedOutAuthState();
+
+  try {
+    return clerkUseAuth();
+  } catch (error: unknown) {
+    if (isMissingClerkProviderError(error)) return getSignedOutAuthState();
+    throw error;
   }
-  return clerkUseAuth();
 }
 
 // Re-export ClerkProvider for places that want to mount it, but strongly prefer

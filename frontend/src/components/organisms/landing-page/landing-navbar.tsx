@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ChevronDown, Menu, X } from "lucide-react";
 
+import { useAuth } from "@/auth/clerk";
 import Logo from "@/components/organisms/landing-slideshow/logo";
 
 const NAV_LINKS = [
@@ -29,7 +30,14 @@ const MOBILE_DRAWER_TOP = `calc(76px + ${SAFE_TOP_INSET})`;
 
 export default function LandingNavbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const hasHydrated = useSyncExternalStore(
+    () => () => undefined,
+    () => true,
+    () => false,
+  );
   const pathname = usePathname();
+  const { isSignedIn } = useAuth();
+  const showOpenBoardCta = hasHydrated && Boolean(isSignedIn);
 
   useEffect(() => {
     if (!mobileOpen) {
@@ -131,12 +139,20 @@ export default function LandingNavbar() {
 
         {/* Desktop auth buttons */}
         <div className="hidden min-h-[44px] min-w-[240px] items-center justify-end gap-3 lg:flex">
-          <Link href="/sign-in" prefetch={false} className={BTN_SIGNIN}>
-            Sign in
-          </Link>
-          <Link href="/onboarding" prefetch={false} className={BTN_SIGNUP}>
-            Sign up
-          </Link>
+          {!showOpenBoardCta ? (
+            <>
+              <Link href="/sign-in" prefetch={false} className={BTN_SIGNIN}>
+                Sign in
+              </Link>
+              <Link href="/onboarding" prefetch={false} className={BTN_SIGNUP}>
+                Sign up
+              </Link>
+            </>
+          ) : (
+            <Link href="/boards" className={BTN_SIGNUP}>
+              Open Board
+            </Link>
+          )}
         </div>
 
         {/* Mobile hamburger */}
@@ -201,20 +217,28 @@ export default function LandingNavbar() {
               </div>
             </div>
             <div className="mt-2 flex flex-col gap-3">
-              <Link
-                href="/sign-in"
-                prefetch={false}
-                className="inline-flex min-h-[44px] items-center justify-center rounded-full border border-white/10 bg-white/[0.03] px-5 text-base font-semibold text-white transition-colors hover:bg-white/[0.08] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
-              >
-                Sign in
-              </Link>
-              <Link
-                href="/onboarding"
-                prefetch={false}
-                className={`${BTN_SIGNUP} min-h-[44px] text-center`}
-              >
-                Sign up
-              </Link>
+              {!showOpenBoardCta ? (
+                <>
+                  <Link
+                    href="/sign-in"
+                    prefetch={false}
+                    className="inline-flex min-h-[44px] items-center justify-center rounded-full border border-white/10 bg-white/[0.03] px-5 text-base font-semibold text-white transition-colors hover:bg-white/[0.08] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                  >
+                    Sign in
+                  </Link>
+                  <Link
+                    href="/onboarding"
+                    prefetch={false}
+                    className={`${BTN_SIGNUP} min-h-[44px] text-center`}
+                  >
+                    Sign up
+                  </Link>
+                </>
+              ) : (
+                <Link href="/boards" className={`${BTN_SIGNUP} min-h-[44px] text-center`}>
+                  Open Board
+                </Link>
+              )}
             </div>
           </div>
         </div>

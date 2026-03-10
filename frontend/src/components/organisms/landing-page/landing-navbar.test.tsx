@@ -1,8 +1,10 @@
 import type { ComponentPropsWithoutRef } from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import LandingNavbar from "./landing-navbar";
+
+const authState = vi.hoisted(() => ({ isSignedIn: false }));
 
 vi.mock("next/link", () => ({
   default: ({ children, href, prefetch: _prefetch, ...props }: ComponentPropsWithoutRef<"a"> & {
@@ -12,6 +14,13 @@ vi.mock("next/link", () => ({
       {children}
     </a>
   ),
+}));
+
+vi.mock("@/auth/clerk", () => ({
+  useAuth: () => ({
+    isLoaded: true,
+    isSignedIn: authState.isSignedIn,
+  }),
 }));
 
 vi.mock("next/navigation", () => ({
@@ -31,6 +40,10 @@ vi.mock("lucide-react", () => ({
 }));
 
 describe("LandingNavbar", () => {
+  beforeEach(() => {
+    authState.isSignedIn = false;
+  });
+
   afterEach(() => {
     document.body.style.removeProperty("overflow");
   });
@@ -43,5 +56,15 @@ describe("LandingNavbar", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /close menu/i }));
     expect(document.body.style.overflow).toBe("");
+  });
+
+  it("shows Open Board instead of auth CTAs for signed-in users", () => {
+    authState.isSignedIn = true;
+
+    render(<LandingNavbar />);
+
+    expect(screen.getByRole("link", { name: "Open Board" })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Sign in" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Sign up" })).not.toBeInTheDocument();
   });
 });
