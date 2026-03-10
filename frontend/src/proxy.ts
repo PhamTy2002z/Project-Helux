@@ -11,8 +11,16 @@ const isClerkEnabled = () =>
     process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
   );
 
-// Public routes include home and sign-in paths to avoid redirect loops.
-const isPublicRoute = createRouteMatcher(["/", "/sign-in(.*)", "/sign-up(.*)"]);
+// Public routes include marketing + onboarding entry paths to avoid redirect loops.
+const isPublicRoute = createRouteMatcher([
+  "/",
+  "/pricing(.*)",
+  "/blog(.*)",
+  "/testimonials(.*)",
+  "/onboarding(.*)",
+  "/sign-in(.*)",
+  "/sign-up(.*)",
+]);
 
 function isClerkInternalPath(pathname: string): boolean {
   // Clerk may hit these paths for internal auth/session refresh flows.

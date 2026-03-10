@@ -59,25 +59,16 @@ export default function FeatureCards() {
           {FEATURE_POSTERS.map((feature, index) => (
             <ScrollReveal key={feature.id} delay={index * 0.1}>
               <article className="group mx-auto h-full w-full max-w-[620px] overflow-hidden rounded-[24px] border border-white/12 bg-[#12110e] shadow-[0_16px_45px_rgba(0,0,0,0.4)] transition-colors duration-300 hover:border-white/20 fhd:max-w-[680px] qhd:max-w-[740px] uhd:max-w-[820px]">
-                <div className="relative h-[280px] overflow-hidden bg-[#07090f] sm:h-[320px] lg:h-[380px] fhd:h-[440px] qhd:h-[500px] uhd:h-[560px]">
-                  <Image
-                    src={feature.imageSrc}
-                    alt=""
-                    aria-hidden
-                    fill
-                    sizes="(min-width: 3840px) 860px, (min-width: 2560px) 780px, (min-width: 1920px) 720px, (min-width: 1024px) calc((100vw - 8rem) / 2), 100vw"
-                    quality={85}
-                    className="object-cover object-center opacity-45 blur-[2px]"
-                  />
-                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.18),transparent_56%),linear-gradient(180deg,rgba(8,9,12,0.16),rgba(8,9,12,0.34))]" />
-                  <div className="absolute inset-0 p-2.5 sm:p-3.5 lg:p-3 fhd:p-4">
+                <div className="relative h-[280px] overflow-hidden bg-[radial-gradient(circle_at_18%_12%,rgba(123,227,255,0.35),transparent_46%),radial-gradient(circle_at_82%_85%,rgba(170,125,255,0.33),transparent_45%),linear-gradient(155deg,#0a1222_4%,#13203a_46%,#2a1742_100%)] sm:h-[320px] lg:h-[380px] fhd:h-[440px] qhd:h-[500px] uhd:h-[560px]">
+                  <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(6,10,18,0.08),rgba(6,10,18,0.35))]" />
+                  <div className="absolute inset-0">
                     <Image
                       src={feature.imageSrc}
                       alt={feature.imageAlt}
                       fill
                       sizes="(min-width: 3840px) 860px, (min-width: 2560px) 780px, (min-width: 1920px) 720px, (min-width: 1024px) calc((100vw - 8rem) / 2), 100vw"
                       quality={96}
-                      className="object-contain object-center drop-shadow-[0_16px_36px_rgba(0,0,0,0.45)] transition-transform duration-500 group-hover:scale-[1.03] lg:scale-[1.02] lg:group-hover:scale-[1.05] qhd:scale-[1.03] qhd:group-hover:scale-[1.06]"
+                      className="object-contain object-center drop-shadow-[0_16px_36px_rgba(0,0,0,0.35)] transition-transform duration-500 scale-[1.04] group-hover:scale-[1.06] lg:scale-[1.05] lg:group-hover:scale-[1.07] qhd:scale-[1.05] qhd:group-hover:scale-[1.08]"
                     />
                   </div>
                 </div>

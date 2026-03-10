@@ -67,4 +67,13 @@ describe("LandingNavbar", () => {
     expect(screen.queryByRole("link", { name: "Sign in" })).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Sign up" })).not.toBeInTheDocument();
   });
+
+  it("routes Build you agent team CTA to sign-in for signed-out users", () => {
+    render(<LandingNavbar />);
+
+    expect(screen.getByRole("link", { name: "Build you agent team" })).toHaveAttribute(
+      "href",
+      "/sign-in",
+    );
+  });
 });
