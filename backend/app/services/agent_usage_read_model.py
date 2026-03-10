@@ -35,6 +35,9 @@ class AgentTokenUsageSnapshot:
     remaining_today: int | None
     blocked: bool
     reset_at: datetime
+    cost_used_today: float = 0.0
+    cost_limit_today: float | None = None
+    cost_remaining_today: float | None = None
 
 
 class AgentTokenUsageReadModel:
@@ -57,11 +60,15 @@ class AgentTokenUsageReadModel:
         )
         return midnight_next_vn.astimezone(UTC)
 
-    async def _resolve_agent_daily_limit(self, *, organization_id: UUID) -> int | None:
+    async def _resolve_agent_daily_limits(
+        self, *, organization_id: UUID
+    ) -> tuple[int | None, float | None]:
+        """Return (token_limit, cost_limit) for the agent daily tier."""
         plan = await get_or_create_organization_plan(self.session, organization_id=organization_id)
         tier = coerce_plan_tier(plan.tier)
         policy = policy_for_tier(tier)
-        return policy.agent_daily_tokens
+        cost_limit = float(policy.agent_daily_cost) if policy.agent_daily_cost is not None else None
+        return policy.agent_daily_tokens, cost_limit
 
     async def _fetch_usage_rows(
         self,
@@ -105,7 +112,9 @@ class AgentTokenUsageReadModel:
 
         usage_date_vn = self._vn_today()
         reset_at = self._next_vn_midnight()
-        limit_today = await self._resolve_agent_daily_limit(organization_id=organization_id)
+        limit_today, cost_limit = await self._resolve_agent_daily_limits(
+            organization_id=organization_id
+        )
         rows_by_agent = await self._fetch_usage_rows(
             organization_id=organization_id,
             usage_date_vn=usage_date_vn,
@@ -117,12 +126,19 @@ class AgentTokenUsageReadModel:
             row = rows_by_agent.get(agent.id)
             used_today = max(int(row.billed_tokens_used), 0) if row is not None else 0
             remaining_today = max(limit_today - used_today, 0) if limit_today is not None else None
-            blocked = bool(row and row.blocked_at is not None)
+            blocked = bool(row and (row.blocked_at is not None or row.cost_blocked_at is not None))
+            cost_used = float(row.cost_used or 0) if row is not None else 0.0
+            cost_remaining = (
+                max(cost_limit - cost_used, 0.0) if cost_limit is not None else None
+            )
             snapshots[agent.id] = AgentTokenUsageSnapshot(
                 used_today=used_today,
                 limit_today=limit_today,
                 remaining_today=remaining_today,
                 blocked=blocked,
                 reset_at=reset_at,
+                cost_used_today=cost_used,
+                cost_limit_today=cost_limit,
+                cost_remaining_today=cost_remaining,
             )
         return snapshots

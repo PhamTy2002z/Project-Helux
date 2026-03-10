@@ -265,6 +265,18 @@ class AgentRead(AgentBase):
         default=None,
         description="UTC timestamp for next VN-local day reset.",
     )
+    cost_used_today: float | None = Field(
+        default=None,
+        description="USD cost for current day.",
+    )
+    cost_limit_today: float | None = Field(
+        default=None,
+        description="Daily cost limit (USD).",
+    )
+    cost_remaining_today: float | None = Field(
+        default=None,
+        description="Remaining cost budget (USD).",
+    )
     created_at: datetime = Field(description="Creation timestamp.")
     updated_at: datetime = Field(description="Last update timestamp.")
 

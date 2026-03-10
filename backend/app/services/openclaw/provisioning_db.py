@@ -964,6 +964,9 @@ class AgentLifecycleService(OpenClawDBService):
                     "token_remaining_today": token_snapshot.remaining_today,
                     "token_blocked": token_snapshot.blocked,
                     "token_reset_at": token_snapshot.reset_at,
+                    "cost_used_today": token_snapshot.cost_used_today,
+                    "cost_limit_today": token_snapshot.cost_limit_today,
+                    "cost_remaining_today": token_snapshot.cost_remaining_today,
                 },
             )
         return model.model_copy(update=updates)

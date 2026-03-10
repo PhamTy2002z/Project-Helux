@@ -29,7 +29,7 @@ async def _make_engine() -> AsyncEngine:
 
 
 @pytest.mark.asyncio
-async def test_sync_session_usage_applies_half_multiplier_without_double_charge(
+async def test_sync_session_usage_uses_raw_tokens_no_multiplier(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     engine = await _make_engine()
@@ -103,8 +103,8 @@ async def test_sync_session_usage_applies_half_multiplier_without_double_charge(
             assert second.billed_delta == 0
             assert second.billed_total == 0
             assert third.openclaw_delta == 3
-            assert third.billed_delta == 2
-            assert third.billed_total == 2
+            assert third.billed_delta == 3  # Raw tokens, no multiplier
+            assert third.billed_total == 3
 
             row = (
                 await session.exec(
@@ -113,7 +113,7 @@ async def test_sync_session_usage_applies_half_multiplier_without_double_charge(
             ).first()
             assert row is not None
             assert row.openclaw_tokens_total == 103
-            assert row.billed_tokens_used == 2
+            assert row.billed_tokens_used == 3  # Raw tokens, no multiplier
     finally:
         await engine.dispose()
 
@@ -302,7 +302,7 @@ async def test_sync_session_usage_charges_after_initial_non_zero_baseline(
             assert second.billed_delta == 0
             assert second.billed_total == 0
             assert third.openclaw_delta == 5
-            assert third.billed_delta == 3
-            assert third.billed_total == 3
+            assert third.billed_delta == 5  # Raw tokens, no multiplier
+            assert third.billed_total == 5
     finally:
         await engine.dispose()

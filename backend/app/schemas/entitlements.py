@@ -38,9 +38,9 @@ class QuotaUsage(SQLModel):
     """Usage and capacity details for a single quota dimension."""
 
     resource: str
-    used: int
-    limit: int | None = None
-    remaining: int | None = None
+    used: float
+    limit: float | None = None
+    remaining: float | None = None
     exceeded: bool = False
 
 

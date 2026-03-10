@@ -18,10 +18,15 @@ const RESOURCE_LABELS: Record<string, string> = {
   org_monthly_tokens: "Org tokens / month",
   trial_total_tokens: "Trial tokens total",
   max_tokens_per_run: "Tokens / run",
+  agent_daily_cost: "Agent cost / day",
+  org_daily_cost: "Org cost / day",
 };
 
-const formatValue = (value: number | null | undefined): string =>
-  typeof value === "number" ? Intl.NumberFormat("en-US").format(value) : "Unlimited";
+const formatValue = (value: number | null | undefined, resource?: string): string => {
+  if (typeof value !== "number") return "Unlimited";
+  if (resource?.includes("cost")) return `$${value.toFixed(2)}`;
+  return Intl.NumberFormat("en-US").format(value);
+};
 
 export function QuotaSummary({ quotas, className }: QuotaSummaryProps) {
   if (!quotas.length) {
@@ -43,7 +48,7 @@ export function QuotaSummary({ quotas, className }: QuotaSummaryProps) {
               {RESOURCE_LABELS[quota.resource] ?? quota.resource}
             </p>
             <p className="mt-1 text-sm font-semibold text-slate-900">
-              {formatValue(quota.used)} / {formatValue(quota.limit)}
+              {formatValue(quota.used, quota.resource)} / {formatValue(quota.limit, quota.resource)}
             </p>
           </div>
         ))}

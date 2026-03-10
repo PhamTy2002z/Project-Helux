@@ -1,8 +1,9 @@
-"""Per-agent OpenClaw usage sync and daily token quota enforcement."""
+"""Per-agent OpenClaw usage sync and daily 2-layer quota enforcement."""
 
 from __future__ import annotations
 
 from dataclasses import dataclass
+from decimal import Decimal
 from uuid import UUID
 
 from fastapi import HTTPException, status
@@ -34,8 +35,17 @@ class AgentQuotaSyncOutcome:
     organization_id: UUID
     billed_total: int
     billed_delta: int
-    limit: int | None
-    quota_reached: bool
+    token_limit: int | None
+    cost_total: Decimal = Decimal(0)
+    cost_delta: Decimal = Decimal(0)
+    cost_limit: Decimal | None = None
+    quota_reached: bool = False
+    blocked_by: str | None = None
+
+    @property
+    def limit(self) -> int | None:
+        """Backward-compatible alias for token_limit."""
+        return self.token_limit
 
 
 class AgentTokenQuotaService(OpenClawDBService):
@@ -72,6 +82,7 @@ class AgentTokenQuotaService(OpenClawDBService):
         organization_id: UUID,
         agent_id: UUID,
         usage_date_vn: object,
+        resource: str,
     ) -> None:
         row = (
             await self.session.exec(
@@ -81,13 +92,19 @@ class AgentTokenQuotaService(OpenClawDBService):
                 .where(col(AgentTokenDailyUsage.usage_date_vn) == usage_date_vn),
             )
         ).first()
-        if row is None or row.blocked_at is not None:
+        if row is None:
             return
         now = utcnow()
-        row.blocked_at = now
-        row.updated_at = now
-        self.session.add(row)
-        await self.session.flush()
+        if resource == "agent_daily_cost" and row.cost_blocked_at is None:
+            row.cost_blocked_at = now
+            row.updated_at = now
+            self.session.add(row)
+            await self.session.flush()
+        elif resource == "agent_daily_tokens" and row.blocked_at is None:
+            row.blocked_at = now
+            row.updated_at = now
+            self.session.add(row)
+            await self.session.flush()
 
     async def sync_and_enforce(
         self,
@@ -103,10 +120,8 @@ class AgentTokenQuotaService(OpenClawDBService):
         )
         if agent is None:
             return None
-        if bool(agent.is_board_lead):
-            # Board lead sessions aggregate board-level orchestration traffic and
-            # are not suitable for per-agent hard-cap enforcement.
-            return None
+        # Board leads track usage but never get blocked (observe-only).
+        is_lead = bool(agent.is_board_lead)
 
         capability = await check_gateway_sessions_usage_capability(config)
         if not capability.supported:
@@ -146,59 +161,73 @@ class AgentTokenQuotaService(OpenClawDBService):
             self.session,
             organization_id=organization_id,
         )
-        limit = policy.agent_daily_tokens
-        if limit is None:
-            return AgentQuotaSyncOutcome(
-                agent_id=agent.id,
-                organization_id=organization_id,
-                billed_total=sync_result.billed_total,
-                billed_delta=sync_result.billed_delta,
-                limit=None,
-                quota_reached=False,
-            )
 
-        quota_reached = sync_result.billed_total >= limit
-        if quota_reached:
-            if not self._enforce_mode_enabled():
+        token_limit = policy.agent_daily_tokens
+        cost_limit = policy.agent_daily_cost
+
+        # Layer 1: Cost quota (primary, when cost data available)
+        cost_exceeded = (
+            sync_result.cost_data_available
+            and cost_limit is not None
+            and sync_result.cost_total >= cost_limit
+        )
+
+        # Layer 2: Token hard-cap (safety net, always checked)
+        token_exceeded = token_limit is not None and sync_result.billed_total >= token_limit
+
+        blocked_by: str | None = None
+        if cost_exceeded:
+            blocked_by = "agent_daily_cost"
+        elif token_exceeded:
+            blocked_by = "agent_daily_tokens"
+
+        if blocked_by is not None:
+            if is_lead or not self._enforce_mode_enabled():
+                reason = "board_lead" if is_lead else "observe_mode"
                 self.logger.warning(
-                    "agent.quota.observe_mode.quota_reached agent_id=%s organization_id=%s usage_date_vn=%s used=%s limit=%s",
+                    "agent.quota.%s.quota_reached agent_id=%s resource=%s used_cost=%s used_tokens=%s",
+                    reason,
                     agent.id,
-                    organization_id,
-                    sync_result.usage_date_vn,
+                    blocked_by,
+                    sync_result.cost_total,
                     sync_result.billed_total,
-                    limit,
                 )
                 return AgentQuotaSyncOutcome(
                     agent_id=agent.id,
                     organization_id=organization_id,
                     billed_total=sync_result.billed_total,
                     billed_delta=sync_result.billed_delta,
-                    limit=limit,
+                    token_limit=token_limit,
+                    cost_total=sync_result.cost_total,
+                    cost_delta=sync_result.cost_delta,
+                    cost_limit=cost_limit,
                     quota_reached=True,
+                    blocked_by=blocked_by,
                 )
             await self._mark_blocked_if_needed(
                 organization_id=organization_id,
                 agent_id=agent.id,
                 usage_date_vn=sync_result.usage_date_vn,
+                resource=blocked_by,
             )
             self.logger.warning(
-                "agent.quota.blocked agent_id=%s organization_id=%s usage_date_vn=%s used=%s limit=%s",
+                "agent.quota.blocked agent_id=%s resource=%s cost=%s tokens=%s",
                 agent.id,
-                organization_id,
-                sync_result.usage_date_vn,
+                blocked_by,
+                sync_result.cost_total,
                 sync_result.billed_total,
-                limit,
             )
             raise HTTPException(
                 status_code=status.HTTP_429_TOO_MANY_REQUESTS,
                 detail={
                     "code": "quota_exceeded",
-                    "message": "agent_daily_tokens quota exceeded for current plan.",
-                    "resource": "agent_daily_tokens",
+                    "message": f"{blocked_by} quota exceeded for current plan.",
+                    "resource": blocked_by,
                     "plan": tier,
-                    "used": sync_result.billed_total,
-                    "limit": limit,
-                    "remaining": max(limit - sync_result.billed_total, 0),
+                    "cost_used": str(sync_result.cost_total),
+                    "cost_limit": str(cost_limit) if cost_limit else None,
+                    "token_used": sync_result.billed_total,
+                    "token_limit": token_limit,
                     "agent_id": str(agent.id),
                     "usage_date_vn": sync_result.usage_date_vn.isoformat(),
                 },
@@ -209,6 +238,9 @@ class AgentTokenQuotaService(OpenClawDBService):
             organization_id=organization_id,
             billed_total=sync_result.billed_total,
             billed_delta=sync_result.billed_delta,
-            limit=limit,
+            token_limit=token_limit,
+            cost_total=sync_result.cost_total,
+            cost_delta=sync_result.cost_delta,
+            cost_limit=cost_limit,
             quota_reached=False,
         )

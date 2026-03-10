@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass
 from datetime import UTC, date, datetime, timedelta
+from decimal import Decimal
 from typing import cast
 from uuid import UUID
 from zoneinfo import ZoneInfo
@@ -48,6 +49,8 @@ class EntitlementPolicy:
     org_monthly_tokens: int | None
     trial_total_tokens: int | None
     max_tokens_per_run: int | None
+    agent_daily_cost: Decimal | None = None
+    org_daily_cost: Decimal | None = None
 
 
 PLAN_POLICIES: dict[PlanTier, EntitlementPolicy] = {
@@ -57,23 +60,27 @@ PLAN_POLICIES: dict[PlanTier, EntitlementPolicy] = {
         max_agents_total=3,
         max_agents_per_board=3,
         max_tasks_created_monthly=None,
-        org_daily_tokens=40_000,
-        agent_daily_tokens=15_000,
+        org_daily_tokens=10_000_000,
+        agent_daily_tokens=5_000_000,
         org_monthly_tokens=None,
-        trial_total_tokens=280_000,
-        max_tokens_per_run=4_000,
+        trial_total_tokens=20_000_000,
+        max_tokens_per_run=8_000,
+        agent_daily_cost=Decimal("2.50"),
+        org_daily_cost=Decimal("7.50"),
     ),
     "pro": EntitlementPolicy(
-        max_board_groups=1,
+        max_board_groups=2,
         max_boards=3,
         max_agents_total=15,
         max_agents_per_board=5,
         max_tasks_created_monthly=None,
-        org_daily_tokens=300_000,
-        agent_daily_tokens=35_000,
-        org_monthly_tokens=8_000_000,
+        org_daily_tokens=40_000_000,
+        agent_daily_tokens=20_000_000,
+        org_monthly_tokens=200_000_000,
         trial_total_tokens=None,
-        max_tokens_per_run=8_000,
+        max_tokens_per_run=16_000,
+        agent_daily_cost=Decimal("5.00"),
+        org_daily_cost=Decimal("25.00"),
     ),
 }
 
@@ -272,12 +279,13 @@ async def _token_usage_from_ledger(
     *,
     organization_id: UUID,
     now: datetime,
-) -> tuple[dict[str, int], bool]:
+) -> tuple[dict[str, float], bool]:
     today_vn = _vn_date_from_utc(now)
     month_start_vn = today_vn.replace(day=1)
     next_month_start_vn = _next_month_start(month_start_vn)
     usage_date_col = col(AgentTokenDailyUsage.usage_date_vn)
     billed_col = col(AgentTokenDailyUsage.billed_tokens_used)
+    cost_col = col(AgentTokenDailyUsage.cost_used)
 
     statement = select(
         func.count(col(AgentTokenDailyUsage.id)),
@@ -306,8 +314,24 @@ async def _token_usage_from_ledger(
             0,
         ),
         func.coalesce(func.sum(billed_col), 0),
+        # Cost aggregation: org daily cost, agent max daily cost
+        func.coalesce(
+            func.sum(
+                case((usage_date_col == today_vn, cost_col), else_=0),
+            ),
+            0,
+        ),
+        func.coalesce(
+            func.max(
+                case((usage_date_col == today_vn, cost_col), else_=None),
+            ),
+            0,
+        ),
     ).where(col(AgentTokenDailyUsage.organization_id) == organization_id)
-    row = cast(tuple[object, object, object, object, object], (await session.exec(statement)).one())
+    row = cast(
+        tuple[object, object, object, object, object, object, object],
+        (await session.exec(statement)).one(),
+    )
     ledger_rows = int(row[0] or 0)
     if ledger_rows <= 0:
         return {}, False
@@ -317,12 +341,14 @@ async def _token_usage_from_ledger(
             "agent_daily": max(int(row[2] or 0), 0),
             "org_monthly": max(int(row[3] or 0), 0),
             "trial_total": max(int(row[4] or 0), 0),
+            "org_daily_cost": max(float(row[5] or 0), 0.0),
+            "agent_daily_cost": max(float(row[6] or 0), 0.0),
         },
         True,
     )
 
 
-def _usage_entry(*, resource: str, used: int, limit: int | None) -> QuotaUsage:
+def _usage_entry(*, resource: str, used: float, limit: float | None) -> QuotaUsage:
     remaining = None if limit is None else max(limit - used, 0)
     exceeded = limit is not None and used >= limit
     return QuotaUsage(
@@ -403,6 +429,16 @@ async def get_entitlement_usage(
             limit=policy.trial_total_tokens,
         ),
         _usage_entry(resource="max_tokens_per_run", used=0, limit=policy.max_tokens_per_run),
+        _usage_entry(
+            resource="agent_daily_cost",
+            used=token_usage.get("agent_daily_cost", 0.0),
+            limit=float(policy.agent_daily_cost) if policy.agent_daily_cost is not None else None,
+        ),
+        _usage_entry(
+            resource="org_daily_cost",
+            used=token_usage.get("org_daily_cost", 0.0),
+            limit=float(policy.org_daily_cost) if policy.org_daily_cost is not None else None,
+        ),
     ]
 
     return EntitlementUsageRead(

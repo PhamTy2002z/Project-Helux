@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-import math
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
+from decimal import Decimal
 from uuid import uuid4
 from zoneinfo import ZoneInfo
 
@@ -20,8 +20,6 @@ from app.services.openclaw.db_service import OpenClawDBService
 from app.services.openclaw.gateway_rpc import GatewayConfig
 from app.services.openclaw.usage_client import SessionUsageQuery, fetch_session_usage
 
-_BILLING_MULTIPLIER = 0.5
-
 
 @dataclass(frozen=True, slots=True)
 class SessionUsageSyncResult:
@@ -34,6 +32,9 @@ class SessionUsageSyncResult:
     openclaw_delta: int
     billed_delta: int
     billed_total: int
+    cost_delta: Decimal = Decimal(0)
+    cost_total: Decimal = Decimal(0)
+    cost_data_available: bool = True
 
 
 class SessionUsageSyncService(OpenClawDBService):
@@ -96,6 +97,8 @@ class SessionUsageSyncService(OpenClawDBService):
             "usage_date_vn": usage_date_vn,
             "openclaw_tokens_total": 0,
             "billed_tokens_used": 0,
+            "openclaw_cost_total": Decimal(0),
+            "cost_used": Decimal(0),
             "created_at": now,
             "updated_at": now,
         }
@@ -179,24 +182,37 @@ class SessionUsageSyncService(OpenClawDBService):
         if row is None:
             raise RuntimeError("failed to lock usage ledger row")
 
+        # Token delta (raw, no multiplier)
         previous_openclaw_total = max(int(row.openclaw_tokens_total), 0)
         next_openclaw_total = max(int(usage.total_tokens), 0)
         openclaw_delta = max(next_openclaw_total - previous_openclaw_total, 0)
-        billed_delta = int(math.ceil(openclaw_delta * _BILLING_MULTIPLIER))
+        billed_delta = openclaw_delta  # raw tokens, no multiplier
 
-        # The first sync of a day should establish a baseline and avoid charging
-        # historical tokens that may have accumulated before Mission Control
-        # started tracking this session/day locally.
-        if int(row.openclaw_tokens_total) <= 0 and int(row.billed_tokens_used) <= 0:
+        # Cost delta
+        previous_cost_total = max(Decimal(str(row.openclaw_cost_total or 0)), Decimal(0))
+        next_cost_total = max(usage.total_cost, Decimal(0))
+        cost_delta = max(next_cost_total - previous_cost_total, Decimal(0))
+
+        # First sync baseline: avoid charging historical tokens/cost
+        is_first_sync = (
+            int(row.openclaw_tokens_total) <= 0 and int(row.billed_tokens_used) <= 0
+        )
+        if is_first_sync:
             openclaw_delta = 0
             billed_delta = 0
+            cost_delta = Decimal(0)
 
+        # Update row
         row.openclaw_tokens_total = max(previous_openclaw_total, next_openclaw_total)
         row.billed_tokens_used = max(int(row.billed_tokens_used), 0) + billed_delta
+        row.openclaw_cost_total = max(previous_cost_total, next_cost_total)
+        row.cost_used = max(Decimal(str(row.cost_used or 0)), Decimal(0)) + cost_delta
         row.last_synced_at = utcnow()
         row.updated_at = utcnow()
         self.session.add(row)
         await self.session.flush()
+
+        cost_data_available = usage.missing_cost_entries == 0 or usage.total_cost > 0
 
         return SessionUsageSyncResult(
             agent_id=str(agent.id),
@@ -206,4 +222,7 @@ class SessionUsageSyncService(OpenClawDBService):
             openclaw_delta=openclaw_delta,
             billed_delta=billed_delta,
             billed_total=row.billed_tokens_used,
+            cost_delta=cost_delta,
+            cost_total=Decimal(str(row.cost_used)),
+            cost_data_available=cost_data_available,
         )
