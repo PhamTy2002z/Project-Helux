@@ -407,6 +407,12 @@ class GatewaySessionService(OpenClawDBService):
             if self.session.in_transaction():
                 await self.session.commit()
             raise
+        except Exception:
+            # Rollback dirty session state on unexpected errors to prevent
+            # partial ledger writes from leaking into subsequent operations.
+            if self.session.in_transaction():
+                await self.session.rollback()
+            raise
         try:
             if main_session and session_id == main_session:
                 await ensure_session(main_session, config=config, label="Gateway Agent")

@@ -107,8 +107,10 @@ class GatewayDispatchService(OpenClawDBService):
                 deliver=deliver,
                 organization_id=organization_id,
             )
-        except HTTPException as exc:
-            return OpenClawGatewayError(str(exc.detail))
+        except HTTPException:
+            # Re-raise HTTP errors (quota 429, auth 402, etc.) so callers
+            # can distinguish enforcement failures from gateway transport errors.
+            raise
         except OpenClawGatewayError as exc:
             return exc
         return None
