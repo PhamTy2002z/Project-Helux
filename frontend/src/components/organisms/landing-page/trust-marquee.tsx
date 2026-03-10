@@ -86,8 +86,12 @@ function BdoMark(props: SVGProps<SVGSVGElement>) {
   );
 }
 
-/* Brand data: icon component + display name */
-const BRANDS: { name: string; Icon: ComponentType<SVGProps<SVGSVGElement>> }[] = [
+/* Brand data: SVG component icon OR image URL */
+type Brand =
+  | { name: string; Icon: ComponentType<SVGProps<SVGSVGElement>>; imgSrc?: never }
+  | { name: string; imgSrc: string; Icon?: never };
+
+const BRANDS: Brand[] = [
   { name: "IBM", Icon: IbmMark },
   { name: "PwC", Icon: PwcMark },
   { name: "DocuSign", Icon: DocuSignMark },
@@ -98,14 +102,38 @@ const BRANDS: { name: string; Icon: ComponentType<SVGProps<SVGSVGElement>> }[] =
   { name: "RBC", Icon: RbcMark },
   { name: "Genpact", Icon: GenpactMark },
   { name: "BDO", Icon: BdoMark },
+  /* Tech integrations */
+  { name: "OpenAI", imgSrc: "/icons/brands/openai.svg" },
+  { name: "Anthropic", imgSrc: "https://cdn.simpleicons.org/anthropic/white" },
+  { name: "Google Cloud", imgSrc: "https://cdn.simpleicons.org/googlecloud/white" },
+  { name: "GitHub", imgSrc: "https://cdn.simpleicons.org/github/white" },
+  { name: "Vercel", imgSrc: "https://cdn.simpleicons.org/vercel/white" },
+  { name: "Docker", imgSrc: "https://cdn.simpleicons.org/docker/white" },
+  { name: "Kubernetes", imgSrc: "https://cdn.simpleicons.org/kubernetes/white" },
+  { name: "PostgreSQL", imgSrc: "https://cdn.simpleicons.org/postgresql/white" },
+  { name: "Redis", imgSrc: "https://cdn.simpleicons.org/redis/white" },
+  { name: "Next.js", imgSrc: "https://cdn.simpleicons.org/nextdotjs/white" },
 ];
 
-function BrandItem({ name, Icon }: { name: string; Icon: ComponentType<SVGProps<SVGSVGElement>> }) {
+function BrandItem({ brand }: { brand: Brand }) {
   return (
     <span className="inline-flex shrink-0 items-center gap-2.5">
-      <Icon className="h-6 w-6 text-white/85 sm:h-7 sm:w-7" aria-hidden="true" />
-      <span className="text-sm font-semibold text-white/90 sm:text-base fhd:text-lg">
-        {name}
+      {brand.Icon ? (
+        <brand.Icon className="h-5 w-5 text-white/85 sm:h-6 sm:w-6" aria-hidden="true" />
+      ) : (
+        /* eslint-disable-next-line @next/next/no-img-element */
+        <img
+          src={brand.imgSrc}
+          alt=""
+          aria-hidden="true"
+          width={24}
+          height={24}
+          className="h-5 w-5 opacity-80 sm:h-6 sm:w-6"
+          loading="lazy"
+        />
+      )}
+      <span className="text-xs font-semibold text-white/90 sm:text-sm fhd:text-base">
+        {brand.name}
       </span>
     </span>
   );
@@ -119,7 +147,7 @@ function BrandItem({ name, Icon }: { name: string; Icon: ComponentType<SVGProps<
 export default function TrustMarquee() {
   return (
     <div className="relative z-10 border-t border-white/10 px-4 pb-8 pt-6 sm:px-6 sm:pb-10 sm:pt-8 lg:px-10 fhd:px-14 qhd:px-16 uhd:px-20">
-      <p className="mb-6 text-center text-base font-medium text-white sm:mb-7 sm:text-xl md:text-2xl fhd:text-[30px]">
+      <p className="mb-5 text-center text-sm font-medium text-white sm:mb-6 sm:text-base md:text-lg fhd:text-xl">
         Loved by AI builders. Trusted by AI leaders.
       </p>
       <div className="relative overflow-hidden">
@@ -137,7 +165,7 @@ export default function TrustMarquee() {
             >
               {BRANDS.map((brand) => (
                 <span key={`${stripIndex}-${brand.name}`} className="inline-flex shrink-0">
-                  <BrandItem {...brand} />
+                  <BrandItem brand={brand} />
                 </span>
               ))}
             </div>

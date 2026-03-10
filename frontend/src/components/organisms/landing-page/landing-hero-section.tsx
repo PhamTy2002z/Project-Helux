@@ -239,7 +239,7 @@ export default function LandingHeroSection() {
       <div className="relative z-10 flex min-h-[100svh] flex-col">
         <div className="flex flex-1 flex-col items-center justify-center px-6 pb-24 pt-24 md:pt-28">
           <h1
-            className="hero-copy-anim max-w-5xl text-center text-[44px] font-light leading-[1.08] tracking-[-0.02em] text-white sm:text-6xl md:text-[72px] lg:text-[78px] fhd:max-w-6xl fhd:text-[82px] qhd:max-w-[1180px] qhd:text-[88px] uhd:max-w-[1320px] uhd:text-[96px]"
+            className="hero-copy-anim max-w-4xl text-center text-[36px] font-light leading-[1.08] tracking-[-0.02em] text-white sm:text-5xl md:text-[60px] lg:text-[68px] fhd:max-w-5xl fhd:text-[74px] qhd:max-w-[1080px] qhd:text-[80px] uhd:max-w-[1200px] uhd:text-[88px]"
             style={
               {
                 "--hero-copy-delay": HERO_COPY_DELAYS.title,
@@ -250,7 +250,7 @@ export default function LandingHeroSection() {
           </h1>
 
           <p
-            className="hero-copy-anim mt-7 max-w-3xl text-center text-base leading-relaxed text-white/80 md:text-xl fhd:max-w-[860px] fhd:text-[22px] qhd:max-w-[920px] qhd:text-[24px]"
+            className="hero-copy-anim mt-6 max-w-2xl text-center text-sm leading-relaxed text-white/80 sm:text-base md:text-lg fhd:max-w-3xl fhd:text-xl qhd:max-w-[860px] qhd:text-[22px]"
             style={
               {
                 "--hero-copy-delay": HERO_COPY_DELAYS.subtitle,
@@ -262,7 +262,7 @@ export default function LandingHeroSection() {
           </p>
 
           <div
-            className="hero-copy-anim mt-11 flex min-h-12 w-full items-center justify-center"
+            className="hero-copy-anim mt-9 flex min-h-12 w-full items-center justify-center"
             style={
               {
                 "--hero-copy-delay": HERO_COPY_DELAYS.cta,

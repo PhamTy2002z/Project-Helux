@@ -45,11 +45,11 @@ export default function FeatureCards() {
         <ScrollReveal className="mb-12 text-center">
           <h2
             className="text-balance text-white"
-            style={{ fontSize: "clamp(30px, 4vw, 64px)" }}
+            style={{ fontSize: "clamp(26px, 3.5vw, 52px)" }}
           >
             One platform for every operational surface
           </h2>
-          <p className="mx-auto mt-4 max-w-3xl text-balance text-[15px] leading-relaxed text-white/55 sm:text-base md:max-w-4xl fhd:text-lg">
+          <p className="mx-auto mt-3 max-w-2xl text-balance text-[13px] leading-relaxed text-white/55 sm:text-sm md:max-w-3xl fhd:text-base">
             Operational trust and team-scale rollout for organizations running
             OpenClaw boards, agents, and gateways from one control plane.
           </p>
@@ -58,8 +58,8 @@ export default function FeatureCards() {
         <div className="grid gap-6 lg:grid-cols-2 lg:gap-7 qhd:gap-8">
           {FEATURE_POSTERS.map((feature, index) => (
             <ScrollReveal key={feature.id} delay={index * 0.1}>
-              <article className="group mx-auto h-full w-full max-w-[680px] overflow-hidden rounded-[28px] border border-white/12 bg-[#12110e] shadow-[0_16px_45px_rgba(0,0,0,0.4)] transition-colors duration-300 hover:border-white/20 fhd:max-w-[720px] qhd:max-w-[780px] uhd:max-w-[860px]">
-                <div className="relative h-[320px] overflow-hidden bg-black sm:h-[380px] lg:h-[440px] fhd:h-[500px] qhd:h-[560px] uhd:h-[620px]">
+              <article className="group mx-auto h-full w-full max-w-[620px] overflow-hidden rounded-[24px] border border-white/12 bg-[#12110e] shadow-[0_16px_45px_rgba(0,0,0,0.4)] transition-colors duration-300 hover:border-white/20 fhd:max-w-[680px] qhd:max-w-[740px] uhd:max-w-[820px]">
+                <div className="relative h-[280px] overflow-hidden bg-black sm:h-[320px] lg:h-[380px] fhd:h-[440px] qhd:h-[500px] uhd:h-[560px]">
                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.14),transparent_52%),linear-gradient(180deg,rgba(255,255,255,0.02),rgba(0,0,0,0.12))]" />
                   <div className="absolute inset-0 p-3 sm:p-4 lg:p-3 fhd:p-4">
                     <Image
@@ -74,10 +74,10 @@ export default function FeatureCards() {
                 </div>
 
                 <div className="border-t border-white/10 p-5 md:p-6 fhd:p-7">
-                  <h3 className="text-xl font-semibold text-white md:text-2xl fhd:text-[30px]">
+                  <h3 className="text-lg font-semibold text-white md:text-xl fhd:text-2xl">
                     {feature.title}
                   </h3>
-                  <p className="mt-2.5 text-[15px] leading-relaxed text-white/65 sm:text-base fhd:text-lg">
+                  <p className="mt-2 text-[13px] leading-relaxed text-white/65 sm:text-sm fhd:text-base">
                     {feature.description}
                   </p>
 

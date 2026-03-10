@@ -150,11 +150,11 @@ export default function ProductTabs() {
         <ScrollReveal className="mb-16 text-center">
           <h2
             className="text-balance text-white"
-            style={{ fontSize: "clamp(30px, 4vw, 64px)" }}
+            style={{ fontSize: "clamp(26px, 3.5vw, 52px)" }}
           >
             The Mission Control Platform
           </h2>
-          <p className="mx-auto mt-4 max-w-2xl text-balance text-[15px] leading-relaxed text-white/55 sm:text-base md:max-w-3xl fhd:text-lg">
+          <p className="mx-auto mt-3 max-w-2xl text-balance text-[13px] leading-relaxed text-white/55 sm:text-sm md:max-w-3xl fhd:text-base">
             Keep every operational surface in one cohesive system without losing
             clarity or control.
           </p>
@@ -180,7 +180,7 @@ export default function ProductTabs() {
                   aria-selected={isActive}
                   aria-controls={`panel-${tab.id}`}
                   tabIndex={isActive ? 0 : -1}
-                  className={`flex min-h-[44px] cursor-pointer items-center gap-2 rounded-full border px-5 py-2.5 text-sm font-medium transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white sm:text-base ${
+                  className={`flex min-h-[40px] cursor-pointer items-center gap-2 rounded-full border px-4 py-2 text-xs font-medium transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white sm:text-sm ${
                     isActive
                       ? "border-white/80 bg-white text-black shadow-[0_10px_30px_rgba(255,255,255,0.16)]"
                       : "hero-glass-card border-white/15 text-white/70 hover:border-white/30 hover:text-white"
@@ -259,13 +259,13 @@ export default function ProductTabs() {
                     </div>
 
                     {/* Description */}
-                    <p className="max-w-2xl text-center text-[15px] leading-relaxed text-white/70 sm:text-base md:max-w-3xl fhd:text-lg">
+                    <p className="max-w-2xl text-center text-[13px] leading-relaxed text-white/70 sm:text-sm md:max-w-3xl fhd:text-base">
                       {tab.description}
                     </p>
                     <Link
                       href={tab.href}
                       prefetch={false}
-                      className="mt-6 inline-flex min-h-[44px] items-center rounded-full border border-white/25 bg-white/10 px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white sm:text-base"
+                      className="mt-5 inline-flex min-h-[40px] items-center rounded-full border border-white/25 bg-white/10 px-4 py-2 text-xs font-medium text-white transition-colors hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white sm:text-sm"
                     >
                       Explore {tab.label}
                     </Link>

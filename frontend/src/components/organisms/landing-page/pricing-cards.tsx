@@ -53,15 +53,22 @@ const INDIVIDUAL_PLANS = [
 export default function PricingCards() {
   return (
     <section id="pricing" className="relative overflow-hidden bg-black px-[5%] pb-16 pt-8 sm:pb-20 sm:pt-10">
+      {/* Hero-style background image with overlay + blur */}
       <div className="pointer-events-none absolute inset-0">
+        <img
+          src="/videos/hero-animation-poster.jpg?v=20260310"
+          alt=""
+          aria-hidden="true"
+          className="absolute inset-0 h-full w-full object-cover"
+        />
+        <div className="absolute inset-0 bg-black/70 backdrop-blur-md" />
         <div className="absolute -left-28 top-6 h-72 w-72 rounded-full bg-white/10 blur-[120px]" />
         <div className="absolute -right-20 bottom-0 h-72 w-72 rounded-full bg-white/5 blur-[130px]" />
-        <div className="absolute inset-0 bg-gradient-to-b from-black via-black to-[var(--slide-bg-alt,#131318)]" />
       </div>
 
       <div className="relative mx-auto max-w-7xl">
         <ScrollReveal className="mb-10 text-center">
-          <h2 className="text-balance text-4xl font-bold leading-[1.05] tracking-tight text-white sm:text-5xl md:text-6xl lg:text-7xl">
+          <h2 className="text-balance text-3xl font-bold leading-[1.05] tracking-tight text-white sm:text-4xl md:text-5xl lg:text-6xl">
             Pick the Plan for Your Mission
           </h2>
         </ScrollReveal>
@@ -71,7 +78,7 @@ export default function PricingCards() {
             return (
               <ScrollReveal key={plan.name} delay={index * 0.1}>
                 <div
-                  className={`relative flex h-full flex-col overflow-hidden rounded-[30px] border p-7 transition-all duration-200 md:p-8 ${
+                  className={`relative flex h-full flex-col overflow-hidden rounded-[24px] border p-6 transition-all duration-200 md:p-7 ${
                     plan.highlighted
                       ? "hero-glass-card border-white/30 bg-white/[0.12] ring-1 ring-white/25 lg:-translate-y-2"
                       : "hero-glass-card border-white/10 bg-white/[0.04] hover:border-white/20"
@@ -92,11 +99,11 @@ export default function PricingCards() {
                     <p className="text-xs font-medium uppercase tracking-[0.2em] text-white/45">
                       Plan
                     </p>
-                    <h3 className="mt-3 text-2xl font-semibold text-white md:text-[30px]">
+                    <h3 className="mt-3 text-xl font-semibold text-white md:text-2xl">
                       {plan.name}
                     </h3>
                     <div className="mt-4 flex items-end gap-2.5">
-                      <p className="text-4xl font-bold tracking-tight text-white md:text-5xl">
+                      <p className="text-3xl font-bold tracking-tight text-white md:text-4xl">
                         {plan.price}
                       </p>
                       <p className="pb-1 text-xs text-white/55 md:text-sm">

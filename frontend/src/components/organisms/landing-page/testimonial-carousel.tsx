@@ -76,11 +76,11 @@ export default function TestimonialCarousel() {
         <ScrollReveal className="mb-16 text-center">
           <h2
             className="text-balance text-white"
-            style={{ fontSize: "clamp(30px, 4vw, 64px)" }}
+            style={{ fontSize: "clamp(26px, 3.5vw, 52px)" }}
           >
             Loved by teams worldwide
           </h2>
-          <p className="mx-auto mt-4 max-w-2xl text-balance text-[15px] leading-relaxed text-white/55 sm:text-base fhd:text-lg">
+          <p className="mx-auto mt-3 max-w-2xl text-balance text-[13px] leading-relaxed text-white/55 sm:text-sm fhd:text-base">
             Proof from operators running real boards, real agents, and real
             approvals in production.
           </p>
@@ -99,7 +99,7 @@ export default function TestimonialCarousel() {
             >
               <p
                 className="mb-8 text-balance text-white/90"
-                style={{ fontSize: "clamp(20px, 2.4vw, 34px)", lineHeight: 1.5 }}
+                style={{ fontSize: "clamp(18px, 2.2vw, 28px)", lineHeight: 1.5 }}
               >
                 &ldquo;{TESTIMONIALS[active].quote}&rdquo;
               </p>

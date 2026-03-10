@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Check } from "lucide-react";
 import { ScrollProvider } from "@/components/providers/scroll-provider";
 import LandingFooter from "@/components/organisms/landing-page/landing-footer";
 import LandingNavbar from "@/components/organisms/landing-page/landing-navbar";
@@ -38,19 +39,19 @@ const ENTERPRISE_FEATURES = [
   "Priority support and account management",
 ];
 
-const TRUSTED_LOGOS = [
-  "OpenAI",
-  "Anthropic",
-  "Google Cloud",
-  "GitHub",
-  "Vercel",
-  "Docker",
-  "Kubernetes",
-  "PostgreSQL",
-  "Redis",
-  "Clerk",
-  "FastAPI",
-  "Next.js",
+const TRUSTED_BRANDS: Array<{ name: string; slug: string; icon?: string }> = [
+  { name: "OpenAI", slug: "openai", icon: "/icons/brands/openai.svg" },
+  { name: "Anthropic", slug: "anthropic" },
+  { name: "Google Cloud", slug: "googlecloud" },
+  { name: "GitHub", slug: "github" },
+  { name: "Vercel", slug: "vercel" },
+  { name: "Docker", slug: "docker" },
+  { name: "Kubernetes", slug: "kubernetes" },
+  { name: "PostgreSQL", slug: "postgresql" },
+  { name: "Redis", slug: "redis" },
+  { name: "Clerk", slug: "clerk" },
+  { name: "FastAPI", slug: "fastapi" },
+  { name: "Next.js", slug: "nextdotjs" },
 ];
 
 const FAQ_ITEMS = [
@@ -83,44 +84,64 @@ export default function PricingPage() {
         <main className="bg-black pt-24">
           <h1 className="sr-only">OpenClaw Mission Control pricing plans</h1>
           <PricingCards />
-          <section className="relative px-[5%] pb-14 sm:pb-20">
+
+          {/* Enterprise plan */}
+          <section className="relative px-[5%] pb-14 pt-10 sm:pb-20 sm:pt-14">
             <div className="mx-auto max-w-7xl">
-              <ScrollReveal className="mb-8 text-center">
-                <p className="mb-3 text-sm font-medium uppercase tracking-[0.2em] text-white/40">
-                  Business Plans
-                </p>
-              </ScrollReveal>
               <ScrollReveal>
-                <div className="hero-glass-card mx-auto max-w-4xl rounded-3xl border border-white/15 p-8 md:p-10">
-                  <p className="text-sm uppercase tracking-[0.18em] text-white/50">
-                    Enterprise
-                  </p>
-                  <p className="mt-2 text-4xl font-bold tracking-tight text-white">
-                    Custom
-                  </p>
-                  <p className="mt-4 text-sm font-medium text-white/65">
-                    Everything in Teams, plus:
-                  </p>
-                  <ul className="mt-5 grid gap-3 sm:grid-cols-2">
-                    {ENTERPRISE_FEATURES.map((feature) => (
-                      <li
-                        key={feature}
-                        className="rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white/75"
+                <div className="mx-auto max-w-5xl overflow-hidden rounded-3xl border border-white/10 bg-white/[0.03]">
+                  <div className="flex flex-col gap-8 p-8 pt-10 md:flex-row md:items-start md:p-10 md:pt-12">
+                    {/* Left — plan info */}
+                    <div className="md:w-1/3">
+                      <span className="mb-1 block h-[2px] w-10 rounded-full bg-white/30" />
+                      <p className="mt-3 text-xs font-medium uppercase tracking-[0.2em] text-white/45">
+                        Plan
+                      </p>
+                      <h3 className="mt-2 text-3xl font-semibold text-white">
+                        Enterprise
+                      </h3>
+                      <p className="mt-3 text-4xl font-bold tracking-tight text-white">
+                        Custom
+                      </p>
+                      <p className="mt-1 text-sm text-white/50">
+                        Contract and governance controls
+                      </p>
+                      <Link
+                        href="/onboarding"
+                        className="hero-btn-primary mt-6 inline-flex items-center justify-center"
                       >
-                        ✓ {feature}
-                      </li>
-                    ))}
-                  </ul>
-                  <Link
-                    href="/onboarding"
-                    className="hero-btn-primary mt-7 inline-flex items-center justify-center"
-                  >
-                    Contact Sales
-                  </Link>
+                        Contact Sales
+                      </Link>
+                    </div>
+
+                    {/* Right — features grid */}
+                    <div className="flex-1">
+                      <p className="mb-4 text-sm font-medium text-white/55">
+                        Everything in Professional, plus:
+                      </p>
+                      <ul className="grid gap-3 sm:grid-cols-2">
+                        {ENTERPRISE_FEATURES.map((feature) => (
+                          <li
+                            key={feature}
+                            className="flex items-start gap-2.5 text-sm leading-relaxed text-white/75"
+                          >
+                            <Check
+                              size={15}
+                              className="mt-0.5 shrink-0 text-white/50"
+                              aria-hidden="true"
+                            />
+                            {feature}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
                 </div>
               </ScrollReveal>
             </div>
           </section>
+
+          {/* Trusted brands — with logos */}
           <section className="px-[5%] py-14 sm:py-16">
             <div className="mx-auto max-w-7xl">
               <ScrollReveal className="text-center">
@@ -128,39 +149,71 @@ export default function PricingPage() {
                   Trusted every day by teams that build world-class software.
                 </h2>
               </ScrollReveal>
-              <div className="mt-8 flex flex-wrap justify-center gap-3">
-                {TRUSTED_LOGOS.map((logo) => (
-                  <span
-                    key={logo}
-                    className="rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-sm font-medium text-white/70"
+              <div className="mt-10 grid grid-cols-3 gap-4 sm:grid-cols-4 md:grid-cols-6">
+                {TRUSTED_BRANDS.map((brand) => (
+                  <div
+                    key={brand.slug}
+                    className="flex items-center justify-center gap-2.5 rounded-xl border border-white/[0.06] bg-white/[0.03] px-4 py-3.5 transition-colors duration-200 hover:border-white/15 hover:bg-white/[0.06]"
                   >
-                    {logo}
-                  </span>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={brand.icon ?? `https://cdn.simpleicons.org/${brand.slug}/white`}
+                      alt=""
+                      aria-hidden="true"
+                      width={18}
+                      height={18}
+                      className="shrink-0 opacity-60"
+                      loading="lazy"
+                    />
+                    <span className="text-xs font-semibold tracking-wide text-white/70">
+                      {brand.name}
+                    </span>
+                  </div>
                 ))}
               </div>
             </div>
           </section>
-          <section className="px-[5%] py-14 sm:py-16">
-            <div className="mx-auto max-w-4xl">
-              <ScrollReveal className="mb-8 text-center">
-                <h2 className="text-3xl font-bold tracking-tight text-white">
-                  Questions & Answers
-                </h2>
-              </ScrollReveal>
-              <div className="space-y-3">
-                {FAQ_ITEMS.map((item) => (
-                  <details
-                    key={item.question}
-                    className="hero-glass-card rounded-2xl border border-white/10 px-5 py-4 text-white/75"
-                  >
-                    <summary className="cursor-pointer list-none text-sm font-semibold text-white">
-                      {item.question}
-                    </summary>
-                    <p className="mt-3 text-sm leading-relaxed text-white/65">
-                      {item.answer}
+          <section className="px-[5%] py-16 sm:py-20">
+            <div className="mx-auto max-w-5xl">
+              <div className="flex flex-col gap-10 md:flex-row md:gap-16">
+                {/* Left — heading */}
+                <div className="md:w-1/3 md:pt-1">
+                  <ScrollReveal>
+                    <p className="text-xs font-medium uppercase tracking-[0.2em] text-white/40">
+                      FAQ
                     </p>
-                  </details>
-                ))}
+                    <h2 className="mt-3 text-3xl font-bold tracking-tight text-white sm:text-4xl">
+                      Questions & Answers
+                    </h2>
+                    <p className="mt-4 text-sm leading-relaxed text-white/50">
+                      Common questions about plans, billing, and platform limits.
+                    </p>
+                  </ScrollReveal>
+                </div>
+
+                {/* Right — accordion */}
+                <div className="flex-1">
+                  <ScrollReveal>
+                    <div className="divide-y divide-white/10">
+                      {FAQ_ITEMS.map((item) => (
+                        <details
+                          key={item.question}
+                          className="group py-5 first:pt-0 last:pb-0"
+                        >
+                          <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-sm font-semibold text-white transition-colors hover:text-white/80">
+                            {item.question}
+                            <span className="shrink-0 text-white/30 transition-transform duration-200 group-open:rotate-45">
+                              +
+                            </span>
+                          </summary>
+                          <p className="mt-3 pr-8 text-sm leading-relaxed text-white/60">
+                            {item.answer}
+                          </p>
+                        </details>
+                      ))}
+                    </div>
+                  </ScrollReveal>
+                </div>
               </div>
             </div>
           </section>
