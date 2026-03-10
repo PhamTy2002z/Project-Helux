@@ -2,28 +2,13 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import { ScrollReveal } from "./scroll-reveal";
+import { TESTIMONIALS } from "./testimonials-data";
 
-const TESTIMONIALS = [
-  {
-    quote:
-      "OpenClaw unified our board operations. Approvals that took days now take minutes.",
-    author: "Engineering Lead",
-    company: "Series B Startup",
-  },
-  {
-    quote:
-      "The agent health dashboard gives us real-time visibility we never had before.",
-    author: "DevOps Manager",
-    company: "Enterprise SaaS",
-  },
-  {
-    quote:
-      "Finally, one place to track tasks, agents, and decisions across all our teams.",
-    author: "CTO",
-    company: "Growth-stage Platform",
-  },
-];
+/** Landing carousel shows first 3 testimonials; full list on /testimonials */
+const CAROUSEL_ITEMS = TESTIMONIALS.slice(0, 3);
 
 export default function TestimonialCarousel() {
   const [active, setActive] = useState(0);
@@ -33,7 +18,7 @@ export default function TestimonialCarousel() {
   const sectionRef = useRef<HTMLElement | null>(null);
 
   const next = useCallback(() => {
-    setActive((prev) => (prev + 1) % TESTIMONIALS.length);
+    setActive((prev) => (prev + 1) % CAROUSEL_ITEMS.length);
   }, []);
 
   useEffect(() => {
@@ -101,17 +86,30 @@ export default function TestimonialCarousel() {
                 className="mb-8 text-balance text-white/90"
                 style={{ fontSize: "clamp(18px, 2.2vw, 28px)", lineHeight: 1.5 }}
               >
-                &ldquo;{TESTIMONIALS[active].quote}&rdquo;
+                &ldquo;{CAROUSEL_ITEMS[active].quote}&rdquo;
               </p>
               <footer className="text-sm text-white/60 sm:text-base">
                 <span className="font-medium text-white/80">
-                  {TESTIMONIALS[active].author}
+                  {CAROUSEL_ITEMS[active].author}
                 </span>
+                {", "}
+                {CAROUSEL_ITEMS[active].role}
                 {" — "}
-                {TESTIMONIALS[active].company}
+                {CAROUSEL_ITEMS[active].company}
               </footer>
             </motion.blockquote>
           </AnimatePresence>
+        </div>
+
+        {/* View all link */}
+        <div className="mt-8 text-center">
+          <Link
+            href="/testimonials"
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-white/55 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+          >
+            View all testimonials
+            <ArrowRight size={14} aria-hidden="true" />
+          </Link>
         </div>
 
         {/* Dots */}
@@ -121,8 +119,8 @@ export default function TestimonialCarousel() {
           aria-label="Testimonials"
           onKeyDown={(e) => {
             let next = active;
-            if (e.key === "ArrowRight") next = (active + 1) % TESTIMONIALS.length;
-            else if (e.key === "ArrowLeft") next = (active - 1 + TESTIMONIALS.length) % TESTIMONIALS.length;
+            if (e.key === "ArrowRight") next = (active + 1) % CAROUSEL_ITEMS.length;
+            else if (e.key === "ArrowLeft") next = (active - 1 + CAROUSEL_ITEMS.length) % CAROUSEL_ITEMS.length;
             else return;
             e.preventDefault();
             setActive(next);
@@ -130,7 +128,7 @@ export default function TestimonialCarousel() {
             buttons[next]?.focus();
           }}
         >
-          {TESTIMONIALS.map((_, index) => (
+          {CAROUSEL_ITEMS.map((_, index) => (
             <button
               key={index}
               type="button"

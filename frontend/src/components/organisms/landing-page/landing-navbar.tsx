@@ -11,11 +11,11 @@ const NAV_LINKS = [
   { label: "Features", href: "/#features" },
   { label: "Product", href: "/#product" },
   { label: "Pricing", href: "/pricing" },
-  { label: "Docs", href: "/docs" },
+  { label: "Blog", href: "/blog" },
 ];
 
 const RESOURCE_LINKS = [
-  { label: "Testimonials", href: "/#testimonials" },
+  { label: "Testimonials", href: "/testimonials" },
   { label: "Documentation", href: "https://github.com/abhi1693/openclaw-mission-control/tree/master/docs", external: true },
   { label: "Changelog", href: "https://github.com/abhi1693/openclaw-mission-control/releases", external: true },
 ];

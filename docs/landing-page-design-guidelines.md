@@ -1,145 +1,249 @@
-# Landing page design guidelines
+# Landing Page Design Guidelines
 
-This document defines UI, motion, copy, and performance rules only for the
-public landing page (`/`). Use it when you edit files under
-`frontend/src/components/organisms/landing-slideshow/` and related landing
-entry files.
+This document defines UI, motion, copy, performance, and accessibility rules for
+the public landing page (`/`). It covers TWO major component groups:
+**landing-page/** (new main landing sections) and **landing-slideshow/**
+(hero slideshow).
 
-## Scope and precedence
+## Scope and Precedence
 
-This guide prevents overlap with the global design guide by setting explicit
-boundaries.
+Landing page has explicit boundaries to prevent overlap with global design guide.
 
-- Scope in: public landing route and slideshow hero only.
-- Scope out: authenticated app shell, dashboard pages, data tables, and form
-  patterns outside landing.
-- Base reference: [`docs/design-guidelines.md`](./design-guidelines.md).
-- Precedence rule: if a rule here conflicts with the global guide, this file
-  wins for landing files only.
+| In Scope | Out of Scope |
+|----------|--------------|
+| Public route `/` landing sections | Authenticated app shell |
+| Both landing-page/ and landing-slideshow/ | Dashboard, data tables |
+| Landing navbar, hero, sections, footer | Form patterns outside landing |
+| Hero video, animations, motion | Typography outside landing context |
 
-## Source of truth
+Base reference: `docs/design-guidelines.md`. This file takes precedence for
+landing-scoped files only.
 
-These files are the implementation baseline for this guideline.
+## Source of Truth
 
-- `frontend/src/app/(public)/page.tsx`
-- `frontend/src/components/organisms/LandingHero.tsx`
-- `frontend/src/components/organisms/landing-slideshow/slide-app.tsx`
-- `frontend/src/components/organisms/landing-slideshow/slide-1.tsx`
-- `frontend/src/components/organisms/landing-slideshow/slide-2.tsx`
-- `frontend/src/components/organisms/landing-slideshow/slide-3.tsx`
-- `frontend/src/components/organisms/landing-slideshow/slide-4.tsx`
-- `frontend/src/components/organisms/landing-slideshow/slide-5.tsx`
-- `frontend/src/components/organisms/landing-slideshow/animated-text.tsx`
-- `frontend/src/components/organisms/landing-slideshow/hls-video.tsx`
-- `frontend/src/components/organisms/landing-slideshow/navigation-dots.tsx`
-- `frontend/src/app/globals.css`
-- `frontend/src/app/layout.tsx`
+**Orchestrator & Entry:**
+- `frontend/src/app/(public)/page.tsx` — Page metadata + LandingPage import
+- `frontend/src/components/organisms/landing-page/landing-page.tsx` — Orchestrator with lazy-loaded sections
 
-## Visual direction
+**Landing-Page Section Components (new):**
+- `landing-navbar.tsx` — Fixed glass navbar with mobile drawer
+- `landing-hero-section.tsx` — Hero with dual-video, staggered copy animations
+- `feature-cards.tsx` — 2-column feature grid with hover zoom
+- `product-tabs.tsx` — 4-tab WAI-ARIA interface with video previews
+- `pricing-cards.tsx` — 3-tier pricing (Basic/Professional/Enterprise)
+- `trust-marquee.tsx` — Brand logo infinite scroll (15 brands)
+- `testimonial-carousel.tsx` — Auto-advance quote carousel
+- `logo-marquee.tsx` — Tech stack badge marquee
+- `scroll-reveal.tsx` — Reusable IntersectionObserver trigger
+- `landing-footer.tsx` — Footer with link columns, social icons
 
-Landing must feel cinematic and high-contrast while keeping clear readability.
-The style is intentional and bold, not dashboard-like.
+**Landing-Slideshow Components (hero slideshow):**
+- `landing-slideshow/slide-app.tsx` — Orchestration, keyboard nav, dynamic imports
+- `landing-slideshow/slide-*.tsx` (1-5) — Individual slide narratives
+- `landing-slideshow/animated-text.tsx` — 3 animation primitives (SlideUpLine, WordByWordReveal, BlurReveal)
+- `landing-slideshow/hls-video.tsx` — HLS streaming with Mux CDN
+- `landing-slideshow/navigation-dots.tsx` — Slide dot navigation
 
-- Use dark canvas backgrounds with white foreground typography.
-- Keep foreground content readable with video overlays (`bg-black/35` or
-  stronger when needed).
-- Keep primary brand lockup minimal: short logo, concise meta strip, large
-  hero statement.
-- Keep one key message per slide. Avoid dense multi-column text blocks.
+**Shared:**
+- `frontend/src/app/globals.css` — All landing CSS classes, variables, keyframes
+- `frontend/src/components/providers/scroll-provider.tsx` — Lenis smooth scroll
 
-## Typography and spacing
+## Visual Direction
 
-Typography must support scan speed and impact.
+Landing must feel **cinematic, high-contrast, bold** — not dashboard-like.
 
-- Use `Aeonik` for landing surface, with
-  `var(--font-body), sans-serif` fallback.
-- Use `text-balance` for large headlines when possible.
-- Keep headline line-height tight (`~0.9`) and body text at comfortable
-  reading size (`14px` to `20px` clamp).
-- Keep horizontal page gutters around `5%` on desktop slides.
-- Keep copy width constrained (`max-w-*`) to avoid long line lengths.
+- Dark canvas (`#000000` background, `#ffffff` text)
+- Readable overlays: `bg-black/35` or stronger over video
+- High-contrast: white text on dark backgrounds, glass cards with subtle opacity
+- Glass morphism: `bg-white/[0.05]`, `border-white/10`
+- CTA accent: `#ff5b35` (orange) with drop shadow for emphasis
+- One key message per section; avoid dense multi-column text blocks
 
-## Motion and interaction
+## Typography System
 
-Motion must communicate progression, not decoration.
+| Element | Font | Size | Line-Height | Notes |
+|---------|------|------|-------------|-------|
+| Hero title | `var(--font-body)` | `clamp(36px, 3.5vw, 88px)` | ~0.9 | Tight, impactful |
+| Section heading | `var(--font-body)` | `clamp(26px, 3.5vw, 52px)` | ~0.9 | Maintain hierarchy |
+| Body text | `var(--font-body)` | `clamp(14px, 1.8vw, 20px)` | 1.5-1.75 | Readable at all sizes |
+| Slideshow (Aeonik) | `Aeonik` | Varies | — | Used in slideshow only |
 
-- Animate `opacity` and `transform` only.
-- Honor `prefers-reduced-motion` in all animated primitives.
-- Keep slide transition short (`~0.35s`) and interruptible by user input.
-- Keep keyboard navigation enabled on landing:
-  - Next: `ArrowRight`, `ArrowDown`, `Space`
-  - Previous: `ArrowLeft`, `ArrowUp`
-- Dot controls must expose clear active state and keyboard focus style.
+Guidelines:
+- Use `text-balance` for large headlines
+- Constrain copy width with `max-w-*` to avoid line-length > 75 chars
+- Maintain 5% horizontal gutters on desktop
+- All scaling via `clamp()` for responsive without breakpoints
 
-## Accessibility requirements
+## Color System
 
-Landing is visual-heavy, but it must still meet baseline accessibility.
+| Palette | Value | Use |
+|---------|-------|-----|
+| Background | `#000000` | Page canvas |
+| Text primary | `#ffffff` | All foreground text |
+| Text muted | Opacity /35 to /55 | Secondary, meta text |
+| Glass card bg | `rgba(255,255,255,0.03-0.12)` | Card backgrounds |
+| Glass border | `rgba(255,255,255,0.06-0.25)` | Card borders, dividers |
+| CTA accent | `#ff5b35` | Primary buttons, highlights |
+| Slideshow vars | See CSS section | Slides only |
 
-- Every interactive element must have visible `focus-visible` styles.
-- Icon-only or dot navigation controls must have `aria-label`.
-- Decorative media must be `aria-hidden` when not meaningful content.
-- Do not disable zoom or block user input behaviors.
-- Keep CTA labels specific and action-oriented.
+Opacity levels: /35, /45, /50, /55, /65, /70, /80, /85, /90 (used in glass cards and text).
 
-## Performance guardrails
+## CSS Classes & Global Styles
 
-Landing must load quickly and avoid jank.
+**Landing structure:**
+- `.landing-page` — Root font override, `var(--font-body)`
 
-- Lazy-load non-initial slides with `next/dynamic`.
-- Preload only neighboring slides for faster perceived navigation.
-- Load `hls.js` dynamically inside video setup, not at module top level.
-- Use `preload="metadata"` for autoplay background videos.
-- Add `preconnect` for streaming and font domains in root layout.
-- Avoid `transition: all`; list transition properties explicitly.
-- Keep listeners stable and avoid effect rebind loops.
+**Performance helpers:**
+- `.landing-deferred-section` — `content-visibility: auto`, `contain-intrinsic-size: 920px`
+- `.landing-reveal` — Fade-in-up on scroll (opacity 0→1, translateY 24→0, 0.5s)
 
-## Copy and conversion rules
+**Hero section (glass + buttons):**
+- `.hero-glass-card` — `bg-white/5`, `border-white/10`
+- `.hero-btn-primary` — Black bg, white border, rounded-full
+- `.hero-btn-secondary` — Glass bg, glass border, hover brightens
+- `.hero-btn-demo` — `#ff5b35` orange with `0 12px 28px rgba(255,91,53,0.35)` shadow
 
-Landing copy must be direct, benefit-first, and easy to act on.
+**Animations:**
+- `.hero-copy-anim` — Staggered fade-in-up via `--hero-copy-delay` (title 120ms, subtitle 240ms, CTA 360ms)
+- `.animate-marquee-loop` — Infinite horizontal scroll (32s linear), uses `--marquee-end: -50%`
+- `.fade-in-up` — Keyframe (opacity 0→1, translateY 16→0)
 
-- Use active voice and second person framing.
-- Start with outcome, then mechanism.
-- Keep headline short and specific.
-- Keep subheadline to one clear value proposition.
-- Keep CTA language concrete:
-  - Good: "Start Free in 2 Minutes"
-  - Avoid: "Continue" or "Learn More"
-- Keep one primary CTA and one secondary CTA per decision point.
+**Slideshow:**
+- `.landing-slideshow` — CSS vars for slide colors (muted, purple, pink, blue-light, blue-dark, etc.)
 
-## Component-level implementation notes
+All animations respect `prefers-reduced-motion: reduce` — disabled on motion-sensitive users.
 
-Use these rules when editing landing slideshow components.
+## Animation & Interaction
 
-- `slide-app.tsx`
-  - Owns slide orchestration, keyboard handling, dynamic imports, and transition
-    behavior.
-- `slide-1.tsx`
-  - Owns main hero proposition and primary conversion actions.
-- `slide-2.tsx` to `slide-5.tsx`
-  - Support narrative and credibility. Avoid adding heavy logic here.
-- `animated-text.tsx`
-  - Must keep reduced-motion fallbacks for all animation helpers.
-- `hls-video.tsx`
-  - Must clean up HLS/native listeners on unmount.
-- `navigation-dots.tsx`
-  - Must keep focus ring visibility, touch-friendly targets, and pressed state.
+| Type | Duration | Easing | Notes |
+|------|----------|--------|-------|
+| Slide transitions | ~350ms | ease-out | Interruptible by user |
+| Fade-in-up (scroll) | 500ms | ease-out | 24px translate, opacity 0→1 |
+| Marquee loop | 32s | linear | Infinite, seamless (transform -50%) |
+| Copy stagger | 120-360ms | ease-out | Delay via CSS var (title→subtitle→CTA) |
+| Hover (buttons) | 300ms | ease-all | Border opacity, background shift, translateY |
 
-## Change checklist
+**Keyboard navigation:**
+- Next slide: `ArrowRight`, `ArrowDown`, `Space`
+- Previous slide: `ArrowLeft`, `ArrowUp`
+- Tabs/carousel: `Tab` for focus, `Arrow` keys for selection within tabs
+- All interactive elements: visible `focus-visible` ring (2px white)
 
-Run this checklist before merging landing updates.
+**Motion strategy:**
+- Animate `opacity` and `transform` only (GPU-optimized)
+- Use `translate3d()` for 3D acceleration
+- Avoid `transition: all` — list properties explicitly
+- Respect `prefers-reduced-motion` globally
 
-1. Verify only landing-scoped files changed.
-2. Verify reduced-motion mode still works.
-3. Verify keyboard slide navigation still works.
-4. Verify CTA focus styles are visible on keyboard tab.
-5. Verify `npm run lint` passes for changed frontend files.
-6. Verify `npm run build` passes in `frontend/`.
-7. Verify copy still matches product positioning and auth flow.
+## Performance Guardrails
 
-## Next steps
+**Bundle optimization:**
+- Lazy-load below-fold sections via `next/dynamic` with skeleton fallbacks
+- Slideshow slides load dynamically (not bundled inline)
+- HLS.js loaded inside `hls-video.tsx`, not at module top
 
-If landing grows beyond the hero slideshow, split this file into:
+**Resource loading:**
+- Video `preload="metadata"` to load poster only until interaction
+- `preconnect` in root layout for streaming & font domains
+- Adjacent slide preloading in slideshow for perceived speed
+- Network-aware video: checks Connection API, deviceMemory >= 8GB, hardwareConcurrency >= 8
 
-- `docs/landing-page-design-guidelines.md` (principles)
-- `docs/landing-page-content-guidelines.md` (copy system)
-- `docs/landing-page-performance-guidelines.md` (budgets and profiling)
+**Layout performance:**
+- `content-visibility: auto` on deferred sections with `contain-intrinsic-size`
+- Images via Next.js Image component with `quality: 92`, responsive sizes
+- Video lazy-load via IntersectionObserver (rootMargin 240px)
+- ScrollProvider conditionally loaded (skips on ≤4 cores or data-saver mode)
+
+## Accessibility Standards
+
+| Category | Requirement | Implementation |
+|----------|-------------|-----------------|
+| Semantic HTML | Use `nav`, `main`, `section`, `article`, `footer`, `blockquote` | Correct sectioning |
+| ARIA | `role="navigation"`, `aria-label` on icon buttons, `aria-selected` on tabs | All interactive elements |
+| Keyboard | Tab order matches visual order; Arrow keys for tabs/carousel | Test keyboard-only flow |
+| Focus | `focus-visible` ring (2px white) on all interactive elements | Check against prefers-reduced-motion |
+| Touch targets | Minimum 44x44px for all clickable areas | Test on mobile |
+| Safe area | Use `env(safe-area-inset-*)` for notched devices | Navbar, hero padding |
+| Motion | All animations disabled for `prefers-reduced-motion` | Opacity/transform removed |
+| Color contrast | Text ≥ 4.5:1 on dark backgrounds | #ffffff on #000000 = 21:1 |
+| Alt text | Descriptive alt for meaningful images; `aria-hidden` for decorative | Review each image |
+| Form labels | Linked label elements with `for` attribute | All inputs labeled |
+
+## Copy & Conversion Rules
+
+Landing copy must be direct, outcome-first, benefit-driven.
+
+**Guidelines:**
+- Use active voice and second-person framing ("You control", "Your board")
+- Start with outcome, then explain mechanism
+- Keep headlines short, specific, benefit-focused
+- Subheadings: one clear value prop per section
+- CTAs: concrete, action-oriented language
+
+**CTA examples:**
+- Good: "Start Free in 2 Minutes", "Request a Demo", "Contact Sales"
+- Avoid: "Continue", "Learn More", "Submit"
+
+**Conversion points:**
+- One primary + one secondary CTA per decision point
+- Testimonials with real titles and companies (builds credibility)
+- Feature benefits use outcome-first language ("Save 10 hours weekly on approvals")
+
+## Component Notes
+
+### Landing-Page Sections
+
+| Component | Owner | Key Rules |
+|-----------|-------|-----------|
+| `landing-navbar.tsx` | Navbar orchestration | Fixed glass, mobile drawer < 1024px, resources dropdown, keyboard focus on links |
+| `landing-hero-section.tsx` | Hero orchestration | Dual-video blend, staggered copy animations, network-aware video loading |
+| `feature-cards.tsx` | Feature showcase | 2-column grid, hover zoom on images, semantic structure |
+| `product-tabs.tsx` | Product overview | 4-tab WAI-ARIA, AnimatePresence transitions, video in active tab only |
+| `testimonial-carousel.tsx` | Social proof | Auto-advance, manual nav, Framer motion slide transitions |
+| `trust-marquee.tsx` | Brand credibility | 15 brands, infinite scroll, no pause on hover (auto-advance) |
+| `logo-marquee.tsx` | Tech stack | Tech badges, 2 rows, marquee-loop animation |
+| `pricing-cards.tsx` | Pricing tiers | 3 tiers (Basic/Pro/Enterprise), CTA per card, hover state |
+| `landing-footer.tsx` | Footer | Link columns, social icons, dark glass style, semantic footer |
+
+### Landing-Slideshow Components
+
+| Component | Owner | Key Rules |
+|-----------|-------|-----------|
+| `slide-app.tsx` | Orchestration | Keyboard nav, dynamic imports, clampIndex(), transition to activeIndex |
+| `slide-1.tsx` to `slide-5.tsx` | Slide content | One message per slide, no heavy logic, animated-text usage |
+| `animated-text.tsx` | Text animation primitives | SlideUpLine, WordByWordReveal, BlurReveal — all respect prefers-reduced-motion |
+| `hls-video.tsx` | Video streaming | HLS via Mux, cleanup listeners on unmount, poster covers load time |
+| `navigation-dots.tsx` | Dot navigation | Focus ring visibility, touch-friendly (44x44px+), pressed state, aria-label |
+
+## Responsive Breakpoints
+
+| Breakpoint | Usage | Context |
+|------------|-------|---------|
+| sm (640px) | Mobile landscape, small tablets | Single-column layouts |
+| md (768px) | Tablets | Video enabled (< 768px: disabled) |
+| lg (1024px) | Desktop, mobile drawer hidden | Multi-column, navbar full |
+| fhd (1920px) | Full HD | Increased max-width, padding |
+| qhd (2560px) | 2K displays | Higher max-width |
+| uhd (3840px) | 4K displays | Extended padding/max-width |
+
+Mobile drawer visible at `< 1024px` only.
+
+## Change Checklist
+
+Before merging landing updates, run:
+
+1. Verify only landing-scoped files changed (not auth, dashboard, etc.)
+2. Verify `prefers-reduced-motion` works across all sections (animations disabled)
+3. Verify keyboard navigation:
+   - Tabs in product-tabs work with Arrow keys
+   - Testimonial carousel manual nav works
+   - Slideshow next/prev work (Arrow keys, Space)
+   - All CTAs accessible via Tab
+4. Verify CTA focus styles visible on keyboard Tab
+5. Verify video playback on desktop (≥ 768px)
+6. Verify mobile drawer opens/closes correctly (< 1024px)
+7. Verify lazy-loaded sections render with skeleton loaders
+8. Run `pnpm lint` — no errors
+9. Run `pnpm build` — no errors
+10. Run landing component tests: `pnpm test landing-page/`
+11. Verify copy matches product positioning (mission control, approvals, gateways)
