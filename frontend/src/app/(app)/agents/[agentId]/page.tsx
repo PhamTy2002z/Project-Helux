@@ -32,6 +32,7 @@ import type {
   AgentRead,
   BoardRead,
 } from "@/api/generated/model";
+import { AgentQuotaCard } from "@/components/agents/agent-quota-status";
 import { LazyMarkdown } from "@/components/atoms/LazyMarkdown";
 import { StatusPill } from "@/components/atoms/StatusPill";
 import { DashboardSidebar } from "@/components/organisms/DashboardSidebar";
@@ -298,6 +299,8 @@ export default function AgentDetailPage() {
                       </div>
                     </div>
                   </div>
+
+                  <AgentQuotaCard agent={agent} />
 
                   <div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] p-5">
                     <div className="flex items-center justify-between">
