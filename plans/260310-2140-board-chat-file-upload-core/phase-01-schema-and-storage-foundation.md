@@ -9,7 +9,7 @@
 
 ## Overview
 - **Priority**: P1 (hard blocker)
-- **Status**: pending
+- **Status**: done
 - **Effort**: 3h
 
 Create foundational tables and runtime config for file ingestion + MinIO integration.
@@ -66,15 +66,16 @@ Create foundational tables and runtime config for file ingestion + MinIO integra
 3. Add config fields in `Settings`:
    - `object_storage_provider`, `object_storage_endpoint`, `object_storage_bucket`,
    - `object_storage_access_key`, `object_storage_secret_key`, `object_storage_use_ssl`,
-   - `board_chat_file_max_bytes`, `board_chat_file_preview_max_chars`.
+   - `board_chat_file_max_bytes`, `board_chat_file_preview_max_chars=500`,
+   - `board_chat_file_max_per_message=3`.
 4. Add compose MinIO service with local admin creds for dev and named volume.
 5. Generate Alembic migration and verify upgrade/downgrade.
 
 ## Todo List
-- [ ] Model files created with <200 lines/file.
-- [ ] Config fields added and validated.
-- [ ] Compose MinIO service added.
-- [ ] Migration generated and reviewed.
+- [x] Model files created with <200 lines/file.
+- [x] Config fields added and validated.
+- [x] Compose MinIO service added.
+- [x] Migration generated and reviewed.
 - [ ] DB upgrade/downgrade tested locally.
 
 ## Success Criteria

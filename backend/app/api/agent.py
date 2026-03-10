@@ -21,6 +21,8 @@ from app.core.agent_auth import AgentAuthContext, get_agent_auth_context
 from app.db.pagination import paginate
 from app.db.session import get_session
 from app.models.agents import Agent
+from app.models.board_chat_file_assets import BoardChatFileAsset
+from app.models.board_chat_file_tasks import BoardChatFileTask
 from app.models.board_webhook_payloads import BoardWebhookPayload
 from app.models.boards import Board
 from app.models.tags import Tag
@@ -28,6 +30,7 @@ from app.models.task_dependencies import TaskDependency
 from app.models.tasks import Task
 from app.schemas.agents import AgentCreate, AgentHeartbeat, AgentNudge, AgentRead
 from app.schemas.approvals import ApprovalCreate, ApprovalRead, ApprovalStatus
+from app.schemas.board_chat_files import AgentFileContentResponse
 from app.schemas.board_memory import BoardMemoryCreate, BoardMemoryRead
 from app.schemas.board_onboarding import BoardOnboardingAgentUpdate, BoardOnboardingRead
 from app.schemas.board_webhooks import BoardWebhookPayloadRead
@@ -46,6 +49,8 @@ from app.schemas.health import AgentHealthStatusResponse
 from app.schemas.pagination import DefaultLimitOffsetPage
 from app.schemas.tags import TagRef
 from app.schemas.tasks import TaskCommentCreate, TaskCommentRead, TaskCreate, TaskRead, TaskUpdate
+from app.services.board_chat_files.extractor import extract_text, resolve_mime
+from app.services.storage.minio_storage import get_object_storage
 from app.services.activity_log import record_activity
 from app.services.entitlements import enforce_task_quota
 from app.services.openclaw.coordination_service import GatewayCoordinationService
@@ -2023,4 +2028,63 @@ async def broadcast_gateway_lead_message(
     return await coordination.broadcast_gateway_lead_message(
         actor_agent=agent_ctx.agent,
         payload=payload,
+    )
+
+
+@router.get(
+    "/boards/{board_id}/chat-files/{file_id}/content",
+    response_model=AgentFileContentResponse,
+    summary="Fetch extracted file content for agent processing",
+    description=(
+        "Returns the full extracted text of a file asset for an agent that has an active "
+        "processing task (status: pending or reported) for that file."
+    ),
+)
+async def get_agent_file_content(
+    board_id: UUID,
+    file_id: UUID,
+    session: AsyncSession = SESSION_DEP,
+    agent_ctx: AgentAuthContext = AGENT_CTX_DEP,
+) -> AgentFileContentResponse:
+    """Serve extracted file text to the requesting agent if it owns a task for this file."""
+    # Verify file asset exists and belongs to the board
+    asset = await BoardChatFileAsset.objects.by_id(file_id).first(session)
+    if asset is None or asset.board_id != board_id:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found.")
+
+    # Validate agent has an active task for this file
+    stmt = (
+        select(BoardChatFileTask)
+        .where(BoardChatFileTask.file_asset_id == file_id)
+        .where(BoardChatFileTask.agent_id == agent_ctx.agent.id)
+        .where(BoardChatFileTask.status.in_(["pending", "reported"]))  # type: ignore[attr-defined]
+    )
+    result = await session.exec(stmt)
+    task = result.first()
+    if task is None:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="No active task found for this agent and file.",
+        )
+
+    # Fetch extracted text from object storage if available, else fall back to preview_text
+    extracted_text: str | None = None
+    if asset.object_storage_key:
+        try:
+            storage = get_object_storage()
+            raw_bytes = storage.get_object(asset.object_storage_key)
+            mime = resolve_mime(asset.file_name, asset.mime_type)
+            extracted_text = extract_text(raw_bytes, mime)
+        except Exception:
+            # Fall back to inline preview on storage/extraction failure
+            extracted_text = asset.preview_text
+    else:
+        extracted_text = asset.preview_text
+
+    return AgentFileContentResponse(
+        file_id=asset.id,
+        filename=asset.file_name,
+        mime_type=asset.mime_type,
+        extracted_text=extracted_text,
+        extract_status=asset.status,
     )

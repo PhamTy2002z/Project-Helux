@@ -28,6 +28,8 @@ dependencies = [
     "redis==6.3.0",
     "rq==2.6.0",
     "cryptography==45.0.7",
+    "minio==7.2.15",
+    "pypdf==5.4.0",
 ]
 
 [project.optional-dependencies]

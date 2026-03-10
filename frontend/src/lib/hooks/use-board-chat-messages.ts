@@ -27,7 +27,7 @@ type UseBoardChatMessagesResult = {
   hasMore: boolean;
   error: string | null;
   loadOlder: () => Promise<void>;
-  sendMessage: (content: string) => Promise<boolean>;
+  sendMessage: (content: string, fileIds?: string[]) => Promise<boolean>;
 };
 
 const compareMessagesAsc = (
@@ -213,7 +213,7 @@ export const useBoardChatMessages = ({
   }, [boardId, chatSessionId, enabled, hasMore, isLoadingOlder]);
 
   const sendMessage = useCallback(
-    async (content: string): Promise<boolean> => {
+    async (content: string, fileIds?: string[]): Promise<boolean> => {
       if (!enabled || !boardId || !chatSessionId) return false;
       const trimmed = content.trim();
       if (!trimmed) return false;
@@ -228,6 +228,7 @@ export const useBoardChatMessages = ({
             tags: ["chat"],
             source,
             chat_session_id: chatSessionId,
+            ...(fileIds?.length ? { file_ids: fileIds } : {}),
           },
         );
         if (result.status !== 200) {

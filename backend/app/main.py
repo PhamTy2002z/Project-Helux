@@ -15,6 +15,7 @@ from app.api.agent import router as agent_router
 from app.api.agents import router as agents_router
 from app.api.approvals import router as approvals_router
 from app.api.auth import router as auth_router
+from app.api.board_chat_files import router as board_chat_files_router
 from app.api.board_chat_sessions import router as board_chat_sessions_router
 from app.api.board_group_memory import router as board_group_memory_router
 from app.api.board_groups import router as board_groups_router
@@ -117,6 +118,10 @@ OPENAPI_TAGS = [
         "description": "Board-scoped memory read/write endpoints for persistent context.",
     },
     {
+        "name": "board-chat-files",
+        "description": "Board chat file upload, extraction status, and metadata endpoints.",
+    },
+    {
         "name": "board-chat-sessions",
         "description": "Board chat session CRUD endpoints for multi-thread chat history.",
     },
@@ -193,6 +198,7 @@ _OPENAPI_EXAMPLE_TAGS = {
     "board-group-memory",
     "boards",
     "board-memory",
+    "board-chat-files",
     "board-chat-sessions",
     "board-webhooks",
     "board-onboarding",
@@ -589,6 +595,7 @@ api_v1.include_router(board_groups_router)
 api_v1.include_router(board_group_memory_router)
 api_v1.include_router(boards_router)
 api_v1.include_router(board_memory_router)
+api_v1.include_router(board_chat_files_router)
 api_v1.include_router(board_chat_sessions_router)
 api_v1.include_router(board_webhooks_router)
 api_v1.include_router(board_onboarding_router)

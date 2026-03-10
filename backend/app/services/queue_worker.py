@@ -12,6 +12,12 @@ from redis.asyncio import Redis
 
 from app.core.config import settings
 from app.core.logging import get_logger
+from app.services.board_chat_files.queue import TASK_TYPE as FILE_EXTRACT_TASK_TYPE
+from app.services.board_chat_files.queue import requeue_extraction_task
+from app.services.board_chat_files.report_deadline_queue import TASK_TYPE as REPORT_DEADLINE_TASK_TYPE
+from app.services.board_chat_files.report_deadline_queue import requeue_deadline_task
+from app.services.board_chat_files.report_deadline_worker import process_report_deadline_task
+from app.services.board_chat_files.worker import process_extraction_task
 from app.services.openclaw.gateway_activation_queue import TASK_TYPE as GATEWAY_ACTIVATION_TASK_TYPE
 from app.services.openclaw.gateway_activation_queue import requeue_gateway_activation_task
 from app.services.openclaw.gateway_activation_worker import process_gateway_activation_task
@@ -34,6 +40,14 @@ class _TaskHandler:
 
 
 _TASK_HANDLERS: dict[str, _TaskHandler] = {
+    FILE_EXTRACT_TASK_TYPE: _TaskHandler(
+        handler=process_extraction_task,
+        attempts_to_delay=lambda attempts: min(
+            settings.rq_dispatch_retry_base_seconds * (2 ** max(0, attempts)),
+            settings.rq_dispatch_retry_max_seconds,
+        ),
+        requeue=lambda task, delay: requeue_extraction_task(task, delay_seconds=delay),
+    ),
     GATEWAY_ACTIVATION_TASK_TYPE: _TaskHandler(
         handler=process_gateway_activation_task,
         attempts_to_delay=lambda attempts: min(
@@ -49,6 +63,14 @@ _TASK_HANDLERS: dict[str, _TaskHandler] = {
             settings.rq_dispatch_retry_max_seconds,
         ),
         requeue=lambda task, delay: requeue_lifecycle_queue_task(task, delay_seconds=delay),
+    ),
+    REPORT_DEADLINE_TASK_TYPE: _TaskHandler(
+        handler=process_report_deadline_task,
+        attempts_to_delay=lambda attempts: min(
+            settings.rq_dispatch_retry_base_seconds * (2 ** max(0, attempts)),
+            settings.rq_dispatch_retry_max_seconds,
+        ),
+        requeue=lambda task, delay: requeue_deadline_task(task, delay_seconds=delay),
     ),
     WEBHOOK_TASK_TYPE: _TaskHandler(
         handler=process_webhook_queue_task,

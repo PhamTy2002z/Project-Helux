@@ -2,6 +2,8 @@
 
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import { Paperclip, X } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -14,6 +16,12 @@ type MentionTarget = {
   query: string;
 };
 
+type PendingFileChip = {
+  id: string;
+  fileName: string;
+  status: string;
+};
+
 type BoardChatComposerProps = {
   placeholder?: string;
   isSending?: boolean;
@@ -21,6 +29,9 @@ type BoardChatComposerProps = {
   mentionSuggestions?: string[];
   autoFocus?: boolean;
   onSend: (content: string) => Promise<boolean>;
+  onFilesSelected?: (files: File[]) => void;
+  pendingFiles?: PendingFileChip[];
+  onRemovePendingFile?: (id: string) => void;
 };
 
 const normalizeMentionHandle = (raw: string): string | null => {
@@ -52,6 +63,9 @@ function BoardChatComposerImpl({
   mentionSuggestions,
   autoFocus = false,
   onSend,
+  onFilesSelected,
+  pendingFiles,
+  onRemovePendingFile,
 }: BoardChatComposerProps) {
   const [value, setValue] = useState("");
   const [mentionTarget, setMentionTarget] = useState<MentionTarget | null>(
@@ -59,6 +73,7 @@ function BoardChatComposerImpl({
   );
   const [activeMentionIndex, setActiveMentionIndex] = useState(0);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const closeMenuTimeoutRef = useRef<number | null>(null);
   const shouldFocusAfterSendRef = useRef(false);
 
@@ -136,6 +151,18 @@ function BoardChatComposerImpl({
     [mentionTarget, value],
   );
 
+  const handleFileChange = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const selected = Array.from(event.target.files ?? []);
+      if (selected.length && onFilesSelected) {
+        onFilesSelected(selected);
+      }
+      // Reset so same file can be re-selected
+      event.target.value = "";
+    },
+    [onFilesSelected],
+  );
+
   const send = useCallback(async () => {
     if (isSending || disabled) return;
     const trimmed = value.trim();
@@ -151,6 +178,39 @@ function BoardChatComposerImpl({
 
   return (
     <div className="mt-4 rounded-2xl border border-slate-200 bg-white/95 p-3 shadow-sm">
+      {pendingFiles && pendingFiles.length > 0 && (
+        <div className="mb-2 flex flex-wrap gap-2">
+          {pendingFiles.map((f) => (
+            <span
+              key={f.id}
+              className="inline-flex items-center gap-1 rounded-lg bg-slate-100 px-2 py-1 text-xs text-slate-700"
+            >
+              {f.fileName}
+              <span
+                className={
+                  f.status === "uploading"
+                    ? "text-blue-500"
+                    : f.status === "failed"
+                      ? "text-red-500"
+                      : "text-green-500"
+                }
+              >
+                {f.status === "uploading" ? "..." : f.status === "failed" ? "!" : "✓"}
+              </span>
+              {onRemovePendingFile && (
+                <button
+                  type="button"
+                  onClick={() => onRemovePendingFile(f.id)}
+                  className="ml-0.5 text-slate-400 hover:text-slate-600"
+                  aria-label={`Remove ${f.fileName}`}
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              )}
+            </span>
+          ))}
+        </div>
+      )}
       <div className="relative">
         <Textarea
           ref={textareaRef}
@@ -259,9 +319,34 @@ function BoardChatComposerImpl({
         ) : null}
       </div>
       <div className="mt-3 flex items-center justify-between gap-3">
-        <p className="text-xs text-slate-500">
-          Enter to send, Shift+Enter for newline.
-        </p>
+        <div className="flex items-center gap-2">
+          {onFilesSelected && (
+            <>
+              <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                accept=".txt,.md,.csv,.json,.pdf"
+                className="hidden"
+                onChange={handleFileChange}
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0"
+                onClick={() => fileInputRef.current?.click()}
+                title="Attach files"
+                disabled={isSending || disabled}
+              >
+                <Paperclip className="h-4 w-4 text-slate-500" />
+              </Button>
+            </>
+          )}
+          <p className="text-xs text-slate-500">
+            Enter to send, Shift+Enter for newline.
+          </p>
+        </div>
         <Button
           onClick={() => void send()}
           disabled={isSending || disabled || !value.trim()}

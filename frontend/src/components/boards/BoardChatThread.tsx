@@ -1,4 +1,6 @@
-import { useEffect, useLayoutEffect, useRef } from "react";
+import { memo, useEffect, useLayoutEffect, useRef } from "react";
+
+import { FileText } from "lucide-react";
 
 import type { BoardMemoryRead } from "@/api/generated/model";
 import { LazyMarkdown } from "@/components/atoms/LazyMarkdown";
@@ -6,6 +8,19 @@ import { BoardChatComposer } from "@/components/BoardChatComposer";
 import { Button } from "@/components/ui/button";
 import { DEFAULT_HUMAN_LABEL, resolveHumanActorName } from "@/lib/display-name";
 import { cn } from "@/lib/utils";
+
+type PendingFileChip = {
+  id: string;
+  fileName: string;
+  status: string;
+};
+
+/** Attachment metadata that may be present on messages once backend hydrates it. */
+type MessageAttachment = {
+  id: string;
+  file_name: string;
+  status: string;
+};
 
 type BoardChatThreadProps = {
   activeSessionId: string | null;
@@ -21,6 +36,9 @@ type BoardChatThreadProps = {
   composerAutoFocus: boolean;
   onLoadOlder: () => Promise<void>;
   onSend: (content: string) => Promise<boolean>;
+  onFilesSelected?: (files: File[]) => void;
+  pendingFiles?: PendingFileChip[];
+  onRemovePendingFile?: (id: string) => void;
 };
 
 const NEAR_BOTTOM_THRESHOLD = 80;
@@ -56,13 +74,13 @@ const sanitizeMessageContent = (content: string, sourceLabel: string): string =>
   return lines.slice(second.index + 1).join("\n").trimStart();
 };
 
-const MessageCard = ({
+const MessageCard = memo(function MessageCard({
   message,
   currentUserDisplayName,
 }: {
   message: BoardMemoryRead;
   currentUserDisplayName: string;
-}) => {
+}) {
   const sourceLabel = resolveHumanActorName(
     message.source,
     DEFAULT_HUMAN_LABEL,
@@ -92,10 +110,37 @@ const MessageCard = ({
         <div className="mt-1 select-text cursor-text text-sm leading-6 break-words text-slate-900">
           <LazyMarkdown content={cleanedContent} variant="chat" />
         </div>
+        {((message as unknown as { attachments?: MessageAttachment[] }).attachments)?.length ? (
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {(message as unknown as { attachments: MessageAttachment[] }).attachments.map((att) => (
+              <span
+                key={att.id}
+                className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-slate-50 px-2 py-1 text-xs text-slate-600"
+              >
+                <FileText className="h-3 w-3 flex-shrink-0" />
+                <span className="max-w-[120px] truncate">{att.file_name}</span>
+                <span
+                  className={cn(
+                    "rounded px-1 py-0.5 text-[10px] font-medium",
+                    att.status === "ready"
+                      ? "bg-green-100 text-green-700"
+                      : att.status === "failed"
+                        ? "bg-red-100 text-red-700"
+                        : "bg-blue-100 text-blue-700",
+                  )}
+                >
+                  {att.status}
+                </span>
+              </span>
+            ))}
+          </div>
+        ) : null}
       </div>
     </div>
   );
-};
+});
+
+MessageCard.displayName = "MessageCard";
 
 export function BoardChatThread({
   activeSessionId,
@@ -111,6 +156,9 @@ export function BoardChatThread({
   composerAutoFocus,
   onLoadOlder,
   onSend,
+  onFilesSelected,
+  pendingFiles,
+  onRemovePendingFile,
 }: BoardChatThreadProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const nearBottomRef = useRef(true);
@@ -206,6 +254,9 @@ export function BoardChatThread({
             ? "Message the board lead. Tag agents with @name."
             : "Read-only access. Chat is disabled."
         }
+        onFilesSelected={onFilesSelected}
+        pendingFiles={pendingFiles}
+        onRemovePendingFile={onRemovePendingFile}
       />
     </div>
   );

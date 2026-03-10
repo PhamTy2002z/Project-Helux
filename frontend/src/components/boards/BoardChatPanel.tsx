@@ -15,6 +15,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
+import { useBoardChatFiles } from "@/lib/hooks/use-board-chat-files";
 import { useBoardChatMessages } from "@/lib/hooks/use-board-chat-messages";
 import { useBoardChatSessions } from "@/lib/hooks/use-board-chat-sessions";
 
@@ -72,6 +73,12 @@ export function BoardChatPanel({
     onMessageCreated,
   });
 
+  const filesState = useBoardChatFiles({
+    boardId: resolvedBoardId,
+    chatSessionId: effectiveActiveSessionId,
+    enabled: isOpen && Boolean(effectiveActiveSessionId),
+  });
+
   const handleCreateSession = useCallback(async () => {
     try {
       const created = await sessionsState.createSession("New chat");
@@ -118,17 +125,32 @@ export function BoardChatPanel({
     }
   }, [archiveTarget, effectiveActiveSessionId, onError, sessionsState]);
 
+  const handleFilesSelected = useCallback(
+    async (files: File[]) => {
+      try {
+        await filesState.uploadFiles(files);
+      } catch (err) {
+        onError(err instanceof Error ? err.message : "Upload failed.");
+      }
+    },
+    [filesState, onError],
+  );
+
   const handleSend = useCallback(
     async (content: string) => {
-      const ok = await messagesState.sendMessage(content);
+      const fileIds = filesState.pendingUploads
+        .filter((u) => u.status === "ready" && u.fileId)
+        .map((u) => u.fileId!);
+      const ok = await messagesState.sendMessage(content, fileIds.length ? fileIds : undefined);
       if (ok) {
-        await sessionsState.refetch();
+        filesState.clearPendingUploads();
+        void sessionsState.refetch();
       } else if (messagesState.error) {
         onError(messagesState.error);
       }
       return ok;
     },
-    [messagesState, onError, sessionsState],
+    [filesState, messagesState, onError, sessionsState],
   );
 
   const combinedError = sessionsState.error?.message ?? messagesState.error;
@@ -228,6 +250,13 @@ export function BoardChatPanel({
                 composerAutoFocus={focusComposer}
                 onLoadOlder={messagesState.loadOlder}
                 onSend={handleSend}
+                onFilesSelected={handleFilesSelected}
+                pendingFiles={filesState.pendingUploads.map((u) => ({
+                  id: u.id,
+                  fileName: u.file.name,
+                  status: u.status,
+                }))}
+                onRemovePendingFile={(id) => filesState.removePendingUpload(id)}
               />
             </div>
           </div>
