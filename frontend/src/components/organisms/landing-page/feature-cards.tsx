@@ -1,150 +1,100 @@
 "use client";
 
-import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import Image from "next/image";
+
 import { ScrollReveal } from "./scroll-reveal";
 
-const FEATURE_SPOTLIGHTS = [
+const FEATURE_POSTERS = [
   {
-    id: "boards",
-    eyebrow: "Execution clarity",
-    title: "Plan and run board operations without context switching",
+    id: "trusted",
+    title: "Trusted",
     description:
-      "Coordinate tasks, approvals, and delivery updates in one surface where operators and agents work from the same source of truth.",
-    ctaLabel: "Open Boards",
-    ctaHref: "/boards",
-    placeholderTitle: "Board workspace preview",
-    placeholderHint: "Replace with your board screenshot or walkthrough video",
+      "Delegate critical tasks to agentic workflows with repeatable outcomes and clear review guardrails.",
+    imageSrc: "/images/landing/crewai-trusted.jpg",
+    imageAlt:
+      "Trusted poster showing an agent workflow timeline with task start, LLM call, tool call, completion, and guardrail highlights.",
+    highlights: ["Workflow tracing", "Agent training", "Task guardrails"],
   },
   {
-    id: "agents",
-    eyebrow: "Autonomous workflows",
-    title: "Ship faster with agent execution that stays reviewable",
+    id: "scalable",
+    title: "Scalable",
     description:
-      "Delegate implementation, testing, and follow-up actions while preserving explicit review checkpoints for every critical decision.",
-    ctaLabel: "Explore Agents",
-    ctaHref: "/agents",
-    placeholderTitle: "Agent run timeline",
-    placeholderHint: "Replace with your agent activity screenshot or demo clip",
-  },
-  {
-    id: "gateways",
-    eyebrow: "Distributed control",
-    title: "Operate gateways, environments, and routing from one console",
-    description:
-      "Track activation health, provisioning states, and remote runtime connectivity with full auditability across every connected node.",
-    ctaLabel: "Manage Gateways",
-    ctaHref: "/gateways",
-    placeholderTitle: "Gateway operations panel",
-    placeholderHint: "Replace with your gateway dashboard screenshot or video",
-  },
-  {
-    id: "approvals",
-    eyebrow: "Governance built-in",
-    title: "Keep approvals and audit trails inside the execution loop",
-    description:
-      "Move sensitive actions through clear approval gates and preserve traceability from request to resolution in one timeline.",
-    ctaLabel: "Start Onboarding",
-    ctaHref: "/onboarding",
-    placeholderTitle: "Approval and audit stream",
-    placeholderHint: "Replace with your approval flow screenshot or recording",
+      "Roll out agent operations across teams with centralized configuration, access control, and infrastructure primitives.",
+    imageSrc: "/images/landing/crewai-scalable.jpg",
+    imageAlt:
+      "Scalable poster showing workflow growth across departments with centralized agent controls.",
+    highlights: [
+      "LLM and tool configuration",
+      "Role-based access control",
+      "Serverless containers",
+    ],
   },
 ];
 
 export default function FeatureCards() {
   return (
-    <section id="features" className="relative overflow-hidden bg-black px-[5%] py-24">
+    <section
+      id="features"
+      className="landing-deferred-section relative scroll-mt-24 overflow-hidden bg-black px-4 py-20 sm:px-6 lg:scroll-mt-28 lg:px-10 fhd:px-14 qhd:px-16 uhd:px-20"
+    >
       <div className="pointer-events-none absolute inset-0">
-        <div className="absolute -top-32 left-1/4 h-72 w-72 rounded-full bg-white/[0.06] blur-3xl" />
-        <div className="absolute bottom-0 right-0 h-80 w-80 rounded-full bg-white/[0.05] blur-3xl" />
+        <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-white/[0.03] to-transparent" />
       </div>
 
-      <div className="mx-auto max-w-7xl">
-        <ScrollReveal className="mb-14 text-center">
+      <div className="mx-auto w-full max-w-[1280px] fhd:max-w-[1440px] qhd:max-w-[1600px] uhd:max-w-[1760px]">
+        <ScrollReveal className="mb-12 text-center">
           <h2
             className="text-balance text-white"
-            style={{ fontSize: "clamp(28px, 4vw, 56px)" }}
+            style={{ fontSize: "clamp(30px, 4vw, 64px)" }}
           >
             One platform for every operational surface
           </h2>
-          <p className="mx-auto mt-4 max-w-2xl text-balance text-sm leading-relaxed text-white/55 md:text-base">
-            Cursor-inspired feature spotlight layout with media placeholders.
-            Swap each placeholder with your final screenshot or video.
+          <p className="mx-auto mt-4 max-w-3xl text-balance text-[15px] leading-relaxed text-white/55 sm:text-base md:max-w-4xl fhd:text-lg">
+            Operational trust and team-scale rollout for organizations running
+            OpenClaw boards, agents, and gateways from one control plane.
           </p>
         </ScrollReveal>
 
-        <div className="space-y-6">
-          {FEATURE_SPOTLIGHTS.map((feature, index) => {
-            const textPanel = (
-              <div className="flex h-full flex-col justify-center p-7 md:p-10">
-                <p className="text-xs font-medium uppercase tracking-[0.2em] text-white/45">
-                  {feature.eyebrow}
-                </p>
-                <h3 className="mt-3 text-balance text-2xl font-semibold leading-tight text-white md:text-3xl">
-                  {feature.title}
-                </h3>
-                <p className="mt-4 text-sm leading-relaxed text-white/65 md:text-base">
-                  {feature.description}
-                </p>
-                <Link
-                  href={feature.ctaHref}
-                  prefetch={false}
-                  className="mt-7 inline-flex w-fit items-center gap-2 text-sm font-medium text-[#f97316] transition-colors hover:text-[#fb923c] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
-                >
-                  {feature.ctaLabel}
-                  <ArrowRight size={16} aria-hidden="true" />
-                </Link>
-              </div>
-            );
-
-            const mediaPanel = (
-              <div className="relative h-full min-h-[280px] p-4 md:p-6">
-                <div className="flex h-full flex-col rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.06] to-white/[0.02] p-5">
-                  <div className="mb-4 flex items-center gap-2">
-                    <span className="h-2.5 w-2.5 rounded-full bg-white/20" />
-                    <span className="h-2.5 w-2.5 rounded-full bg-white/20" />
-                    <span className="h-2.5 w-2.5 rounded-full bg-white/20" />
-                  </div>
-                  <div className="flex flex-1 flex-col rounded-xl border border-dashed border-white/20 bg-black/35 p-4">
-                    <p className="text-sm font-semibold text-white/90">
-                      {feature.placeholderTitle}
-                    </p>
-                    <p className="mt-2 max-w-sm text-xs leading-relaxed text-white/55">
-                      {feature.placeholderHint}
-                    </p>
-                    <div className="mt-5 grid flex-1 grid-cols-2 gap-3">
-                      <div className="rounded-lg border border-white/10 bg-white/[0.04]" />
-                      <div className="rounded-lg border border-white/10 bg-white/[0.03]" />
-                      <div className="rounded-lg border border-white/10 bg-white/[0.03]" />
-                      <div className="rounded-lg border border-white/10 bg-white/[0.04]" />
-                    </div>
+        <div className="grid gap-6 lg:grid-cols-2 lg:gap-7 qhd:gap-8">
+          {FEATURE_POSTERS.map((feature, index) => (
+            <ScrollReveal key={feature.id} delay={index * 0.1}>
+              <article className="group mx-auto h-full w-full max-w-[680px] overflow-hidden rounded-[28px] border border-white/12 bg-[#12110e] shadow-[0_16px_45px_rgba(0,0,0,0.4)] transition-colors duration-300 hover:border-white/20 fhd:max-w-[720px] qhd:max-w-[780px] uhd:max-w-[860px]">
+                <div className="relative h-[320px] overflow-hidden bg-black sm:h-[380px] lg:h-[440px] fhd:h-[500px] qhd:h-[560px] uhd:h-[620px]">
+                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.14),transparent_52%),linear-gradient(180deg,rgba(255,255,255,0.02),rgba(0,0,0,0.12))]" />
+                  <div className="absolute inset-0 p-3 sm:p-4 lg:p-3 fhd:p-4">
+                    <Image
+                      src={feature.imageSrc}
+                      alt={feature.imageAlt}
+                      fill
+                      sizes="(min-width: 3840px) 860px, (min-width: 2560px) 780px, (min-width: 1920px) 720px, (min-width: 1024px) calc((100vw - 8rem) / 2), 100vw"
+                      quality={92}
+                      className="object-contain scale-[1.01] transition-transform duration-500 group-hover:scale-[1.03] lg:scale-[1.06] lg:group-hover:scale-[1.08] qhd:scale-[1.08] qhd:group-hover:scale-[1.1]"
+                    />
                   </div>
                 </div>
-              </div>
-            );
 
-            const textFirst = index % 2 === 0;
+                <div className="border-t border-white/10 p-5 md:p-6 fhd:p-7">
+                  <h3 className="text-xl font-semibold text-white md:text-2xl fhd:text-[30px]">
+                    {feature.title}
+                  </h3>
+                  <p className="mt-2.5 text-[15px] leading-relaxed text-white/65 sm:text-base fhd:text-lg">
+                    {feature.description}
+                  </p>
 
-            return (
-              <ScrollReveal key={feature.title} delay={index * 0.1}>
-                <article className="group overflow-hidden rounded-[30px] border border-white/12 bg-[#12110e] shadow-[0_16px_45px_rgba(0,0,0,0.4)] transition-colors duration-300 hover:border-white/20">
-                  <div className="grid lg:grid-cols-[1.05fr_1.25fr]">
-                    {textFirst ? (
-                      <>
-                        {textPanel}
-                        {mediaPanel}
-                      </>
-                    ) : (
-                      <>
-                        {mediaPanel}
-                        {textPanel}
-                      </>
-                    )}
-                  </div>
-                </article>
-              </ScrollReveal>
-            );
-          })}
+                  <ul className="mt-4 flex flex-wrap gap-2">
+                    {feature.highlights.map((highlight) => (
+                      <li
+                        key={highlight}
+                        className="rounded-full border border-white/12 bg-white/[0.05] px-3 py-1.5 text-xs font-medium text-white/80 md:text-sm fhd:px-3.5 fhd:py-2"
+                      >
+                        {highlight}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </article>
+            </ScrollReveal>
+          ))}
         </div>
       </div>
     </section>

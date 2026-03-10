@@ -1,7 +1,6 @@
 "use client";
 
 import type { ComponentType, SVGProps } from "react";
-import { BlurReveal } from "@/components/organisms/landing-slideshow/animated-text";
 
 /* Minimal SVG mark icons for each brand — displayed before brand name */
 function IbmMark(props: SVGProps<SVGSVGElement>) {
@@ -104,8 +103,10 @@ const BRANDS: { name: string; Icon: ComponentType<SVGProps<SVGSVGElement>> }[] =
 function BrandItem({ name, Icon }: { name: string; Icon: ComponentType<SVGProps<SVGSVGElement>> }) {
   return (
     <span className="inline-flex shrink-0 items-center gap-2.5">
-      <Icon className="h-7 w-7 text-white/85" aria-hidden="true" />
-      <span className="text-lg font-semibold text-white/90">{name}</span>
+      <Icon className="h-6 w-6 text-white/85 sm:h-7 sm:w-7" aria-hidden="true" />
+      <span className="text-sm font-semibold text-white/90 sm:text-base fhd:text-lg">
+        {name}
+      </span>
     </span>
   );
 }
@@ -117,31 +118,32 @@ function BrandItem({ name, Icon }: { name: string; Icon: ComponentType<SVGProps<
  */
 export default function TrustMarquee() {
   return (
-    <div className="relative z-10 min-h-[124px] border-t border-white/10 px-6 pb-10 pt-8 md:min-h-[136px] md:pt-10">
-      <BlurReveal delay={1.0}>
-        <p className="mb-7 text-center text-xl font-medium text-white md:text-2xl">
-          Loved by AI builders. Trusted by AI leaders.
-        </p>
-        <div className="relative overflow-hidden">
-          {/* Fade edges */}
-          <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-16 bg-gradient-to-r from-black to-transparent" />
-          <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-16 bg-gradient-to-l from-black to-transparent" />
+    <div className="relative z-10 border-t border-white/10 px-4 pb-8 pt-6 sm:px-6 sm:pb-10 sm:pt-8 lg:px-10 fhd:px-14 qhd:px-16 uhd:px-20">
+      <p className="mb-6 text-center text-base font-medium text-white sm:mb-7 sm:text-xl md:text-2xl fhd:text-[30px]">
+        Loved by AI builders. Trusted by AI leaders.
+      </p>
+      <div className="relative overflow-hidden">
+        {/* Fade edges */}
+        <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-10 bg-gradient-to-r from-black to-transparent sm:w-16" />
+        <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-10 bg-gradient-to-l from-black to-transparent sm:w-16" />
 
-          {/* Two identical strips side-by-side, each animates -50% so the seam is invisible */}
-          <div className="animate-marquee-loop flex w-max items-center">
-            {BRANDS.map((b) => (
-              <span key={b.name} className="mx-8 md:mx-9">
-                <BrandItem {...b} />
-              </span>
-            ))}
-            {BRANDS.map((b) => (
-              <span key={`dup-${b.name}`} aria-hidden="true" className="mx-8 md:mx-9">
-                <BrandItem {...b} />
-              </span>
-            ))}
-          </div>
+        {/* Four identical strips keep the viewport continuously filled, so the loop resets without a dead gap. */}
+        <div className="animate-marquee-loop flex w-max items-center [--marquee-end:-25%] [animation-duration:32s] fhd:[animation-duration:28s]">
+          {Array.from({ length: 4 }).map((_, stripIndex) => (
+            <div
+              key={stripIndex}
+              aria-hidden={stripIndex > 0}
+              className="flex shrink-0 items-center gap-6 pr-6 sm:gap-8 sm:pr-8 fhd:gap-10 fhd:pr-10"
+            >
+              {BRANDS.map((brand) => (
+                <span key={`${stripIndex}-${brand.name}`} className="inline-flex shrink-0">
+                  <BrandItem {...brand} />
+                </span>
+              ))}
+            </div>
+          ))}
         </div>
-      </BlurReveal>
+      </div>
     </div>
   );
 }

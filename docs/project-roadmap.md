@@ -4,10 +4,19 @@
 
 **Version**: 0.1.0 (Active Development)
 **Status**: Pre-release, under active development
-**Last Updated**: 2026-03-09
+**Last Updated**: 2026-03-10
 
 ## Recent Updates
 
+- ✅ Landing page responsive hardening completed:
+  - Added FHD/QHD/UHD width scaling rules for navbar, hero, feature cards, product tabs, testimonials, and footer
+  - Hero video now degrades gracefully on mobile, reduced-motion, and save-data scenarios to preserve smoothness
+  - Mobile navigation now locks body scroll and uses larger touch targets
+  - Added landing regression tests for hero media policy and mobile drawer behavior
+- ✅ Landing page feature section refresh:
+  - Replaced the `One platform for every operational surface` placeholder cards with two poster-based spotlight cards
+  - Integrated CrewAI `Trusted` and `Scalable` visuals into the current Helux landing page
+  - Added component test coverage for the refreshed landing feature section
 - ✅ Token ledger + quota enforcement plan (`260309-2123`) phases 4-6 completed first:
   - Backend agent read surfaces now expose token fields (`token_used_today`, `token_limit_today`, `token_remaining_today`, `token_blocked`, `token_reset_at`)
   - `/api/v1/metrics/quotas` token resources now derive from `agent_token_daily_usage` ledger with metadata fallback when ledger is empty
@@ -576,5 +585,3 @@
 1. What is the target release date for v1.0.0?
 2. Should we prioritize mobile app development?
 3. What is the strategy for backward compatibility during v0.x releases?
-4. Should we offer managed hosting in addition to self-hosted?
-5. What is the long-term pricing model (if any)?

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { startTransition, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { LayoutDashboard, Bot, Router, Boxes } from "lucide-react";
@@ -9,6 +9,7 @@ import { ScrollReveal } from "./scroll-reveal";
 const VIDEO_ASSET_VERSION = "20260310";
 const withAssetVersion = (assetPath: string) =>
   `${assetPath}?v=${VIDEO_ASSET_VERSION}`;
+const PREVIEW_ASPECT_RATIO = "1280 / 644";
 
 const TABS = [
   {
@@ -108,7 +109,10 @@ export default function ProductTabs() {
       return;
     }
 
-    void activeVideo.play().catch(() => undefined);
+    const playResult = activeVideo.play();
+    if (typeof playResult?.catch === "function") {
+      void playResult.catch(() => undefined);
+    }
   }, [activeTab, canLoadVideos, isSectionVisible, shouldReduceMotion]);
 
   /* WAI-ARIA tabs: arrow-key navigation between tabs */
@@ -119,7 +123,7 @@ export default function ProductTabs() {
       else if (e.key === "ArrowLeft") next = (activeTab - 1 + TABS.length) % TABS.length;
       else return;
       e.preventDefault();
-      setActiveTab(next);
+      startTransition(() => setActiveTab(next));
       /* Focus the newly active tab button */
       const tablist = e.currentTarget;
       const buttons = tablist.querySelectorAll<HTMLButtonElement>('[role="tab"]');
@@ -128,26 +132,29 @@ export default function ProductTabs() {
     [activeTab]
   );
 
+  const handleActivateTab = useCallback((index: number) => {
+    startTransition(() => setActiveTab(index));
+  }, []);
+
   return (
     <section
       id="product"
       ref={sectionRef}
-      className="relative overflow-hidden bg-black px-[5%] py-24"
+      className="landing-deferred-section relative scroll-mt-24 overflow-hidden bg-black px-4 py-24 sm:px-6 lg:scroll-mt-28 lg:px-10 fhd:px-14 qhd:px-16 uhd:px-20"
     >
       <div className="pointer-events-none absolute inset-0">
-        <div className="absolute -top-24 right-1/4 h-64 w-64 rounded-full bg-white/[0.05] blur-3xl" />
-        <div className="absolute bottom-0 left-[-6rem] h-80 w-80 rounded-full bg-white/[0.04] blur-3xl" />
+        <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-white/[0.03] to-transparent" />
       </div>
 
-      <div className="mx-auto max-w-7xl">
+      <div className="mx-auto w-full max-w-[1280px] fhd:max-w-[1440px] qhd:max-w-[1600px] uhd:max-w-[1760px]">
         <ScrollReveal className="mb-16 text-center">
           <h2
             className="text-balance text-white"
-            style={{ fontSize: "clamp(28px, 4vw, 56px)" }}
+            style={{ fontSize: "clamp(30px, 4vw, 64px)" }}
           >
             The Mission Control Platform
           </h2>
-          <p className="mx-auto mt-4 max-w-2xl text-balance text-sm leading-relaxed text-white/55 md:text-base">
+          <p className="mx-auto mt-4 max-w-2xl text-balance text-[15px] leading-relaxed text-white/55 sm:text-base md:max-w-3xl fhd:text-lg">
             Keep every operational surface in one cohesive system without losing
             clarity or control.
           </p>
@@ -156,7 +163,7 @@ export default function ProductTabs() {
         {/* Tab bar */}
         <ScrollReveal>
           <div
-            className="mb-12 flex flex-wrap justify-center gap-2.5"
+            className="mb-12 flex flex-wrap justify-center gap-3"
             role="tablist"
             aria-label="Product areas"
             onKeyDown={handleTabKeyDown}
@@ -173,12 +180,12 @@ export default function ProductTabs() {
                   aria-selected={isActive}
                   aria-controls={`panel-${tab.id}`}
                   tabIndex={isActive ? 0 : -1}
-                  className={`flex cursor-pointer items-center gap-2 rounded-full border px-5 py-2.5 text-sm font-medium transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white ${
+                  className={`flex min-h-[44px] cursor-pointer items-center gap-2 rounded-full border px-5 py-2.5 text-sm font-medium transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white sm:text-base ${
                     isActive
                       ? "border-white/80 bg-white text-black shadow-[0_10px_30px_rgba(255,255,255,0.16)]"
                       : "hero-glass-card border-white/15 text-white/70 hover:border-white/30 hover:text-white"
                   }`}
-                  onClick={() => setActiveTab(index)}
+                  onClick={() => handleActivateTab(index)}
                 >
                   <Icon size={16} />
                   {tab.label}
@@ -203,13 +210,13 @@ export default function ProductTabs() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={shouldReduceMotion ? undefined : { opacity: 0, y: -10 }}
                     transition={{ duration: 0.3, ease: "easeOut" }}
-                    className="hero-glass-card mx-auto flex w-full max-w-5xl flex-col items-center rounded-3xl border border-white/15 px-6 py-8 md:px-10 md:py-10"
+                    className="hero-glass-card mx-auto flex w-full max-w-[1200px] flex-col items-center rounded-3xl border border-white/15 px-5 py-6 sm:px-6 sm:py-8 md:px-10 md:py-10 fhd:max-w-[1360px] qhd:max-w-[1520px] uhd:max-w-[1680px]"
                   >
                     {/* Product surface preview card */}
-                    <div className="mb-8 w-full max-w-4xl rounded-2xl border border-white/15 bg-gradient-to-b from-white/[0.08] to-white/[0.02] p-2 md:p-3">
+                    <div className="mb-7 w-full max-w-[1100px] rounded-2xl border border-white/15 bg-gradient-to-b from-white/[0.08] to-white/[0.02] p-2.5 md:p-3.5 fhd:max-w-[1180px] qhd:max-w-[1240px] uhd:max-w-[1280px]">
                       {tab.previewVideo ? (
                         <>
-                          <div className="mb-2 flex items-center rounded-xl border border-white/10 bg-black/65 px-3 py-2">
+                          <div className="mb-3 flex items-center rounded-xl border border-white/10 bg-black/65 px-3 py-2">
                             <div className="flex items-center gap-1.5">
                               <span className="h-2.5 w-2.5 rounded-full bg-white/25" />
                               <span className="h-2.5 w-2.5 rounded-full bg-white/20" />
@@ -221,18 +228,18 @@ export default function ProductTabs() {
                           </div>
 
                           <div className="overflow-hidden rounded-xl border border-white/10 bg-black">
-                            <div className="aspect-[2/1] w-full">
+                            <div className="w-full" style={{ aspectRatio: PREVIEW_ASPECT_RATIO }}>
                               <video
                                 ref={activeVideoRef}
                                 key={tab.previewVideo}
-                                className="h-full w-full object-cover object-top"
+                                className="h-full w-full object-contain object-top"
                                 src={canLoadVideos ? withAssetVersion(tab.previewVideo) : undefined}
                                 poster={withAssetVersion(tab.previewPoster)}
                                 autoPlay={canLoadVideos && isSectionVisible && !shouldReduceMotion}
                                 loop
                                 muted
                                 playsInline
-                                preload={canLoadVideos ? "metadata" : "none"}
+                                preload={canLoadVideos ? "auto" : "none"}
                                 disablePictureInPicture
                                 aria-label={`${tab.label} workspace preview video`}
                               />
@@ -252,13 +259,13 @@ export default function ProductTabs() {
                     </div>
 
                     {/* Description */}
-                    <p className="max-w-2xl text-center text-base leading-relaxed text-white/70">
+                    <p className="max-w-2xl text-center text-[15px] leading-relaxed text-white/70 sm:text-base md:max-w-3xl fhd:text-lg">
                       {tab.description}
                     </p>
                     <Link
                       href={tab.href}
                       prefetch={false}
-                      className="mt-6 inline-flex rounded-full border border-white/25 bg-white/10 px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                      className="mt-6 inline-flex min-h-[44px] items-center rounded-full border border-white/25 bg-white/10 px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white sm:text-base"
                     >
                       Explore {tab.label}
                     </Link>

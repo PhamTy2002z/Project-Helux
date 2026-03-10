@@ -33,6 +33,7 @@ body {
 
 html {
   scrollbar-gutter: stable;
+  scroll-padding-top: 104px;
 }
 
 * {
@@ -136,12 +137,30 @@ html {
   --slide-bg-alt: #131318;
 }
 
+/* Landing perf helpers */
+.landing-deferred-section {
+  content-visibility: auto;
+  contain-intrinsic-size: 920px;
+}
+
+.landing-reveal {
+  opacity: 0;
+  transform: translate3d(0, 24px, 0);
+  transition:
+    opacity 0.5s ease-out,
+    transform 0.5s ease-out;
+  will-change: opacity, transform;
+}
+
+.landing-reveal[data-revealed="true"] {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+}
+
 /* Hero section — glass & button styles (synapse-inspired) */
 .hero-glass-card {
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
 }
 
 .hero-btn-primary {
@@ -154,9 +173,8 @@ html {
 
 .hero-btn-secondary {
   @apply rounded-full px-6 py-3 text-sm font-medium text-white transition-all duration-300;
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(16px);
 }
 
 .hero-btn-secondary:hover {
@@ -175,24 +193,52 @@ html {
   transform: translateY(-1px);
 }
 
+.hero-media-layer {
+  transform: translateZ(0);
+  will-change: opacity;
+}
+
+.hero-copy-anim {
+  opacity: 0;
+  transform: translate3d(0, 16px, 0);
+  animation: fade-in-up 0.5s ease-out var(--hero-copy-delay, 0ms) forwards;
+}
+
 /* Marquee animation — translates -50% so duplicated content loops seamlessly */
 @keyframes marquee-loop {
   0% {
-    transform: translateX(0);
+    transform: translate3d(0, 0, 0);
   }
   100% {
-    transform: translateX(-50%);
+    transform: translate3d(var(--marquee-end, -50%), 0, 0);
   }
 }
 
 .animate-marquee-loop {
-  animation: marquee-loop 25s linear infinite;
+  animation: marquee-loop 32s linear infinite;
   will-change: transform;
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .animate-fade-in-up,
+  .animate-fade-in,
+  .animate-float,
+  .animate-progress-shimmer,
   .animate-marquee-loop {
     animation: none;
+  }
+
+  .hero-copy-anim {
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
+
+  .landing-reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+    will-change: auto;
   }
 }
 

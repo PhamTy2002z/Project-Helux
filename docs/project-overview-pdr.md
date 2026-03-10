@@ -6,12 +6,12 @@ OpenClaw Mission Control is a centralized operations and governance platform for
 
 ## Core Mission
 
-Enable platform teams to operate OpenClaw reliably in self-hosted or internal environments with clear approval controls, auditability, and API-accessible operations without sacrificing usability.
+Provide a SaaS platform for platform teams to operate OpenClaw reliably with clear approval controls, auditability, and API-accessible operations without sacrificing usability. Available via subscription with trial access.
 
 ## Target Users
 
 ### Primary Users
-- **Platform Teams**: Running OpenClaw in self-hosted or internal environments
+- **Platform Teams**: Operating OpenClaw via our SaaS platform
 - **Operations Teams**: Managing day-to-day agent operations and workflows
 - **Engineering Teams**: Requiring approval and auditability controls
 - **DevOps Teams**: Integrating agent operations into existing automation pipelines
@@ -179,14 +179,14 @@ Organizations, board groups, boards, tasks, tags, and users in one system of rec
 ## Constraints and Assumptions
 
 ### Constraints
-- Self-hosted deployment model (no SaaS offering currently)
+- SaaS-only platform (subscription model: trial → pro tiers)
 - PostgreSQL as primary database (no multi-database support)
 - English-only UI (no i18n currently)
 - Single-region deployment (no multi-region support)
 
 ### Assumptions
-- Users have technical expertise to deploy and operate
-- Organizations manage their own infrastructure
+- Users subscribe to use the platform (trial or paid tier)
+- We manage platform infrastructure and availability
 - Network connectivity between gateways and control plane
 - Users understand OpenClaw agent concepts
 
@@ -195,5 +195,4 @@ Organizations, board groups, boards, tasks, tags, and users in one system of rec
 1. What is the target scale for largest expected deployment (users, orgs, tasks)?
 2. Should we support multi-region deployments with data replication?
 3. What is the retention policy for activity events and metrics?
-4. Should we provide managed hosting option in addition to self-hosted?
-5. What level of customization should be exposed for approval workflows?
+4. What level of customization should be exposed for approval workflows?

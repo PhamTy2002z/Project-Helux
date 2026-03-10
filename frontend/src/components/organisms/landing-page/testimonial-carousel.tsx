@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ScrollReveal } from "./scroll-reveal";
 
@@ -28,48 +28,66 @@ const TESTIMONIALS = [
 export default function TestimonialCarousel() {
   const [active, setActive] = useState(0);
   const [paused, setPaused] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
   const shouldReduceMotion = useReducedMotion();
+  const sectionRef = useRef<HTMLElement | null>(null);
 
   const next = useCallback(() => {
     setActive((prev) => (prev + 1) % TESTIMONIALS.length);
   }, []);
 
+  useEffect(() => {
+    const section = sectionRef.current;
+    if (!section) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        setIsVisible(entries.some((entry) => entry.isIntersecting));
+      },
+      { threshold: 0.2 }
+    );
+
+    observer.observe(section);
+    return () => observer.disconnect();
+  }, []);
+
   // Auto-advance every 5s unless paused or reduced-motion
   useEffect(() => {
-    if (paused || shouldReduceMotion) return;
+    if (paused || shouldReduceMotion || !isVisible) return;
     const timer = setInterval(next, 5000);
     return () => clearInterval(timer);
-  }, [paused, shouldReduceMotion, next]);
+  }, [paused, shouldReduceMotion, isVisible, next]);
 
   return (
     <section
       id="testimonials"
-      className="relative overflow-hidden bg-black px-[5%] py-24"
+      ref={sectionRef}
+      className="landing-deferred-section relative scroll-mt-24 overflow-hidden bg-black px-4 py-24 sm:px-6 lg:scroll-mt-28 lg:px-10 fhd:px-14 qhd:px-16 uhd:px-20"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       onFocus={() => setPaused(true)}
       onBlur={() => setPaused(false)}
     >
       <div className="pointer-events-none absolute inset-0">
-        <div className="absolute top-10 left-1/2 h-64 w-64 -translate-x-1/2 rounded-full bg-white/[0.05] blur-3xl" />
+        <div className="absolute inset-x-0 top-0 h-36 bg-gradient-to-b from-white/[0.03] to-transparent" />
       </div>
 
-      <div className="mx-auto max-w-4xl">
+      <div className="mx-auto w-full max-w-4xl fhd:max-w-[1040px] qhd:max-w-[1160px]">
         <ScrollReveal className="mb-16 text-center">
           <h2
             className="text-balance text-white"
-            style={{ fontSize: "clamp(28px, 4vw, 56px)" }}
+            style={{ fontSize: "clamp(30px, 4vw, 64px)" }}
           >
             Loved by teams worldwide
           </h2>
-          <p className="mx-auto mt-4 max-w-2xl text-balance text-sm leading-relaxed text-white/55 md:text-base">
+          <p className="mx-auto mt-4 max-w-2xl text-balance text-[15px] leading-relaxed text-white/55 sm:text-base fhd:text-lg">
             Proof from operators running real boards, real agents, and real
             approvals in production.
           </p>
         </ScrollReveal>
 
         {/* Quote area */}
-        <div className="relative min-h-[200px]" aria-live="polite">
+        <div className="relative min-h-[220px] md:min-h-[240px] fhd:min-h-[280px]" aria-live="polite">
           <AnimatePresence mode="wait">
             <motion.blockquote
               key={active}
@@ -77,15 +95,15 @@ export default function TestimonialCarousel() {
               animate={{ opacity: 1, x: 0 }}
               exit={shouldReduceMotion ? undefined : { opacity: 0, x: -40 }}
               transition={{ duration: 0.4, ease: "easeOut" }}
-              className="hero-glass-card rounded-3xl border border-white/15 px-6 py-10 text-center md:px-10"
+              className="hero-glass-card rounded-3xl border border-white/15 px-5 py-8 text-center sm:px-6 md:px-10 md:py-10"
             >
               <p
                 className="mb-8 text-balance text-white/90"
-                style={{ fontSize: "clamp(18px, 2.5vw, 28px)", lineHeight: 1.5 }}
+                style={{ fontSize: "clamp(20px, 2.4vw, 34px)", lineHeight: 1.5 }}
               >
                 &ldquo;{TESTIMONIALS[active].quote}&rdquo;
               </p>
-              <footer className="text-sm text-white/60">
+              <footer className="text-sm text-white/60 sm:text-base">
                 <span className="font-medium text-white/80">
                   {TESTIMONIALS[active].author}
                 </span>
@@ -120,13 +138,17 @@ export default function TestimonialCarousel() {
               aria-selected={active === index}
               aria-label={`Testimonial ${index + 1}`}
               tabIndex={active === index ? 0 : -1}
-              className={`cursor-pointer rounded-full border transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white ${
-                active === index
-                  ? "h-2 w-7 border-white bg-white"
-                  : "h-2 w-2 border-white/30 bg-white/20 hover:border-white/50 hover:bg-white/40"
-              }`}
+              className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
               onClick={() => setActive(index)}
-            />
+            >
+              <span
+                className={`block rounded-full border transition-all duration-300 ${
+                  active === index
+                    ? "h-2 w-7 border-white bg-white"
+                    : "h-2 w-2 border-white/30 bg-white/20 hover:border-white/50 hover:bg-white/40"
+                }`}
+              />
+            </button>
           ))}
         </div>
       </div>

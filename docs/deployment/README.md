@@ -1,9 +1,9 @@
 # Deployment
 
-This section covers deploying Mission Control in self-hosted environments.
+This section covers internal deployment of Mission Control for development and staging environments. For production SaaS access, users subscribe to our platform at no self-deployment required.
 
 > **Goal**
-> A simple, reproducible deploy that preserves the Postgres volume and supports safe upgrades.
+> A simple, reproducible deploy for the development team that preserves the Postgres volume and supports safe upgrades.
 
 ## Deployment mode: single host (Docker Compose)
 

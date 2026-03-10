@@ -21,32 +21,38 @@ const RESOURCE_LINKS = [
 ];
 
 const BTN_SIGNIN =
-  "relative inline-flex items-center px-1 pb-1 text-base font-semibold text-white transition-colors hover:text-white/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white after:absolute after:inset-x-0 after:-bottom-0.5 after:h-[2px] after:rounded-full after:bg-white/80";
+  "relative inline-flex min-h-[44px] items-center px-1 pb-1 text-base font-semibold text-white transition-colors hover:text-white/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white after:absolute after:inset-x-0 after:-bottom-0.5 after:h-[2px] after:rounded-full after:bg-white/80";
 const BTN_SIGNUP =
-  "rounded-full border border-white/30 bg-white/95 px-6 py-2.5 text-base font-semibold text-black transition-colors hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white";
+  "inline-flex min-h-[44px] items-center justify-center rounded-full border border-white/30 bg-white/95 px-6 py-2.5 text-base font-semibold text-black transition-colors hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white";
+const SAFE_TOP_INSET = "env(safe-area-inset-top, 0px)";
+const MOBILE_DRAWER_TOP = `calc(76px + ${SAFE_TOP_INSET})`;
 
 export default function LandingNavbar() {
-  const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 50);
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+    if (!mobileOpen) {
+      document.body.style.removeProperty("overflow");
+      return;
+    }
+
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.removeProperty("overflow");
+    };
+  }, [mobileOpen]);
 
   return (
     <nav
-      className={`fixed left-0 right-0 top-0 z-50 transition-colors duration-300 ${
-        scrolled ? "bg-black/80 backdrop-blur-md" : "bg-transparent"
-      }`}
+      className="fixed left-0 right-0 top-0 z-50 bg-black shadow-[0_1px_0_rgba(255,255,255,0.06)]"
+      style={{ paddingTop: SAFE_TOP_INSET }}
       role="navigation"
       aria-label="Main navigation"
     >
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-[5%] py-4">
+      <div className="mx-auto flex w-full max-w-[1280px] items-center justify-between px-4 py-4 sm:px-6 lg:px-10 fhd:max-w-[1440px] fhd:px-14 qhd:max-w-[1600px] qhd:px-16 uhd:max-w-[1760px] uhd:px-20">
         {/* Logo column keeps width parity with auth column to center desktop nav */}
-        <div className="flex min-h-[44px] items-center md:min-w-[220px]">
+        <div className="flex min-h-[44px] items-center lg:min-w-[240px]">
           {pathname === "/" ? (
             <button
               type="button"
@@ -69,7 +75,7 @@ export default function LandingNavbar() {
         </div>
 
         {/* Desktop nav links */}
-        <div className="hidden items-center gap-8 md:flex">
+        <div className="hidden items-center gap-8 lg:flex fhd:gap-10">
           {NAV_LINKS.map((link) => (
             <Link
               key={link.href}
@@ -124,7 +130,7 @@ export default function LandingNavbar() {
         </div>
 
         {/* Desktop auth buttons */}
-        <div className="hidden min-h-[44px] min-w-[220px] items-center justify-end gap-3 md:flex">
+        <div className="hidden min-h-[44px] min-w-[240px] items-center justify-end gap-3 lg:flex">
           <Link href="/sign-in" prefetch={false} className={BTN_SIGNIN}>
             Sign in
           </Link>
@@ -136,7 +142,7 @@ export default function LandingNavbar() {
         {/* Mobile hamburger */}
         <button
           type="button"
-          className="cursor-pointer text-white md:hidden"
+          className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full border border-white/15 bg-white/[0.04] text-white transition-colors hover:bg-white/[0.08] lg:hidden"
           onClick={() => setMobileOpen(!mobileOpen)}
           aria-label={mobileOpen ? "Close menu" : "Open menu"}
           aria-expanded={mobileOpen}
@@ -147,14 +153,17 @@ export default function LandingNavbar() {
 
       {/* Mobile drawer */}
       {mobileOpen && (
-        <div className="border-t border-white/10 bg-black/95 backdrop-blur-md md:hidden">
-          <div className="flex flex-col gap-4 px-[5%] py-6">
+        <div
+          className="fixed inset-x-0 bottom-0 border-t border-white/10 bg-black/98 lg:hidden"
+          style={{ top: MOBILE_DRAWER_TOP }}
+        >
+          <div className="flex h-full flex-col gap-4 overflow-y-auto px-4 py-6 sm:px-6">
             {NAV_LINKS.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
                 prefetch={!link.href.startsWith("/#") ? false : undefined}
-                className="text-base text-white/90 transition-colors hover:text-white"
+                className="inline-flex min-h-[44px] items-center rounded-2xl border border-white/10 bg-white/[0.03] px-4 text-base text-white/90 transition-colors hover:bg-white/[0.06] hover:text-white"
                 onClick={() => setMobileOpen(false)}
               >
                 {link.label}
@@ -172,7 +181,7 @@ export default function LandingNavbar() {
                       href={link.href}
                       target="_blank"
                       rel="noreferrer"
-                      className="text-sm text-white/85 transition-colors hover:text-white"
+                      className="inline-flex min-h-[44px] items-center rounded-xl px-3 text-sm text-white/85 transition-colors hover:bg-white/[0.06] hover:text-white"
                       onClick={() => setMobileOpen(false)}
                     >
                       {link.label}
@@ -182,7 +191,7 @@ export default function LandingNavbar() {
                       key={link.label}
                       href={link.href}
                       prefetch={!link.href.startsWith("/#") ? false : undefined}
-                      className="text-sm text-white/85 transition-colors hover:text-white"
+                      className="inline-flex min-h-[44px] items-center rounded-xl px-3 text-sm text-white/85 transition-colors hover:bg-white/[0.06] hover:text-white"
                       onClick={() => setMobileOpen(false)}
                     >
                       {link.label}
@@ -192,10 +201,18 @@ export default function LandingNavbar() {
               </div>
             </div>
             <div className="mt-2 flex flex-col gap-3">
-              <Link href="/sign-in" prefetch={false} className={`${BTN_SIGNIN} justify-center`}>
+              <Link
+                href="/sign-in"
+                prefetch={false}
+                className="inline-flex min-h-[44px] items-center justify-center rounded-full border border-white/10 bg-white/[0.03] px-5 text-base font-semibold text-white transition-colors hover:bg-white/[0.08] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+              >
                 Sign in
               </Link>
-              <Link href="/onboarding" prefetch={false} className={`${BTN_SIGNUP} text-center`}>
+              <Link
+                href="/onboarding"
+                prefetch={false}
+                className={`${BTN_SIGNUP} min-h-[44px] text-center`}
+              >
                 Sign up
               </Link>
             </div>

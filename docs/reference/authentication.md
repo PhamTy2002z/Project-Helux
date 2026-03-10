@@ -10,26 +10,26 @@ Use this matrix to choose a safe configuration:
 
 - `AUTH_PROFILE=dev`: contributor workflow profile. You can run `AUTH_MODE=local`
   or `AUTH_MODE=clerk`.
-- `AUTH_PROFILE=self_hosted`: self-managed deployment profile. You can run
-  `AUTH_MODE=local` or `AUTH_MODE=clerk`.
-- `AUTH_PROFILE=saas`: internet-facing SaaS profile. You must run
+- `AUTH_PROFILE=self_hosted`: development and internal staging profile (for team deployments). You can run
+  `AUTH_MODE=local` or `AUTH_MODE=clerk`. **Note**: This is for internal development use only. Production SaaS uses `AUTH_PROFILE=saas`.
+- `AUTH_PROFILE=saas`: internet-facing SaaS profile (production). You must run
   `AUTH_MODE=clerk`. Local fallback is disabled.
 
 ## Local mode
 
-Use local mode when you operate self-hosted or development environments with a
+Use local mode when you operate development or internal staging environments with a
 shared bearer token.
 
 Backend:
 
 - `AUTH_MODE=local`
-- `AUTH_PROFILE=dev` or `AUTH_PROFILE=self_hosted`
+- `AUTH_PROFILE=dev` or `AUTH_PROFILE=self_hosted` (development/staging only)
 - `LOCAL_AUTH_TOKEN=<strong-random-token>`
 
 Frontend:
 
 - `NEXT_PUBLIC_AUTH_MODE=local`
-- `NEXT_PUBLIC_AUTH_PROFILE=dev` or `NEXT_PUBLIC_AUTH_PROFILE=self_hosted`
+- `NEXT_PUBLIC_AUTH_PROFILE=dev` or `NEXT_PUBLIC_AUTH_PROFILE=self_hosted` (development/staging only)
 - Users enter the local token in the local auth login form.
 
 ## Clerk mode
@@ -39,11 +39,11 @@ Use Clerk mode when you need user-scoped JWT authentication.
 Backend:
 
 - `AUTH_MODE=clerk`
-- `AUTH_PROFILE=dev`, `self_hosted`, or `saas`
+- `AUTH_PROFILE=dev`, `self_hosted` (development/staging), or `saas` (production)
 - `CLERK_SECRET_KEY=<secret>`
 
 Frontend:
 
 - `NEXT_PUBLIC_AUTH_MODE=clerk`
-- `NEXT_PUBLIC_AUTH_PROFILE=dev`, `self_hosted`, or `saas`
+- `NEXT_PUBLIC_AUTH_PROFILE=dev`, `self_hosted` (development/staging), or `saas` (production)
 - `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=<key>`

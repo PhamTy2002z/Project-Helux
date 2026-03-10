@@ -1,8 +1,8 @@
-# Billing V1 Scope (Simulated Unlock)
+# Billing V1 Scope
 
 ## Goals
-- Ship a SaaS-ready upgrade flow quickly with deterministic quota enforcement.
-- Keep payment complexity out of v1 so rollout risk stays low.
+- Ship a SaaS subscription model with trial and paid tiers, with deterministic quota enforcement.
+- Use simulated billing in v1 to validate user flows and quota mechanics before integrating real payment providers in v2.
 
 ## In Scope
 - Plans: `trial_7d`, `pro`.
@@ -37,11 +37,11 @@
   - `org_monthly_tokens=8000000`
   - `max_tokens_per_run=8000`
 
-## Out Of Scope
-- Real provider checkout pages.
-- Billing customer/subscription/invoice domains.
-- Tax, proration, refunds, add-ons.
-- Webhook settlement and reconciliation.
+## Out Of Scope (v1)
+- Real provider checkout pages (coming in v2 with Stripe/Paddle integration).
+- Billing customer/subscription/invoice domains (coming in v2).
+- Tax, proration, refunds, add-ons (coming in v2).
+- Webhook settlement and reconciliation (coming in v2).
 
 ## Migration Path
 - Keep API contracts stable while internals switch from simulated mode to provider mode.

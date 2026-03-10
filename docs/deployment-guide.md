@@ -82,7 +82,7 @@ Mission Control supports two authentication modes:
 
 #### Local Bearer Token Mode (Default)
 
-For self-hosted deployments with shared token authentication:
+For development and internal staging deployments with shared token authentication:
 
 ```bash
 # In .env file

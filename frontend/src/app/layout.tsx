@@ -2,6 +2,7 @@ import "./globals.css";
 
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import dynamic from "next/dynamic";
 
 import { DM_Serif_Display, IBM_Plex_Sans, Sora } from "next/font/google";
 
@@ -77,6 +78,11 @@ const displayFont = DM_Serif_Display({
   weight: ["400"],
 });
 
+const DevAgentation =
+  process.env.NODE_ENV === "development"
+    ? dynamic(() => import("agentation").then((mod) => mod.Agentation))
+    : null;
+
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
@@ -92,6 +98,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         className={`${bodyFont.variable} ${headingFont.variable} ${displayFont.variable} min-h-screen bg-app text-strong antialiased`}
       >
         {children}
+        {DevAgentation ? <DevAgentation /> : null}
       </body>
     </html>
   );

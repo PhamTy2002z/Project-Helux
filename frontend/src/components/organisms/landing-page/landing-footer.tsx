@@ -75,18 +75,18 @@ const SOCIAL_LINKS = [
 
 export default function LandingFooter() {
   return (
-    <footer className="relative overflow-hidden border-t border-white/10 bg-black px-[5%] pt-16 pb-8">
+    <footer className="landing-deferred-section relative overflow-hidden border-t border-white/10 bg-black px-4 pb-8 pt-16 sm:px-6 lg:px-10 fhd:px-14 qhd:px-16 uhd:px-20">
       <div className="pointer-events-none absolute inset-0">
-        <div className="absolute -bottom-16 left-1/4 h-64 w-64 rounded-full bg-white/[0.05] blur-3xl" />
+        <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-white/[0.02] to-transparent" />
       </div>
 
-      <div className="mx-auto max-w-7xl">
+      <div className="mx-auto w-full max-w-[1280px] fhd:max-w-[1440px] qhd:max-w-[1600px] uhd:max-w-[1760px]">
         {/* Top: Logo + link columns */}
-        <div className="hero-glass-card grid gap-10 rounded-3xl border border-white/15 p-8 md:p-10 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="hero-glass-card grid gap-10 rounded-3xl border border-white/15 p-6 sm:grid-cols-2 sm:p-8 md:p-10 xl:grid-cols-4 fhd:gap-12">
           {/* Logo column */}
-          <div>
+          <div className="max-w-[280px]">
             <Logo />
-            <p className="mt-4 max-w-[240px] text-sm leading-relaxed text-white/55">
+            <p className="mt-4 text-[15px] leading-relaxed text-white/55 sm:text-base">
               The mission control platform for boards, agents, and operations.
             </p>
           </div>
@@ -139,7 +139,7 @@ export default function LandingFooter() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={social.label}
-                  className="hero-glass-card inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/15 text-white/55 transition-all hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                  className="hero-glass-card inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/15 text-white/55 transition-all hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
                 >
                   <Icon size={18} />
                 </a>
