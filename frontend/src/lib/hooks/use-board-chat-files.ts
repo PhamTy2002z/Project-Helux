@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 
 import { isLocalAuthMode } from "@/auth/localAuth";
 import { getApiBaseUrl } from "@/lib/api-base";
@@ -198,14 +198,26 @@ export const useBoardChatFiles = ({
     pendingRef.current = [];
   }, []);
 
-  return {
-    files,
-    pendingUploads,
-    isUploading,
-    error,
-    uploadFiles,
-    removePendingUpload,
-    clearPendingUploads,
-    refreshFiles,
-  };
+  return useMemo(
+    () => ({
+      files,
+      pendingUploads,
+      isUploading,
+      error,
+      uploadFiles,
+      removePendingUpload,
+      clearPendingUploads,
+      refreshFiles,
+    }),
+    [
+      clearPendingUploads,
+      error,
+      files,
+      isUploading,
+      pendingUploads,
+      refreshFiles,
+      removePendingUpload,
+      uploadFiles,
+    ],
+  );
 };

@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
 
 import { PanelLeftOpen, X } from "lucide-react";
 
@@ -30,7 +30,7 @@ type BoardChatPanelProps = {
   onError: (message: string) => void;
 };
 
-export function BoardChatPanel({
+export const BoardChatPanel = memo(function BoardChatPanel({
   boardId,
   isOpen,
   canWrite,
@@ -78,6 +78,16 @@ export function BoardChatPanel({
     chatSessionId: effectiveActiveSessionId,
     enabled: isOpen && Boolean(effectiveActiveSessionId),
   });
+  const pendingUploads = filesState.pendingUploads;
+  const pendingFileChips = useMemo(
+    () =>
+      pendingUploads.map((upload) => ({
+        id: upload.id,
+        fileName: upload.file.name,
+        status: upload.status,
+      })),
+    [pendingUploads],
+  );
 
   const handleCreateSession = useCallback(async () => {
     try {
@@ -138,7 +148,7 @@ export function BoardChatPanel({
 
   const handleSend = useCallback(
     async (content: string) => {
-      const fileIds = filesState.pendingUploads
+      const fileIds = pendingUploads
         .filter((u) => u.status === "ready" && u.fileId)
         .map((u) => u.fileId!);
       const ok = await messagesState.sendMessage(content, fileIds.length ? fileIds : undefined);
@@ -150,7 +160,7 @@ export function BoardChatPanel({
       }
       return ok;
     },
-    [filesState, messagesState, onError, sessionsState],
+    [filesState, messagesState, onError, pendingUploads, sessionsState],
   );
 
   const combinedError = sessionsState.error?.message ?? messagesState.error;
@@ -251,12 +261,8 @@ export function BoardChatPanel({
                 onLoadOlder={messagesState.loadOlder}
                 onSend={handleSend}
                 onFilesSelected={handleFilesSelected}
-                pendingFiles={filesState.pendingUploads.map((u) => ({
-                  id: u.id,
-                  fileName: u.file.name,
-                  status: u.status,
-                }))}
-                onRemovePendingFile={(id) => filesState.removePendingUpload(id)}
+                pendingFiles={pendingFileChips}
+                onRemovePendingFile={filesState.removePendingUpload}
               />
             </div>
           </div>
@@ -292,4 +298,6 @@ export function BoardChatPanel({
       </Dialog>
     </>
   );
-}
+});
+
+BoardChatPanel.displayName = "BoardChatPanel";

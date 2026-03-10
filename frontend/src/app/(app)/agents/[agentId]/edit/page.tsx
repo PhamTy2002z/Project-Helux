@@ -377,26 +377,7 @@ export default function EditAgentPage() {
               </div>
             </div>
           </div>
-          <div className="mt-6 rounded-xl border border-slate-200 bg-slate-50 p-4">
-            <label className="flex items-start gap-3 text-sm text-slate-700">
-              <input
-                type="checkbox"
-                className="mt-1 h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-200"
-                checked={resolvedIsGatewayMain}
-                onChange={(event) => setIsGatewayMain(event.target.checked)}
-                disabled={isLoading}
-              />
-              <span>
-                <span className="block font-medium text-slate-900">
-                  Gateway main agent
-                </span>
-                <span className="block text-xs text-slate-500">
-                  Uses the gateway main session key and is not tied to a single
-                  board.
-                </span>
-              </span>
-            </label>
-          </div>
+          {/* Gateway main flag is system-managed and hidden from user */}
         </div>
 
         <div>

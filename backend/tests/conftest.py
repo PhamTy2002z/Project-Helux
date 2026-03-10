@@ -12,5 +12,6 @@ if str(ROOT) not in sys.path:
 # Tests should fail fast if auth-mode wiring breaks, but still need deterministic
 # defaults during import-time settings initialization, regardless of shell env.
 os.environ["AUTH_MODE"] = "local"
+os.environ["AUTH_PROFILE"] = "self_hosted"
 os.environ["LOCAL_AUTH_TOKEN"] = "test-local-token-0123456789-0123456789-0123456789x"
 os.environ["BASE_URL"] = "http://localhost:8000"

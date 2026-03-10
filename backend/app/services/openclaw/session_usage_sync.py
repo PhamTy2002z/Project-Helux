@@ -193,15 +193,6 @@ class SessionUsageSyncService(OpenClawDBService):
         next_cost_total = max(usage.total_cost, Decimal(0))
         cost_delta = max(next_cost_total - previous_cost_total, Decimal(0))
 
-        # First sync baseline: avoid charging historical tokens/cost
-        is_first_sync = (
-            int(row.openclaw_tokens_total) <= 0 and int(row.billed_tokens_used) <= 0
-        )
-        if is_first_sync:
-            openclaw_delta = 0
-            billed_delta = 0
-            cost_delta = Decimal(0)
-
         # Update row
         row.openclaw_tokens_total = max(previous_openclaw_total, next_openclaw_total)
         row.billed_tokens_used = max(int(row.billed_tokens_used), 0) + billed_delta

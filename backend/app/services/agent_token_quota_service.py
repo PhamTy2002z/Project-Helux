@@ -12,6 +12,7 @@ from sqlmodel import col, select
 from app.core.config import settings
 from app.core.time import utcnow
 from app.models.agent_token_daily_usage import AgentTokenDailyUsage
+from app.models.agents import Agent
 from app.services.entitlements import resolve_runtime_policy
 from app.services.openclaw.db_service import OpenClawDBService
 from app.services.openclaw.gateway_compat import check_gateway_sessions_usage_capability
@@ -106,6 +107,40 @@ class AgentTokenQuotaService(OpenClawDBService):
             self.session.add(row)
             await self.session.flush()
 
+    async def _all_board_members_blocked(
+        self,
+        *,
+        board_id: object,
+        organization_id: UUID,
+        usage_date_vn: object,
+    ) -> bool:
+        """Check if every non-lead agent on the board is blocked today."""
+        members = (
+            await self.session.exec(
+                select(Agent)
+                .where(col(Agent.board_id) == board_id)
+                .where(col(Agent.organization_id) == organization_id)
+                .where(col(Agent.is_board_lead) == False)  # noqa: E712
+                .where(col(Agent.is_gateway_main) == False)  # noqa: E712
+            )
+        ).all()
+        if not members:
+            return False
+        member_ids = [m.id for m in members]
+        rows = (
+            await self.session.exec(
+                select(AgentTokenDailyUsage)
+                .where(col(AgentTokenDailyUsage.agent_id).in_(member_ids))
+                .where(col(AgentTokenDailyUsage.usage_date_vn) == usage_date_vn)
+            )
+        ).all()
+        blocked_by_id = {
+            row.agent_id
+            for row in rows
+            if row.blocked_at is not None or row.cost_blocked_at is not None
+        }
+        return all(m.id in blocked_by_id for m in members)
+
     async def sync_and_enforce(
         self,
         *,
@@ -182,11 +217,9 @@ class AgentTokenQuotaService(OpenClawDBService):
             blocked_by = "agent_daily_tokens"
 
         if blocked_by is not None:
-            if is_lead or not self._enforce_mode_enabled():
-                reason = "board_lead" if is_lead else "observe_mode"
+            if not self._enforce_mode_enabled():
                 self.logger.warning(
-                    "agent.quota.%s.quota_reached agent_id=%s resource=%s used_cost=%s used_tokens=%s",
-                    reason,
+                    "agent.quota.observe_mode.quota_reached agent_id=%s resource=%s used_cost=%s used_tokens=%s",
                     agent.id,
                     blocked_by,
                     sync_result.cost_total,
@@ -203,6 +236,36 @@ class AgentTokenQuotaService(OpenClawDBService):
                     cost_limit=cost_limit,
                     quota_reached=True,
                     blocked_by=blocked_by,
+                )
+            # Board lead exempt from quota unless all members are blocked
+            if is_lead:
+                all_members_down = await self._all_board_members_blocked(
+                    board_id=agent.board_id,
+                    organization_id=organization_id,
+                    usage_date_vn=sync_result.usage_date_vn,
+                )
+                if not all_members_down:
+                    self.logger.info(
+                        "agent.quota.board_lead.exempt agent_id=%s resource=%s",
+                        agent.id,
+                        blocked_by,
+                    )
+                    return AgentQuotaSyncOutcome(
+                        agent_id=agent.id,
+                        organization_id=organization_id,
+                        billed_total=sync_result.billed_total,
+                        billed_delta=sync_result.billed_delta,
+                        token_limit=token_limit,
+                        cost_total=sync_result.cost_total,
+                        cost_delta=sync_result.cost_delta,
+                        cost_limit=cost_limit,
+                        quota_reached=True,
+                        blocked_by=blocked_by,
+                    )
+                self.logger.warning(
+                    "agent.quota.board_lead.all_members_blocked agent_id=%s resource=%s",
+                    agent.id,
+                    blocked_by,
                 )
             await self._mark_blocked_if_needed(
                 organization_id=organization_id,

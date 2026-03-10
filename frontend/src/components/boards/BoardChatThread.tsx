@@ -142,7 +142,7 @@ const MessageCard = memo(function MessageCard({
 
 MessageCard.displayName = "MessageCard";
 
-export function BoardChatThread({
+export const BoardChatThread = memo(function BoardChatThread({
   activeSessionId,
   messages,
   isLoading,
@@ -260,4 +260,6 @@ export function BoardChatThread({
       />
     </div>
   );
-}
+});
+
+BoardChatThread.displayName = "BoardChatThread";

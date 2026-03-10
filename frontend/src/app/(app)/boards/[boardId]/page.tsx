@@ -149,6 +149,48 @@ import {
   toLiveFeedFromComment,
 } from "./live-feed-utils";
 
+const compareChatMessagesAsc = (
+  left: BoardChatMessage,
+  right: BoardChatMessage,
+): number => {
+  const leftTime = apiDatetimeToMs(left.created_at) ?? 0;
+  const rightTime = apiDatetimeToMs(right.created_at) ?? 0;
+  if (leftTime !== rightTime) return leftTime - rightTime;
+  return left.id.localeCompare(right.id);
+};
+
+const findChatInsertionIndex = (
+  items: BoardChatMessage[],
+  incoming: BoardChatMessage,
+): number => {
+  let low = 0;
+  let high = items.length;
+  while (low < high) {
+    const middle = Math.floor((low + high) / 2);
+    if (compareChatMessagesAsc(items[middle], incoming) <= 0) {
+      low = middle + 1;
+    } else {
+      high = middle;
+    }
+  }
+  return low;
+};
+
+const appendUniqueSortedChatMessage = (
+  items: BoardChatMessage[],
+  incoming: BoardChatMessage,
+): BoardChatMessage[] => {
+  if (items.some((item) => item.id === incoming.id)) {
+    return items;
+  }
+  const insertionIndex = findChatInsertionIndex(items, incoming);
+  return [
+    ...items.slice(0, insertionIndex),
+    incoming,
+    ...items.slice(insertionIndex),
+  ];
+};
+
 export default function BoardDetailPage() {
   const router = useRouter();
   const params = useParams();
@@ -384,15 +426,7 @@ export default function BoardDetailPage() {
       if (!message.tags?.includes("chat")) return;
       pushLiveFeed(toLiveFeedFromBoardChat(message));
       setChatMessages((prev) => {
-        const exists = prev.some((item) => item.id === message.id);
-        if (exists) return prev;
-        const next = [...prev, message];
-        next.sort((a, b) => {
-          const aTime = apiDatetimeToMs(a.created_at) ?? 0;
-          const bTime = apiDatetimeToMs(b.created_at) ?? 0;
-          return aTime - bTime;
-        });
-        return next;
+        return appendUniqueSortedChatMessage(prev, message);
       });
     },
     [pushLiveFeed],
@@ -1251,7 +1285,7 @@ export default function BoardDetailPage() {
     };
   }, [commentIdFromUrl, comments, isDetailOpen]);
 
-  const closeComments = () => {
+  const closeComments = useCallback(() => {
     openedTaskIdFromUrlRef.current = null;
     if (searchParams.get("taskId") || searchParams.get("commentId")) {
       router.replace(buildUrlWithTaskAndComment(null, null), {
@@ -1266,33 +1300,48 @@ export default function BoardDetailPage() {
     setCommentsError(null);
     setPostCommentError(null);
     setIsEditDialogOpen(false);
-  };
+  }, [buildUrlWithTaskAndComment, router, searchParams]);
 
-  const openBoardChat = () => {
+  const openBoardChat = useCallback(() => {
     if (isDetailOpen) {
       closeComments();
     }
     setIsLiveFeedOpen(false);
     if (
-      searchParams.get("panel") !== "chat" ||
-      searchParams.get("taskId") ||
-      searchParams.get("commentId")
+      panelFromUrl !== "chat" ||
+      taskIdFromUrl ||
+      commentIdFromUrl
     ) {
       router.replace(buildUrlWithTaskAndComment(null, null, "chat"), {
         scroll: false,
       });
     }
     setIsChatOpen(true);
-  };
+  }, [
+    buildUrlWithTaskAndComment,
+    commentIdFromUrl,
+    closeComments,
+    isDetailOpen,
+    panelFromUrl,
+    router,
+    taskIdFromUrl,
+  ]);
 
-  const closeBoardChat = () => {
-    if (searchParams.get("panel") === "chat") {
+  const closeBoardChat = useCallback(() => {
+    if (panelFromUrl === "chat") {
       router.replace(buildUrlWithTaskAndComment(null, null, null), {
         scroll: false,
       });
     }
     setIsChatOpen(false);
-  };
+  }, [buildUrlWithTaskAndComment, panelFromUrl, router]);
+
+  const handleBoardChatError = useCallback(
+    (message: string) => {
+      pushToast(message);
+    },
+    [pushToast],
+  );
 
   const openLiveFeed = () => {
     if (isDetailOpen) {
@@ -2167,9 +2216,7 @@ export default function BoardDetailPage() {
         mentionSuggestions={boardChatMentionSuggestions}
         onClose={closeBoardChat}
         onMessageCreated={appendBoardChatMessage}
-        onError={(message) => {
-          pushToast(message);
-        }}
+        onError={handleBoardChatError}
       />
 
       <LiveFeedPanel
