@@ -27,7 +27,21 @@ type UseBoardChatMessagesResult = {
   hasMore: boolean;
   error: string | null;
   loadOlder: () => Promise<void>;
-  sendMessage: (content: string, fileIds?: string[]) => Promise<boolean>;
+  sendMessage: (
+    content: string,
+    fileIds?: string[],
+    attachments?: MessageAttachment[],
+  ) => Promise<boolean>;
+};
+
+export type MessageAttachment = {
+  id: string;
+  file_name: string;
+  status: string;
+};
+
+type BoardMemoryWithAttachments = BoardMemoryRead & {
+  attachments?: MessageAttachment[];
 };
 
 const compareMessagesAsc = (
@@ -61,6 +75,21 @@ const findInsertionIndex = (
   return low;
 };
 
+const preserveExistingAttachments = (
+  existing: BoardMemoryRead,
+  incoming: BoardMemoryRead,
+): BoardMemoryRead => {
+  const existingAttachments = (existing as BoardMemoryWithAttachments).attachments;
+  const incomingAttachments = (incoming as BoardMemoryWithAttachments).attachments;
+  if (!existingAttachments?.length || incomingAttachments?.length) {
+    return incoming;
+  }
+  return {
+    ...(incoming as BoardMemoryWithAttachments),
+    attachments: existingAttachments,
+  } as BoardMemoryRead;
+};
+
 const upsertSortedMessage = (
   items: BoardMemoryRead[],
   incoming: BoardMemoryRead,
@@ -79,14 +108,18 @@ const upsertSortedMessage = (
     return items;
   }
 
+  const normalizedIncoming = preserveExistingAttachments(
+    items[existingIndex],
+    incoming,
+  );
   const withoutExisting = [
     ...items.slice(0, existingIndex),
     ...items.slice(existingIndex + 1),
   ];
-  const insertionIndex = findInsertionIndex(withoutExisting, incoming);
+  const insertionIndex = findInsertionIndex(withoutExisting, normalizedIncoming);
   return [
     ...withoutExisting.slice(0, insertionIndex),
-    incoming,
+    normalizedIncoming,
     ...withoutExisting.slice(insertionIndex),
   ];
 };
@@ -213,7 +246,11 @@ export const useBoardChatMessages = ({
   }, [boardId, chatSessionId, enabled, hasMore, isLoadingOlder]);
 
   const sendMessage = useCallback(
-    async (content: string, fileIds?: string[]): Promise<boolean> => {
+    async (
+      content: string,
+      fileIds?: string[],
+      attachments?: MessageAttachment[],
+    ): Promise<boolean> => {
       if (!enabled || !boardId || !chatSessionId) return false;
       const trimmed = content.trim();
       if (!trimmed) return false;
@@ -234,9 +271,13 @@ export const useBoardChatMessages = ({
         if (result.status !== 200) {
           throw new Error("Unable to send message.");
         }
-        const created = result.data;
-        setMessages((prev) => mergeMessagesById(prev, [created]));
-        onMessageCreated?.(created);
+        const created = result.data as BoardMemoryWithAttachments;
+        const createdWithAttachments =
+          attachments?.length && !created.attachments?.length
+            ? { ...created, attachments }
+            : created;
+        setMessages((prev) => mergeMessagesById(prev, [createdWithAttachments]));
+        onMessageCreated?.(createdWithAttachments);
         return true;
       } catch (nextError) {
         setError(

@@ -2,7 +2,15 @@
 
 export const dynamic = "force-dynamic";
 
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  memo,
+  startTransition,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   useParams,
   usePathname,
@@ -1307,16 +1315,18 @@ export default function BoardDetailPage() {
       closeComments();
     }
     setIsLiveFeedOpen(false);
+    setIsChatOpen(true);
     if (
       panelFromUrl !== "chat" ||
       taskIdFromUrl ||
       commentIdFromUrl
     ) {
-      router.replace(buildUrlWithTaskAndComment(null, null, "chat"), {
-        scroll: false,
+      startTransition(() => {
+        router.replace(buildUrlWithTaskAndComment(null, null, "chat"), {
+          scroll: false,
+        });
       });
     }
-    setIsChatOpen(true);
   }, [
     buildUrlWithTaskAndComment,
     commentIdFromUrl,
@@ -1328,12 +1338,14 @@ export default function BoardDetailPage() {
   ]);
 
   const closeBoardChat = useCallback(() => {
+    setIsChatOpen(false);
     if (panelFromUrl === "chat") {
-      router.replace(buildUrlWithTaskAndComment(null, null, null), {
-        scroll: false,
+      startTransition(() => {
+        router.replace(buildUrlWithTaskAndComment(null, null, null), {
+          scroll: false,
+        });
       });
     }
-    setIsChatOpen(false);
   }, [buildUrlWithTaskAndComment, panelFromUrl, router]);
 
   const handleBoardChatError = useCallback(
@@ -2163,20 +2175,24 @@ export default function BoardDetailPage() {
           </div>
         </main>
       </SignedIn>
-      {isDetailOpen || isChatOpen || isLiveFeedOpen ? (
-        <div
-          className="fixed inset-0 z-40 bg-slate-900/20"
-          onClick={() => {
-            if (isChatOpen) {
-              closeBoardChat();
-            } else if (isLiveFeedOpen) {
-              closeLiveFeed();
-            } else {
-              closeComments();
-            }
-          }}
-        />
-      ) : null}
+      <div
+        className={cn(
+          "fixed inset-0 z-40 bg-slate-900/20 transition-opacity duration-200 ease-out",
+          isSidePanelOpen
+            ? "pointer-events-auto opacity-100"
+            : "pointer-events-none opacity-0",
+        )}
+        onClick={() => {
+          if (!isSidePanelOpen) return;
+          if (isChatOpen) {
+            closeBoardChat();
+          } else if (isLiveFeedOpen) {
+            closeLiveFeed();
+          } else {
+            closeComments();
+          }
+        }}
+      />
       <TaskDetailPanel
         selectedTask={selectedTask}
         isDetailOpen={isDetailOpen}

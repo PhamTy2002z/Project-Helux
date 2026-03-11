@@ -2,10 +2,10 @@
 
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { Paperclip, X } from "lucide-react";
+import { AudioLines, Plus, X } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
 
 const MENTION_MAX_OPTIONS = 8;
 const MENTION_PATTERN = /(?:^|\s)@([A-Za-z0-9_-]{0,31})$/;
@@ -23,6 +23,7 @@ type PendingFileChip = {
 };
 
 type BoardChatComposerProps = {
+  className?: string;
   placeholder?: string;
   isSending?: boolean;
   disabled?: boolean;
@@ -57,6 +58,7 @@ const findMentionTarget = (
 };
 
 function BoardChatComposerImpl({
+  className,
   placeholder = "Message the board lead. Tag agents with @name.",
   isSending = false,
   disabled = false,
@@ -73,9 +75,19 @@ function BoardChatComposerImpl({
   );
   const [activeMentionIndex, setActiveMentionIndex] = useState(0);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const closeMenuTimeoutRef = useRef<number | null>(null);
   const shouldFocusAfterSendRef = useRef(false);
+
+  // Auto-resize textarea to fit content, up to max height
+  const autoResize = useCallback(() => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+    textarea.style.height = "auto";
+    const maxHeight = 200; // ~8 lines
+    const scrollHeight = textarea.scrollHeight;
+    textarea.style.height = `${Math.min(scrollHeight, maxHeight)}px`;
+    textarea.style.overflowY = scrollHeight > maxHeight ? "auto" : "hidden";
+  }, []);
 
   const mentionOptions = useMemo(() => {
     const handles = new Set<string>(["lead"]);
@@ -107,7 +119,8 @@ function BoardChatComposerImpl({
     if (!shouldFocusAfterSendRef.current) return;
     shouldFocusAfterSendRef.current = false;
     textareaRef.current?.focus();
-  }, [isSending]);
+    autoResize();
+  }, [isSending, autoResize]);
 
   useEffect(() => {
     if (!autoFocus) return;
@@ -163,6 +176,8 @@ function BoardChatComposerImpl({
     [onFilesSelected],
   );
 
+  const isComposerDisabled = isSending || disabled;
+
   const send = useCallback(async () => {
     if (isSending || disabled) return;
     const trimmed = value.trim();
@@ -173,26 +188,33 @@ function BoardChatComposerImpl({
       setValue("");
       setMentionTarget(null);
       setActiveMentionIndex(0);
+      // Reset textarea height after clearing
+      if (textareaRef.current) {
+        textareaRef.current.style.height = "auto";
+        textareaRef.current.style.overflowY = "hidden";
+      }
     }
   }, [disabled, isSending, onSend, value]);
 
+  const canSend = !isComposerDisabled && value.trim().length > 0;
+
   return (
-    <div className="mt-4 rounded-2xl border border-slate-200 bg-white/95 p-3 shadow-sm">
+    <div className={cn("mt-4", className)}>
       {pendingFiles && pendingFiles.length > 0 && (
-        <div className="mb-2 flex flex-wrap gap-2">
+        <div className="mb-2.5 flex flex-wrap gap-2">
           {pendingFiles.map((f) => (
             <span
               key={f.id}
-              className="inline-flex items-center gap-1 rounded-lg bg-slate-100 px-2 py-1 text-xs text-slate-700"
+              className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-100 px-2.5 py-1 text-xs text-slate-700"
             >
-              {f.fileName}
+              <span className="max-w-[180px] truncate">{f.fileName}</span>
               <span
                 className={
                   f.status === "uploading"
-                    ? "text-blue-500"
+                    ? "text-sky-600"
                     : f.status === "failed"
-                      ? "text-red-500"
-                      : "text-green-500"
+                      ? "text-rose-600"
+                      : "text-emerald-600"
                 }
               >
                 {f.status === "uploading" ? "..." : f.status === "failed" ? "!" : "✓"}
@@ -201,7 +223,7 @@ function BoardChatComposerImpl({
                 <button
                   type="button"
                   onClick={() => onRemovePendingFile(f.id)}
-                  className="ml-0.5 text-slate-400 hover:text-slate-600"
+                  className="ml-0.5 text-slate-500 transition hover:text-slate-700"
                   aria-label={`Remove ${f.fileName}`}
                 >
                   <X className="h-3 w-3" />
@@ -211,13 +233,38 @@ function BoardChatComposerImpl({
           ))}
         </div>
       )}
-      <div className="relative">
-        <Textarea
+      <div className="relative rounded-[28px] border border-slate-200 bg-slate-50 px-3.5 py-2.5 shadow-[0_12px_28px_-20px_rgba(15,23,42,0.55)]">
+        <div className="flex items-center gap-2">
+          {onFilesSelected && (
+            <>
+              <label
+                className={`relative inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-slate-500 transition ${
+                  isComposerDisabled
+                    ? "cursor-not-allowed bg-slate-100 text-slate-400"
+                    : "cursor-pointer hover:bg-slate-200 hover:text-slate-700"
+                }`}
+                title={isComposerDisabled ? "Chat unavailable" : "Attach files"}
+              >
+                <Plus className="h-5 w-5" />
+                <input
+                  type="file"
+                  multiple
+                  accept=".txt,.md,.csv,.json,.pdf"
+                  className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+                  onChange={handleFileChange}
+                  disabled={isComposerDisabled}
+                  aria-label="Attach files"
+                />
+              </label>
+            </>
+          )}
+          <Textarea
           ref={textareaRef}
           value={value}
           onChange={(event) => {
             const nextValue = event.target.value;
             setValue(nextValue);
+            autoResize();
             refreshMentionTarget(
               nextValue,
               event.target.selectionStart ?? nextValue.length,
@@ -290,11 +337,28 @@ function BoardChatComposerImpl({
             void send();
           }}
           placeholder={placeholder}
-          className="min-h-[104px] resize-y rounded-xl border-slate-200 bg-slate-50/70 text-slate-900 shadow-none focus-visible:ring-blue-200"
-          disabled={isSending || disabled}
+          rows={1}
+          className="min-h-[24px] min-w-0 !w-auto max-h-40 flex-1 resize-none border-0 bg-transparent px-0 py-0.5 text-[15px] leading-6 text-slate-700 shadow-none placeholder:text-slate-400 focus-visible:ring-0"
+          disabled={isComposerDisabled}
         />
+          <div className="flex flex-shrink-0 items-center">
+            <button
+              type="button"
+              onClick={() => void send()}
+              disabled={!canSend}
+              aria-label={isSending ? "Sending message" : "Send message"}
+              className={`inline-flex h-10 w-10 items-center justify-center rounded-full transition ${
+                canSend
+                  ? "bg-sky-500 text-white hover:bg-sky-600"
+                  : "bg-slate-100 text-slate-400"
+              } disabled:cursor-not-allowed`}
+            >
+              <AudioLines className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
         {mentionTarget && filteredMentionOptions.length > 0 ? (
-          <div className="absolute bottom-full left-0 z-20 mb-2 w-full max-w-sm overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg shadow-slate-200/70">
+          <div className="absolute bottom-full left-0 z-20 mb-2 w-full max-w-sm overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl shadow-slate-200/60">
             <div className="max-h-52 overflow-y-auto py-1">
               {filteredMentionOptions.map((option, index) => (
                 <button
@@ -306,7 +370,7 @@ function BoardChatComposerImpl({
                   }}
                   className={`flex w-full items-center justify-between px-3 py-2 text-left text-sm transition ${
                     index === activeIndex
-                      ? "bg-blue-50 text-blue-700"
+                      ? "bg-slate-100 text-slate-900"
                       : "text-slate-700 hover:bg-slate-50"
                   }`}
                 >
@@ -317,44 +381,6 @@ function BoardChatComposerImpl({
             </div>
           </div>
         ) : null}
-      </div>
-      <div className="mt-3 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          {onFilesSelected && (
-            <>
-              <input
-                ref={fileInputRef}
-                type="file"
-                multiple
-                accept=".txt,.md,.csv,.json,.pdf"
-                className="hidden"
-                onChange={handleFileChange}
-              />
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="h-8 w-8 p-0"
-                onClick={() => fileInputRef.current?.click()}
-                title="Attach files"
-                disabled={isSending || disabled}
-              >
-                <Paperclip className="h-4 w-4 text-slate-500" />
-              </Button>
-            </>
-          )}
-          <p className="text-xs text-slate-500">
-            Enter to send, Shift+Enter for newline.
-          </p>
-        </div>
-        <Button
-          onClick={() => void send()}
-          disabled={isSending || disabled || !value.trim()}
-          size="sm"
-          className="rounded-lg px-4"
-        >
-          {isSending ? "Sending…" : "Send"}
-        </Button>
       </div>
     </div>
   );

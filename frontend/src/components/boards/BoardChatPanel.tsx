@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { useBoardChatFiles } from "@/lib/hooks/use-board-chat-files";
+import type { MessageAttachment } from "@/lib/hooks/use-board-chat-messages";
 import { useBoardChatMessages } from "@/lib/hooks/use-board-chat-messages";
 import { useBoardChatSessions } from "@/lib/hooks/use-board-chat-sessions";
 
@@ -151,7 +152,18 @@ export const BoardChatPanel = memo(function BoardChatPanel({
       const fileIds = pendingUploads
         .filter((u) => u.status === "ready" && u.fileId)
         .map((u) => u.fileId!);
-      const ok = await messagesState.sendMessage(content, fileIds.length ? fileIds : undefined);
+      const attachments: MessageAttachment[] = pendingUploads
+        .filter((u) => u.status === "ready" && u.fileId)
+        .map((u) => ({
+          id: u.fileId!,
+          file_name: u.file.name,
+          status: "ready",
+        }));
+      const ok = await messagesState.sendMessage(
+        content,
+        fileIds.length ? fileIds : undefined,
+        attachments.length ? attachments : undefined,
+      );
       if (ok) {
         filesState.clearPendingUploads();
         void sessionsState.refetch();
@@ -169,8 +181,10 @@ export const BoardChatPanel = memo(function BoardChatPanel({
     <>
       <aside
         className={cn(
-          "fixed right-0 top-0 z-50 h-full w-[920px] max-w-[98vw] transform border-l border-slate-200 bg-white shadow-2xl transition-transform",
-          isOpen ? "transform-none" : "translate-x-full",
+          "fixed right-0 top-0 z-50 h-full w-[920px] max-w-[98vw] border-l border-slate-200 bg-white shadow-2xl transform-gpu transition-[transform,opacity] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform motion-reduce:transition-none",
+          isOpen
+            ? "translate-x-0 opacity-100 pointer-events-auto"
+            : "translate-x-[104%] opacity-0 pointer-events-none",
         )}
       >
         <div className="flex h-full flex-col">

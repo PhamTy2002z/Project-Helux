@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { getApiBaseUrl } from "./api-base";
+import { getApiBaseUrl, resolveAutoApiBaseUrl } from "./api-base";
 
 describe("getApiBaseUrl", () => {
   afterEach(() => {
@@ -23,5 +23,17 @@ describe("getApiBaseUrl", () => {
     vi.stubEnv("NEXT_PUBLIC_API_URL", "");
 
     expect(getApiBaseUrl()).toBe("http://localhost:8000");
+  });
+
+  it("forces http for localhost even when page protocol is https", () => {
+    expect(resolveAutoApiBaseUrl("localhost", "https:")).toBe(
+      "http://localhost:8000",
+    );
+  });
+
+  it("normalizes non-routable 0.0.0.0 host to localhost", () => {
+    expect(resolveAutoApiBaseUrl("0.0.0.0", "http:")).toBe(
+      "http://localhost:8000",
+    );
   });
 });

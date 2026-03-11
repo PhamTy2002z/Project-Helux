@@ -48,6 +48,7 @@ const ALLOWED_TYPES = ["text/plain", "text/markdown", "text/csv", "application/j
 const ALLOWED_EXTENSIONS = [".txt", ".md", ".csv", ".json", ".pdf"];
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const MAX_FILES_PER_MESSAGE = 3;
+const FILE_UPLOAD_TIMEOUT_MS = 30_000;
 
 const resolveAuthHeaders = async (): Promise<Record<string, string>> => {
   if (typeof window === "undefined") return {};
@@ -134,6 +135,7 @@ export const useBoardChatFiles = ({
 
       await Promise.all(
         newPending.map(async (pending) => {
+          let timeoutId: number | null = null;
           try {
             const authHeaders = await resolveAuthHeaders();
             const formData = new FormData();
@@ -141,12 +143,17 @@ export const useBoardChatFiles = ({
             if (chatSessionId) {
               formData.append("chat_session_id", chatSessionId);
             }
+            const controller = new AbortController();
+            timeoutId = window.setTimeout(() => {
+              controller.abort();
+            }, FILE_UPLOAD_TIMEOUT_MS);
 
             const url = buildApiUrl(`/api/v1/boards/${boardId}/chat-files`);
             const response = await fetch(url, {
               method: "POST",
               headers: { ...authHeaders },
               body: formData,
+              signal: controller.signal,
               credentials: isLocalAuthMode() ? "same-origin" : undefined,
             });
 
@@ -175,6 +182,11 @@ export const useBoardChatFiles = ({
               pendingRef.current = next;
               return next;
             });
+            setError("File upload failed or timed out. Please retry.");
+          } finally {
+            if (timeoutId !== null) {
+              window.clearTimeout(timeoutId);
+            }
           }
         }),
       );

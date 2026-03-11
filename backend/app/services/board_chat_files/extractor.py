@@ -5,6 +5,7 @@ from __future__ import annotations
 import csv
 import io
 import json
+from contextlib import suppress
 
 from app.core.config import settings
 from app.core.logging import get_logger
@@ -102,12 +103,20 @@ def _extract_json(data: bytes) -> str:
 
 
 def _extract_pdf(data: bytes) -> str:
-    """Extract text from PDF using pypdf."""
+    """Extract text from PDF using text layer, then OCR fallback when needed."""
+    text = _read_pdf_text_with_pypdf(data)
+    if text:
+        return text
+    return _extract_pdf_with_ocr(data)
+
+
+def _read_pdf_text_with_pypdf(data: bytes) -> str:
+    """Extract PDF text from embedded text layer via pypdf."""
     try:
         from pypdf import PdfReader
     except ImportError:
         logger.warning("pdf.extraction.pypdf_not_installed")
-        raise ValueError("pypdf is not installed; cannot extract PDF text")
+        return ""
 
     reader = PdfReader(io.BytesIO(data))
     pages: list[str] = []
@@ -117,4 +126,62 @@ def _extract_pdf(data: bytes) -> str:
             pages.append(page_text)
     if not pages:
         return ""
+    return "\n\n".join(pages)
+
+
+def _extract_pdf_with_ocr(data: bytes) -> str:
+    """OCR fallback for image-based PDFs when text-layer extraction is empty."""
+    if not settings.board_chat_file_pdf_ocr_enabled:
+        return ""
+
+    try:
+        import pypdfium2 as pdfium
+        import pytesseract
+    except ImportError:
+        logger.warning("pdf.ocr.dependencies_missing")
+        return ""
+
+    language = settings.board_chat_file_pdf_ocr_lang.strip() or "eng"
+    pages: list[str] = []
+    doc = None
+    try:
+        doc = pdfium.PdfDocument(io.BytesIO(data))
+        page_count = min(len(doc), settings.board_chat_file_pdf_ocr_max_pages)
+        for idx in range(page_count):
+            page = doc[idx]
+            bitmap = None
+            image = None
+            try:
+                bitmap = page.render(scale=settings.board_chat_file_pdf_ocr_render_scale)
+                image = bitmap.to_pil()
+                text = pytesseract.image_to_string(image, lang=language)
+                normalized = text.strip()
+                if normalized:
+                    pages.append(normalized)
+            except Exception:
+                logger.exception("pdf.ocr.page_failed", extra={"page_index": idx})
+            finally:
+                with suppress(Exception):
+                    if image is not None:
+                        image.close()
+                with suppress(Exception):
+                    if bitmap is not None:
+                        bitmap.close()
+                with suppress(Exception):
+                    page.close()
+    except Exception:
+        logger.exception("pdf.ocr.document_failed")
+    finally:
+        with suppress(Exception):
+            if doc is not None:
+                doc.close()
+
+    if pages:
+        logger.info(
+            "pdf.ocr.fallback_succeeded",
+            extra={
+                "ocr_page_count": len(pages),
+                "ocr_max_pages": settings.board_chat_file_pdf_ocr_max_pages,
+            },
+        )
     return "\n\n".join(pages)

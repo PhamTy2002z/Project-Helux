@@ -108,10 +108,14 @@ async def test_report_accepted_and_task_marked_reported(
             },
         ),
     )
-    # Stub shared knowledge publish (imported locally inside function)
+    # Stub shared knowledge and board-wide signal publishers.
     monkeypatch.setattr(
         "app.services.board_chat_files.shared_knowledge.publish_board_shared_summary",
         _fake_publish,
+    )
+    monkeypatch.setattr(
+        "app.services.board_chat_files.reporting.publish_board_file_signal",
+        _fake_publish_signal,
     )
 
     fake_session = _FakeSession()
@@ -146,10 +150,14 @@ async def test_report_idempotent_upsert(monkeypatch: pytest.MonkeyPatch) -> None
         "app.services.board_chat_files.reporting.BoardChatFileReport",
         type("R", (), {"objects": _FakeObjectsFilter(existing_report)}),
     )
-    # publish_board_shared_summary is imported locally; patch at source module
+    # publishers are imported locally; patch both sources.
     monkeypatch.setattr(
         "app.services.board_chat_files.shared_knowledge.publish_board_shared_summary",
         _fake_publish,
+    )
+    monkeypatch.setattr(
+        "app.services.board_chat_files.reporting.publish_board_file_signal",
+        _fake_publish_signal,
     )
 
     fake_session = _FakeSession()
@@ -192,10 +200,14 @@ async def test_report_truncates_long_summary(monkeypatch: pytest.MonkeyPatch) ->
     monkeypatch.setattr(
         "app.services.board_chat_files.reporting.BoardChatFileReport", _StubReport,
     )
-    # publish_board_shared_summary is imported locally; patch at source module
+    # publishers are imported locally; patch both sources.
     monkeypatch.setattr(
         "app.services.board_chat_files.shared_knowledge.publish_board_shared_summary",
         _fake_publish,
+    )
+    monkeypatch.setattr(
+        "app.services.board_chat_files.reporting.publish_board_file_signal",
+        _fake_publish_signal,
     )
 
     long_summary = "X" * 5000
@@ -218,3 +230,7 @@ async def test_report_truncates_long_summary(monkeypatch: pytest.MonkeyPatch) ->
 
 async def _fake_publish(**_kw: object) -> bool:
     return True
+
+
+async def _fake_publish_signal(**_kw: object) -> None:
+    return None

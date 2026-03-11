@@ -115,6 +115,41 @@ def test_extract_unsupported_mime_raises() -> None:
         extract_text(b"data", "image/png")
 
 
+def test_extract_pdf_prefers_text_layer(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        "app.services.board_chat_files.extractor._read_pdf_text_with_pypdf",
+        lambda _data: "text-layer-content",
+    )
+
+    called = {"ocr": False}
+
+    def _fake_ocr(_data: bytes) -> str:
+        called["ocr"] = True
+        return "ocr-content"
+
+    monkeypatch.setattr("app.services.board_chat_files.extractor._extract_pdf_with_ocr", _fake_ocr)
+
+    result = extract_text(b"fake-pdf", "application/pdf")
+    assert result == "text-layer-content"
+    assert called["ocr"] is False
+
+
+def test_extract_pdf_uses_ocr_fallback_when_text_layer_empty(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        "app.services.board_chat_files.extractor._read_pdf_text_with_pypdf",
+        lambda _data: "",
+    )
+    monkeypatch.setattr(
+        "app.services.board_chat_files.extractor._extract_pdf_with_ocr",
+        lambda _data: "ocr-fallback-content",
+    )
+
+    result = extract_text(b"fake-pdf", "application/pdf")
+    assert result == "ocr-fallback-content"
+
+
 def test_extract_text_plain_bad_encoding_replaces() -> None:
     """Invalid UTF-8 bytes should be replaced, not raise."""
     data = b"\xff\xfe invalid bytes"

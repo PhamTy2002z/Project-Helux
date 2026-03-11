@@ -29,7 +29,11 @@ dependencies = [
     "rq==2.6.0",
     "cryptography==45.0.7",
     "minio==7.2.15",
+    "pypdfium2==4.30.0",
+    "pytesseract==0.3.13",
     "pypdf==5.4.0",
+    "pillow==11.3.0",
+    "python-multipart==0.0.20",
 ]
 
 [project.optional-dependencies]

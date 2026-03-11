@@ -1,34 +1,65 @@
 name: openclaw-mission-control
 
+# ---------- shared config ----------
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+x-restart: &default-restart
+  restart: unless-stopped
+
 services:
+  # ---------- data stores (internal only) ----------
   db:
     image: postgres:16-alpine
+    <<: *default-restart
+    logging: *default-logging
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-mission_control}
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    # Bind to localhost for dev; in prod behind reverse proxy, no port exposure needed.
     ports:
       - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
+    networks:
+      - internal
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
-      interval: 5s
+      interval: 10s
       timeout: 3s
       retries: 20
+    deploy:
+      resources:
+        limits:
+          memory: 512M
 
   redis:
     image: redis:7-alpine
+    <<: *default-restart
+    logging: *default-logging
+    command: ["redis-server", "--maxmemory", "128mb", "--maxmemory-policy", "allkeys-lru"]
     ports:
       - "127.0.0.1:${REDIS_PORT:-6379}:6379"
+    networks:
+      - internal
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
+      interval: 10s
       timeout: 3s
       retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 256M
 
   minio:
-    image: minio/minio:latest
+    image: minio/minio:RELEASE.2025-02-28T09-55-16Z
+    <<: *default-restart
+    logging: *default-logging
     command: server /data --console-address ":9001"
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
@@ -38,18 +69,27 @@ services:
     ports:
       - "127.0.0.1:${MINIO_API_PORT:-9000}:9000"
       - "127.0.0.1:${MINIO_CONSOLE_PORT:-9001}:9001"
+    networks:
+      - internal
     healthcheck:
       test: ["CMD", "mc", "ready", "local"]
-      interval: 5s
+      interval: 10s
       timeout: 3s
       retries: 10
+    deploy:
+      resources:
+        limits:
+          memory: 512M
 
+  # ---------- application ----------
   backend:
     build:
       # Build from repo root so the backend image can include repo-level assets
       # like `backend/templates/`.
       context: .
       dockerfile: backend/Dockerfile
+    <<: *default-restart
+    logging: *default-logging
     env_file:
       - ./backend/.env
     environment:
@@ -79,13 +119,30 @@ services:
         condition: service_healthy
     ports:
       - "${BACKEND_PORT:-8000}:8000"
+    networks:
+      - internal
+      - public
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8000/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          memory: 1G
 
   frontend:
+    profiles:
+      - docker-frontend
     build:
       context: ./frontend
       args:
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-auto}
         NEXT_PUBLIC_AUTH_MODE: ${AUTH_MODE}
+    <<: *default-restart
+    logging: *default-logging
     # Optional, user-managed env file.
     # IMPORTANT: do NOT load `.env.example` here because it contains non-empty
     # placeholder Clerk keys, which can accidentally flip Clerk "on".
@@ -96,9 +153,22 @@ services:
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-auto}
       NEXT_PUBLIC_AUTH_MODE: ${AUTH_MODE}
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     ports:
       - "${FRONTEND_PORT:-3000}:3000"
+    networks:
+      - public
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:3000 || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          memory: 512M
     develop:
       watch:
         # Rebuild frontend image when UI source or build config changes.
@@ -122,12 +192,18 @@ services:
       context: .
       dockerfile: backend/Dockerfile
     command: ["python", "scripts/rq-docker", "worker"]
+    <<: *default-restart
+    logging: *default-logging
     env_file:
       - ./backend/.env
     depends_on:
       redis:
         condition: service_healthy
       db:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      backend:
         condition: service_healthy
     environment:
       DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-mission_control}
@@ -137,11 +213,29 @@ services:
       RQ_QUEUE_NAME: ${RQ_QUEUE_NAME:-default}
       RQ_DISPATCH_THROTTLE_SECONDS: ${RQ_DISPATCH_THROTTLE_SECONDS:-2.0}
       RQ_DISPATCH_MAX_RETRIES: ${RQ_DISPATCH_MAX_RETRIES:-3}
+      OBJECT_STORAGE_ENDPOINT: http://minio:9000
+      OBJECT_STORAGE_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
+      OBJECT_STORAGE_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin}
+      OBJECT_STORAGE_BUCKET: ${OBJECT_STORAGE_BUCKET:-board-chat-files}
+      OBJECT_STORAGE_USE_SSL: "false"
       WORKER_HEARTBEAT_KEY: ${WORKER_HEARTBEAT_KEY:-mission-control:worker:heartbeat}
       OPENCLAW_GATEWAY_DEVICE_IDENTITY_PATH: /shared/device-identity/device.json
     volumes:
       - device_identity:/shared/device-identity
-    restart: unless-stopped
+    networks:
+      - internal
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+networks:
+  # Internal: db, redis, minio, backend, worker — not reachable from host except via mapped ports.
+  internal:
+    driver: bridge
+  # Public: backend + frontend — services that need external access.
+  public:
+    driver: bridge
 
 volumes:
   postgres_data:

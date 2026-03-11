@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import hashlib
 from typing import TYPE_CHECKING
 from uuid import UUID
@@ -77,6 +78,18 @@ def _build_object_key(board: Board, file_name: str) -> str:
     return f"{board.organization_id}/{board.id}/{date_prefix}/{ts}-{safe_name}"
 
 
+def _should_extract_inline(mime_type: str, file_size: int) -> bool:
+    """Decide whether extraction should run in-request or via background queue.
+
+    PDF parsing (especially OCR fallback for scans) can be expensive and block the UI.
+    Keep PDFs async so upload requests return quickly, while small text-like files still
+    get immediate previews.
+    """
+    if mime_type == "application/pdf":
+        return False
+    return file_size <= _INLINE_EXTRACTION_THRESHOLD
+
+
 @router.post(
     "",
     response_model=BoardChatFileUploadResponse,
@@ -137,8 +150,8 @@ async def upload_board_chat_file(
     storage = get_object_storage()
 
     try:
-        storage.ensure_bucket()
-        storage.put_object(object_key, data, mime_type)
+        await asyncio.to_thread(storage.ensure_bucket)
+        await asyncio.to_thread(storage.put_object, object_key, data, mime_type)
     except Exception as exc:
         logger.exception(
             "file_upload.storage_failed",
@@ -166,8 +179,8 @@ async def upload_board_chat_file(
     await session.commit()
     await session.refresh(asset)
 
-    # Inline extraction for small files; async for large ones
-    if len(data) <= _INLINE_EXTRACTION_THRESHOLD:
+    # Inline extraction for lightweight text-like files; queue heavy formats (PDF) asynchronously.
+    if _should_extract_inline(mime_type, len(data)):
         try:
             full_text = extract_text(data, mime_type)
             asset.preview_text = extract_preview(full_text)

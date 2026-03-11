@@ -110,6 +110,10 @@ class Settings(BaseSettings):
     board_chat_file_max_per_message: int = Field(default=3, ge=1)
     board_chat_file_preview_max_chars: int = Field(default=500, ge=0)
     board_chat_file_allowed_types: str = "txt,md,csv,json,pdf"
+    board_chat_file_pdf_ocr_enabled: bool = True
+    board_chat_file_pdf_ocr_lang: str = "eng+vie"
+    board_chat_file_pdf_ocr_max_pages: int = Field(default=12, ge=1)
+    board_chat_file_pdf_ocr_render_scale: float = Field(default=2.0, gt=0)
 
     # Board chat file report SLA / retry policy
     board_chat_file_report_timeout_seconds: int = Field(default=300, ge=10)
