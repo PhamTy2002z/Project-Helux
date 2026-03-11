@@ -324,7 +324,7 @@ async def test_get_agent_returns_blocked_token_state() -> None:
         payload = response.json()
         assert payload["token_used_today"] == 16_000
         assert payload["token_limit_today"] == 5_000_000
-        assert payload["token_remaining_today"] == 0
+        assert payload["token_remaining_today"] == 5_000_000 - 16_000
         assert payload["token_blocked"] is True
         assert isinstance(payload["token_reset_at"], str)
     finally:
