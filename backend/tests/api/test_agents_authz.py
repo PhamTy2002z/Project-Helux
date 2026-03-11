@@ -253,8 +253,8 @@ async def test_list_agents_includes_token_fields_for_board_scoped_agents() -> No
         by_id = {item["id"]: item for item in items}
         board_item = by_id[str(board_agent.id)]
         assert board_item["token_used_today"] == 12_345
-        assert board_item["token_limit_today"] == 15_000
-        assert board_item["token_remaining_today"] == 2_655
+        assert board_item["token_limit_today"] == 5_000_000
+        assert board_item["token_remaining_today"] == 5_000_000 - 12_345
         assert board_item["token_blocked"] is False
         assert isinstance(board_item["token_reset_at"], str)
 
@@ -323,7 +323,7 @@ async def test_get_agent_returns_blocked_token_state() -> None:
         assert response.status_code == 200
         payload = response.json()
         assert payload["token_used_today"] == 16_000
-        assert payload["token_limit_today"] == 15_000
+        assert payload["token_limit_today"] == 5_000_000
         assert payload["token_remaining_today"] == 0
         assert payload["token_blocked"] is True
         assert isinstance(payload["token_reset_at"], str)
