@@ -1,4 +1,4 @@
-name: openclaw-mission-control
+name: project-helux-openclaw-mission-control
 
 services:
   db:
