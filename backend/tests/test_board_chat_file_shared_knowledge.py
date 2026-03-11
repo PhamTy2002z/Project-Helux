@@ -10,7 +10,6 @@ import pytest
 
 from app.services.board_chat_files.shared_knowledge import publish_board_shared_summary
 
-
 # ---------------------------------------------------------------------------
 # Fakes
 # ---------------------------------------------------------------------------

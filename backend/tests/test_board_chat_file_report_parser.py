@@ -9,7 +9,6 @@ import pytest
 
 from app.services.board_chat_files.report_parser import ParsedFileReport, parse_file_reports
 
-
 # ---------------------------------------------------------------------------
 # Fast-path: no FILE_REPORT tag → empty list
 # ---------------------------------------------------------------------------

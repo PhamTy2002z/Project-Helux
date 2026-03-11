@@ -15,11 +15,11 @@ from app.api.agent import router as agent_router
 from app.api.agents import router as agents_router
 from app.api.approvals import router as approvals_router
 from app.api.auth import router as auth_router
+from app.api.billing import router as billing_router
 from app.api.board_chat_files import router as board_chat_files_router
 from app.api.board_chat_sessions import router as board_chat_sessions_router
 from app.api.board_group_memory import router as board_group_memory_router
 from app.api.board_groups import router as board_groups_router
-from app.api.billing import router as billing_router
 from app.api.board_memory import router as board_memory_router
 from app.api.board_onboarding import router as board_onboarding_router
 from app.api.board_webhooks import router as board_webhooks_router

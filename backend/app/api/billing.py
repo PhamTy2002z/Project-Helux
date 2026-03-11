@@ -14,15 +14,14 @@ from app.core.logging import get_request_endpoint, get_request_id
 from app.db.session import get_session
 from app.models.activity_events import ActivityEvent
 from app.schemas.billing import (
-    BillingSupportTimelineEvent,
     BillingSimulateCheckoutRequest,
     BillingSimulateCheckoutResponse,
     BillingSubscriptionRead,
+    BillingSupportTimelineEvent,
     BillingUpgradeModalOpenEvent,
 )
 from app.schemas.common import OkResponse
-from app.services.activity_log import record_activity
-from app.services.activity_log import record_admin_audit
+from app.services.activity_log import record_activity, record_admin_audit
 from app.services.billing import get_subscription, simulate_checkout
 from app.services.organizations import OrganizationContext
 

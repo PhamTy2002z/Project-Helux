@@ -27,11 +27,6 @@ from app.models.agents import Agent
 from app.models.board_memory import BoardMemory
 from app.schemas.board_memory import BoardMemoryCreate, BoardMemoryRead
 from app.schemas.pagination import DefaultLimitOffsetPage
-from app.services.board_chat_sessions import (
-    get_chat_session_for_board,
-    get_or_create_default_chat_session,
-    maybe_auto_title_chat_session,
-)
 from app.services.board_chat_files.delivery import (
     create_file_tasks_for_targets,
     validate_and_link_files,
@@ -40,6 +35,11 @@ from app.services.board_chat_files.message_contract import build_file_manifest_b
 from app.services.board_chat_files.report_deadline_queue import enqueue_report_deadline
 from app.services.board_chat_files.report_parser import parse_file_reports
 from app.services.board_chat_files.reporting import process_agent_file_report
+from app.services.board_chat_sessions import (
+    get_chat_session_for_board,
+    get_or_create_default_chat_session,
+    maybe_auto_title_chat_session,
+)
 from app.services.mentions import extract_mentions, matches_agent_mention
 from app.services.openclaw.gateway_dispatch import GatewayDispatchService
 from app.services.openclaw.gateway_rpc import GatewayConfig as GatewayClientConfig

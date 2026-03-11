@@ -19,7 +19,11 @@ from app.schemas.billing import (
     BillingSubscriptionRead,
     SubscriptionStatus,
 )
-from app.services.entitlements import TRIAL_DURATION_DAYS, coerce_plan_tier, get_or_create_organization_plan
+from app.services.entitlements import (
+    TRIAL_DURATION_DAYS,
+    coerce_plan_tier,
+    get_or_create_organization_plan,
+)
 
 
 def _subscription_status(*, tier: str, effective_until: datetime | None) -> SubscriptionStatus:

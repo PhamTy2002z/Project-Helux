@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, status
+from sqlmodel import select
 
 from app.api.deps import (
     ActorContext,
@@ -28,8 +29,6 @@ from app.schemas.board_chat_files import (
     BoardChatFileTaskRead,
     BoardChatFileUploadResponse,
 )
-from sqlmodel import select
-
 from app.services.board_chat_files.extractor import (
     extract_preview,
     extract_text,

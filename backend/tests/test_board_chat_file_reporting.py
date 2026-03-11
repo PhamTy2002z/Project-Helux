@@ -10,7 +10,6 @@ import pytest
 
 from app.services.board_chat_files.reporting import process_agent_file_report
 
-
 # ---------------------------------------------------------------------------
 # Fakes
 # ---------------------------------------------------------------------------

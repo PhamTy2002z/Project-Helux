@@ -49,13 +49,13 @@ from app.schemas.health import AgentHealthStatusResponse
 from app.schemas.pagination import DefaultLimitOffsetPage
 from app.schemas.tags import TagRef
 from app.schemas.tasks import TaskCommentCreate, TaskCommentRead, TaskCreate, TaskRead, TaskUpdate
-from app.services.board_chat_files.extractor import extract_text, resolve_mime
-from app.services.storage.minio_storage import get_object_storage
 from app.services.activity_log import record_activity
+from app.services.board_chat_files.extractor import extract_text, resolve_mime
 from app.services.entitlements import enforce_task_quota
 from app.services.openclaw.coordination_service import GatewayCoordinationService
 from app.services.openclaw.policies import OpenClawAuthorizationPolicy
 from app.services.openclaw.provisioning_db import AgentLifecycleService
+from app.services.storage.minio_storage import get_object_storage
 from app.services.tags import replace_tags, validate_tag_ids
 from app.services.task_dependencies import (
     blocked_by_dependency_ids,

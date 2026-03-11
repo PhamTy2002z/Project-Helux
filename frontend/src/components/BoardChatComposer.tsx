@@ -233,7 +233,7 @@ function BoardChatComposerImpl({
           ))}
         </div>
       )}
-      <div className="relative rounded-[28px] border border-slate-200 bg-slate-50 px-3.5 py-2.5 shadow-[0_12px_28px_-20px_rgba(15,23,42,0.55)]">
+      <div className="relative rounded-[28px] border border-slate-300/80 bg-slate-100/80 px-3.5 py-2.5 shadow-[0_14px_32px_-22px_rgba(15,23,42,0.42)]">
         <div className="flex items-center gap-2">
           {onFilesSelected && (
             <>

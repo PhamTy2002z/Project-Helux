@@ -20,9 +20,9 @@ from app.models.activity_events import ActivityEvent
 from app.models.agents import Agent
 from app.models.approval_task_links import ApprovalTaskLink
 from app.models.approvals import Approval
+from app.models.billing_checkout_attempts import BillingCheckoutAttempt
 from app.models.board_group_memory import BoardGroupMemory
 from app.models.board_groups import BoardGroup
-from app.models.billing_checkout_attempts import BillingCheckoutAttempt
 from app.models.board_memory import BoardMemory
 from app.models.board_onboarding import BoardOnboardingSession
 from app.models.board_webhook_payloads import BoardWebhookPayload

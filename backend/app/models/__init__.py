@@ -1,10 +1,11 @@
 """Model exports for SQLAlchemy/SQLModel metadata discovery."""
 
 from app.models.activity_events import ActivityEvent
-from app.models.agents import Agent
 from app.models.agent_token_daily_usage import AgentTokenDailyUsage
+from app.models.agents import Agent
 from app.models.approval_task_links import ApprovalTaskLink
 from app.models.approvals import Approval
+from app.models.billing_checkout_attempts import BillingCheckoutAttempt
 from app.models.board_chat_file_assets import BoardChatFileAsset
 from app.models.board_chat_file_reports import BoardChatFileReport
 from app.models.board_chat_file_tasks import BoardChatFileTask
@@ -12,7 +13,6 @@ from app.models.board_chat_message_files import BoardChatMessageFile
 from app.models.board_chat_sessions import BoardChatSession
 from app.models.board_group_memory import BoardGroupMemory
 from app.models.board_groups import BoardGroup
-from app.models.billing_checkout_attempts import BillingCheckoutAttempt
 from app.models.board_memory import BoardMemory
 from app.models.board_onboarding import BoardOnboardingSession
 from app.models.board_webhook_payloads import BoardWebhookPayload
