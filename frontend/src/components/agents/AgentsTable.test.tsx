@@ -131,10 +131,12 @@ describe("AgentsTable", () => {
       />,
     );
 
-    expect(screen.getByText("0 / 15,000")).toBeInTheDocument();
     const blockedBadge = screen.getByText("Blocked");
     expect(blockedBadge).toBeInTheDocument();
-    expect(blockedBadge).toHaveAttribute(
+    expect(blockedBadge.parentElement).toHaveTextContent("0 / 15,000");
+    const quotaContainer = blockedBadge.closest("div[title]");
+    expect(quotaContainer).not.toBeNull();
+    expect(quotaContainer).toHaveAttribute(
       "title",
       expect.stringContaining("Resets"),
     );

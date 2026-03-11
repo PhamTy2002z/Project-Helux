@@ -44,7 +44,6 @@ from app.services.organizations import (
 if TYPE_CHECKING:
     from sqlmodel.ext.asyncio.session import AsyncSession
 
-    from app.models.agents import Agent
     from app.models.users import User
 
 AUTH_DEP = Depends(get_auth_context)

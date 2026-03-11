@@ -134,4 +134,3 @@ async def test_update_gateway_main_agent_is_forbidden(
     assert exc_info.value.status_code == status.HTTP_403_FORBIDDEN
     assert "system-managed" in str(exc_info.value.detail).lower()
     assert session.committed == 0
-

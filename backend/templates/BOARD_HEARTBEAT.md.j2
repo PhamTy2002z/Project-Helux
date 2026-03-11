@@ -140,14 +140,18 @@ jq -r '
 2) Verify API access:
 - `GET {{ base_url }}/healthz`
 - `GET {{ base_url }}/api/v1/agent/boards`
-- `GET {{ base_url }}/api/v1/agent/boards/{{ board_id }}/tasks`
+- `GET {{ base_url }}/api/v1/agent/boards/{{ board_id }}/tasks?status=inbox,in_progress,review`
 3) If any check fails, stop and retry next heartbeat.
 
 ## Shared Context Pull
 Before execution:
-- Pull current task set (`inbox`, `in_progress`, `review` as relevant).
+- Pull current task set with filters:
+  - worker primary queue: `assigned_agent_id={{ agent_id }}&status=in_progress,inbox&archived=false`
+  - lead delegation queue: `unassigned=true&status=inbox&archived=false`
+  - review lane: `status=review&archived=false`
 - Pull non-chat board memory.
 - Pull group memory if board is grouped.
+- Treat `task_group_id` as planning metadata only. Execute actionable leaf tasks, not group containers.
 
 ## Role-Specific Loop
 {% if is_lead %}
@@ -169,7 +173,7 @@ Before execution:
 {% else %}
 ### Board Worker Loop
 1) Check in via heartbeat endpoint.
-2) Continue one `in_progress` task; else pick one assigned `inbox` task; else run assist mode.
+2) Continue one assigned `in_progress` task; else pick one assigned `inbox` task; else run assist mode.
 3) Refresh task context and plan for the active task.
 4) Execute and post only high-signal task comment updates.
 5) Move to `review` when deliverable and evidence are ready.

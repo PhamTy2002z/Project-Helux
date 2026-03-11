@@ -72,6 +72,9 @@ pages/          # Full pages (app/ directory with Next.js App Router)
 - **Domain Components**: Organized by feature (`components/agents/`, `components/boards/`)
 - **UI Components**: Reusable primitives (`components/ui/`)
 - **Shared Components**: Cross-cutting concerns (`components/providers/`, `components/tables/`)
+- **Board overlay modules**: Keep scalable board-view logic in
+  `src/lib/boards/*` and keep render primitives in focused organism components
+  (`task-board-filter-bar.tsx`, `task-group-column-section.tsx`).
 
 #### File Size Guidelines
 - Target: < 200 lines per component file
@@ -576,6 +579,18 @@ Clarify environment variable requirements.
 - Use database connection pooling
 - Avoid N+1 queries with eager loading
 - Monitor slow query log
+
+## Compatibility Standards (OpenClaw Board Workflows)
+
+- Follow `docs/reference/board-planning-overlay-contract-matrix.md` for non-negotiable runtime contracts.
+- Treat compatibility-sensitive API/schema work as additive-first:
+  - Keep existing route paths and default semantics stable.
+  - Add optional fields/filters/endpoints, do not replace existing defaults.
+- Preserve these locked contracts unless a formal breaking-change process is approved:
+  - `TaskStatus`: `inbox`, `in_progress`, `review`, `done`
+  - Agent task discovery route: `GET /api/v1/agent/boards/{board_id}/tasks`
+  - Task event types: `task.created`, `task.updated`, `task.status_changed`, `task.comment`
+- Any PR touching these contracts must include/update regression tests.
 
 ## Accessibility Standards
 

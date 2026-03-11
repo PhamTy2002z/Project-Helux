@@ -3,15 +3,21 @@
 from __future__ import annotations
 
 import asyncio
+import base64
+import binascii
 import json
 from collections import deque
 from dataclasses import dataclass
 from datetime import UTC, datetime
+from time import perf_counter
 from typing import TYPE_CHECKING, cast
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
-from sqlalchemy import asc, desc, or_
+from pydantic import ValidationError
+from sqlalchemy import and_, asc, desc, or_
+from sqlalchemy.orm import aliased
+from sqlalchemy.sql.elements import ColumnElement
 from sqlmodel import col, select
 from sse_starlette.sse import EventSourceResponse
 
@@ -40,6 +46,7 @@ from app.models.task_custom_fields import (
 )
 from app.models.task_dependencies import TaskDependency
 from app.models.task_fingerprints import TaskFingerprint
+from app.models.task_groups import TaskGroup
 from app.models.tasks import Task
 from app.schemas.activity_events import ActivityEventRead
 from app.schemas.common import OkResponse
@@ -50,12 +57,14 @@ from app.schemas.task_custom_fields import (
     TaskCustomFieldValues,
     validate_custom_field_value,
 )
+from app.schemas.task_queries import TaskCursorPage, TaskCursorToken, TaskQueryFilters
 from app.schemas.tasks import TaskCommentCreate, TaskCommentRead, TaskCreate, TaskRead, TaskUpdate
 from app.services.activity_log import record_activity
 from app.services.approval_task_links import (
     load_task_ids_by_approval,
     pending_approval_conflicts_by_task,
 )
+from app.services.board_overlay_observability import record_board_query_latency
 from app.services.entitlements import enforce_task_quota
 from app.services.mentions import extract_mentions, matches_agent_mention
 from app.services.openclaw.gateway_dispatch import GatewayDispatchService
@@ -100,10 +109,13 @@ BOARD_READ_DEP = Depends(get_board_for_actor_read)
 ACTOR_DEP = Depends(require_admin_or_agent)
 SINCE_QUERY = Query(default=None)
 STATUS_QUERY = Query(default=None, alias="status")
+PRIORITY_QUERY = Query(default=None, alias="priority")
 BOARD_WRITE_DEP = Depends(get_board_for_user_write)
 SESSION_DEP = Depends(get_session)
 ADMIN_AUTH_DEP = Depends(require_admin_auth)
 TASK_DEP = Depends(get_task_or_404)
+CURSOR_QUERY = Query(default=None)
+CURSOR_LIMIT_QUERY = Query(default=100, ge=1, le=200)
 
 
 @dataclass(frozen=True, slots=True)
@@ -1200,7 +1212,9 @@ def _task_list_statement(
     status_filter: str | None,
     assigned_agent_id: UUID | None,
     unassigned: bool | None,
+    filters: TaskQueryFilters | None = None,
 ) -> SelectOfScalar[Task]:
+    filters = filters or TaskQueryFilters()
     statement = select(Task).where(Task.board_id == board_id)
     statuses = _status_values(status_filter)
     if statuses:
@@ -1209,7 +1223,201 @@ def _task_list_statement(
         statement = statement.where(col(Task.assigned_agent_id) == assigned_agent_id)
     if unassigned:
         statement = statement.where(col(Task.assigned_agent_id).is_(None))
-    return statement.order_by(col(Task.created_at).desc())
+    if filters.q:
+        search = f"%{filters.q}%"
+        statement = statement.where(
+            or_(
+                col(Task.title).ilike(search),
+                col(Task.description).ilike(search),
+            ),
+        )
+    if filters.tag_ids:
+        tagged_task_ids = select(col(TagAssignment.task_id)).where(
+            col(TagAssignment.tag_id).in_(filters.tag_ids),
+        )
+        statement = statement.where(col(Task.id).in_(tagged_task_ids))
+    if filters.priority:
+        statement = statement.where(col(Task.priority).in_(filters.priority))
+    if filters.due_after is not None:
+        statement = statement.where(
+            col(Task.due_at).is_not(None),
+            col(Task.due_at) >= filters.due_after,
+        )
+    if filters.due_before is not None:
+        statement = statement.where(
+            col(Task.due_at).is_not(None),
+            col(Task.due_at) <= filters.due_before,
+        )
+    if filters.task_group_id is not None:
+        statement = statement.where(col(Task.task_group_id) == filters.task_group_id)
+    if filters.archived is True:
+        statement = statement.where(col(Task.archived_at).is_not(None))
+    elif filters.archived is False:
+        statement = statement.where(col(Task.archived_at).is_(None))
+    if filters.blocked is not None:
+        blocked_exists = _blocked_task_exists_expression()
+        statement = (
+            statement.where(blocked_exists) if filters.blocked else statement.where(~blocked_exists)
+        )
+    if filters.has_pending_approval is not None:
+        pending_exists = _pending_approval_exists_expression(board_id)
+        statement = (
+            statement.where(pending_exists)
+            if filters.has_pending_approval
+            else statement.where(~pending_exists)
+        )
+    return statement.order_by(col(Task.created_at).desc(), col(Task.id).desc())
+
+
+def _csv_values(value: str | None) -> list[str]:
+    if value is None:
+        return []
+    return [item.strip() for item in value.split(",") if item.strip()]
+
+
+def _priority_values(value: str | None) -> list[str]:
+    return [item.lower() for item in _csv_values(value)]
+
+
+def _uuid_csv_values(value: str | None, *, field_name: str) -> list[UUID]:
+    output: list[UUID] = []
+    for raw in _csv_values(value):
+        try:
+            output.append(UUID(raw))
+        except ValueError as exc:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                detail=f"Invalid {field_name} value.",
+            ) from exc
+    return output
+
+
+def _task_query_filters(
+    *,
+    q: str | None,
+    tag_ids_filter: str | None,
+    priority_filter: str | None,
+    blocked: bool | None,
+    due_before: datetime | None,
+    due_after: datetime | None,
+    has_pending_approval: bool | None,
+    task_group_id: UUID | None,
+    archived: bool | None,
+) -> TaskQueryFilters:
+    if due_before is not None and due_after is not None and due_before < due_after:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail="due_before must be >= due_after.",
+        )
+    return TaskQueryFilters(
+        q=(q.strip() if q else None) or None,
+        tag_ids=_uuid_csv_values(tag_ids_filter, field_name="tag_ids"),
+        priority=_priority_values(priority_filter),
+        blocked=blocked,
+        due_before=due_before,
+        due_after=due_after,
+        has_pending_approval=has_pending_approval,
+        task_group_id=task_group_id,
+        archived=archived,
+    )
+
+
+def _has_active_task_filters(filters: TaskQueryFilters) -> bool:
+    return any(
+        (
+            bool(filters.q),
+            bool(filters.tag_ids),
+            bool(filters.priority),
+            filters.blocked is not None,
+            filters.due_before is not None,
+            filters.due_after is not None,
+            filters.has_pending_approval is not None,
+            filters.task_group_id is not None,
+            filters.archived is not None,
+        ),
+    )
+
+
+def _blocked_task_exists_expression() -> ColumnElement[bool]:
+    dependency_task = aliased(Task)
+    return (
+        select(col(TaskDependency.task_id))
+        .join(
+            dependency_task,
+            col(TaskDependency.depends_on_task_id) == col(dependency_task.id),
+        )
+        .where(col(TaskDependency.task_id) == col(Task.id))
+        .where(col(dependency_task.status) != "done")
+        .exists()
+    )
+
+
+def _pending_approval_exists_expression(board_id: UUID) -> ColumnElement[bool]:
+    primary_pending = (
+        select(col(Approval.id))
+        .where(col(Approval.board_id) == board_id)
+        .where(col(Approval.status) == "pending")
+        .where(col(Approval.task_id) == col(Task.id))
+        .exists()
+    )
+    linked_pending = (
+        select(col(ApprovalTaskLink.approval_id))
+        .join(
+            Approval,
+            col(Approval.id) == col(ApprovalTaskLink.approval_id),
+        )
+        .where(col(ApprovalTaskLink.task_id) == col(Task.id))
+        .where(col(Approval.board_id) == board_id)
+        .where(col(Approval.status) == "pending")
+        .exists()
+    )
+    return or_(primary_pending, linked_pending)
+
+
+def _task_cursor_validation_error() -> HTTPException:
+    return HTTPException(
+        status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+        detail="Invalid task cursor token.",
+    )
+
+
+def _encode_task_cursor(value: TaskCursorToken) -> str:
+    payload = value.model_dump(mode="json")
+    raw = json.dumps(payload, separators=(",", ":")).encode("utf-8")
+    return base64.urlsafe_b64encode(raw).decode("utf-8").rstrip("=")
+
+
+def _decode_task_cursor(value: str | None) -> TaskCursorToken | None:
+    if value is None:
+        return None
+    normalized = value.strip()
+    if not normalized:
+        return None
+    padded = normalized + ("=" * (-len(normalized) % 4))
+    try:
+        raw = base64.urlsafe_b64decode(padded.encode("utf-8"))
+        payload = json.loads(raw.decode("utf-8"))
+        return TaskCursorToken.model_validate(payload)
+    except (ValidationError, ValueError, binascii.Error, json.JSONDecodeError) as exc:
+        raise _task_cursor_validation_error() from exc
+
+
+def _apply_task_cursor(
+    statement: SelectOfScalar[Task],
+    *,
+    cursor: TaskCursorToken | None,
+) -> SelectOfScalar[Task]:
+    if cursor is None:
+        return statement
+    return statement.where(
+        or_(
+            col(Task.created_at) < cursor.created_at,
+            and_(
+                col(Task.created_at) == cursor.created_at,
+                col(Task.id) < cursor.task_id,
+            ),
+        ),
+    )
 
 
 async def _task_read_page(
@@ -1440,16 +1648,38 @@ async def list_tasks(
     status_filter: str | None = STATUS_QUERY,
     assigned_agent_id: UUID | None = None,
     unassigned: bool | None = None,
+    q: str | None = Query(default=None),
+    tag_ids_filter: str | None = Query(default=None, alias="tag_ids"),
+    priority_filter: str | None = PRIORITY_QUERY,
+    blocked: bool | None = Query(default=None),
+    due_before: datetime | None = Query(default=None),
+    due_after: datetime | None = Query(default=None),
+    has_pending_approval: bool | None = Query(default=None),
+    task_group_id: UUID | None = Query(default=None),
+    archived: bool | None = Query(default=None),
     board: Board = BOARD_READ_DEP,
     session: AsyncSession = SESSION_DEP,
     _actor: ActorContext = ACTOR_DEP,
 ) -> LimitOffsetPage[TaskRead]:
     """List board tasks with optional status and assignment filters."""
+    started_at = perf_counter()
+    filters = _task_query_filters(
+        q=q,
+        tag_ids_filter=tag_ids_filter,
+        priority_filter=priority_filter,
+        blocked=blocked,
+        due_before=due_before,
+        due_after=due_after,
+        has_pending_approval=has_pending_approval,
+        task_group_id=task_group_id,
+        archived=archived,
+    )
     statement = _task_list_statement(
         board_id=board.id,
         status_filter=status_filter,
         assigned_agent_id=assigned_agent_id,
         unassigned=unassigned,
+        filters=filters,
     )
 
     async def _transform(items: Sequence[object]) -> Sequence[object]:
@@ -1460,7 +1690,85 @@ async def list_tasks(
             tasks=tasks,
         )
 
-    return await paginate(session, statement, transformer=_transform)
+    try:
+        return await paginate(session, statement, transformer=_transform)
+    finally:
+        record_board_query_latency(
+            latency_ms=(perf_counter() - started_at) * 1000.0,
+            used_cursor=False,
+            used_filters=_has_active_task_filters(filters),
+        )
+
+
+@router.get("/cursor", response_model=TaskCursorPage)
+async def list_tasks_cursor(
+    status_filter: str | None = STATUS_QUERY,
+    assigned_agent_id: UUID | None = None,
+    unassigned: bool | None = None,
+    q: str | None = Query(default=None),
+    tag_ids_filter: str | None = Query(default=None, alias="tag_ids"),
+    priority_filter: str | None = PRIORITY_QUERY,
+    blocked: bool | None = Query(default=None),
+    due_before: datetime | None = Query(default=None),
+    due_after: datetime | None = Query(default=None),
+    has_pending_approval: bool | None = Query(default=None),
+    task_group_id: UUID | None = Query(default=None),
+    archived: bool | None = Query(default=False),
+    cursor: str | None = CURSOR_QUERY,
+    limit: int = CURSOR_LIMIT_QUERY,
+    board: Board = BOARD_READ_DEP,
+    session: AsyncSession = SESSION_DEP,
+    _actor: ActorContext = ACTOR_DEP,
+) -> TaskCursorPage:
+    """List board tasks using cursor pagination for high-volume board views."""
+    started_at = perf_counter()
+    filters = _task_query_filters(
+        q=q,
+        tag_ids_filter=tag_ids_filter,
+        priority_filter=priority_filter,
+        blocked=blocked,
+        due_before=due_before,
+        due_after=due_after,
+        has_pending_approval=has_pending_approval,
+        task_group_id=task_group_id,
+        archived=archived,
+    )
+    statement = _task_list_statement(
+        board_id=board.id,
+        status_filter=status_filter,
+        assigned_agent_id=assigned_agent_id,
+        unassigned=unassigned,
+        filters=filters,
+    )
+    try:
+        statement = _apply_task_cursor(
+            statement,
+            cursor=_decode_task_cursor(cursor),
+        ).limit(limit + 1)
+        tasks = list(await session.exec(statement))
+        has_more = len(tasks) > limit
+        page_tasks = tasks[:limit]
+        next_cursor: str | None = None
+        if has_more and page_tasks:
+            last_task = page_tasks[-1]
+            next_cursor = _encode_task_cursor(
+                TaskCursorToken(created_at=last_task.created_at, task_id=last_task.id),
+            )
+        return TaskCursorPage(
+            items=await _task_read_page(
+                session=session,
+                board_id=board.id,
+                tasks=page_tasks,
+            ),
+            next_cursor=next_cursor,
+            has_more=has_more,
+        )
+    finally:
+        record_board_query_latency(
+            latency_ms=(perf_counter() - started_at) * 1000.0,
+            used_cursor=True,
+            used_filters=_has_active_task_filters(filters),
+        )
 
 
 @router.post("", response_model=TaskRead, responses={409: {"model": BlockedTaskError}})
@@ -1480,6 +1788,12 @@ async def create_task(
     task = Task.model_validate(data)
     task.organization_id = board.organization_id
     task.board_id = board.id
+    await _require_task_group_belongs_to_board(
+        session,
+        board_id=board.id,
+        organization_id=board.organization_id,
+        task_group_id=task.task_group_id,
+    )
     if task.created_by_user_id is None and auth.user is not None:
         task.created_by_user_id = auth.user.id
 
@@ -1622,6 +1936,13 @@ async def update_task(
         custom_field_values=custom_field_values or {},
         custom_field_values_set=custom_field_values_set,
     )
+    if "task_group_id" in update.updates:
+        await _require_task_group_belongs_to_board(
+            session,
+            board_id=board_id,
+            organization_id=task.organization_id,
+            task_group_id=_optional_task_group_id(update.updates["task_group_id"]),
+        )
     if actor.actor_type == "agent" and actor.agent and actor.agent.is_board_lead:
         return await _apply_lead_task_update(session, update=update)
 
@@ -1895,6 +2216,12 @@ def _optional_assigned_agent_id(value: object) -> UUID | None:
     raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT)
 
 
+def _optional_task_group_id(value: object) -> UUID | None:
+    if value is None or isinstance(value, UUID):
+        return value
+    raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT)
+
+
 async def _board_organization_id(
     session: AsyncSession,
     *,
@@ -1908,6 +2235,31 @@ async def _board_organization_id(
     if organization_id is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
     return organization_id
+
+
+async def _require_task_group_belongs_to_board(
+    session: AsyncSession,
+    *,
+    board_id: UUID,
+    organization_id: UUID | None,
+    task_group_id: UUID | None,
+) -> None:
+    if task_group_id is None:
+        return
+    task_group = await TaskGroup.objects.by_id(task_group_id).first(session)
+    if (
+        task_group is None
+        or task_group.board_id != board_id
+        or (
+            organization_id is not None
+            and task_group.organization_id is not None
+            and task_group.organization_id != organization_id
+        )
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail="task_group_id must reference a task group in this board.",
+        )
 
 
 async def _task_dep_ids(
@@ -2009,6 +2361,9 @@ def _validate_lead_update_request(update: _TaskUpdateInput) -> None:
     allowed_fields = {
         "assigned_agent_id",
         "status",
+        "task_group_id",
+        "sort_index",
+        "archived_at",
         "depends_on_task_ids",
         "tag_ids",
         "custom_field_values",

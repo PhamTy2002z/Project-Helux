@@ -4,10 +4,27 @@
 
 **Version**: 0.1.0 (Active Development)
 **Status**: Pre-release, under active development
-**Last Updated**: 2026-03-10
+**Last Updated**: 2026-03-12
 
 ## Recent Updates
 
+- ✅ Board planning overlay compatibility plan (`260311-2312`) phases 5-7 completed:
+  - Added feature-flagged board overlay UX with URL-synced query state, saved
+    views, grouped rendering, density modes, and done-lane compression.
+  - Added overlay rollout controls and canary targeting for
+    `board_planning_overlay_v1` and `board_query_v2`.
+  - Added new telemetry endpoint `/api/v1/metrics/board-overlay` with latency,
+    filter-usage, cursor-usage, and agent loop regression counters.
+  - Added rollout runbook:
+    `docs/operations/board-overlay-rollout-playbook.md`.
+  - Added backend/frontend overlay regression tests and verified full check.
+- ✅ Board planning overlay compatibility plan (`260311-2312`) phases 1-4 completed:
+  - Contract matrix locked for OpenClaw compatibility-sensitive task-loop semantics
+  - Added `TaskGroup` planning overlay model + migration and additive task fields (`task_group_id`, `sort_index`, `archived_at`)
+  - Added additive task query filters and new cursor pagination route (`/api/v1/boards/{board_id}/tasks/cursor`)
+  - Added optional compact board snapshot mode (`/api/v1/boards/{board_id}/snapshot?compact=true`)
+  - Updated heartbeat/agent templates and agent OpenAPI hints for deterministic filtered task selection
+  - Added contract + scaling + heartbeat-selection regression tests
 - ✅ Landing page responsive hardening completed:
   - Added FHD/QHD/UHD width scaling rules for navbar, hero, feature cards, product tabs, testimonials, and footer
   - Hero video now degrades gracefully on mobile, reduced-motion, and save-data scenarios to preserve smoothness

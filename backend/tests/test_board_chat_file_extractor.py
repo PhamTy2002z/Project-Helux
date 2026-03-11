@@ -18,6 +18,7 @@ from app.services.board_chat_files.extractor import (
 # resolve_mime
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.parametrize(
     ("file_name", "content_type", "expected"),
     [
@@ -47,6 +48,7 @@ def test_resolve_mime(file_name: str, content_type: str, expected: str) -> None:
 # is_allowed_type
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.parametrize(
     ("file_name", "content_type", "allowed"),
     [
@@ -70,6 +72,7 @@ def test_is_allowed_type(file_name: str, content_type: str, *, allowed: bool) ->
 # ---------------------------------------------------------------------------
 # extract_text — per handler
 # ---------------------------------------------------------------------------
+
 
 def test_extract_text_plain() -> None:
     data = b"Hello, world!"
@@ -160,23 +163,30 @@ def test_extract_text_plain_bad_encoding_replaces() -> None:
 # extract_preview — truncation
 # ---------------------------------------------------------------------------
 
+
 def test_extract_preview_short(monkeypatch: pytest.MonkeyPatch) -> None:
     """Text shorter than max should return unchanged."""
-    monkeypatch.setattr("app.services.board_chat_files.extractor.settings.board_chat_file_preview_max_chars", 500)
+    monkeypatch.setattr(
+        "app.services.board_chat_files.extractor.settings.board_chat_file_preview_max_chars", 500
+    )
     text = "Short text"
     assert extract_preview(text) == text
 
 
 def test_extract_preview_truncates(monkeypatch: pytest.MonkeyPatch) -> None:
     """Text longer than max should be truncated."""
-    monkeypatch.setattr("app.services.board_chat_files.extractor.settings.board_chat_file_preview_max_chars", 10)
+    monkeypatch.setattr(
+        "app.services.board_chat_files.extractor.settings.board_chat_file_preview_max_chars", 10
+    )
     text = "A" * 100
     assert extract_preview(text) == "A" * 10
 
 
 def test_extract_preview_exact_boundary(monkeypatch: pytest.MonkeyPatch) -> None:
     """Text at exact max length should return unchanged."""
-    monkeypatch.setattr("app.services.board_chat_files.extractor.settings.board_chat_file_preview_max_chars", 5)
+    monkeypatch.setattr(
+        "app.services.board_chat_files.extractor.settings.board_chat_file_preview_max_chars", 5
+    )
     assert extract_preview("12345") == "12345"
 
 

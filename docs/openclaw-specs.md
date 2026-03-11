@@ -517,6 +517,9 @@ Helux Service → WebSocket 127.0.0.1:18789 → Full bidirectional control
 
 ## References
 
+- Board planning overlay compatibility matrix:
+  - `docs/reference/board-planning-overlay-contract-matrix.md`
+
 - Full doc index: https://docs.openclaw.ai/llms.txt
 - OpenAPI spec: https://docs.openclaw.ai/api-reference/openapi.json
 - Config reference: https://docs.openclaw.ai/gateway/configuration-reference

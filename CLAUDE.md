@@ -88,7 +88,6 @@ Before delivering Go code, verify:
 | `tooling` | Go tools, linting, profiling |
 | `module` | Go modules, versioning, dependencies |
 
-
 ---
 
 ---

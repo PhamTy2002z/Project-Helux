@@ -74,4 +74,3 @@ async def check_sessions_usage_capability(
         async with _CAPABILITY_CACHE_LOCK:
             _CAPABILITY_CACHE[key] = (now + ttl_seconds, result)
     return result
-

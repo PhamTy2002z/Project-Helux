@@ -48,7 +48,9 @@ async def test_gateway_activation_worker_marks_ready_on_success(
     async def _fake_ensure(self: object, *_args: object, **_kwargs: object) -> None:
         _ = self
 
-    monkeypatch.setattr("app.services.openclaw.gateway_activation_worker.async_session_maker", session_maker)
+    monkeypatch.setattr(
+        "app.services.openclaw.gateway_activation_worker.async_session_maker", session_maker
+    )
     monkeypatch.setattr(
         "app.services.openclaw.admin_service.GatewayAdminLifecycleService.assert_gateway_runtime_compatible",
         _fake_assert,
@@ -104,7 +106,9 @@ async def test_gateway_activation_worker_marks_degraded_without_retry_for_422(
         _ = self
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="unsupported")
 
-    monkeypatch.setattr("app.services.openclaw.gateway_activation_worker.async_session_maker", session_maker)
+    monkeypatch.setattr(
+        "app.services.openclaw.gateway_activation_worker.async_session_maker", session_maker
+    )
     monkeypatch.setattr(
         "app.services.openclaw.admin_service.GatewayAdminLifecycleService.assert_gateway_runtime_compatible",
         _fake_assert,
@@ -155,7 +159,9 @@ async def test_gateway_activation_worker_raises_for_retryable_5xx(
         _ = self
         raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="gateway down")
 
-    monkeypatch.setattr("app.services.openclaw.gateway_activation_worker.async_session_maker", session_maker)
+    monkeypatch.setattr(
+        "app.services.openclaw.gateway_activation_worker.async_session_maker", session_maker
+    )
     monkeypatch.setattr(
         "app.services.openclaw.admin_service.GatewayAdminLifecycleService.assert_gateway_runtime_compatible",
         _fake_assert,

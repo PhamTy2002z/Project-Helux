@@ -54,4 +54,3 @@ class AgentTokenDailyUsage(QueryModel, table=True):
     last_synced_at: datetime | None = None
     created_at: datetime = Field(default_factory=utcnow)
     updated_at: datetime = Field(default_factory=utcnow)
-

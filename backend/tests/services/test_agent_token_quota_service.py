@@ -154,6 +154,12 @@ async def test_sync_and_enforce_raises_429_and_marks_blocked_at_when_quota_reach
     try:
         async with AsyncSession(engine, expire_on_commit=False) as session:
             monkeypatch.setattr(settings, "openclaw_usage_enforcement_mode", "enforce")
+            trial_policy = policy_for_tier("trial_7d")
+            token_limit = trial_policy.agent_daily_tokens
+            assert token_limit is not None
+            seeded_total = max(token_limit - 20_000, 0)
+            exceeded_total = token_limit + 1
+            token_delta = max(exceeded_total - seeded_total, 0)
             org = Organization(id=uuid4(), name="Org")
             gateway = Gateway(
                 id=uuid4(),
@@ -187,8 +193,8 @@ async def test_sync_and_enforce_raises_429_and_marks_blocked_at_when_quota_reach
                     organization_id=org.id,
                     agent_id=agent.id,
                     usage_date_vn=usage_date_vn,
-                    openclaw_tokens_total=80_000,
-                    billed_tokens_used=80_000,
+                    openclaw_tokens_total=seeded_total,
+                    billed_tokens_used=seeded_total,
                 ),
             )
             await session.commit()
@@ -221,10 +227,10 @@ async def test_sync_and_enforce_raises_429_and_marks_blocked_at_when_quota_reach
                     agent_id=str(agent.id),
                     organization_id=str(org.id),
                     usage_date_vn=usage_date_vn or date(2026, 3, 9),
-                    openclaw_total=100_000,
-                    openclaw_delta=20_000,
-                    billed_delta=20_000,
-                    billed_total=100_000,
+                    openclaw_total=exceeded_total,
+                    openclaw_delta=token_delta,
+                    billed_delta=token_delta,
+                    billed_total=exceeded_total,
                 )
 
             async def _fake_resolve_runtime_policy(
@@ -289,6 +295,12 @@ async def test_sync_and_enforce_observe_mode_does_not_block_on_quota_reached(
     try:
         async with AsyncSession(engine, expire_on_commit=False) as session:
             monkeypatch.setattr(settings, "openclaw_usage_enforcement_mode", "observe")
+            trial_policy = policy_for_tier("trial_7d")
+            token_limit = trial_policy.agent_daily_tokens
+            assert token_limit is not None
+            seeded_total = max(token_limit - 20_000, 0)
+            exceeded_total = token_limit + 1
+            token_delta = max(exceeded_total - seeded_total, 0)
             org = Organization(id=uuid4(), name="Org")
             gateway = Gateway(
                 id=uuid4(),
@@ -322,8 +334,8 @@ async def test_sync_and_enforce_observe_mode_does_not_block_on_quota_reached(
                     organization_id=org.id,
                     agent_id=agent.id,
                     usage_date_vn=usage_date_vn,
-                    openclaw_tokens_total=80_000,
-                    billed_tokens_used=80_000,
+                    openclaw_tokens_total=seeded_total,
+                    billed_tokens_used=seeded_total,
                 ),
             )
             await session.commit()
@@ -356,10 +368,10 @@ async def test_sync_and_enforce_observe_mode_does_not_block_on_quota_reached(
                     agent_id=str(agent.id),
                     organization_id=str(org.id),
                     usage_date_vn=usage_date_vn or date(2026, 3, 9),
-                    openclaw_total=100_000,
-                    openclaw_delta=20_000,
-                    billed_delta=20_000,
-                    billed_total=100_000,
+                    openclaw_total=exceeded_total,
+                    openclaw_delta=token_delta,
+                    billed_delta=token_delta,
+                    billed_total=exceeded_total,
                 )
 
             async def _fake_resolve_runtime_policy(
@@ -507,6 +519,17 @@ async def test_sync_and_enforce_blocks_on_cost_quota_exceeded(
     try:
         async with AsyncSession(engine, expire_on_commit=False) as session:
             monkeypatch.setattr(settings, "openclaw_usage_enforcement_mode", "enforce")
+            trial_policy = policy_for_tier("trial_7d")
+            token_limit = trial_policy.agent_daily_tokens
+            cost_limit = trial_policy.agent_daily_cost
+            assert token_limit is not None
+            assert cost_limit is not None
+            seeded_total = max(token_limit - 2, 0)
+            next_total = seeded_total + 1
+            token_delta = max(next_total - seeded_total, 0)
+            seeded_cost = max(cost_limit - Decimal("0.10"), Decimal(0))
+            exceeded_cost = cost_limit + Decimal("0.05")
+            cost_delta = max(exceeded_cost - seeded_cost, Decimal(0))
             org = Organization(id=uuid4(), name="Org")
             gateway = Gateway(
                 id=uuid4(),
@@ -540,9 +563,9 @@ async def test_sync_and_enforce_blocks_on_cost_quota_exceeded(
                     organization_id=org.id,
                     agent_id=agent.id,
                     usage_date_vn=usage_date_vn,
-                    openclaw_tokens_total=10_000,
-                    billed_tokens_used=10_000,
-                    cost_used=Decimal("0.40"),
+                    openclaw_tokens_total=seeded_total,
+                    billed_tokens_used=seeded_total,
+                    cost_used=seeded_cost,
                 ),
             )
             await session.commit()
@@ -575,12 +598,12 @@ async def test_sync_and_enforce_blocks_on_cost_quota_exceeded(
                     agent_id=str(agent.id),
                     organization_id=str(org.id),
                     usage_date_vn=usage_date_vn or date(2026, 3, 9),
-                    openclaw_total=15_000,
-                    openclaw_delta=5_000,
-                    billed_delta=5_000,
-                    billed_total=15_000,
-                    cost_delta=Decimal("0.15"),
-                    cost_total=Decimal("0.55"),
+                    openclaw_total=next_total,
+                    openclaw_delta=token_delta,
+                    billed_delta=token_delta,
+                    billed_total=next_total,
+                    cost_delta=cost_delta,
+                    cost_total=exceeded_cost,
                     cost_data_available=True,
                 )
 
@@ -646,6 +669,12 @@ async def test_sync_and_enforce_blocks_on_token_cap_when_cost_data_unavailable(
     try:
         async with AsyncSession(engine, expire_on_commit=False) as session:
             monkeypatch.setattr(settings, "openclaw_usage_enforcement_mode", "enforce")
+            trial_policy = policy_for_tier("trial_7d")
+            token_limit = trial_policy.agent_daily_tokens
+            assert token_limit is not None
+            seeded_total = max(token_limit - 20_000, 0)
+            exceeded_total = token_limit + 1
+            token_delta = max(exceeded_total - seeded_total, 0)
             org = Organization(id=uuid4(), name="Org")
             gateway = Gateway(
                 id=uuid4(),
@@ -679,8 +708,8 @@ async def test_sync_and_enforce_blocks_on_token_cap_when_cost_data_unavailable(
                     organization_id=org.id,
                     agent_id=agent.id,
                     usage_date_vn=usage_date_vn,
-                    openclaw_tokens_total=80_000,
-                    billed_tokens_used=80_000,
+                    openclaw_tokens_total=seeded_total,
+                    billed_tokens_used=seeded_total,
                 ),
             )
             await session.commit()
@@ -713,10 +742,10 @@ async def test_sync_and_enforce_blocks_on_token_cap_when_cost_data_unavailable(
                     agent_id=str(agent.id),
                     organization_id=str(org.id),
                     usage_date_vn=usage_date_vn or date(2026, 3, 9),
-                    openclaw_total=100_000,
-                    openclaw_delta=20_000,
-                    billed_delta=20_000,
-                    billed_total=100_000,
+                    openclaw_total=exceeded_total,
+                    openclaw_delta=token_delta,
+                    billed_delta=token_delta,
+                    billed_total=exceeded_total,
                     cost_delta=Decimal(0),
                     cost_total=Decimal(0),
                     cost_data_available=False,  # Cost data unavailable

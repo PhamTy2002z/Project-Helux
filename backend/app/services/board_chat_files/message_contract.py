@@ -44,7 +44,9 @@ def build_file_manifest_block(
         status_note = ""
         if asset.status != "ready":
             status_note = f" [extraction {asset.status}]"
-        lines.append(f'<file name="{asset.file_name}" id="{asset.id}">{preview}{status_note}</file>')
+        lines.append(
+            f'<file name="{asset.file_name}" id="{asset.id}">{preview}{status_note}</file>'
+        )
         lines.append(
             f"Full content: GET {base_url}/api/v1/agent/boards/{board_id}"
             f"/chat-files/{asset.id}/content"
@@ -53,8 +55,6 @@ def build_file_manifest_block(
     lines.append("")
     lines.append("REPORT INSTRUCTIONS")
     for asset in assets:
-        lines.append(
-            f"Reply with: [FILE_REPORT:{asset.id}] your analysis summary"
-        )
+        lines.append(f"Reply with: [FILE_REPORT:{asset.id}] your analysis summary")
 
     return "\n".join(lines)

@@ -71,6 +71,8 @@ export function OnboardingWizard({
   useEffect(() => {
     const fromMetadata = progress?.steps.find((step) => step.key === "use_case")?.details;
     const existing = typeof fromMetadata?.use_case === "string" ? fromMetadata.use_case : "";
+    // Keep local input synchronized with server-backed onboarding metadata.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setUseCase(existing);
   }, [progress]);
 

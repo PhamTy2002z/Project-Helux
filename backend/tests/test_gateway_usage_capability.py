@@ -56,4 +56,3 @@ async def test_check_gateway_sessions_usage_capability_force_refresh_bypasses_ca
     await check_gateway_sessions_usage_capability(config, force_refresh=True)
 
     assert calls == 2
-

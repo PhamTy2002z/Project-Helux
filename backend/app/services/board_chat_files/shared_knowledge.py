@@ -5,7 +5,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 from uuid import UUID
 
-from app.core.config import settings
 from app.core.logging import get_logger
 from app.core.time import utcnow
 from app.models.board_chat_file_assets import BoardChatFileAsset
@@ -56,8 +55,7 @@ async def publish_board_shared_summary(
     from sqlmodel import col
 
     existing = await (
-        BoardMemory.objects
-        .filter_by(board_id=board_id, is_chat=False)
+        BoardMemory.objects.filter_by(board_id=board_id, is_chat=False)
         .filter(col(BoardMemory.tags).contains([dedupe_tag]))
         .first(session)
     )

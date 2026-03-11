@@ -224,6 +224,13 @@ services:
       - device_identity:/shared/device-identity
     networks:
       - internal
+    # Worker healthcheck: verify the process is alive and can import app modules.
+    healthcheck:
+      test: ["CMD-SHELL", "python -c 'from app.services.queue_worker import run_worker' || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
     deploy:
       resources:
         limits:

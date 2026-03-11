@@ -773,6 +773,24 @@ Organizations
 - Error stack traces
 - Audit trail via ActivityEvents
 
+## Board Planning Overlay Compatibility Guardrails
+
+- Contract matrix source of truth: `docs/reference/board-planning-overlay-contract-matrix.md`
+- Locked contracts for OpenClaw runtime compatibility:
+  - Task status model remains `inbox`, `in_progress`, `review`, `done`
+  - Agent discovery route stays `GET /api/v1/agent/boards/{board_id}/tasks`
+  - Task event taxonomy remains unchanged
+  - Heartbeat workflow stays task-comment-first
+- Overlay changes must stay additive:
+  - Optional task-group metadata (`task_group_id`, `sort_index`, `archived_at`)
+  - Optional filter/cursor query paths for scalable UI reads
+- Rollout and observability controls:
+  - Feature flags: `board_planning_overlay_v1`, `board_query_v2`
+  - Canary targeting via board/org allowlists from runtime configuration
+  - Runtime telemetry endpoint: `GET /api/v1/metrics/board-overlay`
+  - Query instrumentation: latency samples, filter usage, cursor usage
+  - Compatibility signal: `agent_task_loop_regression_count`
+
 ## Unresolved Questions
 
 1. What is the expected concurrent user load for production deployments?

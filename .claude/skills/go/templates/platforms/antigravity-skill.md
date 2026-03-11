@@ -137,15 +137,15 @@ volumes:
 **Makefile** (must include):
 ```makefile
 dev:
-	go run ./cmd/api
+    go run ./cmd/api
 build:
-	go build -o bin/api ./cmd/api
+    go build -o bin/api ./cmd/api
 test:
-	go test -race -cover ./...
+    go test -race -cover ./...
 docker-up:
-	docker-compose up -d --build
+    docker-compose up -d --build
 docker-down:
-	docker-compose down
+    docker-compose down
 ```
 
 ## Pre-Delivery Checklist

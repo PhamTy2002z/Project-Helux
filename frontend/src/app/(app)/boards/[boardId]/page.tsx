@@ -106,9 +106,14 @@ import {
   resolveMemberDisplayName,
 } from "@/lib/display-name";
 import { AGENT_EMOJI_GLYPHS } from "@/lib/agent-emoji";
+import {
+  applyBoardQueryStateToSearchParams,
+  parseBoardQueryState,
+} from "@/lib/boards/board-query-state";
 import { cn } from "@/lib/utils";
 import { usePageActive } from "@/hooks/usePageActive";
 import { loadBoardDetailBootstrap } from "@/lib/hooks/board-detail/load-board-detail-bootstrap";
+import { isBoardOverlayEnabled } from "@/lib/query-policy";
 import {
   boardCustomFieldValues,
   type TaskCustomFieldValues,
@@ -211,6 +216,10 @@ export default function BoardDetailPage() {
   const taskIdFromUrl = searchParams.get("taskId");
   const commentIdFromUrl = searchParams.get("commentId");
   const panelFromUrl = searchParams.get("panel");
+  const boardQueryState = useMemo(
+    () => parseBoardQueryState(searchParams),
+    [searchParams],
+  );
   const buildUrlWithTaskAndComment = useCallback(
     (
       taskId: string | null,
@@ -237,6 +246,17 @@ export default function BoardDetailPage() {
       return next ? `${pathname}?${next}` : pathname;
     },
     [pathname, searchParams],
+  );
+  const setBoardQueryState = useCallback(
+    (nextState: ReturnType<typeof parseBoardQueryState>) => {
+      const nextParams = applyBoardQueryStateToSearchParams(
+        new URLSearchParams(searchParams.toString()),
+        nextState,
+      );
+      const next = nextParams.toString();
+      router.replace(next ? `${pathname}?${next}` : pathname, { scroll: false });
+    },
+    [pathname, router, searchParams],
   );
 
   const membershipQuery = useGetMyMembershipApiV1OrganizationsMeMemberGet<
@@ -364,6 +384,14 @@ export default function BoardDetailPage() {
     "pause" | "resume"
   >("pause");
   const [viewMode, setViewMode] = useState<"board" | "list">("board");
+  const overlayEnabled = useMemo(
+    () =>
+      isBoardOverlayEnabled({
+        boardId: boardId ?? null,
+        organizationId: board?.organization_id ?? null,
+      }),
+    [board?.organization_id, boardId],
+  );
   const [isLiveFeedOpen, setIsLiveFeedOpen] = useState(false);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
   const isLiveFeedOpenRef = useRef(false);
@@ -2053,6 +2081,9 @@ export default function BoardDetailPage() {
                       onTaskSelect={openComments}
                       onTaskMove={canWrite ? handleTaskMove : undefined}
                       readOnly={!canWrite}
+                      overlayEnabled={overlayEnabled}
+                      queryState={boardQueryState}
+                      onQueryStateChange={setBoardQueryState}
                     />
                   ) : (
                     <div className="rounded-xl border border-slate-200 bg-white shadow-sm">

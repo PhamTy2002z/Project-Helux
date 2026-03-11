@@ -47,11 +47,9 @@ async def process_agent_file_report(
     Idempotent: updates existing report if agent re-submits.
     """
     # Find pending task for this agent + file
-    task = await (
-        BoardChatFileTask.objects
-        .filter_by(file_asset_id=file_asset_id, agent_id=agent_id)
-        .first(session)
-    )
+    task = await BoardChatFileTask.objects.filter_by(
+        file_asset_id=file_asset_id, agent_id=agent_id
+    ).first(session)
     if task is None:
         logger.warning(
             "file_report.no_task",
@@ -63,11 +61,9 @@ async def process_agent_file_report(
     truncated = summary[:_MAX_SUMMARY_CHARS] if len(summary) > _MAX_SUMMARY_CHARS else summary
 
     # Upsert report keyed by (file_asset_id, agent_id)
-    existing = await (
-        BoardChatFileReport.objects
-        .filter_by(file_asset_id=file_asset_id, agent_id=agent_id)
-        .first(session)
-    )
+    existing = await BoardChatFileReport.objects.filter_by(
+        file_asset_id=file_asset_id, agent_id=agent_id
+    ).first(session)
     now = utcnow()
     if existing is not None:
         existing.summary = truncated
@@ -191,7 +187,7 @@ async def _create_board_chat_signal(
 ) -> None:
     message = (
         f"[FILE_SIGNAL:{context.asset.id}] {context.reporter_name} {context.action} "
-        f"file analysis for \"{context.asset.file_name}\".\n"
+        f'file analysis for "{context.asset.file_name}".\n'
         f"Summary: {context.summary_line}"
     )
     session.add(

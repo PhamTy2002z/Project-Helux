@@ -26,7 +26,9 @@ async def _build_session_maker() -> async_sessionmaker[AsyncSession]:
     return session_maker
 
 
-def _patch_managed_settings(monkeypatch: pytest.MonkeyPatch, *, auto_provision: bool = True) -> None:
+def _patch_managed_settings(
+    monkeypatch: pytest.MonkeyPatch, *, auto_provision: bool = True
+) -> None:
     monkeypatch.setattr("app.core.config.settings.managed_gateway_auto_provision", auto_provision)
     monkeypatch.setattr("app.core.config.settings.managed_gateway_name", "Managed Gateway")
     monkeypatch.setattr(

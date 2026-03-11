@@ -87,14 +87,22 @@ def _task_to_card(
     )
 
 
-async def build_board_snapshot(session: AsyncSession, board: Board) -> BoardSnapshot:
+async def build_board_snapshot(
+    session: AsyncSession,
+    board: Board,
+    *,
+    compact: bool = False,
+) -> BoardSnapshot:
     """Build a board snapshot with tasks, agents, approvals, and chat history."""
     board_read = BoardRead.model_validate(board, from_attributes=True)
 
+    task_statement = Task.objects.filter_by(board_id=board.id).statement
+    if compact:
+        task_statement = task_statement.where(col(Task.archived_at).is_(None)).limit(300)
     tasks = list(
-        await Task.objects.filter_by(board_id=board.id)
-        .order_by(col(Task.created_at).desc())
-        .all(session),
+        await session.exec(
+            task_statement.order_by(col(Task.created_at).desc()),
+        ),
     )
     task_ids = [task.id for task in tasks]
     tag_state_by_task_id = await load_tag_state(

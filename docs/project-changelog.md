@@ -1,5 +1,55 @@
 # Project Changelog
 
+## 2026-03-12
+
+### Board planning overlay compatibility plan (`260311-2312`) phases 5-7
+- Added scalable board overlay UX behind rollout flags:
+  - New global filter bar with saved views, status/priority filters, and URL
+    query-state sync.
+  - Grouped board rendering with per-group collapse and progress rollups.
+  - Density modes and done-lane compression controls for high-volume boards.
+- Added overlay view-model and query-state modules:
+  - `frontend/src/lib/boards/board-query-state.ts`
+  - `frontend/src/lib/boards/board-view-model.ts`
+- Added new board overlay UI building blocks:
+  - `frontend/src/components/organisms/task-board-filter-bar.tsx`
+  - `frontend/src/components/organisms/task-group-column-section.tsx`
+- Added lazy task-card detail hydration and batched large-list rendering in
+  overlay mode to preserve interaction smoothness.
+- Added rollout and observability controls:
+  - Backend/Frontend feature flags for `board_planning_overlay_v1` and
+    `board_query_v2` with canary board/org targeting.
+  - New runtime telemetry endpoint: `GET /api/v1/metrics/board-overlay`.
+  - Task query latency/filter usage instrumentation and agent loop regression
+    marker tracking.
+  - New operations runbook:
+    `docs/operations/board-overlay-rollout-playbook.md`.
+- Added regression coverage for overlay rollout and compatibility:
+  - `backend/tests/test_board_overlay_compatibility.py`
+  - `frontend/src/components/organisms/task-board-overlay.test.tsx`
+
+## 2026-03-11
+
+### Board planning overlay compatibility plan (`260311-2312`) phases 1-4
+- Added immutable compatibility matrix for OpenClaw task-loop contracts at `docs/reference/board-planning-overlay-contract-matrix.md`.
+- Added additive planning overlay data model:
+  - New `task_groups` table/model
+  - New optional task fields: `task_group_id`, `sort_index`, `archived_at`
+  - New migration: `b9d4e7f1a2c3_add_task_group_overlay.py`
+- Extended task query APIs with additive optional filters:
+  - `q`, `tag_ids`, `priority`, `blocked`, `due_before`, `due_after`, `has_pending_approval`, `task_group_id`, `archived`
+- Added scalable cursor query route: `GET /api/v1/boards/{board_id}/tasks/cursor`.
+- Added optional compact board snapshot mode: `GET /api/v1/boards/{board_id}/snapshot?compact=true`.
+- Hardened agent workflow guidance:
+  - Updated `BOARD_HEARTBEAT.md.j2` with deterministic filtered selection recipes
+  - Updated `BOARD_AGENTS.md.j2` with explicit task-group-as-planning-metadata guidance
+  - Extended agent OpenAPI routing hints for filtered task discovery.
+- Added regression tests:
+  - `test_agent_task_contracts.py`
+  - `test_task_query_scaling_contract.py`
+  - `test_agent_heartbeat_task_selection_contract.py`
+- Updated existing task permission tests for current notifier call signature compatibility.
+
 ## 2026-03-10
 
 ### Board chat file upload core (phases 1-7)

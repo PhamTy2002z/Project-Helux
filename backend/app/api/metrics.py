@@ -14,6 +14,7 @@ from sqlmodel import col, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.api.deps import require_org_member
+from app.core.config import settings
 from app.core.time import utcnow
 from app.db.session import get_session
 from app.models.activity_events import ActivityEvent
@@ -23,6 +24,7 @@ from app.models.boards import Board
 from app.models.tasks import Task
 from app.schemas.entitlements import EntitlementUsageRead
 from app.schemas.metrics import (
+    BoardOverlayMetrics,
     DashboardBucketKey,
     DashboardKpis,
     DashboardMetrics,
@@ -38,6 +40,7 @@ from app.schemas.metrics import (
     SaasBillingHealthMetrics,
     TenantSloMetrics,
 )
+from app.services.board_overlay_observability import get_board_overlay_runtime_snapshot
 from app.services.entitlements import get_entitlement_usage
 from app.services.organizations import OrganizationContext, list_accessible_board_ids
 
@@ -602,6 +605,50 @@ async def quota_usage(
 ) -> EntitlementUsageRead:
     """Return organization plan tier and current quota usage snapshot."""
     return await get_entitlement_usage(session, organization_id=ctx.organization.id)
+
+
+@router.get("/board-overlay", response_model=BoardOverlayMetrics)
+async def board_overlay_metrics(
+    session: AsyncSession = SESSION_DEP,
+    ctx: OrganizationContext = ORG_MEMBER_DEP,
+) -> BoardOverlayMetrics:
+    """Return rollout flags and runtime telemetry for board overlay compatibility."""
+    organization_id = ctx.organization.id
+    accessible_board_ids = await list_accessible_board_ids(
+        session,
+        member=ctx.member,
+        write=False,
+    )
+    board_overlay_enabled_count = sum(
+        1
+        for board_id in accessible_board_ids
+        if settings.board_planning_overlay_enabled_for(
+            board_id=board_id,
+            organization_id=organization_id,
+        )
+    )
+    board_query_v2_enabled_count = sum(
+        1
+        for board_id in accessible_board_ids
+        if settings.board_query_v2_enabled_for(
+            board_id=board_id,
+            organization_id=organization_id,
+        )
+    )
+    runtime = get_board_overlay_runtime_snapshot()
+    return BoardOverlayMetrics(
+        organization_id=organization_id,
+        generated_at=utcnow(),
+        board_overlay_enabled_count=board_overlay_enabled_count,
+        board_query_v2_enabled_count=board_query_v2_enabled_count,
+        board_query_latency_samples=runtime.samples,
+        board_query_latency_ms_avg=runtime.avg_ms,
+        board_query_latency_ms_p95=runtime.p95_ms,
+        board_query_latency_ms_max=runtime.max_ms,
+        filter_usage_count=runtime.filter_usage_count,
+        cursor_usage_count=runtime.cursor_usage_count,
+        agent_task_loop_regression_count=runtime.agent_task_loop_regression_count,
+    )
 
 
 @router.get("/tenant-slo", response_model=TenantSloMetrics)

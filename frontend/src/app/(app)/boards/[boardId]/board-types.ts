@@ -25,6 +25,9 @@ export type Task = Omit<
   approvals_count: number;
   approvals_pending_count: number;
   custom_field_values?: TaskCustomFieldValues | null;
+  task_group_id?: string | null;
+  sort_index?: number | null;
+  archived_at?: string | null;
 };
 
 export type Agent = AgentRead & { status: string };

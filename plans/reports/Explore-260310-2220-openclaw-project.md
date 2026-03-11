@@ -45,7 +45,7 @@ openclaw/
 - **Task Processing**: croner 10.0.1
 - **Validation**: Zod 4.3.6, AJV 8.18.0
 - **CLI**: Commander 14.0.3, Clack 1.1.0
-- **Media Processing**: 
+- **Media Processing**:
   - sharp 0.34.5 (image processing)
   - pdfjs-dist 5.5.207 (PDF extraction)
   - playwright-core 1.58.2 (browser automation)
@@ -84,7 +84,7 @@ OpenClaw handles file uploads through a multi-layer abstraction:
      fileName?: string;
      content?: unknown;  // base64 or buffer
    };
-   
+
    export type ChatImageContent = {
      type: "image";
      data: string;      // base64
@@ -361,7 +361,7 @@ Searches for board, kanban, card, column, task patterns returned:
 
 ### Primary Database: SQLite (Node.js Built-in)
 
-**Location**: 
+**Location**:
 - `/src/memory/manager.ts` - Memory manager using SQLite
 - `/src/memory/manager-sync-ops.ts` - Synchronous SQLite operations
 
@@ -399,7 +399,7 @@ CREATE TABLE files (
 {"type":"message", "role":"assistant", "content":"...", "timestamp":1234567891}
 ```
 
-**Repair/Migration**: 
+**Repair/Migration**:
 - `/src/agents/session-file-repair.ts` - Repair corrupted session files
 - `/src/memory/session-files.ts` - JSONL parsing with line-mapping
 

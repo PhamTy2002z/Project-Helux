@@ -3,7 +3,7 @@
 
 from __future__ import annotations
 
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 import pytest
 
@@ -12,6 +12,7 @@ from app.services.board_chat_files.report_parser import ParsedFileReport, parse_
 # ---------------------------------------------------------------------------
 # Fast-path: no FILE_REPORT tag → empty list
 # ---------------------------------------------------------------------------
+
 
 def test_no_tag_returns_empty() -> None:
     assert parse_file_reports("Just a normal chat message.") == []
@@ -25,6 +26,7 @@ def test_empty_string_returns_empty() -> None:
 # Single report
 # ---------------------------------------------------------------------------
 
+
 def test_single_report_parsed() -> None:
     fid = uuid4()
     content = f"[FILE_REPORT:{fid}] This file contains API docs for the payments module."
@@ -36,11 +38,7 @@ def test_single_report_parsed() -> None:
 
 def test_single_report_multiline_summary() -> None:
     fid = uuid4()
-    content = (
-        f"[FILE_REPORT:{fid}] Line one of summary.\n"
-        "Line two of summary.\n"
-        "Line three."
-    )
+    content = f"[FILE_REPORT:{fid}] Line one of summary.\n" "Line two of summary.\n" "Line three."
     reports = parse_file_reports(content)
     assert len(reports) == 1
     assert "Line one" in reports[0].summary
@@ -50,6 +48,7 @@ def test_single_report_multiline_summary() -> None:
 # ---------------------------------------------------------------------------
 # Multiple reports in single message
 # ---------------------------------------------------------------------------
+
 
 def test_multiple_reports_in_one_message() -> None:
     fid1 = uuid4()
@@ -67,6 +66,7 @@ def test_multiple_reports_in_one_message() -> None:
 # ---------------------------------------------------------------------------
 # Edge cases: empty summary, malformed UUID
 # ---------------------------------------------------------------------------
+
 
 def test_empty_summary_skipped() -> None:
     fid = uuid4()
@@ -97,6 +97,7 @@ def test_valid_report_among_noise() -> None:
 # Case insensitivity
 # ---------------------------------------------------------------------------
 
+
 def test_case_insensitive_tag() -> None:
     fid = uuid4()
     content = f"[file_report:{fid}] lowercase tag summary."
@@ -111,6 +112,7 @@ def test_case_insensitive_tag() -> None:
 # ---------------------------------------------------------------------------
 # Data class immutability
 # ---------------------------------------------------------------------------
+
 
 def test_parsed_report_is_frozen() -> None:
     report = ParsedFileReport(file_asset_id=uuid4(), summary="test")
