@@ -98,6 +98,31 @@ class Settings(BaseSettings):
     managed_gateway_disable_device_pairing: bool = False
     managed_gateway_allow_insecure_tls: bool = False
 
+    # Object storage (MinIO / S3-compatible)
+    object_storage_endpoint: str = "http://localhost:9000"
+    object_storage_access_key: str = "minioadmin"
+    object_storage_secret_key: str = "minioadmin"
+    object_storage_bucket: str = "board-chat-files"
+    object_storage_use_ssl: bool = False
+
+    # Board chat file upload limits
+    board_chat_file_max_bytes: int = Field(default=10_485_760, ge=1)  # 10 MB
+    board_chat_file_max_per_message: int = Field(default=3, ge=1)
+    board_chat_file_preview_max_chars: int = Field(default=500, ge=0)
+    board_chat_file_allowed_types: str = "txt,md,csv,json,pdf"
+    board_chat_file_pdf_ocr_enabled: bool = True
+    board_chat_file_pdf_ocr_lang: str = "eng+vie"
+    board_chat_file_pdf_ocr_max_pages: int = Field(default=12, ge=1)
+    board_chat_file_pdf_ocr_render_scale: float = Field(default=2.0, gt=0)
+
+    # Board chat file report SLA / retry policy
+    board_chat_file_report_timeout_seconds: int = Field(default=300, ge=10)
+    board_chat_file_report_max_retries: int = Field(default=2, ge=0)
+    board_chat_file_report_retry_backoff_seconds: str = "30,120"
+
+    # Shared knowledge publication
+    board_chat_file_publish_group_memory: bool = False
+
     # Logging
     log_level: str = "INFO"
     log_format: str = "text"

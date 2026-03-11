@@ -32,6 +32,14 @@ from app.services.board_chat_sessions import (
     get_or_create_default_chat_session,
     maybe_auto_title_chat_session,
 )
+from app.services.board_chat_files.delivery import (
+    create_file_tasks_for_targets,
+    validate_and_link_files,
+)
+from app.services.board_chat_files.message_contract import build_file_manifest_block
+from app.services.board_chat_files.report_deadline_queue import enqueue_report_deadline
+from app.services.board_chat_files.report_parser import parse_file_reports
+from app.services.board_chat_files.reporting import process_agent_file_report
 from app.services.mentions import extract_mentions, matches_agent_mention
 from app.services.openclaw.gateway_dispatch import GatewayDispatchService
 from app.services.openclaw.gateway_rpc import GatewayConfig as GatewayClientConfig
@@ -231,6 +239,7 @@ async def _notify_chat_targets(
     board: Board,
     memory: BoardMemory,
     actor: ActorContext,
+    file_assets: list | None = None,
 ) -> None:
     if not memory.content:
         return
@@ -262,6 +271,26 @@ async def _notify_chat_targets(
     )
     if not targets:
         return
+
+    # Create per-agent per-file task rows and enqueue deadline checks
+    if file_assets:
+        file_tasks = await create_file_tasks_for_targets(
+            session=session,
+            assets=file_assets,
+            targets=targets,
+        )
+        await session.commit()
+        for ft in file_tasks:
+            enqueue_report_deadline(ft.id)
+
+    # Build file manifest block if files are attached
+    file_block = ""
+    if file_assets:
+        file_block = build_file_manifest_block(
+            board_id=board.id,
+            assets=file_assets,
+        )
+
     actor_name = _actor_display_name(actor)
     snippet = memory.content.strip()
     if len(snippet) > MAX_SNIPPET_LENGTH:
@@ -276,7 +305,8 @@ async def _notify_chat_targets(
             f"{header}\n"
             f"Board: {board.name}\n"
             f"From: {actor_name}\n\n"
-            f"{snippet}\n\n"
+            f"{snippet}"
+            f"{file_block}\n\n"
             "Reply via board chat:\n"
             f"POST {base_url}/api/v1/agent/boards/{board.id}/memory\n"
             f"Body: {_agent_reply_body_hint(memory)}"
@@ -429,6 +459,18 @@ async def create_board_memory(
     session.add(memory)
     await session.commit()
     await session.refresh(memory)
+
+    # Validate and link files if provided (Phase 3)
+    file_assets = None
+    if is_chat and payload.file_ids:
+        file_assets = await validate_and_link_files(
+            session=session,
+            board_id=board.id,
+            memory=memory,
+            file_ids=payload.file_ids,
+        )
+        await session.commit()
+
     if is_chat:
         if resolved_chat_session is not None:
             await maybe_auto_title_chat_session(
@@ -441,5 +483,24 @@ async def create_board_memory(
             board=board,
             memory=memory,
             actor=actor,
+            file_assets=file_assets,
         )
+
+    # Detect file reports from agent chat messages (Phase 4)
+    if is_chat and actor.actor_type == "agent" and actor.agent:
+        parsed_reports = parse_file_reports(payload.content)
+        for pr in parsed_reports:
+            try:
+                await process_agent_file_report(
+                    session=session,
+                    agent_id=actor.agent.id,
+                    file_asset_id=pr.file_asset_id,
+                    summary=pr.summary,
+                )
+            except Exception:
+                # Never fail the message create on report processing errors
+                pass
+        if parsed_reports:
+            await session.commit()
+
     return memory

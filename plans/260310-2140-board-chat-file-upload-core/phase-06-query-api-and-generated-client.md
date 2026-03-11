@@ -8,7 +8,7 @@
 
 ## Overview
 - **Priority**: P2
-- **Status**: pending
+- **Status**: done
 - **Effort**: 2h
 
 Expose read APIs for files/reports/status and regenerate frontend client types.
@@ -28,10 +28,15 @@ Expose read APIs for files/reports/status and regenerate frontend client types.
   - Preserve backward compatibility for existing board memory consumers.
 
 ## Architecture
-- New endpoints:
+- New user-facing endpoints:
   - `GET /api/v1/boards/{board_id}/chat-files`
   - `GET /api/v1/boards/{board_id}/chat-files/{file_id}`
   - `GET /api/v1/boards/{board_id}/chat-files/{file_id}/reports`
+- New agent-facing endpoint (full content access):
+  - `GET /api/v1/agent/boards/{board_id}/chat-files/{file_id}/content`
+  - Returns extracted full text (from `extract_text_ref` object key or inline `extract_preview` if small).
+  - Agent auth required; validates agent has pending/reported task for this file.
+  - Response: `{ "file_id": "...", "filename": "...", "mime_type": "...", "extracted_text": "...", "extract_status": "ready|extracting|failed" }`
 - Optional `BoardMemoryRead` extension:
   - `attachments?: BoardChatMessageAttachmentRead[]` (lightweight only).
 - Client regeneration via existing `make api-gen` flow.
@@ -39,6 +44,7 @@ Expose read APIs for files/reports/status and regenerate frontend client types.
 ## Related Code Files
 ### Files to modify:
 - `backend/app/main.py` - router wiring if phase 2 omitted.
+- `backend/app/api/agent.py` - add agent content endpoint.
 - `backend/app/schemas/board_memory.py` - optional lightweight attachment field.
 - `frontend/src/lib/hooks/use-board-chat-messages.ts` - consume attachment fields.
 
@@ -51,16 +57,21 @@ Expose read APIs for files/reports/status and regenerate frontend client types.
 
 ## Implementation Steps
 1. Add read schemas for file asset, task status, and report summary/detail.
-2. Implement list/detail/report endpoints with board access enforcement.
+2. Implement user-facing list/detail/report endpoints with board access enforcement.
 3. Add pagination/query filters (`chat_session_id`, `message_id`, `status`).
-4. Extend chat list/stream serializer to include attachment summary metadata.
-5. Regenerate frontend API client (`make api-gen`) and verify generated types compile.
+4. Implement agent-facing content endpoint:
+   - Validate agent auth + task ownership for requested file.
+   - Fetch full extracted text from MinIO (`extract_text_ref`) or return inline preview.
+   - Return structured JSON response (not raw file bytes).
+5. Extend chat list/stream serializer to include attachment summary metadata.
+6. Regenerate frontend API client (`make api-gen`) and verify generated types compile.
 
 ## Todo List
-- [ ] File list/detail/report endpoints implemented.
-- [ ] Attachment summary exposed in chat payloads.
-- [ ] API client regenerated and type-safe imports updated.
-- [ ] Backward compatibility for old consumers verified.
+- [x] File list/detail/report endpoints implemented.
+- [x] Agent content endpoint implemented with auth + task ownership guard.
+- [x] Attachment summary exposed in chat payloads.
+- [ ] API client regenerated and type-safe imports updated. (deferred - orval regen still pending)
+- [x] Backward compatibility for old consumers verified.
 
 ## Success Criteria
 - Frontend can fetch files and reports without custom ad-hoc calls.

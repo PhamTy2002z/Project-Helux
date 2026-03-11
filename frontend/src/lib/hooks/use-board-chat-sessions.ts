@@ -1,3 +1,5 @@
+import { useCallback, useMemo } from "react";
+
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
@@ -50,12 +52,13 @@ export const useBoardChatSessions = (
   enabled: boolean,
 ): UseBoardChatSessionsResult => {
   const queryClient = useQueryClient();
+  const sessionsQueryKey = useMemo(
+    () => getListBoardChatSessionsApiV1BoardsBoardIdChatSessionsGetQueryKey(boardId),
+    [boardId],
+  );
 
   const sessionsQuery = useQuery({
-    queryKey:
-      getListBoardChatSessionsApiV1BoardsBoardIdChatSessionsGetQueryKey(
-        boardId,
-      ),
+    queryKey: sessionsQueryKey,
     enabled: enabled && Boolean(boardId),
     queryFn: async () => {
       const result =
@@ -68,14 +71,11 @@ export const useBoardChatSessions = (
     staleTime: 15_000,
   });
 
-  const invalidateSessions = async () => {
+  const invalidateSessions = useCallback(async () => {
     await queryClient.invalidateQueries({
-      queryKey:
-        getListBoardChatSessionsApiV1BoardsBoardIdChatSessionsGetQueryKey(
-          boardId,
-        ),
+      queryKey: sessionsQueryKey,
     });
-  };
+  }, [queryClient, sessionsQueryKey]);
 
   const createMutation = useMutation({
     mutationFn: async (title?: string) => {
@@ -130,39 +130,71 @@ export const useBoardChatSessions = (
     onSuccess: invalidateSessions,
   });
 
-  return {
-    sessions: sessionsQuery.data ?? [],
-    isLoading: sessionsQuery.isLoading,
-    isRefetching: sessionsQuery.isRefetching,
-    error: sessionsQuery.error
-      ? toError("Unable to load chat sessions.", sessionsQuery.error)
-      : null,
-    createSession: async (title?: string) => {
+  const createSession = useCallback(
+    async (title?: string) => {
       try {
         return await createMutation.mutateAsync(title);
       } catch (error) {
         throw toError("Unable to create chat session.", error);
       }
     },
-    renameSession: async (chatSessionId: string, title: string) => {
+    [createMutation],
+  );
+
+  const renameSession = useCallback(
+    async (chatSessionId: string, title: string) => {
       try {
         return await renameMutation.mutateAsync({ chatSessionId, title });
       } catch (error) {
         throw toError("Unable to rename chat session.", error);
       }
     },
-    archiveSession: async (chatSessionId: string) => {
+    [renameMutation],
+  );
+
+  const archiveSession = useCallback(
+    async (chatSessionId: string) => {
       try {
         await archiveMutation.mutateAsync(chatSessionId);
       } catch (error) {
         throw toError("Unable to archive chat session.", error);
       }
     },
-    isCreating: createMutation.isPending,
-    isRenaming: renameMutation.isPending,
-    isArchiving: archiveMutation.isPending,
-    refetch: async () => {
-      await sessionsQuery.refetch();
-    },
-  };
+    [archiveMutation],
+  );
+
+  const refetch = useCallback(async () => {
+    await sessionsQuery.refetch();
+  }, [sessionsQuery]);
+
+  return useMemo(
+    () => ({
+      sessions: sessionsQuery.data ?? [],
+      isLoading: sessionsQuery.isLoading,
+      isRefetching: sessionsQuery.isRefetching,
+      error: sessionsQuery.error
+        ? toError("Unable to load chat sessions.", sessionsQuery.error)
+        : null,
+      createSession,
+      renameSession,
+      archiveSession,
+      isCreating: createMutation.isPending,
+      isRenaming: renameMutation.isPending,
+      isArchiving: archiveMutation.isPending,
+      refetch,
+    }),
+    [
+      archiveSession,
+      createSession,
+      createMutation.isPending,
+      refetch,
+      renameSession,
+      renameMutation.isPending,
+      archiveMutation.isPending,
+      sessionsQuery.data,
+      sessionsQuery.error,
+      sessionsQuery.isLoading,
+      sessionsQuery.isRefetching,
+    ],
+  );
 };

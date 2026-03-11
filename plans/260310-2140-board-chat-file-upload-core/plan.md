@@ -19,24 +19,28 @@ Add core file pipeline for board chat: upload -> extract -> mention-delivery con
 - Object storage: MinIO (S3 compatible) from day 1.
 - Shared knowledge default: board-only. Board-group fanout deferred.
 - SLA/retry (v1): dispatch ack timeout `30s`, report timeout `300s`, retry `2` with backoff `[30s, 120s]`.
+- **Max 3 files per message**. Preview capped at 500 chars/file.
+- **Agent report via board chat reply** (structured `[FILE_REPORT]` tag), NOT separate HTTP callback. Mission Control parses report from reply content.
+- **Full file content access**: `GET /agent/boards/{id}/chat-files/{file_id}/content` endpoint for agent auth.
 
 ## OpenClaw Constraints (Validated)
 - `chat.send` attachment parse path is image-first (`parseMessageWithAttachments`); non-image docs not reliable for deterministic read.
 - Document extraction lives in media-understanding flow (`applyMediaUnderstanding`) and appends `<file ...>` blocks.
 - `agents.files.*` is workspace-file allowlist (`AGENTS.md`, `MEMORY.md`, etc.), not generic upload store.
+- Agent interacts via WebSocket gateway protocol; direct HTTP callback unreliable. Use board chat reply channel for reports.
 
 ## Phases
 
 | # | Phase | Status | Effort | File |
 |---|-------|--------|--------|------|
-| 1 | Schema and storage foundation | pending | 3h | [phase-01](phase-01-schema-and-storage-foundation.md) |
+| 1 | Schema and storage foundation | done | 3h | [phase-01](phase-01-schema-and-storage-foundation.md) |
 | 2 | Upload and extraction pipeline | pending | 4h | [phase-02](phase-02-upload-and-extraction-pipeline.md) |
 | 3 | Chat mention file-delivery contract | pending | 4h | [phase-03](phase-03-chat-mention-file-delivery-contract.md) |
 | 4 | Agent reporting SLA and retry worker | pending | 3h | [phase-04](phase-04-agent-reporting-sla-and-retry-worker.md) |
 | 5 | Shared knowledge publication (board scope) | pending | 2h | [phase-05](phase-05-shared-knowledge-publication-board-scope.md) |
-| 6 | Query API and generated client | pending | 2h | [phase-06](phase-06-query-api-and-generated-client.md) |
-| 7 | Frontend chat file UI | pending | 4h | [phase-07](phase-07-frontend-chat-file-ui.md) |
-| 8 | Tests, observability, rollout | pending | 2h | [phase-08](phase-08-tests-observability-and-rollout.md) |
+| 6 | Query API and generated client | done | 2h | [phase-06](phase-06-query-api-and-generated-client.md) |
+| 7 | Frontend chat file UI | done | 4h | [phase-07](phase-07-frontend-chat-file-ui.md) |
+| 8 | Tests, observability, rollout | in-progress | 2h | [phase-08](phase-08-tests-observability-and-rollout.md) |
 
 ## Dependencies
 - Phase 1 blocks all phases.

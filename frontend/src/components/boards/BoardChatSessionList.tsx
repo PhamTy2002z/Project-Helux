@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { memo, useState } from "react";
 
 import { Pencil, Plus, Trash2 } from "lucide-react";
 
@@ -19,7 +19,7 @@ type BoardChatSessionListProps = {
   onArchiveRequest: (session: BoardChatSessionRead) => void;
 };
 
-export function BoardChatSessionList({
+export const BoardChatSessionList = memo(function BoardChatSessionList({
   sessions,
   activeSessionId,
   canWrite,
@@ -187,4 +187,6 @@ export function BoardChatSessionList({
       ) : null}
     </div>
   );
-}
+});
+
+BoardChatSessionList.displayName = "BoardChatSessionList";

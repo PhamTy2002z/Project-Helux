@@ -1,8 +1,9 @@
 "use client";
 
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Pencil, X } from "lucide-react";
-import nextDynamic from "next/dynamic";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { LazyMarkdown } from "@/components/atoms/LazyMarkdown";
 import {
   DependencyBanner,
@@ -20,11 +21,14 @@ import {
 import type { Approval, Task, TaskComment } from "./board-types";
 import { normalizeTagColor } from "./board-normalizers";
 
-const BoardChatComposer = nextDynamic(
-  () =>
-    import("@/components/BoardChatComposer").then((m) => m.BoardChatComposer),
-  { ssr: false },
-);
+const COMMENT_MENTION_MAX_OPTIONS = 8;
+const COMMENT_MENTION_PATTERN = /(?:^|\s)@([A-Za-z0-9_-]{0,31})$/;
+
+type CommentMentionTarget = {
+  start: number;
+  end: number;
+  query: string;
+};
 
 export type TaskDetailPanelProps = {
   selectedTask: Task | null;
@@ -158,6 +162,28 @@ function getApprovalReason(approval: Approval) {
   return approvalPayloadValue(approval.payload ?? {}, "reason");
 }
 
+function normalizeMentionSuggestion(value: string): string | null {
+  const trimmed = value.trim().replace(/^@+/, "");
+  if (!trimmed) return null;
+  const normalized =
+    trimmed.split(/\s+/)[0]?.replace(/[^A-Za-z0-9_-]/g, "").toLowerCase() ??
+    "";
+  return normalized || null;
+}
+
+function findCommentMentionTarget(
+  text: string,
+  caret: number,
+): CommentMentionTarget | null {
+  if (caret < 0 || caret > text.length) return null;
+  const prefix = text.slice(0, caret);
+  const match = prefix.match(COMMENT_MENTION_PATTERN);
+  if (!match) return null;
+  const query = (match[1] ?? "").toLowerCase();
+  const start = caret - query.length - 1;
+  return { start, end: caret, query };
+}
+
 export function TaskDetailPanel({
   selectedTask,
   isDetailOpen,
@@ -188,6 +214,123 @@ export function TaskDetailPanel({
   boardId,
   onNavigate,
 }: TaskDetailPanelProps) {
+  const [commentDraft, setCommentDraft] = useState("");
+  const [mentionTarget, setMentionTarget] = useState<CommentMentionTarget | null>(
+    null,
+  );
+  const [activeMentionIndex, setActiveMentionIndex] = useState(0);
+  const commentTextareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const closeMentionMenuTimeoutRef = useRef<number | null>(null);
+
+  const resizeCommentTextarea = useCallback(() => {
+    const textarea = commentTextareaRef.current;
+    if (!textarea) return;
+    textarea.style.height = "auto";
+    const maxHeight = 240;
+    const scrollHeight = textarea.scrollHeight;
+    textarea.style.height = `${Math.min(scrollHeight, maxHeight)}px`;
+    textarea.style.overflowY = scrollHeight > maxHeight ? "auto" : "hidden";
+  }, []);
+
+  const mentionHints = useMemo(() => {
+    const handles = new Set<string>(["lead"]);
+    boardChatMentionSuggestions.forEach((candidate) => {
+      const handle = normalizeMentionSuggestion(candidate);
+      if (handle) handles.add(handle);
+    });
+    return [...handles].slice(0, 4);
+  }, [boardChatMentionSuggestions]);
+
+  const mentionOptions = useMemo(() => {
+    const handles = new Set<string>(["lead"]);
+    boardChatMentionSuggestions.forEach((candidate) => {
+      const handle = normalizeMentionSuggestion(candidate);
+      if (handle) handles.add(handle);
+    });
+    return [...handles];
+  }, [boardChatMentionSuggestions]);
+
+  const filteredMentionOptions = useMemo(() => {
+    if (!mentionTarget) return [];
+    const query = mentionTarget.query;
+    return mentionOptions
+      .filter((option) => option.startsWith(query))
+      .slice(0, COMMENT_MENTION_MAX_OPTIONS);
+  }, [mentionOptions, mentionTarget]);
+
+  const activeMentionOptionIndex =
+    filteredMentionOptions.length > 0
+      ? Math.min(activeMentionIndex, filteredMentionOptions.length - 1)
+      : 0;
+
+  const refreshMentionTarget = useCallback((nextValue: string, caret: number) => {
+    const nextTarget = findCommentMentionTarget(nextValue, caret);
+    setMentionTarget(nextTarget);
+    if (!nextTarget) {
+      setActiveMentionIndex(0);
+    }
+  }, []);
+
+  const applyMentionSelection = useCallback(
+    (handle: string) => {
+      const textarea = commentTextareaRef.current;
+      if (!textarea || !mentionTarget) return;
+      const replacement = `@${handle} `;
+      const nextDraft =
+        commentDraft.slice(0, mentionTarget.start) +
+        replacement +
+        commentDraft.slice(mentionTarget.end);
+      setCommentDraft(nextDraft);
+      setMentionTarget(null);
+      setActiveMentionIndex(0);
+      window.requestAnimationFrame(() => {
+        const nextCaret = mentionTarget.start + replacement.length;
+        textarea.focus();
+        textarea.setSelectionRange(nextCaret, nextCaret);
+      });
+    },
+    [commentDraft, mentionTarget],
+  );
+
+  useEffect(() => {
+    setCommentDraft("");
+    setMentionTarget(null);
+    setActiveMentionIndex(0);
+    const textarea = commentTextareaRef.current;
+    if (!textarea) return;
+    textarea.style.height = "auto";
+    textarea.style.overflowY = "hidden";
+  }, [selectedTask?.id]);
+
+  useEffect(() => {
+    resizeCommentTextarea();
+  }, [commentDraft, resizeCommentTextarea]);
+
+  useEffect(() => {
+    return () => {
+      if (closeMentionMenuTimeoutRef.current !== null) {
+        window.clearTimeout(closeMentionMenuTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const submitComment = useCallback(async () => {
+    if (!canWrite || isPostingComment) return;
+    const content = commentDraft.trim();
+    if (!content) return;
+    const ok = await onPostComment(content);
+    if (!ok) return;
+    setCommentDraft("");
+    const textarea = commentTextareaRef.current;
+    if (!textarea) return;
+    textarea.style.height = "auto";
+    textarea.style.overflowY = "hidden";
+    textarea.focus();
+  }, [canWrite, commentDraft, isPostingComment, onPostComment]);
+
+  const canSubmitComment =
+    canWrite && !isPostingComment && commentDraft.trim().length > 0;
+
   return (
     <aside
       className={cn(
@@ -452,18 +595,144 @@ export function TaskDetailPanel({
             <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
               Comments
             </p>
-            <div className="space-y-2 rounded-xl border border-slate-200 bg-slate-50 p-3">
-              <BoardChatComposer
-                placeholder={
-                  canWrite
-                    ? "Write a message for the assigned agent. Tag @lead or @name."
-                    : "Read-only access. Comments are disabled."
-                }
-                isSending={isPostingComment}
-                onSend={onPostComment}
-                disabled={!canWrite}
-                mentionSuggestions={boardChatMentionSuggestions}
-              />
+            <div className="space-y-2">
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3 shadow-sm">
+                <div className="relative">
+                  <Textarea
+                    ref={commentTextareaRef}
+                    value={commentDraft}
+                    onChange={(event) => {
+                      const nextValue = event.target.value;
+                      setCommentDraft(nextValue);
+                      refreshMentionTarget(
+                        nextValue,
+                        event.target.selectionStart ?? nextValue.length,
+                      );
+                    }}
+                    onClick={(event) => {
+                      refreshMentionTarget(
+                        commentDraft,
+                        event.currentTarget.selectionStart ?? commentDraft.length,
+                      );
+                    }}
+                    onKeyUp={(event) => {
+                      refreshMentionTarget(
+                        commentDraft,
+                        event.currentTarget.selectionStart ?? commentDraft.length,
+                      );
+                    }}
+                    onFocus={(event) => {
+                      refreshMentionTarget(
+                        commentDraft,
+                        event.currentTarget.selectionStart ?? commentDraft.length,
+                      );
+                    }}
+                    onBlur={() => {
+                      if (closeMentionMenuTimeoutRef.current !== null) {
+                        window.clearTimeout(closeMentionMenuTimeoutRef.current);
+                      }
+                      closeMentionMenuTimeoutRef.current = window.setTimeout(() => {
+                        setMentionTarget(null);
+                        setActiveMentionIndex(0);
+                      }, 120);
+                    }}
+                    onKeyDown={(event) => {
+                      if (filteredMentionOptions.length > 0 && mentionTarget) {
+                        if (event.key === "ArrowDown") {
+                          event.preventDefault();
+                          setActiveMentionIndex(
+                            (prev) => (prev + 1) % filteredMentionOptions.length,
+                          );
+                          return;
+                        }
+                        if (event.key === "ArrowUp") {
+                          event.preventDefault();
+                          setActiveMentionIndex(
+                            (prev) =>
+                              (prev - 1 + filteredMentionOptions.length) %
+                              filteredMentionOptions.length,
+                          );
+                          return;
+                        }
+                        if (event.key === "Enter" || event.key === "Tab") {
+                          event.preventDefault();
+                          const selected =
+                            filteredMentionOptions[activeMentionOptionIndex];
+                          if (selected) {
+                            applyMentionSelection(selected);
+                          }
+                          return;
+                        }
+                        if (event.key === "Escape") {
+                          event.preventDefault();
+                          setMentionTarget(null);
+                          setActiveMentionIndex(0);
+                          return;
+                        }
+                      }
+
+                      if (event.key !== "Enter") return;
+                      if (event.nativeEvent.isComposing) return;
+                      if (event.shiftKey) return;
+                      event.preventDefault();
+                      void submitComment();
+                    }}
+                    placeholder={
+                      canWrite
+                        ? "Write a comment for the assigned agent. Tag @lead or @name."
+                        : "Read-only access. Comments are disabled."
+                    }
+                    disabled={!canWrite || isPostingComment}
+                    rows={4}
+                    className="min-h-[96px] max-h-60 resize-none border-slate-200 bg-white text-sm text-slate-900 shadow-none focus-visible:ring-slate-300"
+                  />
+                  {mentionTarget && filteredMentionOptions.length > 0 ? (
+                    <div className="absolute bottom-2 left-2 z-20 w-full max-w-sm overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg shadow-slate-200/70">
+                      <div className="max-h-52 overflow-y-auto py-1">
+                        {filteredMentionOptions.map((option, index) => (
+                          <button
+                            key={option}
+                            type="button"
+                            onMouseDown={(event) => {
+                              event.preventDefault();
+                              applyMentionSelection(option);
+                            }}
+                            className={`flex w-full items-center justify-between px-3 py-2 text-left text-sm transition ${
+                              index === activeMentionOptionIndex
+                                ? "bg-slate-100 text-slate-900"
+                                : "text-slate-700 hover:bg-slate-50"
+                            }`}
+                          >
+                            <span className="font-mono">@{option}</span>
+                            <span className="text-xs text-slate-400">mention</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+                <div className="mt-2 flex items-center justify-between gap-3">
+                  <p className="text-xs text-slate-500">
+                    {canWrite
+                      ? "Enter to post, Shift+Enter for newline."
+                      : "Read-only mode."}
+                  </p>
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={() => void submitComment()}
+                    disabled={!canSubmitComment}
+                  >
+                    {isPostingComment ? "Posting..." : "Post comment"}
+                  </Button>
+                </div>
+                {canWrite ? (
+                  <p className="mt-2 text-xs text-slate-500">
+                    Quick mentions:{" "}
+                    {mentionHints.map((handle) => `@${handle}`).join(" · ")}
+                  </p>
+                ) : null}
+              </div>
               {postCommentError ? (
                 <p className="text-xs text-rose-600">{postCommentError}</p>
               ) : null}

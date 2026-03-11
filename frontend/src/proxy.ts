@@ -20,6 +20,7 @@ const isPublicRoute = createRouteMatcher([
   "/onboarding(.*)",
   "/sign-in(.*)",
   "/sign-up(.*)",
+  "/api/local-auth(.*)",
 ]);
 
 function isClerkInternalPath(pathname: string): boolean {

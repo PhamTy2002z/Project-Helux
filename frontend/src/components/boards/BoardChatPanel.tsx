@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
 
 import { PanelLeftOpen, X } from "lucide-react";
 
@@ -15,6 +15,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
+import { useBoardChatFiles } from "@/lib/hooks/use-board-chat-files";
+import type { MessageAttachment } from "@/lib/hooks/use-board-chat-messages";
 import { useBoardChatMessages } from "@/lib/hooks/use-board-chat-messages";
 import { useBoardChatSessions } from "@/lib/hooks/use-board-chat-sessions";
 
@@ -29,7 +31,7 @@ type BoardChatPanelProps = {
   onError: (message: string) => void;
 };
 
-export function BoardChatPanel({
+export const BoardChatPanel = memo(function BoardChatPanel({
   boardId,
   isOpen,
   canWrite,
@@ -71,6 +73,22 @@ export function BoardChatPanel({
     source: currentUserDisplayName,
     onMessageCreated,
   });
+
+  const filesState = useBoardChatFiles({
+    boardId: resolvedBoardId,
+    chatSessionId: effectiveActiveSessionId,
+    enabled: isOpen && Boolean(effectiveActiveSessionId),
+  });
+  const pendingUploads = filesState.pendingUploads;
+  const pendingFileChips = useMemo(
+    () =>
+      pendingUploads.map((upload) => ({
+        id: upload.id,
+        fileName: upload.file.name,
+        status: upload.status,
+      })),
+    [pendingUploads],
+  );
 
   const handleCreateSession = useCallback(async () => {
     try {
@@ -118,17 +136,43 @@ export function BoardChatPanel({
     }
   }, [archiveTarget, effectiveActiveSessionId, onError, sessionsState]);
 
+  const handleFilesSelected = useCallback(
+    async (files: File[]) => {
+      try {
+        await filesState.uploadFiles(files);
+      } catch (err) {
+        onError(err instanceof Error ? err.message : "Upload failed.");
+      }
+    },
+    [filesState, onError],
+  );
+
   const handleSend = useCallback(
     async (content: string) => {
-      const ok = await messagesState.sendMessage(content);
+      const fileIds = pendingUploads
+        .filter((u) => u.status === "ready" && u.fileId)
+        .map((u) => u.fileId!);
+      const attachments: MessageAttachment[] = pendingUploads
+        .filter((u) => u.status === "ready" && u.fileId)
+        .map((u) => ({
+          id: u.fileId!,
+          file_name: u.file.name,
+          status: "ready",
+        }));
+      const ok = await messagesState.sendMessage(
+        content,
+        fileIds.length ? fileIds : undefined,
+        attachments.length ? attachments : undefined,
+      );
       if (ok) {
-        await sessionsState.refetch();
+        filesState.clearPendingUploads();
+        void sessionsState.refetch();
       } else if (messagesState.error) {
         onError(messagesState.error);
       }
       return ok;
     },
-    [messagesState, onError, sessionsState],
+    [filesState, messagesState, onError, pendingUploads, sessionsState],
   );
 
   const combinedError = sessionsState.error?.message ?? messagesState.error;
@@ -137,8 +181,10 @@ export function BoardChatPanel({
     <>
       <aside
         className={cn(
-          "fixed right-0 top-0 z-50 h-full w-[920px] max-w-[98vw] transform border-l border-slate-200 bg-white shadow-2xl transition-transform",
-          isOpen ? "transform-none" : "translate-x-full",
+          "fixed right-0 top-0 z-50 h-full w-[920px] max-w-[98vw] border-l border-slate-200 bg-white shadow-2xl transform-gpu transition-[transform,opacity] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform motion-reduce:transition-none",
+          isOpen
+            ? "translate-x-0 opacity-100 pointer-events-auto"
+            : "translate-x-[104%] opacity-0 pointer-events-none",
         )}
       >
         <div className="flex h-full flex-col">
@@ -228,6 +274,9 @@ export function BoardChatPanel({
                 composerAutoFocus={focusComposer}
                 onLoadOlder={messagesState.loadOlder}
                 onSend={handleSend}
+                onFilesSelected={handleFilesSelected}
+                pendingFiles={pendingFileChips}
+                onRemovePendingFile={filesState.removePendingUpload}
               />
             </div>
           </div>
@@ -263,4 +312,6 @@ export function BoardChatPanel({
       </Dialog>
     </>
   );
-}
+});
+
+BoardChatPanel.displayName = "BoardChatPanel";

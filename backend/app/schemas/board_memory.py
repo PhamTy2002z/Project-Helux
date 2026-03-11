@@ -7,6 +7,7 @@ from uuid import UUID
 
 from sqlmodel import SQLModel
 
+from app.schemas.board_chat_files import BoardChatMessageAttachmentRead
 from app.schemas.common import NonEmptyStr
 
 RUNTIME_ANNOTATION_TYPES = (datetime, UUID, NonEmptyStr)
@@ -20,6 +21,8 @@ class BoardMemoryCreate(SQLModel):
     tags: list[str] | None = None
     source: str | None = None
     chat_session_id: UUID | None = None
+    # Optional file attachments (max 3 per message, validated in delivery service).
+    file_ids: list[UUID] | None = None
 
 
 class BoardMemoryRead(SQLModel):
@@ -35,3 +38,4 @@ class BoardMemoryRead(SQLModel):
     is_chat: bool = False
     chat_session_id: UUID | None = None
     created_at: datetime
+    attachments: list[BoardChatMessageAttachmentRead] | None = None

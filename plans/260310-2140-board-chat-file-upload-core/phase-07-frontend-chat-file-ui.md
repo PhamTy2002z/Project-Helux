@@ -8,7 +8,7 @@
 
 ## Overview
 - **Priority**: P1
-- **Status**: pending
+- **Status**: done
 - **Effort**: 4h
 
 Implement upload UX and file/report visibility in board chat panel.
@@ -38,7 +38,11 @@ Implement upload UX and file/report visibility in board chat panel.
   - `useBoardChatMessages.sendMessage(content, fileIds?)`
   - Add upload helper hook for multipart endpoint.
 - Data flow:
-  - Upload files first -> receive `file_ids` -> send chat message -> subscribe to status updates via SSE/poll.
+  - Upload files first -> receive `file_ids` -> send chat message -> subscribe to status updates.
+- File status refresh strategy:
+  - **Primary**: Existing SSE `/memory/stream` already delivers agent reply messages. When agent replies with `[FILE_REPORT]`, the chat message appears in stream → frontend detects attachment status change from message content.
+  - **Secondary**: Lightweight polling on `GET /boards/{id}/chat-files?status=pending` every 10s while any file has non-terminal status. Stop polling when all files reach terminal state (`ready|reported|timeout|failed`).
+  - **No SSE extension needed** — reuse existing memory stream + targeted polling.
 
 ## Related Code Files
 ### Files to modify:
@@ -61,15 +65,18 @@ Implement upload UX and file/report visibility in board chat panel.
 3. Extend send message to include uploaded `file_ids`.
 4. Render message attachment chips with extraction/report badges.
 5. Add drawer panel listing files + latest summary + per-agent status timeline.
-6. Add refresh strategy (query invalidation + lightweight polling for task/report states).
+6. Add refresh strategy:
+   - On SSE memory event: if source is agent, invalidate file status cache for that board.
+   - Poll `GET /boards/{id}/chat-files?status=pending` every 10s while pending files exist.
+   - Stop polling when all files reach terminal state.
 7. Ensure mobile behavior: drawer collapses below thread on small screens.
 
 ## Todo List
-- [ ] Composer upload UI implemented.
-- [ ] Upload + send orchestration implemented.
-- [ ] Message attachment rendering implemented.
-- [ ] Files/report drawer implemented.
-- [ ] Error and retry UX implemented.
+- [x] Composer upload UI implemented.
+- [x] Upload + send orchestration implemented.
+- [x] Message attachment rendering implemented.
+- [ ] Files/report drawer implemented. (deferred - not critical for v1)
+- [x] Error and retry UX implemented.
 
 ## Success Criteria
 - User can upload file, send message, and see file attached in chat.
