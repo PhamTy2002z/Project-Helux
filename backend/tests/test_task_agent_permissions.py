@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from typing import Any
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import pytest
 from fastapi import HTTPException
@@ -499,8 +499,9 @@ async def test_non_lead_agent_move_to_review_reassigns_to_lead_and_sends_review_
                 config: Any,
                 agent_name: str,
                 message: str,
+                organization_id: UUID | None = None,
             ) -> None:
-                _ = dispatch, config
+                _ = dispatch, config, organization_id
                 sent["session_key"] = session_key
                 sent["agent_name"] = agent_name
                 sent["message"] = message
@@ -616,8 +617,9 @@ async def test_lead_moves_review_task_to_inbox_and_reassigns_last_worker_with_re
                 config: Any,
                 agent_name: str,
                 message: str,
+                organization_id: UUID | None = None,
             ) -> None:
-                _ = dispatch, config
+                _ = dispatch, config, organization_id
                 sent.append(
                     {
                         "session_key": session_key,

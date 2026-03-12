@@ -26,6 +26,7 @@ class _FakeAsset:
 # Empty input
 # ---------------------------------------------------------------------------
 
+
 def test_empty_assets_returns_empty_string() -> None:
     assert build_file_manifest_block(board_id=uuid4(), assets=[]) == ""
 
@@ -33,6 +34,7 @@ def test_empty_assets_returns_empty_string() -> None:
 # ---------------------------------------------------------------------------
 # Single file — structure
 # ---------------------------------------------------------------------------
+
 
 def test_single_file_manifest_structure() -> None:
     bid = uuid4()
@@ -75,6 +77,7 @@ def test_single_file_includes_report_instructions() -> None:
 # Multiple files
 # ---------------------------------------------------------------------------
 
+
 def test_multiple_files_all_listed() -> None:
     assets = [
         _FakeAsset(file_name="a.txt"),
@@ -95,6 +98,7 @@ def test_multiple_files_all_listed() -> None:
 # Status markers
 # ---------------------------------------------------------------------------
 
+
 def test_extracting_status_shows_marker() -> None:
     asset = _FakeAsset(status="extracting", preview_text="partial text")
     result = build_file_manifest_block(board_id=uuid4(), assets=[asset])  # type: ignore[arg-type]
@@ -112,6 +116,7 @@ def test_ready_status_no_marker() -> None:
 # ---------------------------------------------------------------------------
 # Preview truncation
 # ---------------------------------------------------------------------------
+
 
 def test_preview_respects_max_chars(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(

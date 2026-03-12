@@ -22,6 +22,8 @@ import { SignInButton, SignedIn, SignedOut, useAuth } from "@/auth/clerk";
 import {
   Activity,
   ArrowUpRight,
+  ChevronsLeft,
+  ChevronsRight,
   MessageSquare,
   Pause,
   Plus,
@@ -106,9 +108,14 @@ import {
   resolveMemberDisplayName,
 } from "@/lib/display-name";
 import { AGENT_EMOJI_GLYPHS } from "@/lib/agent-emoji";
+import {
+  applyBoardQueryStateToSearchParams,
+  parseBoardQueryState,
+} from "@/lib/boards/board-query-state";
 import { cn } from "@/lib/utils";
 import { usePageActive } from "@/hooks/usePageActive";
 import { loadBoardDetailBootstrap } from "@/lib/hooks/board-detail/load-board-detail-bootstrap";
+import { isBoardOverlayEnabled } from "@/lib/query-policy";
 import {
   boardCustomFieldValues,
   type TaskCustomFieldValues,
@@ -211,6 +218,10 @@ export default function BoardDetailPage() {
   const taskIdFromUrl = searchParams.get("taskId");
   const commentIdFromUrl = searchParams.get("commentId");
   const panelFromUrl = searchParams.get("panel");
+  const boardQueryState = useMemo(
+    () => parseBoardQueryState(searchParams),
+    [searchParams],
+  );
   const buildUrlWithTaskAndComment = useCallback(
     (
       taskId: string | null,
@@ -237,6 +248,17 @@ export default function BoardDetailPage() {
       return next ? `${pathname}?${next}` : pathname;
     },
     [pathname, searchParams],
+  );
+  const setBoardQueryState = useCallback(
+    (nextState: ReturnType<typeof parseBoardQueryState>) => {
+      const nextParams = applyBoardQueryStateToSearchParams(
+        new URLSearchParams(searchParams.toString()),
+        nextState,
+      );
+      const next = nextParams.toString();
+      router.replace(next ? `${pathname}?${next}` : pathname, { scroll: false });
+    },
+    [pathname, router, searchParams],
   );
 
   const membershipQuery = useGetMyMembershipApiV1OrganizationsMeMemberGet<
@@ -358,12 +380,21 @@ export default function BoardDetailPage() {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [chatMessages, setChatMessages] = useState<BoardChatMessage[]>([]);
   const chatMessagesRef = useRef<BoardChatMessage[]>([]);
+  const [isAgentsPanelCollapsed, setIsAgentsPanelCollapsed] = useState(true);
   const [isAgentsControlDialogOpen, setIsAgentsControlDialogOpen] =
     useState(false);
   const [agentsControlAction, setAgentsControlAction] = useState<
     "pause" | "resume"
   >("pause");
   const [viewMode, setViewMode] = useState<"board" | "list">("board");
+  const overlayEnabled = useMemo(
+    () =>
+      isBoardOverlayEnabled({
+        boardId: boardId ?? null,
+        organizationId: board?.organization_id ?? null,
+      }),
+    [board?.organization_id, boardId],
+  );
   const [isLiveFeedOpen, setIsLiveFeedOpen] = useState(false);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
   const isLiveFeedOpenRef = useRef(false);
@@ -1748,44 +1779,61 @@ export default function BoardDetailPage() {
             </div>
           </div>
 
-          <div className="relative flex gap-6 p-6">
+          <div className="relative flex gap-4 p-4">
             {isOrgAdmin ? (
-              <aside className="flex h-full w-64 flex-col rounded-xl border border-slate-200 bg-white shadow-sm">
-                <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+              <aside
+                style={{ width: isAgentsPanelCollapsed ? 56 : 240 }}
+                className="flex h-full flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition-[width] duration-200 ease-in-out"
+              >
+                {/* Header — always rendered, clipped by overflow-hidden */}
+                <div className="flex shrink-0 items-center justify-between border-b border-slate-200 px-3 py-3">
+                  <div className={cn(
+                    "min-w-0 overflow-hidden transition-opacity duration-200",
+                    isAgentsPanelCollapsed ? "w-0 opacity-0" : "flex-1 opacity-100",
+                  )}>
+                    <p className="whitespace-nowrap text-xs font-semibold uppercase tracking-wider text-slate-500">
                       Agents
                     </p>
-                    <p className="text-xs text-slate-400">
+                    <p className="whitespace-nowrap text-xs text-slate-400">
                       {sortedAgents.length} total
                     </p>
                   </div>
                   <button
                     type="button"
-                    onClick={() => router.push("/agents/new")}
-                    className="rounded-md border border-slate-200 px-2.5 py-1 text-xs font-semibold text-slate-600 transition hover:border-slate-300 hover:bg-slate-50"
+                    aria-label={isAgentsPanelCollapsed ? "Expand agents panel" : "Collapse agents panel"}
+                    onClick={() => setIsAgentsPanelCollapsed((prev) => !prev)}
+                    className="shrink-0 rounded-md border border-slate-200 p-1.5 text-slate-500 transition hover:border-slate-300 hover:bg-slate-50"
                   >
-                    Add
+                    {isAgentsPanelCollapsed ? (
+                      <ChevronsRight className="h-3.5 w-3.5" />
+                    ) : (
+                      <ChevronsLeft className="h-3.5 w-3.5" />
+                    )}
                   </button>
                 </div>
-                <div className="flex-1 space-y-2 overflow-y-auto p-3">
-                  {sortedAgents.length === 0 ? (
-                    <div className="rounded-lg border border-dashed border-slate-200 p-3 text-xs text-slate-500">
-                      No agents assigned yet.
-                    </div>
-                  ) : (
-                    sortedAgents.map((agent) => {
+
+                {/* Agent list — both views always in DOM, toggled by opacity + pointer-events */}
+                <div className="relative flex-1 overflow-y-auto overflow-x-hidden">
+                  {/* Collapsed: avatar-only view */}
+                  <div
+                    className={cn(
+                      "space-y-1 p-1.5 transition-opacity duration-200",
+                      isAgentsPanelCollapsed
+                        ? "pointer-events-auto opacity-100"
+                        : "pointer-events-none absolute inset-0 opacity-0",
+                    )}
+                  >
+                    {sortedAgents.map((agent) => {
                       const isWorking = workingAgentIds.has(agent.id);
                       return (
                         <button
                           key={agent.id}
                           type="button"
-                          className={cn(
-                            "flex w-full items-center gap-3 rounded-lg border border-transparent px-2 py-2 text-left transition hover:border-slate-200 hover:bg-slate-50",
-                          )}
+                          title={`${agent.name} — ${agentRoleLabel(agent)}`}
+                          className="flex w-full items-center justify-center rounded-lg border border-transparent py-1.5 transition hover:border-slate-200 hover:bg-slate-50"
                           onClick={() => router.push(`/agents/${agent.id}`)}
                         >
-                          <div className="relative flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-700">
+                          <div className="relative flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-700">
                             {agentAvatarLabel(agent)}
                             <StatusDot
                               status={agent.status}
@@ -1796,23 +1844,79 @@ export default function BoardDetailPage() {
                               )}
                             />
                           </div>
-                          <div className="min-w-0 flex-1">
-                            <p className="truncate text-sm font-medium text-slate-900">
-                              {agent.name}
-                            </p>
-                            <p className="text-[11px] text-slate-500">
-                              {agentRoleLabel(agent)}
-                            </p>
-                          </div>
                         </button>
                       );
-                    })
-                  )}
+                    })}
+                    <button
+                      type="button"
+                      title="Add agent"
+                      onClick={() => router.push("/agents/new")}
+                      className="flex w-full items-center justify-center rounded-lg border border-dashed border-slate-200 py-1.5 text-slate-400 transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-600"
+                    >
+                      <Plus className="h-4 w-4" />
+                    </button>
+                  </div>
+
+                  {/* Expanded: full agent list */}
+                  <div
+                    className={cn(
+                      "space-y-1 p-3 transition-opacity duration-200",
+                      isAgentsPanelCollapsed
+                        ? "pointer-events-none absolute inset-0 opacity-0"
+                        : "pointer-events-auto opacity-100",
+                    )}
+                  >
+                    {sortedAgents.length === 0 ? (
+                      <div className="rounded-lg border border-dashed border-slate-200 p-3 text-xs text-slate-500">
+                        No agents assigned yet.
+                      </div>
+                    ) : (
+                      sortedAgents.map((agent) => {
+                        const isWorking = workingAgentIds.has(agent.id);
+                        return (
+                          <button
+                            key={agent.id}
+                            type="button"
+                            className="flex w-full items-center gap-3 rounded-lg border border-transparent px-2 py-2 text-left transition hover:border-slate-200 hover:bg-slate-50"
+                            onClick={() => router.push(`/agents/${agent.id}`)}
+                          >
+                            <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-700">
+                              {agentAvatarLabel(agent)}
+                              <StatusDot
+                                status={agent.status}
+                                variant="agent"
+                                className={cn(
+                                  "absolute -right-0.5 -bottom-0.5 h-2.5 w-2.5 rounded-full border-2 border-white",
+                                  isWorking && "ring-2 ring-emerald-200",
+                                )}
+                              />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="truncate text-sm font-medium text-slate-900">
+                                {agent.name}
+                              </p>
+                              <p className="whitespace-nowrap text-[11px] text-slate-500">
+                                {agentRoleLabel(agent)}
+                              </p>
+                            </div>
+                          </button>
+                        );
+                      })
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => router.push("/agents/new")}
+                      className="flex w-full items-center justify-center rounded-lg border border-dashed border-slate-200 py-2 text-xs font-semibold text-slate-500 transition hover:border-slate-300 hover:bg-slate-50"
+                    >
+                      <Plus className="mr-1.5 h-3.5 w-3.5" />
+                      Add Agent
+                    </button>
+                  </div>
                 </div>
               </aside>
             ) : null}
 
-            <div className="min-w-0 flex-1 space-y-6">
+            <div className="min-w-0 flex-1 space-y-4">
               {error && (
                 <div className="rounded-lg border border-slate-200 bg-white p-3 text-sm text-slate-600 shadow-sm">
                   {error}
@@ -2053,6 +2157,9 @@ export default function BoardDetailPage() {
                       onTaskSelect={openComments}
                       onTaskMove={canWrite ? handleTaskMove : undefined}
                       readOnly={!canWrite}
+                      overlayEnabled={overlayEnabled}
+                      queryState={boardQueryState}
+                      onQueryStateChange={setBoardQueryState}
                     />
                   ) : (
                     <div className="rounded-xl border border-slate-200 bg-white shadow-sm">

@@ -14,6 +14,7 @@ from app.services.board_chat_files.shared_knowledge import publish_board_shared_
 # Fakes
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class _FakeAsset:
     id: UUID = field(default_factory=uuid4)
@@ -55,6 +56,7 @@ class _FakeSession:
 # Empty summary → skip
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_empty_summary_returns_false() -> None:
     result = await publish_board_shared_summary(
@@ -69,6 +71,7 @@ async def test_empty_summary_returns_false() -> None:
 # ---------------------------------------------------------------------------
 # Asset not found → skip
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_asset_not_found_returns_false(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -89,6 +92,7 @@ async def test_asset_not_found_returns_false(monkeypatch: pytest.MonkeyPatch) ->
 # ---------------------------------------------------------------------------
 # New publication — creates board memory entry
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_new_publication_creates_entry(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -139,6 +143,7 @@ async def test_new_publication_creates_entry(monkeypatch: pytest.MonkeyPatch) ->
 # Idempotent update — existing entry updated
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class _FakeExistingMemory:
     content: str = "old content"
@@ -180,6 +185,7 @@ async def test_idempotent_update_existing_entry(monkeypatch: pytest.MonkeyPatch)
 # ---------------------------------------------------------------------------
 # Board ID provided directly
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_with_explicit_board_id(monkeypatch: pytest.MonkeyPatch) -> None:

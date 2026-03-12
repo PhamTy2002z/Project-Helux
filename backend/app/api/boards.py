@@ -536,11 +536,12 @@ def get_board(
 
 @router.get("/{board_id}/snapshot", response_model=BoardSnapshot)
 async def get_board_snapshot(
+    compact: bool = Query(default=False),
     board: Board = BOARD_ACTOR_READ_DEP,
     session: AsyncSession = SESSION_DEP,
 ) -> BoardSnapshot:
     """Get a board snapshot view model."""
-    return await build_board_snapshot(session, board)
+    return await build_board_snapshot(session, board, compact=compact)
 
 
 @router.get(

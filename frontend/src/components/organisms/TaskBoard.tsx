@@ -10,6 +10,13 @@ import {
 } from "react";
 
 import { TaskCard } from "@/components/molecules/TaskCard";
+import { TaskBoardFilterBar } from "@/components/organisms/task-board-filter-bar";
+import { TaskGroupColumnSection } from "@/components/organisms/task-group-column-section";
+import {
+  defaultBoardQueryState,
+  type BoardQueryState,
+} from "@/lib/boards/board-query-state";
+import { buildBoardViewModel } from "@/lib/boards/board-view-model";
 import { parseApiDatetime } from "@/lib/datetime";
 import { cn } from "@/lib/utils";
 
@@ -25,10 +32,15 @@ type Task = {
   assigned_agent_id?: string | null;
   assignee?: string | null;
   approvals_pending_count?: number;
-  tags?: Array<{ id: string; name: string; slug: string; color: string }>;
+  tags?: Array<{ id: string; name: string; slug?: string; color: string }>;
   depends_on_task_ids?: string[];
   blocked_by_task_ids?: string[];
   is_blocked?: boolean;
+  task_group_id?: string | null;
+  sort_index?: number | null;
+  archived_at?: string | null;
+  created_at?: string;
+  updated_at?: string;
 };
 
 type TaskBoardProps = {
@@ -36,6 +48,9 @@ type TaskBoardProps = {
   onTaskSelect?: (task: Task) => void;
   onTaskMove?: (taskId: string, status: TaskStatus) => void | Promise<void>;
   readOnly?: boolean;
+  overlayEnabled?: boolean;
+  queryState?: BoardQueryState;
+  onQueryStateChange?: (next: BoardQueryState) => void;
 };
 
 type ReviewBucket = "all" | "approval_needed" | "waiting_lead" | "blocked";
@@ -128,6 +143,9 @@ export const TaskBoard = memo(function TaskBoard({
   onTaskSelect,
   onTaskMove,
   readOnly = false,
+  overlayEnabled = false,
+  queryState,
+  onQueryStateChange,
 }: TaskBoardProps) {
   const boardRef = useRef<HTMLDivElement | null>(null);
   const cardRefs = useRef<Map<string, HTMLDivElement>>(new Map());
@@ -139,6 +157,18 @@ export const TaskBoard = memo(function TaskBoard({
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [activeColumn, setActiveColumn] = useState<TaskStatus | null>(null);
   const [reviewBucket, setReviewBucket] = useState<ReviewBucket>("all");
+  const [collapsedGroupIds, setCollapsedGroupIds] = useState<Set<string>>(
+    () => new Set(),
+  );
+  const [internalOverlayQueryState, setInternalOverlayQueryState] =
+    useState<BoardQueryState>(defaultBoardQueryState);
+
+  const effectiveOverlayState = queryState ?? internalOverlayQueryState;
+  const setEffectiveOverlayState = onQueryStateChange ?? setInternalOverlayQueryState;
+  const overlayViewModel = useMemo(
+    () => buildBoardViewModel(tasks, effectiveOverlayState),
+    [tasks, effectiveOverlayState],
+  );
 
   const setCardRef = useCallback(
     (taskId: string) => (node: HTMLDivElement | null) => {
@@ -358,6 +388,79 @@ export const TaskBoard = memo(function TaskBoard({
       setActiveColumn(null);
     }
   };
+
+  const toggleGroupCollapsed = useCallback((groupId: string) => {
+    setCollapsedGroupIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(groupId)) {
+        next.delete(groupId);
+      } else {
+        next.add(groupId);
+      }
+      return next;
+    });
+  }, []);
+
+  const collapseAllGroups = useCallback(() => {
+    setCollapsedGroupIds(new Set(overlayViewModel.groups.map((group) => group.id)));
+  }, [overlayViewModel.groups]);
+
+  const expandAllGroups = useCallback(() => {
+    setCollapsedGroupIds(new Set());
+  }, []);
+
+  if (overlayEnabled) {
+    return (
+      <div ref={boardRef} data-testid="task-board-overlay" className="space-y-4 pb-6">
+        <TaskBoardFilterBar
+          state={effectiveOverlayState}
+          visibleCount={overlayViewModel.filteredCount}
+          totalCount={overlayViewModel.totalCount}
+          groupCount={overlayViewModel.groups.length}
+          onChange={setEffectiveOverlayState}
+          onCollapseAll={collapseAllGroups}
+          onExpandAll={expandAllGroups}
+        />
+        {overlayViewModel.groups.length === 0 ? (
+          <div className="rounded-xl border border-slate-200 bg-white px-4 py-8 text-sm text-slate-500 shadow-sm">
+            No tasks match the current board filters.
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {overlayViewModel.groups.map((group) => (
+              <TaskGroupColumnSection
+                key={group.id}
+                group={group}
+                collapsed={collapsedGroupIds.has(group.id)}
+                readOnly={readOnly}
+                density={effectiveOverlayState.density}
+                doneCompression={effectiveOverlayState.doneCompression}
+                draggingId={draggingId}
+                activeColumn={activeColumn}
+                onToggleCollapsed={() => toggleGroupCollapsed(group.id)}
+                onTaskSelect={(task) => onTaskSelect?.(task as Task)}
+                onTaskMove={onTaskMove}
+                onColumnHover={(status) => {
+                  if (readOnly) return;
+                  if (activeColumn !== status) {
+                    setActiveColumn(status);
+                  }
+                }}
+                onColumnLeave={(status) => {
+                  if (readOnly) return;
+                  if (activeColumn === status) {
+                    setActiveColumn(null);
+                  }
+                }}
+                onDragStart={handleDragStart}
+                onDragEnd={handleDragEnd}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div

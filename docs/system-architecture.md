@@ -158,7 +158,7 @@ OpenClaw Mission Control follows a three-tier architecture with clear separation
                       PostgreSQL
 ```
 
-## Billing V1 Runtime Flow
+## Billing V1 & Token Quota Runtime Flow
 
 ```
 Frontend UpgradeModal
@@ -177,8 +177,20 @@ Runtime write paths (boards/board-groups/agents/tasks)
     │
     └─→ entitlements service
           - resolves tier (`trial_7d`/`pro`)
-          - enforces hard quotas
+          - enforces hard quotas (board-groups, agents-per-board)
           - returns 402 `blocked_for_payment` when trial expired
+
+Token Quota Enforcement
+    │
+    ├─→ Agent daily ledger: agent_token_daily_usage
+    │     - incremented per agent on execution
+    │     - aggregated by day for quota checks
+    │
+    ├─→ Quota surfaces: GET /api/v1/metrics/quotas
+    │     - derives from ledger with metadata fallback
+    │     - exposes: token_used_today, token_limit_today, token_remaining_today
+    │
+    └─→ Agent UI: Agents table shows "Tokens left" column with reset hint
 ```
 
 ## Data Flow Patterns
@@ -212,28 +224,37 @@ Backend SSE Endpoint
           - Proper SSE formatting
 ```
 
-### Board Chat Multi-Session Flow
+### Board Chat Multi-Session & File Upload Flow
 
 ```
 BoardChatPanel (frontend)
     │
-    ├─→ /api/v1/boards/{board_id}/chat-sessions
+    ├─→ Session CRUD: /api/v1/boards/{board_id}/chat-sessions
     │     - list/create/rename/archive session metadata
     │
-    ├─→ /api/v1/boards/{board_id}/memory?is_chat=true&chat_session_id=...
+    ├─→ Message reads: /api/v1/boards/{board_id}/memory?is_chat=true&chat_session_id=...
     │     - latest-first paged message reads
     │
-    ├─→ /api/v1/boards/{board_id}/memory/stream?is_chat=true&chat_session_id=...
+    ├─→ File upload: POST /api/v1/boards/{board_id}/chat-files/upload (multipart)
+    │     - Client-side allowlist: txt, md, csv, json, pdf
+    │     - Server: MinIO storage + PDF OCR extraction
+    │     - Response: file_id + task queue job reference
+    │
+    ├─→ SSE stream: /api/v1/boards/{board_id}/memory/stream?is_chat=true&chat_session_id=...
     │     - session-scoped SSE updates via useSSEStream
     │     - parsed by parseSSEBuffer
+    │     - includes attachment metadata for uploaded files
     │
-    └─→ /api/v1/boards/{board_id}/memory (POST)
-          - chat message write with chat_session_id
+    └─→ Message write: POST /api/v1/boards/{board_id}/memory
+          - chat message write with chat_session_id + file references
           - auto-title when untouched title is "New chat"
+          - attachments linked via board_message_files junction
 
-PostgreSQL
-    ├─ board_chat_sessions
-    │   (id, board_id, title, created_by, created_at, updated_at, archived_at)
+PostgreSQL Models:
+    ├─ board_chat_sessions (id, board_id, title, created_by, ...)
+    ├─ board_chat_file_assets (id, board_id, file_name, status, created_at, ...)
+    ├─ board_chat_file_reports (id, file_asset_id, extraction_status, ...)
+    ├─ board_chat_message_files (id, board_memory_id, file_asset_id, ...)
     └─ board_memory.chat_session_id (nullable FK)
 ```
 
@@ -738,45 +759,40 @@ Organizations
 ### Vertical Scaling
 
 - Increase database resources (CPU, RAM, storage)
-- Increase Redis memory for larger cache
-- Increase backend worker processes (uvicorn workers)
+- Increase Redis memory + backend worker processes
 
-### Future Scaling Considerations
+### Future Scaling
 
-- Database read replicas for read-heavy workloads
-- Redis cluster for distributed caching
-- Message queue (RabbitMQ/Kafka) for event streaming
-- CDN for static assets
+- Database read replicas, Redis cluster, message queues, CDN
 
 ## Monitoring and Observability
 
-### Health Checks
+- `/healthz` health check endpoint with db, redis, gateway status
+- API latency metrics (P50, P95, P99) + job queue monitoring
+- Board overlay telemetry: `/api/v1/metrics/board-overlay` (latency, filters, cursor usage, regression markers)
+- Billing health: `/api/v1/metrics/saas-billing-health` (trial status, entitlements, events)
+- Structured JSON logging with audit trail via ActivityEvents
 
-- `/healthz` endpoint for backend health
-- Database connection check
-- Redis connection check
-- Gateway connectivity status
+## Board Planning Overlay Compatibility Guardrails
 
-### Metrics
-
-- API request latency (P50, P95, P99)
-- Database query performance
-- Job queue length and processing time
-- Active gateway connections
-- Error rates by endpoint
-
-### Logging
-
-- Structured logging (JSON format)
-- Log levels (DEBUG, INFO, WARNING, ERROR)
-- Request/response logging
-- Error stack traces
-- Audit trail via ActivityEvents
+- Contract matrix source of truth: `docs/reference/board-planning-overlay-contract-matrix.md`
+- Locked contracts for OpenClaw runtime compatibility:
+  - Task status model remains `inbox`, `in_progress`, `review`, `done`
+  - Agent discovery route stays `GET /api/v1/agent/boards/{board_id}/tasks`
+  - Task event taxonomy remains unchanged
+  - Heartbeat workflow stays task-comment-first
+- Overlay changes must stay additive:
+  - Optional task-group metadata (`task_group_id`, `sort_index`, `archived_at`)
+  - Optional filter/cursor query paths for scalable UI reads
+- Rollout and observability controls:
+  - Feature flags: `board_planning_overlay_v1`, `board_query_v2`
+  - Canary targeting via board/org allowlists from runtime configuration
+  - Runtime telemetry endpoint: `GET /api/v1/metrics/board-overlay`
+  - Query instrumentation: latency samples, filter usage, cursor usage
+  - Compatibility signal: `agent_task_loop_regression_count`
 
 ## Unresolved Questions
 
-1. What is the expected concurrent user load for production deployments?
-2. Should we implement database read replicas for scaling?
-3. What is the disaster recovery strategy and RTO/RPO targets?
-4. Should we add distributed tracing (OpenTelemetry)?
-5. What monitoring solution should be recommended (Prometheus, Datadog, etc.)?
+1. What concurrent user load target for production?
+2. Database read replicas needed for scaling?
+3. Disaster recovery strategy and RTO/RPO targets?

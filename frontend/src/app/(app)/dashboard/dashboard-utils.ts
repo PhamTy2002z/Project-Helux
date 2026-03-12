@@ -285,11 +285,10 @@ export const toSessionSummaries = (
           ? `${compactNumber(usedTokens)} tokens`
           : DASH;
 
-    const subtitleBits = [channel, model].filter(Boolean) as string[];
+    const maskedModel = model ? "custom-model" : null;
+    const subtitleBits = [channel, maskedModel].filter(Boolean) as string[];
     const subtitle = subtitleBits.length > 0 ? subtitleBits.join(" · ") : "Session";
-    const modelWithProvider =
-      modelProvider && model && modelProvider !== model ? `${model} · ${modelProvider}` : model;
-    const subtitleWithProvider = [channel, modelWithProvider].filter(Boolean).join(" · ");
+    const subtitleWithProvider = subtitle;
 
     return {
       key,

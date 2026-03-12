@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import json
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
+from uuid import UUID
 
 from fastapi import APIRouter, Depends
 from sqlalchemy import func
@@ -56,7 +57,7 @@ def _build_default_steps() -> dict[str, dict[str, object]]:
 
 def _coerce_step_status(value: object) -> OnboardingStepStatus:
     if value in {"pending", "completed", "skipped"}:
-        return value
+        return cast(OnboardingStepStatus, value)
     return "pending"
 
 
@@ -128,8 +129,8 @@ def _to_read(progress: UserOnboardingProgress) -> OnboardingProgressRead:
 async def _get_or_create_progress(
     session: AsyncSession,
     *,
-    organization_id,
-    user_id,
+    organization_id: UUID,
+    user_id: UUID,
 ) -> UserOnboardingProgress:
     progress = await UserOnboardingProgress.objects.filter_by(
         organization_id=organization_id,
@@ -162,8 +163,11 @@ async def _apply_inferred_step_completion(
     org_id = progress.organization_id
 
     board_count = int(
-        (await session.exec(select(func.count(col(Board.id))).where(col(Board.organization_id) == org_id)))
-        .one()
+        (
+            await session.exec(
+                select(func.count(col(Board.id))).where(col(Board.organization_id) == org_id)
+            )
+        ).one()
         or 0
     )
     member_count = int(
@@ -223,7 +227,7 @@ async def _apply_inferred_step_completion(
 def _record_onboarding_event(
     session: AsyncSession,
     *,
-    organization_id,
+    organization_id: UUID,
     event_type: str,
     step: OnboardingStepKey,
     status: str | None = None,

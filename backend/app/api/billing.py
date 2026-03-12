@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 from typing import TYPE_CHECKING
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlmodel import col, select
@@ -39,7 +40,7 @@ LIMIT_QUERY = Query(default=50, ge=1, le=200)
 def _record_billing_metric_event(
     session: AsyncSession,
     *,
-    organization_id,
+    organization_id: UUID,
     event_type: str,
     payload: dict[str, object] | None = None,
 ) -> None:

@@ -119,4 +119,3 @@ async def probe_sessions_usage_capability(*, config: GatewayConfig) -> bool:
             return False
         # Method is reachable; failure reason is unrelated to support.
         return True
-

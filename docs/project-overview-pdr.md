@@ -25,7 +25,7 @@ Provide a SaaS platform for platform teams to operate OpenClaw reliably with cle
 ## Use Cases
 
 ### Multi-Team Agent Operations
-Run multiple boards and board groups across organizations from a single control plane. Organize work hierarchically with organizations → board groups → boards → tasks.
+Run multiple boards and board groups across organizations from a single control plane. Organize work hierarchically with organizations → board groups → boards → tasks. Scalable board overlays with grouped rendering, density modes, and saved views for high-volume boards.
 
 ### Human-in-the-Loop Execution
 Require explicit approvals before sensitive actions execute. Maintain decision trails attached to work items for compliance and audit purposes.
@@ -44,10 +44,11 @@ Connect internal workflows and automation clients to the same operational model 
 ### Work Orchestration
 - **Organizations**: Multi-tenant structure for team isolation
 - **Board Groups**: Logical grouping of related boards
-- **Boards**: Work containers with lifecycle management
-- **Tasks**: Individual work items with dependencies and custom fields
+- **Boards**: Work containers with lifecycle management and multi-session chat
+- **Tasks**: Individual work items with dependencies, custom fields, and planning overlay support
 - **Tags**: Cross-cutting categorization and filtering
 - **Custom Fields**: Extensible metadata for domain-specific requirements
+- **File Upload**: Board chat file attachment with PDF OCR extraction and full-text indexing
 
 ### Agent Operations
 - **Agent Lifecycle**: Create, configure, inspect, and manage agents
@@ -67,6 +68,7 @@ Connect internal workflows and automation clients to the same operational model 
 - **Gateway Health**: Monitor gateway connectivity and status
 - **Gateway Routing**: Automatic routing of work to appropriate gateways
 - **WebSocket Communication**: Real-time bidirectional gateway protocol
+- **Rollout & Canary**: Feature-flagged rollout with org/board-level canary targeting for compatibility testing
 
 ### Activity and Observability
 - **Activity Timeline**: System-wide event stream for all operations
@@ -179,10 +181,11 @@ Organizations, board groups, boards, tasks, tags, and users in one system of rec
 ## Constraints and Assumptions
 
 ### Constraints
-- SaaS-only platform (subscription model: trial → pro tiers)
+- SaaS-only platform (subscription model: `trial_7d` → `pro` tiers)
 - PostgreSQL as primary database (no multi-database support)
 - English-only UI (no i18n currently)
 - Single-region deployment (no multi-region support)
+- Billing v1 scope locked to trial expiry + board-group/agent quotas (Stripe integration out-of-scope)
 
 ### Assumptions
 - Users subscribe to use the platform (trial or paid tier)

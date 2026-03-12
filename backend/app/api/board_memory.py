@@ -50,6 +50,7 @@ if TYPE_CHECKING:
     from fastapi_pagination.limit_offset import LimitOffsetPage
     from sqlmodel.ext.asyncio.session import AsyncSession
 
+    from app.models.board_chat_file_assets import BoardChatFileAsset
     from app.models.board_chat_sessions import BoardChatSession
     from app.models.boards import Board
 
@@ -239,7 +240,7 @@ async def _notify_chat_targets(
     board: Board,
     memory: BoardMemory,
     actor: ActorContext,
-    file_assets: list | None = None,
+    file_assets: list[BoardChatFileAsset] | None = None,
 ) -> None:
     if not memory.content:
         return

@@ -87,13 +87,23 @@ async def _notify_target_agent(
         return
 
     message = _webhook_message(board=board, webhook=webhook, payload=payload)
+    organization_id = getattr(board, "organization_id", None)
+    if organization_id is None:
+        await dispatch.try_send_agent_message(
+            session_key=target_agent.openclaw_session_id,
+            config=config,
+            agent_name=target_agent.name,
+            message=message,
+            deliver=False,
+        )
+        return
     await dispatch.try_send_agent_message(
         session_key=target_agent.openclaw_session_id,
         config=config,
         agent_name=target_agent.name,
         message=message,
         deliver=False,
-        organization_id=board.organization_id,
+        organization_id=organization_id,
     )
 
 

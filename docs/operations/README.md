@@ -92,6 +92,7 @@ Use these focused runbooks for live operations:
 - [Backup and restore drill](./backup-restore-drill.md)
 - [Incident triage](./incident-triage.md)
 - [Billing simulated incident playbook](./billing-simulated-incident-playbook.md)
+- [Board overlay rollout playbook](./board-overlay-rollout-playbook.md)
 
 ## Rollback notes
 

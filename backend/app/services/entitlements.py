@@ -274,6 +274,38 @@ def _next_month_start(value: date) -> date:
     return date(value.year, value.month + 1, 1)
 
 
+def _coerce_int(value: object) -> int:
+    if value is None:
+        return 0
+    if isinstance(value, (int, float, Decimal)):
+        return int(value)
+    if isinstance(value, str):
+        with_value = value.strip()
+        if not with_value:
+            return 0
+        try:
+            return int(with_value)
+        except ValueError:
+            return 0
+    return 0
+
+
+def _coerce_float(value: object) -> float:
+    if value is None:
+        return 0.0
+    if isinstance(value, (int, float, Decimal)):
+        return float(value)
+    if isinstance(value, str):
+        with_value = value.strip()
+        if not with_value:
+            return 0.0
+        try:
+            return float(with_value)
+        except ValueError:
+            return 0.0
+    return 0.0
+
+
 async def _token_usage_from_ledger(
     session: AsyncSession,
     *,
@@ -287,7 +319,7 @@ async def _token_usage_from_ledger(
     billed_col = col(AgentTokenDailyUsage.billed_tokens_used)
     cost_col = col(AgentTokenDailyUsage.cost_used)
 
-    statement = select(
+    statement = select(  # type: ignore[call-overload]
         func.count(col(AgentTokenDailyUsage.id)),
         func.coalesce(
             func.sum(
@@ -332,17 +364,17 @@ async def _token_usage_from_ledger(
         tuple[object, object, object, object, object, object, object],
         (await session.exec(statement)).one(),
     )
-    ledger_rows = int(row[0] or 0)
+    ledger_rows = _coerce_int(row[0])
     if ledger_rows <= 0:
         return {}, False
     return (
         {
-            "org_daily": max(int(row[1] or 0), 0),
-            "agent_daily": max(int(row[2] or 0), 0),
-            "org_monthly": max(int(row[3] or 0), 0),
-            "trial_total": max(int(row[4] or 0), 0),
-            "org_daily_cost": max(float(row[5] or 0), 0.0),
-            "agent_daily_cost": max(float(row[6] or 0), 0.0),
+            "org_daily": max(_coerce_int(row[1]), 0),
+            "agent_daily": max(_coerce_int(row[2]), 0),
+            "org_monthly": max(_coerce_int(row[3]), 0),
+            "trial_total": max(_coerce_int(row[4]), 0),
+            "org_daily_cost": max(_coerce_float(row[5]), 0.0),
+            "agent_daily_cost": max(_coerce_float(row[6]), 0.0),
         },
         True,
     )

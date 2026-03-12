@@ -20,9 +20,7 @@ class BoardChatFileTask(QueryModel, table=True):
     """Tracks per-agent processing state for a given file asset."""
 
     __tablename__ = "board_chat_file_tasks"  # pyright: ignore[reportAssignmentType]
-    __table_args__ = (
-        UniqueConstraint("file_asset_id", "agent_id", name="uq_file_task_agent"),
-    )
+    __table_args__ = (UniqueConstraint("file_asset_id", "agent_id", name="uq_file_task_agent"),)
 
     id: UUID = Field(default_factory=uuid4, primary_key=True)
     file_asset_id: UUID = Field(foreign_key="board_chat_file_assets.id", index=True)

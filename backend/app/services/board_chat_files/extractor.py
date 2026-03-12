@@ -135,8 +135,8 @@ def _extract_pdf_with_ocr(data: bytes) -> str:
         return ""
 
     try:
-        import pypdfium2 as pdfium
-        import pytesseract
+        import pypdfium2 as pdfium  # type: ignore[import-untyped]
+        import pytesseract  # type: ignore[import-untyped]
     except ImportError:
         logger.warning("pdf.ocr.dependencies_missing")
         return ""

@@ -108,7 +108,9 @@ async def test_sync_session_usage_uses_raw_tokens_no_multiplier(
 
             row = (
                 await session.exec(
-                    select(AgentTokenDailyUsage).where(col(AgentTokenDailyUsage.agent_id) == agent.id),
+                    select(AgentTokenDailyUsage).where(
+                        col(AgentTokenDailyUsage.agent_id) == agent.id
+                    ),
                 )
             ).first()
             assert row is not None

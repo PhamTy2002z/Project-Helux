@@ -128,9 +128,7 @@ class AgentTokenUsageReadModel:
             remaining_today = max(limit_today - used_today, 0) if limit_today is not None else None
             blocked = bool(row and (row.blocked_at is not None or row.cost_blocked_at is not None))
             cost_used = float(row.cost_used or 0) if row is not None else 0.0
-            cost_remaining = (
-                max(cost_limit - cost_used, 0.0) if cost_limit is not None else None
-            )
+            cost_remaining = max(cost_limit - cost_used, 0.0) if cost_limit is not None else None
             snapshots[agent.id] = AgentTokenUsageSnapshot(
                 used_today=used_today,
                 limit_today=limit_today,

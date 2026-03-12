@@ -103,19 +103,19 @@ class SessionUsageSyncService(OpenClawDBService):
             "updated_at": now,
         }
         if dialect_name == "postgresql":
-            statement = postgres_insert(AgentTokenDailyUsage).values(**values)
-            statement = statement.on_conflict_do_nothing(
+            pg_statement = postgres_insert(AgentTokenDailyUsage).values(**values)
+            pg_statement = pg_statement.on_conflict_do_nothing(
                 index_elements=["agent_id", "usage_date_vn"],
             )
-            await self.session.exec(statement)
+            await self.session.exec(pg_statement)
             await self.session.flush()
             return
         if dialect_name == "sqlite":
-            statement = sqlite_insert(AgentTokenDailyUsage).values(**values)
-            statement = statement.on_conflict_do_nothing(
+            sqlite_statement = sqlite_insert(AgentTokenDailyUsage).values(**values)
+            sqlite_statement = sqlite_statement.on_conflict_do_nothing(
                 index_elements=["agent_id", "usage_date_vn"],
             )
-            await self.session.exec(statement)
+            await self.session.exec(sqlite_statement)
             await self.session.flush()
             return
 
@@ -184,20 +184,31 @@ class SessionUsageSyncService(OpenClawDBService):
 
         # Token delta (raw, no multiplier)
         previous_openclaw_total = max(int(row.openclaw_tokens_total), 0)
+        previous_billed_total = max(int(row.billed_tokens_used), 0)
         next_openclaw_total = max(int(usage.total_tokens), 0)
-        openclaw_delta = max(next_openclaw_total - previous_openclaw_total, 0)
+        # Treat first observed non-zero total as a baseline to avoid backcharging
+        # usage that happened before this ledger started tracking the session.
+        baseline_catchup = previous_openclaw_total == 0 and previous_billed_total == 0
+        openclaw_delta = (
+            0 if baseline_catchup else max(next_openclaw_total - previous_openclaw_total, 0)
+        )
         billed_delta = openclaw_delta  # raw tokens, no multiplier
 
         # Cost delta
         previous_cost_total = max(Decimal(str(row.openclaw_cost_total or 0)), Decimal(0))
         next_cost_total = max(usage.total_cost, Decimal(0))
-        cost_delta = max(next_cost_total - previous_cost_total, Decimal(0))
+        previous_cost_used = max(Decimal(str(row.cost_used or 0)), Decimal(0))
+        cost_delta = (
+            Decimal(0)
+            if baseline_catchup and previous_cost_total == 0 and previous_cost_used == 0
+            else max(next_cost_total - previous_cost_total, Decimal(0))
+        )
 
         # Update row
         row.openclaw_tokens_total = max(previous_openclaw_total, next_openclaw_total)
-        row.billed_tokens_used = max(int(row.billed_tokens_used), 0) + billed_delta
-        row.openclaw_cost_total = max(previous_cost_total, next_cost_total)
-        row.cost_used = max(Decimal(str(row.cost_used or 0)), Decimal(0)) + cost_delta
+        row.billed_tokens_used = previous_billed_total + billed_delta
+        row.openclaw_cost_total = float(max(previous_cost_total, next_cost_total))
+        row.cost_used = float(previous_cost_used + cost_delta)
         row.last_synced_at = utcnow()
         row.updated_at = utcnow()
         self.session.add(row)

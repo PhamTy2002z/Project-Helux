@@ -18,6 +18,7 @@ from app.services.board_chat_files.delivery import (
 # Fakes
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class _FakeAsset:
     id: UUID = field(default_factory=uuid4)
@@ -69,13 +70,15 @@ class _FakeSession:
 # validate_and_link_files
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_validate_and_link_rejects_too_many_files(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Reject when file_ids exceeds max_per_message."""
     monkeypatch.setattr(
-        "app.services.board_chat_files.delivery.settings.board_chat_file_max_per_message", 3,
+        "app.services.board_chat_files.delivery.settings.board_chat_file_max_per_message",
+        3,
     )
     file_ids = [uuid4() for _ in range(4)]
 
@@ -95,7 +98,8 @@ async def test_validate_and_link_rejects_unknown_file(
 ) -> None:
     """Reject file_id that doesn't exist in DB."""
     monkeypatch.setattr(
-        "app.services.board_chat_files.delivery.settings.board_chat_file_max_per_message", 3,
+        "app.services.board_chat_files.delivery.settings.board_chat_file_max_per_message",
+        3,
     )
     monkeypatch.setattr(
         "app.services.board_chat_files.delivery.BoardChatFileAsset",
@@ -122,7 +126,8 @@ async def test_validate_and_link_rejects_wrong_board(
     asset = _FakeAsset(board_id=other_board_id)
 
     monkeypatch.setattr(
-        "app.services.board_chat_files.delivery.settings.board_chat_file_max_per_message", 3,
+        "app.services.board_chat_files.delivery.settings.board_chat_file_max_per_message",
+        3,
     )
     monkeypatch.setattr(
         "app.services.board_chat_files.delivery.BoardChatFileAsset",
@@ -150,7 +155,8 @@ async def test_validate_and_link_success(
     assets_db = {asset1.id: asset1, asset2.id: asset2}
 
     monkeypatch.setattr(
-        "app.services.board_chat_files.delivery.settings.board_chat_file_max_per_message", 3,
+        "app.services.board_chat_files.delivery.settings.board_chat_file_max_per_message",
+        3,
     )
     monkeypatch.setattr(
         "app.services.board_chat_files.delivery.BoardChatFileAsset",
@@ -185,7 +191,8 @@ async def test_validate_and_link_deduplicates(
     asset = _FakeAsset(board_id=board_id)
 
     monkeypatch.setattr(
-        "app.services.board_chat_files.delivery.settings.board_chat_file_max_per_message", 3,
+        "app.services.board_chat_files.delivery.settings.board_chat_file_max_per_message",
+        3,
     )
     monkeypatch.setattr(
         "app.services.board_chat_files.delivery.BoardChatFileAsset",
@@ -212,6 +219,7 @@ async def test_validate_and_link_deduplicates(
 # ---------------------------------------------------------------------------
 # create_file_tasks_for_targets
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_create_file_tasks_creates_per_agent_per_file(

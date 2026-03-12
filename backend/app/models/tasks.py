@@ -8,9 +8,11 @@ from uuid import UUID, uuid4
 from sqlmodel import Field
 
 from app.core.time import utcnow
+from app.models.task_groups import TaskGroup as _TaskGroup
 from app.models.tenancy import TenantScoped
 
 RUNTIME_ANNOTATION_TYPES = (datetime,)
+MODEL_DEPENDENCIES = (_TaskGroup,)
 
 
 class Task(TenantScoped, table=True):
@@ -21,12 +23,15 @@ class Task(TenantScoped, table=True):
     id: UUID = Field(default_factory=uuid4, primary_key=True)
     organization_id: UUID | None = Field(default=None, foreign_key="organizations.id", index=True)
     board_id: UUID | None = Field(default=None, foreign_key="boards.id", index=True)
+    task_group_id: UUID | None = Field(default=None, foreign_key="task_groups.id", index=True)
 
     title: str
     description: str | None = None
     status: str = Field(default="inbox", index=True)
     priority: str = Field(default="medium", index=True)
+    sort_index: int | None = Field(default=None, index=True)
     due_at: datetime | None = None
+    archived_at: datetime | None = Field(default=None, index=True)
     in_progress_at: datetime | None = None
     previous_in_progress_at: datetime | None = None
 
