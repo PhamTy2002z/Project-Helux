@@ -68,7 +68,7 @@ If you believe you’ve found a security vulnerability:
 
 - **Do not** open a public issue.
 - Prefer GitHub’s private reporting flow:
-  - https://github.com/abhi1693/openclaw-mission-control/security/advisories/new
+  - https://github.com/PhamTy2002z/Project-Helux/security/advisories/new
 
 If that’s not available in your environment, contact the maintainers privately.
 
