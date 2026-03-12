@@ -41,7 +41,7 @@ class Settings(BaseSettings):
     )
 
     environment: str = "dev"
-    database_url: str = "postgresql+psycopg://postgres:postgres@localhost:5432/openclaw_agency"
+    database_url: str = "postgresql+psycopg://postgres:postgres@localhost:5432/mission_control"
 
     # Auth profile controls auth strictness by deployment type.
     auth_profile: AuthProfile = AuthProfile.DEV
