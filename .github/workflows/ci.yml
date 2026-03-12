@@ -131,6 +131,7 @@ jobs:
           # Keep CI builds deterministic.
           AUTH_MODE: "local"
           LOCAL_AUTH_TOKEN: "ci-local-auth-token-0123456789-0123456789-0123456789x"
+          CORS_ORIGINS: "http://localhost:3000"
         run: |
           make backend-lint
           make backend-coverage
