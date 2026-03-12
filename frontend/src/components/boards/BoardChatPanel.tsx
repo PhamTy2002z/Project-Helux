@@ -1,4 +1,4 @@
-import { memo, useCallback, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useState } from "react";
 
 import { ChevronDown, MessageSquare, Plus } from "lucide-react";
 
@@ -54,7 +54,7 @@ export const BoardChatPanel = memo(function BoardChatPanel({
   const [isSessionMenuOpen, setIsSessionMenuOpen] = useState(false);
 
   // Track session IDs that were just created — skip initial fetch for these
-  const freshSessionIds = useRef(new Set<string>());
+  const [freshSessionIds, setFreshSessionIds] = useState<Set<string>>(() => new Set());
 
   const sessions = sessionsState.sessions;
   const effectiveActiveSessionId = useMemo(() => {
@@ -76,11 +76,21 @@ export const BoardChatPanel = memo(function BoardChatPanel({
 
   const skipInitialFetch =
     effectiveActiveSessionId !== null &&
-    freshSessionIds.current.has(effectiveActiveSessionId);
-  // Clear the flag after first render so subsequent navigations back fetch normally
-  if (skipInitialFetch) {
-    freshSessionIds.current.delete(effectiveActiveSessionId);
-  }
+    freshSessionIds.has(effectiveActiveSessionId);
+
+  // Clear the flag after first render so subsequent navigations back fetch normally.
+  // setState here is intentional: we need to sync the "consumed" flag after the
+  // skip-fetch decision has been read during this render cycle.
+  useEffect(() => {
+    if (effectiveActiveSessionId && freshSessionIds.has(effectiveActiveSessionId)) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional: clear consumed flag after render
+      setFreshSessionIds((prev) => {
+        const next = new Set(prev);
+        next.delete(effectiveActiveSessionId);
+        return next;
+      });
+    }
+  }, [effectiveActiveSessionId, freshSessionIds]);
 
   const messagesState = useBoardChatMessages({
     boardId: resolvedBoardId,
@@ -110,7 +120,7 @@ export const BoardChatPanel = memo(function BoardChatPanel({
   const handleCreateSession = useCallback(async () => {
     try {
       const created = await sessionsState.createSession("New chat");
-      freshSessionIds.current.add(created.id);
+      setFreshSessionIds((prev) => new Set(prev).add(created.id));
       setActiveSessionId(created.id);
       setIsSessionMenuOpen(false);
       triggerComposerFocus();
