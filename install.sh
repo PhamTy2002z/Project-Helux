@@ -890,7 +890,7 @@ main() {
     upsert_env_value "$REPO_ROOT/.env" "DB_AUTO_MIGRATE" "true"
 
     info "Starting production-like Docker stack..."
-    docker_compose -f compose.yml --env-file .env up -d --build
+    docker_compose --profile docker-frontend -f compose.yml --env-file .env up -d --build
 
     wait_for_http "http://127.0.0.1:$backend_port/healthz" "Backend" 180 || true
     wait_for_http "http://127.0.0.1:$frontend_port" "Frontend" 180 || true
@@ -908,7 +908,7 @@ Auth:
 - LOCAL_AUTH_TOKEN=$local_auth_token
 
 Stop stack:
-  docker compose -f compose.yml --env-file .env down
+  docker compose --profile docker-frontend -f compose.yml --env-file .env down
 SUMMARY
     return
   fi
