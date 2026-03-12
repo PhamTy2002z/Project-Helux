@@ -6,11 +6,11 @@ import { GlobalLoader } from "@/components/ui/global-loader";
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   return (
-    <AuthProvider>
-      <QueryProvider>
-        <GlobalLoader />
+    <QueryProvider>
+      <GlobalLoader />
+      <AuthProvider>
         {children}
-      </QueryProvider>
-    </AuthProvider>
+      </AuthProvider>
+    </QueryProvider>
   );
 }
