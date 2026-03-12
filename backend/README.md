@@ -52,9 +52,7 @@ A starter file exists at `backend/.env.example`.
   - In `dev`, if you **don’t** explicitly set `DB_AUTO_MIGRATE`, the backend defaults it to `true`.
 - `LOG_LEVEL` (default: `INFO`)
 - `DATABASE_URL`
-  - Default: `postgresql+psycopg://postgres:postgres@localhost:5432/openclaw_agency`
-  - Recommended local/dev default (matches `backend/.env.example`):
-    `postgresql+psycopg://postgres:postgres@localhost:5432/mission_control`
+  - Default: `postgresql+psycopg://postgres:postgres@localhost:5432/mission_control`
 - `CORS_ORIGINS` (comma-separated)
   - Example: `http://localhost:3000`
 - `BASE_URL` (required for gateway provisioning/agent heartbeat templates; no fallback)
