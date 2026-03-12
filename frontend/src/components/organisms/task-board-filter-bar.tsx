@@ -161,7 +161,7 @@ export function TaskBoardFilterBar({
             onClick={onCollapseAll}
             className="rounded-full border border-slate-200 px-2.5 py-1 text-xs font-semibold text-slate-600 transition hover:border-slate-300 hover:bg-slate-50"
           >
-            Collapse All
+            Collapse All Groups
           </button>
         ) : null}
         {onExpandAll ? (
@@ -170,7 +170,7 @@ export function TaskBoardFilterBar({
             onClick={onExpandAll}
             className="rounded-full border border-slate-200 px-2.5 py-1 text-xs font-semibold text-slate-600 transition hover:border-slate-300 hover:bg-slate-50"
           >
-            Expand All
+            Expand All Groups
           </button>
         ) : null}
 
