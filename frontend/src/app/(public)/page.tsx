@@ -5,7 +5,7 @@ import { getSiteUrl } from "@/lib/site-url";
 
 const landingTitle = "AI Agent Mission Control for Boards, Approvals, and Gateways";
 const landingDescription =
-  "OpenClaw Mission Control helps teams run board operations, agent workflows, approvals, and gateways from one secure, real-time workspace.";
+  "Project Helux helps teams run board operations, agent workflows, approvals, and gateways from one secure, real-time workspace.";
 const siteUrl = getSiteUrl();
 
 export const metadata: Metadata = {
@@ -39,14 +39,14 @@ const landingStructuredData = {
   "@graph": [
     {
       "@type": "WebSite",
-      name: "OpenClaw Mission Control",
+      name: "Project Helux",
       url: siteUrl,
       description: landingDescription,
     },
     {
       "@type": "SoftwareApplication",
       applicationCategory: "BusinessApplication",
-      name: "OpenClaw Mission Control",
+      name: "Project Helux",
       operatingSystem: "Web",
       description: landingDescription,
       url: siteUrl,
@@ -58,10 +58,10 @@ const landingStructuredData = {
     },
     {
       "@type": "Organization",
-      name: "OpenClaw",
+      name: "Helux",
       url: siteUrl,
       sameAs: [
-        "https://github.com/abhi1693/openclaw-mission-control",
+        "https://github.com/PhamTy2002z/Project-Helux",
       ],
     },
   ],
