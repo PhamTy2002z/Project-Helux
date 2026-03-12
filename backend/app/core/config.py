@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Self
 from urllib.parse import urlparse
+from uuid import UUID
 
 from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -98,6 +99,14 @@ class Settings(BaseSettings):
     managed_gateway_disable_device_pairing: bool = False
     managed_gateway_allow_insecure_tls: bool = False
 
+    # Board planning overlay rollout controls
+    board_planning_overlay_v1: bool = False
+    board_planning_overlay_v1_canary_board_ids: str = ""
+    board_planning_overlay_v1_canary_org_ids: str = ""
+    board_query_v2: bool = False
+    board_query_v2_canary_board_ids: str = ""
+    board_query_v2_canary_org_ids: str = ""
+
     # Object storage (MinIO / S3-compatible)
     object_storage_endpoint: str = "http://localhost:9000"
     object_storage_access_key: str = "minioadmin"
@@ -176,6 +185,14 @@ class Settings(BaseSettings):
         self.managed_gateway_url = self.managed_gateway_url.strip()
         self.managed_gateway_token = self.managed_gateway_token.strip()
         self.managed_gateway_workspace_root = self.managed_gateway_workspace_root.strip()
+        self.board_planning_overlay_v1_canary_board_ids = (
+            self.board_planning_overlay_v1_canary_board_ids.strip()
+        )
+        self.board_planning_overlay_v1_canary_org_ids = (
+            self.board_planning_overlay_v1_canary_org_ids.strip()
+        )
+        self.board_query_v2_canary_board_ids = self.board_query_v2_canary_board_ids.strip()
+        self.board_query_v2_canary_org_ids = self.board_query_v2_canary_org_ids.strip()
         self.billing_mode = self.billing_mode.strip().lower()
         if self.billing_mode not in BILLING_MODES:
             raise ValueError("BILLING_MODE must be one of: simulated, provider.")
@@ -190,6 +207,49 @@ class Settings(BaseSettings):
             self.openclaw_usage_day_timezone.strip() or "Asia/Ho_Chi_Minh"
         )
         return self
+
+    @staticmethod
+    def _uuid_csv_set(raw: str) -> set[UUID]:
+        values: set[UUID] = set()
+        for item in raw.split(","):
+            normalized = item.strip()
+            if not normalized:
+                continue
+            try:
+                values.add(UUID(normalized))
+            except ValueError:
+                continue
+        return values
+
+    def board_planning_overlay_enabled_for(
+        self,
+        *,
+        board_id: UUID | None,
+        organization_id: UUID | None,
+    ) -> bool:
+        if self.board_planning_overlay_v1:
+            return True
+        canary_board_ids = self._uuid_csv_set(self.board_planning_overlay_v1_canary_board_ids)
+        canary_org_ids = self._uuid_csv_set(self.board_planning_overlay_v1_canary_org_ids)
+        return bool(
+            (board_id is not None and board_id in canary_board_ids)
+            or (organization_id is not None and organization_id in canary_org_ids)
+        )
+
+    def board_query_v2_enabled_for(
+        self,
+        *,
+        board_id: UUID | None,
+        organization_id: UUID | None,
+    ) -> bool:
+        if self.board_query_v2:
+            return True
+        canary_board_ids = self._uuid_csv_set(self.board_query_v2_canary_board_ids)
+        canary_org_ids = self._uuid_csv_set(self.board_query_v2_canary_org_ids)
+        return bool(
+            (board_id is not None and board_id in canary_board_ids)
+            or (organization_id is not None and organization_id in canary_org_ids)
+        )
 
 
 settings = Settings()

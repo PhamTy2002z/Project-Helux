@@ -132,3 +132,19 @@ class SaasBillingHealthMetrics(SQLModel):
     checkout_failure_ratio_pct: float
     trial_blocked_count: int
     trial_blocked_rate_pct: float
+
+
+class BoardOverlayMetrics(SQLModel):
+    """Board planning overlay rollout and compatibility telemetry snapshot."""
+
+    organization_id: UUID
+    generated_at: datetime
+    board_overlay_enabled_count: int
+    board_query_v2_enabled_count: int
+    board_query_latency_samples: int
+    board_query_latency_ms_avg: float
+    board_query_latency_ms_p95: float | None
+    board_query_latency_ms_max: float | None
+    filter_usage_count: int
+    cursor_usage_count: int
+    agent_task_loop_regression_count: int

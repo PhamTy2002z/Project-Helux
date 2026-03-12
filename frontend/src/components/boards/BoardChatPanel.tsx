@@ -1,6 +1,6 @@
-import { memo, useCallback, useMemo, useState } from "react";
+import { memo, useCallback, useMemo, useRef, useState } from "react";
 
-import { PanelLeftOpen, X } from "lucide-react";
+import { ChevronDown, MessageSquare, Plus } from "lucide-react";
 
 import type { BoardMemoryRead } from "@/api/generated/model";
 import { BoardChatSessionList } from "@/components/boards/BoardChatSessionList";
@@ -14,6 +14,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { useBoardChatFiles } from "@/lib/hooks/use-board-chat-files";
 import type { MessageAttachment } from "@/lib/hooks/use-board-chat-messages";
@@ -46,7 +51,10 @@ export const BoardChatPanel = memo(function BoardChatPanel({
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
   const [focusComposer, setFocusComposer] = useState(false);
   const [archiveTargetId, setArchiveTargetId] = useState<string | null>(null);
-  const [isSessionListOpen, setIsSessionListOpen] = useState(false);
+  const [isSessionMenuOpen, setIsSessionMenuOpen] = useState(false);
+
+  // Track session IDs that were just created — skip initial fetch for these
+  const freshSessionIds = useRef(new Set<string>());
 
   const sessions = sessionsState.sessions;
   const effectiveActiveSessionId = useMemo(() => {
@@ -66,12 +74,21 @@ export const BoardChatPanel = memo(function BoardChatPanel({
     window.setTimeout(() => setFocusComposer(false), 0);
   }, []);
 
+  const skipInitialFetch =
+    effectiveActiveSessionId !== null &&
+    freshSessionIds.current.has(effectiveActiveSessionId);
+  // Clear the flag after first render so subsequent navigations back fetch normally
+  if (skipInitialFetch) {
+    freshSessionIds.current.delete(effectiveActiveSessionId);
+  }
+
   const messagesState = useBoardChatMessages({
     boardId: resolvedBoardId,
     chatSessionId: effectiveActiveSessionId,
     enabled: isOpen && Boolean(effectiveActiveSessionId),
     source: currentUserDisplayName,
     onMessageCreated,
+    skipInitialFetch,
   });
 
   const filesState = useBoardChatFiles({
@@ -93,7 +110,9 @@ export const BoardChatPanel = memo(function BoardChatPanel({
   const handleCreateSession = useCallback(async () => {
     try {
       const created = await sessionsState.createSession("New chat");
+      freshSessionIds.current.add(created.id);
       setActiveSessionId(created.id);
+      setIsSessionMenuOpen(false);
       triggerComposerFocus();
     } catch (error) {
       onError(
@@ -175,52 +194,54 @@ export const BoardChatPanel = memo(function BoardChatPanel({
     [filesState, messagesState, onError, pendingUploads, sessionsState],
   );
 
+  const handleSelectSession = useCallback(
+    (chatSessionId: string) => {
+      setActiveSessionId(chatSessionId);
+      setIsSessionMenuOpen(false);
+      triggerComposerFocus();
+    },
+    [triggerComposerFocus],
+  );
+
+  const handleArchiveRequest = useCallback((chatSessionId: string) => {
+    setArchiveTargetId(chatSessionId);
+    setIsSessionMenuOpen(false);
+  }, []);
+
+  const activeSessionTitle = useMemo(() => {
+    if (!effectiveActiveSessionId) return null;
+    return sessions.find((s) => s.id === effectiveActiveSessionId)?.title ?? null;
+  }, [effectiveActiveSessionId, sessions]);
+
   const combinedError = sessionsState.error?.message ?? messagesState.error;
 
   return (
     <>
+      {/* Backdrop overlay — click to close */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 z-40"
+          onClick={onClose}
+          aria-hidden="true"
+        />
+      )}
       <aside
         className={cn(
-          "fixed right-0 top-0 z-50 h-full w-[920px] max-w-[98vw] border-l border-slate-200 bg-white shadow-2xl transform-gpu transition-[transform,opacity] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform motion-reduce:transition-none",
+          "fixed right-0 top-0 z-50 h-full w-[780px] max-w-[98vw] border-l border-slate-200 bg-white shadow-2xl transform-gpu transition-[transform,opacity] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform motion-reduce:transition-none",
           isOpen
             ? "translate-x-0 opacity-100 pointer-events-auto"
             : "translate-x-[104%] opacity-0 pointer-events-none",
         )}
       >
         <div className="flex h-full flex-col">
-          <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                Board chat
-              </p>
-              <p className="mt-1 text-sm font-medium text-slate-900">
-                Multi-session board chat. Commands like /pause and /resume stay
-                board-global.
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button
-                type="button"
-                size="sm"
-                variant={isSessionListOpen ? "secondary" : "outline"}
-                className="h-8 px-2"
-                onClick={() => setIsSessionListOpen((value) => !value)}
-                title={isSessionListOpen ? "Hide chats" : "Show chats"}
-                aria-controls="board-chat-session-list"
-                aria-expanded={isSessionListOpen}
-              >
-                <PanelLeftOpen className="h-3.5 w-3.5" />
-                Chats
-              </Button>
-              <button
-                type="button"
-                onClick={onClose}
-                className="rounded-lg border border-slate-200 p-2 text-slate-500 transition hover:bg-slate-50"
-                aria-label="Close board chat"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
+          <div className="border-b border-slate-200 px-6 py-4">
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+              Board chat
+            </p>
+            <p className="mt-1 text-sm font-medium text-slate-900">
+              Multi-session board chat. Commands like /pause and /resume stay
+              board-global.
+            </p>
           </div>
 
           {combinedError ? (
@@ -229,56 +250,84 @@ export const BoardChatPanel = memo(function BoardChatPanel({
             </div>
           ) : null}
 
-          <div className="flex min-h-0 flex-1 flex-col md:flex-row">
-            <div
-              id="board-chat-session-list"
-              className={cn(
-                "overflow-hidden transition-all duration-200 ease-out",
-                isSessionListOpen
-                  ? "max-h-[45vh] opacity-100 md:max-h-none md:w-72"
-                  : "max-h-0 opacity-0 md:max-h-none md:w-0",
-              )}
+          {/* Session selector bar — above chat thread */}
+          <div className="flex items-center justify-between border-b border-slate-200 px-4 py-2">
+            <Popover open={isSessionMenuOpen} onOpenChange={setIsSessionMenuOpen}>
+              <PopoverTrigger asChild>
+                <button
+                  type="button"
+                  className="flex min-w-0 items-center gap-2 rounded-lg px-2 py-1.5 text-left text-sm transition hover:bg-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                  title={isSessionMenuOpen ? "Close session menu" : "Switch session"}
+                  aria-expanded={isSessionMenuOpen}
+                >
+                  <MessageSquare aria-hidden="true" className="h-3.5 w-3.5 flex-shrink-0 text-slate-600" />
+                  <span className="max-w-[200px] truncate font-medium text-slate-700">
+                    {activeSessionTitle ?? "No session"}
+                  </span>
+                  <ChevronDown
+                    aria-hidden="true"
+                    className={cn(
+                      "h-3.5 w-3.5 flex-shrink-0 text-slate-400 transition-transform",
+                      isSessionMenuOpen ? "rotate-180" : "",
+                    )}
+                  />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent
+                align="start"
+                sideOffset={6}
+                className="w-[min(22rem,calc(100vw-2.5rem))] rounded-xl border border-slate-200 bg-white p-0 shadow-xl"
+              >
+                <BoardChatSessionList
+                  layout="dropdown"
+                  sessions={sessions}
+                  activeSessionId={effectiveActiveSessionId}
+                  canWrite={canWrite}
+                  isCreating={sessionsState.isCreating}
+                  isMutating={
+                    sessionsState.isRenaming || sessionsState.isArchiving
+                  }
+                  onSelect={handleSelectSession}
+                  onCreate={() => void handleCreateSession()}
+                  onRename={handleRenameSession}
+                  onArchiveRequest={(session) => {
+                    handleArchiveRequest(session.id);
+                  }}
+                />
+              </PopoverContent>
+            </Popover>
+            <button
+              type="button"
+              className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg border border-slate-200 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:opacity-50"
+              onClick={() => void handleCreateSession()}
+              disabled={!canWrite || sessionsState.isCreating}
+              title={canWrite ? "Create new chat" : "Read-only access"}
+              aria-label="Create new chat"
             >
-              <BoardChatSessionList
-                sessions={sessions}
-                activeSessionId={effectiveActiveSessionId}
-                canWrite={canWrite}
-                isCreating={sessionsState.isCreating}
-                isMutating={
-                  sessionsState.isRenaming || sessionsState.isArchiving
-                }
-                onSelect={(chatSessionId) => {
-                  setActiveSessionId(chatSessionId);
-                  triggerComposerFocus();
-                }}
-                onCreate={() => void handleCreateSession()}
-                onRename={handleRenameSession}
-                onArchiveRequest={(session) => {
-                  setArchiveTargetId(session.id);
-                }}
-              />
-            </div>
+              <Plus aria-hidden="true" className="h-4 w-4" />
+            </button>
+          </div>
 
-            <div className="min-h-0 flex-1 px-4 py-4">
-              <BoardChatThread
-                activeSessionId={effectiveActiveSessionId}
-                messages={messagesState.messages}
-                isLoading={messagesState.isLoading || sessionsState.isLoading}
-                isLoadingOlder={messagesState.isLoadingOlder}
-                isSending={messagesState.isSending}
-                hasMore={messagesState.hasMore}
-                error={messagesState.error}
-                canWrite={canWrite}
-                currentUserDisplayName={currentUserDisplayName}
-                mentionSuggestions={mentionSuggestions}
-                composerAutoFocus={focusComposer}
-                onLoadOlder={messagesState.loadOlder}
-                onSend={handleSend}
-                onFilesSelected={handleFilesSelected}
-                pendingFiles={pendingFileChips}
-                onRemovePendingFile={filesState.removePendingUpload}
-              />
-            </div>
+          <div className="min-h-0 flex-1 px-4 py-4">
+            <BoardChatThread
+              activeSessionId={effectiveActiveSessionId}
+              messages={messagesState.messages}
+              isLoading={messagesState.isLoading || sessionsState.isLoading}
+              isLoadingOlder={messagesState.isLoadingOlder}
+              isSending={messagesState.isSending}
+              isAwaitingReply={messagesState.isAwaitingReply}
+              hasMore={messagesState.hasMore}
+              error={messagesState.error}
+              canWrite={canWrite}
+              currentUserDisplayName={currentUserDisplayName}
+              mentionSuggestions={mentionSuggestions}
+              composerAutoFocus={focusComposer}
+              onLoadOlder={messagesState.loadOlder}
+              onSend={handleSend}
+              onFilesSelected={handleFilesSelected}
+              pendingFiles={pendingFileChips}
+              onRemovePendingFile={filesState.removePendingUpload}
+            />
           </div>
         </div>
       </aside>

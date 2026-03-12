@@ -293,9 +293,12 @@ export function TaskDetailPanel({
   );
 
   useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect */
+    // Reset local draft state when switching the selected task.
     setCommentDraft("");
     setMentionTarget(null);
     setActiveMentionIndex(0);
+    /* eslint-enable react-hooks/set-state-in-effect */
     const textarea = commentTextareaRef.current;
     if (!textarea) return;
     textarea.style.height = "auto";

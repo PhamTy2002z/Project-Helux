@@ -1,4 +1,4 @@
-import { memo } from "react";
+import { memo, useState } from "react";
 
 import { CalendarClock, UserCircle } from "lucide-react";
 
@@ -17,6 +17,8 @@ interface TaskCardProps {
   tags?: Array<{ id: string; name: string; color: string }>;
   isBlocked?: boolean;
   blockedByCount?: number;
+  density?: "comfortable" | "compact";
+  deferDetails?: boolean;
   onClick?: () => void;
   draggable?: boolean;
   isDragging?: boolean;
@@ -35,12 +37,15 @@ export const TaskCard = memo(function TaskCard({
   tags = [],
   isBlocked = false,
   blockedByCount = 0,
+  density = "comfortable",
+  deferDetails = false,
   onClick,
   draggable = false,
   isDragging = false,
   onDragStart,
   onDragEnd,
 }: TaskCardProps) {
+  const [isDetailsHydrated, setIsDetailsHydrated] = useState(!deferDetails);
   const hasPendingApproval = approvalsPendingCount > 0;
   const needsLeadReview =
     status === "review" && !isBlocked && !hasPendingApproval;
@@ -72,7 +77,8 @@ export const TaskCard = memo(function TaskCard({
   return (
     <div
       className={cn(
-        "group relative cursor-pointer rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md",
+        "group relative cursor-pointer rounded-lg border border-slate-200 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md",
+        density === "compact" ? "p-2.5" : "p-4",
         isDragging && "opacity-60 shadow-none",
         hasPendingApproval && "border-amber-200 bg-amber-50/40",
         isBlocked && "border-rose-200 bg-rose-50/50",
@@ -82,14 +88,17 @@ export const TaskCard = memo(function TaskCard({
       onDragStart={onDragStart}
       onDragEnd={onDragEnd}
       onClick={onClick}
+      onMouseEnter={() => setIsDetailsHydrated(true)}
       role="button"
       tabIndex={0}
       onKeyDown={(event) => {
         if (event.key === "Enter" || event.key === " ") {
           event.preventDefault();
+          setIsDetailsHydrated(true);
           onClick?.();
         }
       }}
+      onFocus={() => setIsDetailsHydrated(true)}
     >
       {leftBarClassName ? (
         <span
@@ -155,28 +164,32 @@ export const TaskCard = memo(function TaskCard({
           </span>
         </div>
       </div>
-      <div className="mt-3 flex items-center justify-between text-xs text-slate-500">
-        <div className="flex items-center gap-2">
-          <UserCircle className="h-4 w-4 text-slate-400" />
-          <span>{assignee ?? "Unassigned"}</span>
-        </div>
-        {due ? (
-          <div
-            className={cn(
-              "flex items-center gap-2",
-              isOverdue && "font-semibold text-rose-600",
-            )}
-          >
-            <CalendarClock
-              className={cn(
-                "h-4 w-4",
-                isOverdue ? "text-rose-500" : "text-slate-400",
-              )}
-            />
-            <span>{due}</span>
+      {isDetailsHydrated ? (
+        <div className="mt-3 flex items-center justify-between text-xs text-slate-500">
+          <div className="flex items-center gap-2">
+            <UserCircle className="h-4 w-4 text-slate-400" />
+            <span>{assignee ?? "Unassigned"}</span>
           </div>
-        ) : null}
-      </div>
+          {due ? (
+            <div
+              className={cn(
+                "flex items-center gap-2",
+                isOverdue && "font-semibold text-rose-600",
+              )}
+            >
+              <CalendarClock
+                className={cn(
+                  "h-4 w-4",
+                  isOverdue ? "text-rose-500" : "text-slate-400",
+                )}
+              />
+              <span>{due}</span>
+            </div>
+          ) : null}
+        </div>
+      ) : (
+        <div className="mt-3 h-4 w-32 rounded bg-slate-100" />
+      )}
     </div>
   );
 });

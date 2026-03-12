@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 type BoardChatSessionListProps = {
   sessions: BoardChatSessionRead[];
   activeSessionId: string | null;
+  layout?: "panel" | "dropdown";
   canWrite: boolean;
   isCreating: boolean;
   isMutating: boolean;
@@ -22,6 +23,7 @@ type BoardChatSessionListProps = {
 export const BoardChatSessionList = memo(function BoardChatSessionList({
   sessions,
   activeSessionId,
+  layout = "panel",
   canWrite,
   isCreating,
   isMutating,
@@ -32,9 +34,17 @@ export const BoardChatSessionList = memo(function BoardChatSessionList({
 }: BoardChatSessionListProps) {
   const [editingSessionId, setEditingSessionId] = useState<string | null>(null);
   const [titleDraft, setTitleDraft] = useState("");
+  const isDropdownLayout = layout === "dropdown";
 
   return (
-    <div className="flex h-full min-h-0 w-full flex-col border-b border-slate-200 md:w-72 md:border-b-0 md:border-r">
+    <div
+      className={cn(
+        "flex min-h-0 w-full flex-col",
+        isDropdownLayout
+          ? "max-h-[70vh]"
+          : "h-full border-b border-slate-200 md:w-72 md:border-b-0 md:border-r",
+      )}
+    >
       <div className="flex items-center justify-between gap-2 border-b border-slate-200 px-3 py-3">
         <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
           Chats

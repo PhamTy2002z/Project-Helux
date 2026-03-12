@@ -1,0 +1,90 @@
+<svg width="1368" height="912" viewBox="0 0 1368 912" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="90" y1="88" x2="1220" y2="820" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2B9AEB"/>
+      <stop offset="1" stop-color="#D9EDF9"/>
+    </linearGradient>
+    <linearGradient id="terminalGlow" x1="560" y1="440" x2="1110" y2="640" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2A2B35"/>
+      <stop offset="1" stop-color="#151821"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#09111E" flood-opacity="0.16"/>
+    </filter>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#0A1830" flood-opacity="0.14"/>
+    </filter>
+    <filter id="terminalShadow" x="-20%" y="-20%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="14" stdDeviation="16" flood-color="#FF8B52" flood-opacity="0.18"/>
+    </filter>
+  </defs>
+
+  <path d="M52 74C52 47.5 73.5 26 100 26H1268C1294.5 26 1316 47.5 1316 74V838C1316 864.5 1294.5 886 1268 886H100C73.5 886 52 864.5 52 838V286L26 260V128L52 102V74Z" fill="url(#bg)"/>
+  <path d="M52 102H118L148 66H52V102Z" fill="#081522"/>
+  <rect x="52" y="26" width="1264" height="860" rx="48" stroke="white" stroke-opacity="0.16" stroke-width="2"/>
+  <circle cx="1260" cy="844" r="26" fill="white" fill-opacity="0.16"/>
+  <path d="M1260 818L1266.8 837.2L1286 844L1266.8 850.8L1260 870L1253.2 850.8L1234 844L1253.2 837.2L1260 818Z" fill="white" fill-opacity="0.55"/>
+
+  <g filter="url(#shadow)">
+    <rect x="210" y="156" width="236" height="158" rx="22" fill="#FF8A2D"/>
+    <rect x="299" y="178" width="58" height="58" rx="16" fill="#EA6F12"/>
+    <path d="M328 191.5L331.5 199.5L339.5 203L331.5 206.5L328 214.5L324.5 206.5L316.5 203L324.5 199.5L328 191.5Z" fill="white"/>
+    <circle cx="328" cy="203" r="13" stroke="white" stroke-width="3"/>
+    <text x="328" y="259" text-anchor="middle" fill="white" font-family="Arial, Helvetica, sans-serif" font-size="25" font-weight="500">Helux</text>
+    <text x="328" y="299" text-anchor="middle" fill="white" font-family="Arial, Helvetica, sans-serif" font-size="29" font-weight="500">Orchestration</text>
+  </g>
+
+  <g filter="url(#soft)">
+    <rect x="542" y="132" width="532" height="206" rx="24" fill="#F5F6F7"/>
+    <text x="600" y="184" fill="#2B2D30" font-family="Arial, Helvetica, sans-serif" font-size="26" font-weight="600">AI builder</text>
+    <g>
+      <rect x="566" y="210" width="152" height="104" rx="18" fill="#EBEEF2" stroke="#C9D0DA" stroke-width="2"/>
+      <rect x="580" y="224" width="124" height="76" rx="16" fill="#F7F8FA" stroke="#D1D5DD" stroke-width="2"/>
+      <text x="642" y="270" text-anchor="middle" fill="#2F3135" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="500">AI Agent</text>
+    </g>
+    <g>
+      <rect x="732" y="210" width="152" height="104" rx="18" fill="#EBEEF2" stroke="#C9D0DA" stroke-width="2"/>
+      <rect x="746" y="224" width="124" height="76" rx="16" fill="#F7F8FA" stroke="#D1D5DD" stroke-width="2"/>
+      <text x="808" y="270" text-anchor="middle" fill="#2F3135" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="500">AI Agent</text>
+    </g>
+    <g>
+      <rect x="898" y="210" width="152" height="104" rx="18" fill="#EBEEF2" stroke="#C9D0DA" stroke-width="2"/>
+      <rect x="912" y="224" width="124" height="76" rx="16" fill="#F7F8FA" stroke="#D1D5DD" stroke-width="2"/>
+      <text x="974" y="270" text-anchor="middle" fill="#2F3135" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="500">AI Agent</text>
+    </g>
+  </g>
+
+  <g filter="url(#terminalShadow)">
+    <rect x="542" y="430" width="532" height="188" rx="22" fill="url(#terminalGlow)" stroke="#E08242" stroke-opacity="0.55" stroke-width="2"/>
+    <text x="576" y="476" fill="#A5ABB4" font-family="Courier New, monospace" font-size="24"># Deploying Helux agent</text>
+    <text x="576" y="526" fill="#FF8B37" font-family="Courier New, monospace" font-size="24" font-weight="700">helux deploy</text>
+    <text x="576" y="586" fill="#B5BDC8" font-family="Courier New, monospace" font-size="18"># This command deploys the Helux agent based on the</text>
+    <text x="576" y="616" fill="#B5BDC8" font-family="Courier New, monospace" font-size="18">configuration set up in your environment.</text>
+  </g>
+
+  <g filter="url(#soft)">
+    <rect x="200" y="690" width="304" height="176" rx="20" fill="#F4F5F7"/>
+    <text x="228" y="742" fill="#2B2D30" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="600">Capabilities</text>
+    <g fill="#EEF1F4" stroke="#CFD6DE" stroke-width="2">
+      <rect x="228" y="774" width="98" height="38" rx="19"/>
+      <rect x="340" y="774" width="125" height="38" rx="19"/>
+      <rect x="228" y="826" width="70" height="38" rx="19"/>
+      <rect x="312" y="826" width="84" height="38" rx="19"/>
+      <rect x="410" y="826" width="115" height="38" rx="19"/>
+    </g>
+    <g fill="#2F3135" font-family="Arial, Helvetica, sans-serif" font-size="16" font-weight="500">
+      <text x="277" y="798" text-anchor="middle">Planning</text>
+      <text x="402.5" y="798" text-anchor="middle">Collaboration</text>
+      <text x="263" y="850" text-anchor="middle">Tools</text>
+      <text x="354" y="850" text-anchor="middle">Memory</text>
+      <text x="467.5" y="850" text-anchor="middle">Knowledge</text>
+    </g>
+  </g>
+
+  <g stroke="#243444" stroke-width="3" stroke-linecap="round" stroke-dasharray="10 8" fill="none">
+    <path d="M446 235H542"/>
+    <path d="M328 314C328 402 416 396 542 524"/>
+    <path d="M1074 235C1176 235 1158 414 1074 524"/>
+    <path d="M808 618C808 728 700 756 504 778"/>
+  </g>
+</svg>

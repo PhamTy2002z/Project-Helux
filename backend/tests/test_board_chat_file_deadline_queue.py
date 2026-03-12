@@ -8,6 +8,8 @@ from uuid import uuid4
 
 import pytest
 
+from app.services.board_chat_files.queue import TASK_TYPE as EXTRACT_TASK_TYPE
+from app.services.board_chat_files.queue import decode_extraction_task
 from app.services.board_chat_files.report_deadline_queue import (
     TASK_TYPE,
     decode_deadline_task,
@@ -48,11 +50,6 @@ def test_decode_deadline_task_missing_key_raises() -> None:
 # ---------------------------------------------------------------------------
 # Extraction queue decode
 # ---------------------------------------------------------------------------
-
-from app.services.board_chat_files.queue import (
-    TASK_TYPE as EXTRACT_TASK_TYPE,
-    decode_extraction_task,
-)
 
 
 def test_decode_extraction_task_extracts_uuid() -> None:

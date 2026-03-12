@@ -4,10 +4,33 @@
 
 **Version**: 0.1.0 (Active Development)
 **Status**: Pre-release, under active development
-**Last Updated**: 2026-03-10
+**Last Updated**: 2026-03-12
 
-## Recent Updates
+## Recent Updates (March 2026)
 
+- ✅ **SaaS Hardening & Payment Enforcement Complete** (2026-03-12):
+  - Trial expiry blocks (402 blocked_for_payment response)
+  - Board-group and agents-per-board quota enforcement
+  - Entitlements service validation on write operations
+  - Billing observability endpoints live
+
+- ✅ Board planning overlay compatibility plan (`260311-2312`) phases 5-7 completed:
+  - Added feature-flagged board overlay UX with URL-synced query state, saved
+    views, grouped rendering, density modes, and done-lane compression.
+  - Added overlay rollout controls and canary targeting for
+    `board_planning_overlay_v1` and `board_query_v2`.
+  - Added new telemetry endpoint `/api/v1/metrics/board-overlay` with latency,
+    filter-usage, cursor-usage, and agent loop regression counters.
+  - Added rollout runbook:
+    `docs/operations/board-overlay-rollout-playbook.md`.
+  - Added backend/frontend overlay regression tests and verified full check.
+- ✅ Board planning overlay compatibility plan (`260311-2312`) phases 1-4 completed:
+  - Contract matrix locked for OpenClaw compatibility-sensitive task-loop semantics
+  - Added `TaskGroup` planning overlay model + migration and additive task fields (`task_group_id`, `sort_index`, `archived_at`)
+  - Added additive task query filters and new cursor pagination route (`/api/v1/boards/{board_id}/tasks/cursor`)
+  - Added optional compact board snapshot mode (`/api/v1/boards/{board_id}/snapshot?compact=true`)
+  - Updated heartbeat/agent templates and agent OpenAPI hints for deterministic filtered task selection
+  - Added contract + scaling + heartbeat-selection regression tests
 - ✅ Landing page responsive hardening completed:
   - Added FHD/QHD/UHD width scaling rules for navbar, hero, feature cards, product tabs, testimonials, and footer
   - Hero video now degrades gracefully on mobile, reduced-motion, and save-data scenarios to preserve smoothness
@@ -116,7 +139,7 @@
 
 ### Phase 3: Agent Operations & React Performance Optimization (In Progress)
 
-**Status**: 🔄 In Progress (92% complete)
+**Status**: 🔄 In Progress (98% complete)
 **Timeline**: Q1 2025 - Q2 2025
 
 #### Completed Features
@@ -129,12 +152,16 @@
 - ✅ OpenClaw gateway integration
 - ✅ Gateway WebSocket communication
 - ✅ Gateway health checks
+- ✅ Board planning overlay with TaskGroup model, cursor pagination, grouped rendering, density modes
+- ✅ Board chat multi-session with file upload (MinIO) + PDF OCR extraction
 - ✅ Frontend performance optimization (route groups, SSE consolidation)
 - ✅ Reusable SSE streaming patterns (`useSSEStream`, `parseSSEBuffer`)
 - ✅ React Query policy normalization with bundle budget enforcement
 - ✅ Markdown heavy dependency isolation (`LazyMarkdown`, `MarkdownLite`)
 - ✅ Chat render-path optimization (ordered upsert merge, render sort removal, content-visibility)
 - ✅ Performance hardening verification + rollout checklist for plan `260308-1727`
+- ✅ Token ledger + per-agent quota surfaces with ledger aggregation
+- ✅ SaaS hardening with billing enforcement (trial expiry, quota blocks)
 
 #### In Progress
 

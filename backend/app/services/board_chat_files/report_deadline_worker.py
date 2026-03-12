@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from app.core.config import settings
 from app.core.logging import get_logger
 from app.core.time import utcnow
@@ -14,6 +16,9 @@ from app.services.board_chat_files.report_deadline_queue import (
 )
 from app.services.openclaw.gateway_dispatch import GatewayDispatchService
 from app.services.queue import QueuedTask
+
+if TYPE_CHECKING:
+    from sqlmodel.ext.asyncio.session import AsyncSession
 
 logger = get_logger(__name__)
 
@@ -91,7 +96,7 @@ async def process_report_deadline_task(task: QueuedTask) -> None:
             )
 
 
-async def _send_reminder(session, file_task: BoardChatFileTask) -> None:
+async def _send_reminder(session: AsyncSession, file_task: BoardChatFileTask) -> None:
     """Send a compact reminder message to the agent via gateway."""
     from app.models.agents import Agent
     from app.models.boards import Board

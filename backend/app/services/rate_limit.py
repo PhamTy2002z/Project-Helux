@@ -74,7 +74,7 @@ class RateLimiter:
         pipe.incr(namespaced_key)
         pipe.expire(namespaced_key, policy.window_seconds, nx=True)
         pipe.ttl(namespaced_key)
-        current_raw, _expire_set, ttl_raw = pipe.execute()  # type: ignore[no-untyped-call]
+        current_raw, _expire_set, ttl_raw = pipe.execute()
 
         current = int(current_raw or 0)
         ttl = int(ttl_raw or 0)

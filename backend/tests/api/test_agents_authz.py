@@ -25,6 +25,7 @@ from app.models.boards import Board
 from app.models.gateways import Gateway
 from app.models.organization_members import OrganizationMember
 from app.models.organizations import Organization
+from app.services.entitlements import policy_for_tier
 from app.services.openclaw.session_usage_sync import SessionUsageSyncService
 from app.services.organizations import OrganizationContext
 
@@ -252,9 +253,12 @@ async def test_list_agents_includes_token_fields_for_board_scoped_agents() -> No
         items = payload.get("items", [])
         by_id = {item["id"]: item for item in items}
         board_item = by_id[str(board_agent.id)]
+        trial_policy = policy_for_tier("trial_7d")
+        expected_limit = trial_policy.agent_daily_tokens
+        assert expected_limit is not None
         assert board_item["token_used_today"] == 12_345
-        assert board_item["token_limit_today"] == 15_000
-        assert board_item["token_remaining_today"] == 2_655
+        assert board_item["token_limit_today"] == expected_limit
+        assert board_item["token_remaining_today"] == max(expected_limit - 12_345, 0)
         assert board_item["token_blocked"] is False
         assert isinstance(board_item["token_reset_at"], str)
 
@@ -322,9 +326,12 @@ async def test_get_agent_returns_blocked_token_state() -> None:
 
         assert response.status_code == 200
         payload = response.json()
+        trial_policy = policy_for_tier("trial_7d")
+        expected_limit = trial_policy.agent_daily_tokens
+        assert expected_limit is not None
         assert payload["token_used_today"] == 16_000
-        assert payload["token_limit_today"] == 15_000
-        assert payload["token_remaining_today"] == 0
+        assert payload["token_limit_today"] == expected_limit
+        assert payload["token_remaining_today"] == max(expected_limit - 16_000, 0)
         assert payload["token_blocked"] is True
         assert isinstance(payload["token_reset_at"], str)
     finally:

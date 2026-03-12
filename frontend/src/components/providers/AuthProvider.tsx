@@ -29,6 +29,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!localMode) return;
     const hasToken = Boolean(getLocalAuthToken());
     if (!hasToken) {
+      // No local token: resolve readiness immediately for login rendering.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setLocalAuthReady(true);
       return;
     }
@@ -36,7 +38,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let active = true;
     void verifyLocalAuthSession().then((authenticated) => {
       if (!active) return;
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setLocalAuthenticated(authenticated);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setLocalAuthReady(true);
     });
 

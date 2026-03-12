@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from datetime import datetime
 from enum import Enum
 from typing import TYPE_CHECKING, Any, cast
 from uuid import UUID
@@ -27,6 +28,7 @@ from app.models.board_webhook_payloads import BoardWebhookPayload
 from app.models.boards import Board
 from app.models.tags import Tag
 from app.models.task_dependencies import TaskDependency
+from app.models.task_groups import TaskGroup
 from app.models.tasks import Task
 from app.schemas.agents import AgentCreate, AgentHeartbeat, AgentNudge, AgentRead
 from app.schemas.approvals import ApprovalCreate, ApprovalRead, ApprovalStatus
@@ -49,13 +51,14 @@ from app.schemas.health import AgentHealthStatusResponse
 from app.schemas.pagination import DefaultLimitOffsetPage
 from app.schemas.tags import TagRef
 from app.schemas.tasks import TaskCommentCreate, TaskCommentRead, TaskCreate, TaskRead, TaskUpdate
-from app.services.board_chat_files.extractor import extract_text, resolve_mime
-from app.services.storage.minio_storage import get_object_storage
 from app.services.activity_log import record_activity
+from app.services.board_chat_files.extractor import extract_text, resolve_mime
+from app.services.board_overlay_observability import record_agent_task_loop_regression
 from app.services.entitlements import enforce_task_quota
 from app.services.openclaw.coordination_service import GatewayCoordinationService
 from app.services.openclaw.policies import OpenClawAuthorizationPolicy
 from app.services.openclaw.provisioning_db import AgentLifecycleService
+from app.services.storage.minio_storage import get_object_storage
 from app.services.tags import replace_tags, validate_tag_ids
 from app.services.task_dependencies import (
     blocked_by_dependency_ids,
@@ -114,17 +117,44 @@ class AgentTaskListFilters(SQLModel):
     status_filter: str | None = None
     assigned_agent_id: UUID | None = None
     unassigned: bool | None = None
+    q: str | None = None
+    tag_ids_filter: str | None = None
+    priority_filter: str | None = None
+    blocked: bool | None = None
+    due_before: datetime | None = None
+    due_after: datetime | None = None
+    has_pending_approval: bool | None = None
+    task_group_id: UUID | None = None
+    archived: bool | None = None
 
 
 def _task_list_filters(
     status_filter: str | None = TASK_STATUS_QUERY,
     assigned_agent_id: UUID | None = None,
     unassigned: bool | None = None,
+    q: str | None = Query(default=None),
+    tag_ids_filter: str | None = Query(default=None, alias="tag_ids"),
+    priority_filter: str | None = Query(default=None, alias="priority"),
+    blocked: bool | None = Query(default=None),
+    due_before: datetime | None = Query(default=None),
+    due_after: datetime | None = Query(default=None),
+    has_pending_approval: bool | None = Query(default=None),
+    task_group_id: UUID | None = Query(default=None),
+    archived: bool | None = Query(default=None),
 ) -> AgentTaskListFilters:
     return AgentTaskListFilters(
         status_filter=status_filter,
         assigned_agent_id=assigned_agent_id,
         unassigned=unassigned,
+        q=q,
+        tag_ids_filter=tag_ids_filter,
+        priority_filter=priority_filter,
+        blocked=blocked,
+        due_before=due_before,
+        due_after=due_after,
+        has_pending_approval=has_pending_approval,
+        task_group_id=task_group_id,
+        archived=archived,
     )
 
 
@@ -236,6 +266,29 @@ def _guard_task_access(agent_ctx: AgentAuthContext, task: Task) -> None:
         agent_ctx.agent.board_id and task.board_id and agent_ctx.agent.board_id != task.board_id
     )
     OpenClawAuthorizationPolicy.require_board_write_access(allowed=allowed)
+
+
+async def _require_task_group_belongs_to_board(
+    session: AsyncSession,
+    *,
+    board: Board,
+    task_group_id: UUID | None,
+) -> None:
+    if task_group_id is None:
+        return
+    task_group = await TaskGroup.objects.by_id(task_group_id).first(session)
+    if (
+        task_group is None
+        or task_group.board_id != board.id
+        or (
+            task_group.organization_id is not None
+            and task_group.organization_id != board.organization_id
+        )
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail="task_group_id must reference a task group in this board.",
+        )
 
 
 @router.get(
@@ -534,6 +587,12 @@ async def list_agents(
         when_to_use=[
             "Agent needs board task list for work selection or queue management.",
             "Lead needs a filtered view for delegation planning.",
+            "Worker needs focused actionable queue (for example assigned + inbox/in_progress).",
+        ],
+        routing_policy=[
+            "Start with narrow filters (`assigned_agent_id`, `status`, `blocked`, `has_pending_approval`) to reduce noisy scans.",
+            "Treat `task_group_id` as planning metadata for grouping/triage; execute leaf tasks directly.",
+            "Prefer unarchived tasks for active execution unless explicitly reviewing archive history.",
         ],
         routing_examples=[
             {
@@ -546,6 +605,13 @@ async def list_agents(
             {
                 "input": {
                     "intent": "find unassigned backlog for delegation",
+                    "required_privilege": "board_lead",
+                },
+                "decision": "agent_board_task_discovery",
+            },
+            {
+                "input": {
+                    "intent": "fetch only blocked tasks with pending approvals",
                     "required_privilege": "board_lead",
                 },
                 "decision": "agent_board_task_discovery",
@@ -566,14 +632,31 @@ async def list_tasks(
     - lead: fetch unassigned inbox tasks for delegation
     """
     _guard_board_access(agent_ctx, board)
-    return await tasks_api.list_tasks(
-        status_filter=filters.status_filter,
-        assigned_agent_id=filters.assigned_agent_id,
-        unassigned=filters.unassigned,
-        board=board,
-        session=session,
-        _actor=_actor(agent_ctx),
-    )
+    try:
+        return await tasks_api.list_tasks(
+            status_filter=filters.status_filter,
+            assigned_agent_id=filters.assigned_agent_id,
+            unassigned=filters.unassigned,
+            q=filters.q,
+            tag_ids_filter=filters.tag_ids_filter,
+            priority_filter=filters.priority_filter,
+            blocked=filters.blocked,
+            due_before=filters.due_before,
+            due_after=filters.due_after,
+            has_pending_approval=filters.has_pending_approval,
+            task_group_id=filters.task_group_id,
+            archived=filters.archived,
+            board=board,
+            session=session,
+            _actor=_actor(agent_ctx),
+        )
+    except HTTPException as exc:
+        if exc.status_code >= status.HTTP_500_INTERNAL_SERVER_ERROR:
+            record_agent_task_loop_regression()
+        raise
+    except Exception:
+        record_agent_task_loop_regression()
+        raise
 
 
 @router.get(
@@ -792,6 +875,11 @@ async def create_task(
     task.board_id = board.id
     task.auto_created = True
     task.auto_reason = f"lead_agent:{agent_ctx.agent.id}"
+    await _require_task_group_belongs_to_board(
+        session,
+        board=board,
+        task_group_id=task.task_group_id,
+    )
 
     normalized_deps = await validate_dependency_update(
         session,

@@ -23,7 +23,7 @@ jobs:
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: openclaw_agency
+          POSTGRES_DB: mission_control
         ports:
           - 5432:5432
         options: >-
@@ -304,7 +304,7 @@ jobs:
 
           if [ "$backend_ready" -ne 1 ] || [ "$frontend_ready" -ne 1 ]; then
             echo "Installer local smoke readiness failed: backend_ready=$backend_ready frontend_ready=$frontend_ready"
-            LOG_DIR="$XDG_STATE_HOME/openclaw-mission-control-install"
+            LOG_DIR="$XDG_STATE_HOME/project-helux-install"
             if [ -f "$LOG_DIR/backend.log" ]; then
               echo "----- backend log (tail) -----"
               tail -n 200 "$LOG_DIR/backend.log" || true
@@ -321,7 +321,7 @@ jobs:
         env:
           XDG_STATE_HOME: ${{ github.workspace }}/.installer-state
         run: |
-          LOG_DIR="$XDG_STATE_HOME/openclaw-mission-control-install"
+          LOG_DIR="$XDG_STATE_HOME/project-helux-install"
           if [ -f "$LOG_DIR/backend.pid" ]; then kill "$(cat "$LOG_DIR/backend.pid")" || true; fi
           if [ -f "$LOG_DIR/frontend.pid" ]; then kill "$(cat "$LOG_DIR/frontend.pid")" || true; fi
           docker compose -f compose.yml --env-file .env down -v --remove-orphans || true

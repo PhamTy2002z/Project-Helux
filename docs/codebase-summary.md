@@ -9,8 +9,8 @@ OpenClaw Mission Control is a full-stack web application with FastAPI backend, N
 ### Backend (Python)
 - **Total Python Files**: ~1,899 files
 - **Core Application Files**: ~150 files (excluding migrations, tests, cache)
-- **API Routes**: 24 route modules
-- **Database Models**: 28 SQLModel models
+- **API Routes**: 28 route modules
+- **Database Models**: 38 SQLModel models
 - **Service Modules**: 18 core services + 20+ OpenClaw integration services
 - **Primary Language**: Python 3.12
 - **Framework**: FastAPI 0.131.0
@@ -121,11 +121,18 @@ backend/
 │   ├── db/                # Database configuration
 │   │   ├── session.py     # Async session management
 │   │   └── base.py        # Base model imports
-│   ├── models/            # SQLModel database models (28 models)
+│   ├── models/            # SQLModel database models (38 models)
 │   │   ├── activity_events.py
+│   │   ├── agent_token_daily_usage.py
 │   │   ├── agents.py
 │   │   ├── approvals.py
 │   │   ├── approval_task_links.py
+│   │   ├── billing_checkout_attempts.py
+│   │   ├── board_chat_file_assets.py
+│   │   ├── board_chat_file_reports.py
+│   │   ├── board_chat_file_tasks.py
+│   │   ├── board_chat_message_files.py
+│   │   ├── board_chat_sessions.py
 │   │   ├── board_groups.py
 │   │   ├── board_group_memory.py
 │   │   ├── board_memory.py
@@ -138,13 +145,18 @@ backend/
 │   │   ├── organization_members.py
 │   │   ├── organization_invites.py
 │   │   ├── organization_board_access.py
+│   │   ├── organization_plans.py
 │   │   ├── skills.py
 │   │   ├── tags.py
 │   │   ├── tag_assignments.py
-│   │   ├── tasks.py
 │   │   ├── task_custom_fields.py
 │   │   ├── task_dependencies.py
-│   │   └── task_fingerprints.py
+│   │   ├── task_fingerprints.py
+│   │   ├── task_groups.py
+│   │   ├── tasks.py
+│   │   ├── tenancy.py
+│   │   ├── user_onboarding_progress.py
+│   │   └── users.py
 │   ├── schemas/           # Pydantic schemas (30 modules)
 │   │   └── [request/response schemas]
 │   ├── services/          # Business logic (18+ modules)
@@ -296,9 +308,11 @@ frontend/
 ### Data Flow Patterns
 - **API-First**: All operations go through REST API
 - **Optimistic Updates**: UI updates before server confirmation
-- **Real-Time Updates**: WebSocket for gateway communication
-- **Pagination**: Cursor-based pagination for large datasets
+- **Real-Time Updates**: WebSocket for gateway communication + SSE streaming
+- **Pagination**: Cursor-based pagination for large datasets (board tasks, chat messages)
 - **Caching**: TanStack Query cache + Redis backend cache
+- **Board Planning Overlay**: TaskGroup model + cursor pagination + feature-flagged UI with canary targeting
+- **Multi-Session Chat**: Chat session CRUD + session-scoped SSE streaming + file upload pipeline
 
 ## Code Organization Principles
 
@@ -366,6 +380,20 @@ frontend/
 - E2E test execution
 - Database migration validation
 - Docker image building
+
+## Key Observability Endpoints
+
+### Telemetry & Metrics
+- `/api/v1/metrics/board-overlay` - Board overlay latency, filter usage, cursor pagination stats, agent loop regression markers
+- `/api/v1/metrics/quotas` - Token usage ledger aggregation per agent with plan tier
+- `/api/v1/metrics/saas-billing-health` - Trial expiry, subscription status, entitlement enforcement events
+- `/api/v1/metrics` - General system metrics endpoint
+- `/api/v1/billing/support/timeline` - Billing event history for debugging
+- `/api/v1/onboarding/progress/me` - Step-based onboarding checklist completion
+
+### Feature Flags & Canary Targeting
+- `board_planning_overlay_v1` - Board overlay UX rollout (board/org-level canary targeting)
+- `board_query_v2` - New task query endpoint for cursor pagination
 
 ## Unresolved Questions
 

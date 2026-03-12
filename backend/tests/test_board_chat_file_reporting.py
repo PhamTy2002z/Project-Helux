@@ -10,10 +10,10 @@ import pytest
 
 from app.services.board_chat_files.reporting import process_agent_file_report
 
-
 # ---------------------------------------------------------------------------
 # Fakes
 # ---------------------------------------------------------------------------
+
 
 @dataclass
 class _FakeTask:
@@ -64,6 +64,7 @@ class _FakeSession:
 # No matching task → rejected
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_report_rejected_when_no_task(monkeypatch: pytest.MonkeyPatch) -> None:
     """Report should be rejected if no task exists for agent+file."""
@@ -85,6 +86,7 @@ async def test_report_rejected_when_no_task(monkeypatch: pytest.MonkeyPatch) -> 
 # ---------------------------------------------------------------------------
 # Successful new report
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_report_accepted_and_task_marked_reported(
@@ -136,6 +138,7 @@ async def test_report_accepted_and_task_marked_reported(
 # Idempotent update on re-report
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_report_idempotent_upsert(monkeypatch: pytest.MonkeyPatch) -> None:
     """Re-submitting a report should update existing report row."""
@@ -177,6 +180,7 @@ async def test_report_idempotent_upsert(monkeypatch: pytest.MonkeyPatch) -> None
 # Summary truncation
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
 async def test_report_truncates_long_summary(monkeypatch: pytest.MonkeyPatch) -> None:
     """Summary exceeding max chars should be truncated."""
@@ -198,7 +202,8 @@ async def test_report_truncates_long_summary(monkeypatch: pytest.MonkeyPatch) ->
             created_reports.append(self)
 
     monkeypatch.setattr(
-        "app.services.board_chat_files.reporting.BoardChatFileReport", _StubReport,
+        "app.services.board_chat_files.reporting.BoardChatFileReport",
+        _StubReport,
     )
     # publishers are imported locally; patch both sources.
     monkeypatch.setattr(
@@ -227,6 +232,7 @@ async def test_report_truncates_long_summary(monkeypatch: pytest.MonkeyPatch) ->
 # ---------------------------------------------------------------------------
 # Helper
 # ---------------------------------------------------------------------------
+
 
 async def _fake_publish(**_kw: object) -> bool:
     return True

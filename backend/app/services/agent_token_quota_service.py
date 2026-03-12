@@ -121,7 +121,6 @@ class AgentTokenQuotaService(OpenClawDBService):
                 .where(col(Agent.board_id) == board_id)
                 .where(col(Agent.organization_id) == organization_id)
                 .where(col(Agent.is_board_lead) == False)  # noqa: E712
-                .where(col(Agent.is_gateway_main) == False)  # noqa: E712
             )
         ).all()
         if not members:
@@ -155,8 +154,9 @@ class AgentTokenQuotaService(OpenClawDBService):
         )
         if agent is None:
             return None
-        # Board leads track usage but never get blocked (observe-only).
-        is_lead = bool(agent.is_board_lead)
+        # Board leads are exempt from per-agent quota sync/enforcement.
+        if bool(agent.is_board_lead):
+            return None
 
         capability = await check_gateway_sessions_usage_capability(config)
         if not capability.supported:
@@ -236,36 +236,6 @@ class AgentTokenQuotaService(OpenClawDBService):
                     cost_limit=cost_limit,
                     quota_reached=True,
                     blocked_by=blocked_by,
-                )
-            # Board lead exempt from quota unless all members are blocked
-            if is_lead:
-                all_members_down = await self._all_board_members_blocked(
-                    board_id=agent.board_id,
-                    organization_id=organization_id,
-                    usage_date_vn=sync_result.usage_date_vn,
-                )
-                if not all_members_down:
-                    self.logger.info(
-                        "agent.quota.board_lead.exempt agent_id=%s resource=%s",
-                        agent.id,
-                        blocked_by,
-                    )
-                    return AgentQuotaSyncOutcome(
-                        agent_id=agent.id,
-                        organization_id=organization_id,
-                        billed_total=sync_result.billed_total,
-                        billed_delta=sync_result.billed_delta,
-                        token_limit=token_limit,
-                        cost_total=sync_result.cost_total,
-                        cost_delta=sync_result.cost_delta,
-                        cost_limit=cost_limit,
-                        quota_reached=True,
-                        blocked_by=blocked_by,
-                    )
-                self.logger.warning(
-                    "agent.quota.board_lead.all_members_blocked agent_id=%s resource=%s",
-                    agent.id,
-                    blocked_by,
                 )
             await self._mark_blocked_if_needed(
                 organization_id=organization_id,

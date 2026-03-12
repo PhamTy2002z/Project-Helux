@@ -28,6 +28,7 @@ type BoardChatThreadProps = {
   isLoading: boolean;
   isLoadingOlder: boolean;
   isSending: boolean;
+  isAwaitingReply: boolean;
   hasMore: boolean;
   error: string | null;
   canWrite: boolean;
@@ -148,6 +149,7 @@ export const BoardChatThread = memo(function BoardChatThread({
   isLoading,
   isLoadingOlder,
   isSending,
+  isAwaitingReply,
   hasMore,
   error,
   canWrite,
@@ -240,6 +242,22 @@ export const BoardChatThread = memo(function BoardChatThread({
               currentUserDisplayName={currentUserDisplayName}
             />
           ))
+        )}
+
+        {/* Typing indicator — visible while sending or awaiting agent reply */}
+        {(isSending || isAwaitingReply) && (
+          <div className="flex justify-start">
+            <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
+              <div className="flex items-center gap-1.5" role="status" aria-label="Agent is typing">
+                <span className="h-1.5 w-1.5 rounded-full bg-slate-400 animate-typing-dot-1" />
+                <span className="h-1.5 w-1.5 rounded-full bg-slate-400 animate-typing-dot-2" />
+                <span className="h-1.5 w-1.5 rounded-full bg-slate-400 animate-typing-dot-3" />
+              </div>
+              <span className="text-xs text-slate-400">
+                {isSending ? "Sending..." : "Thinking..."}
+              </span>
+            </div>
+          </div>
         )}
       </div>
 

@@ -110,4 +110,3 @@ async def test_probe_sessions_usage_capability_detects_unsupported_method(
         )
         is False
     )
-

@@ -43,7 +43,7 @@ The installer script handles all setup automatically:
 
 ```bash
 # If not cloned yet, installer will clone the repo
-curl -fsSL https://raw.githubusercontent.com/abhi1693/openclaw-mission-control/master/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/PhamTy2002z/Project-Helux/main/install.sh | bash
 
 # If already cloned
 ./install.sh

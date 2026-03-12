@@ -91,7 +91,13 @@ export const useBoardChatSessions = (
       }
       return result.data;
     },
-    onSuccess: invalidateSessions,
+    onSuccess: (created) => {
+      // Optimistic: prepend new session to cache immediately instead of refetching
+      queryClient.setQueryData<BoardChatSessionRead[]>(
+        sessionsQueryKey,
+        (prev) => (prev ? [created, ...prev] : [created]),
+      );
+    },
   });
 
   const renameMutation = useMutation({

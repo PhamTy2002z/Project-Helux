@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 from typing import TYPE_CHECKING
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlmodel import col, select
@@ -14,15 +15,14 @@ from app.core.logging import get_request_endpoint, get_request_id
 from app.db.session import get_session
 from app.models.activity_events import ActivityEvent
 from app.schemas.billing import (
-    BillingSupportTimelineEvent,
     BillingSimulateCheckoutRequest,
     BillingSimulateCheckoutResponse,
     BillingSubscriptionRead,
+    BillingSupportTimelineEvent,
     BillingUpgradeModalOpenEvent,
 )
 from app.schemas.common import OkResponse
-from app.services.activity_log import record_activity
-from app.services.activity_log import record_admin_audit
+from app.services.activity_log import record_activity, record_admin_audit
 from app.services.billing import get_subscription, simulate_checkout
 from app.services.organizations import OrganizationContext
 
@@ -40,7 +40,7 @@ LIMIT_QUERY = Query(default=50, ge=1, le=200)
 def _record_billing_metric_event(
     session: AsyncSession,
     *,
-    organization_id,
+    organization_id: UUID,
     event_type: str,
     payload: dict[str, object] | None = None,
 ) -> None:

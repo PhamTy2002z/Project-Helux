@@ -5,8 +5,8 @@ import pytest
 
 import app.services.openclaw.usage_capability as usage_capability
 from app.core.config import settings
-from app.services.openclaw.gateway_rpc import GatewayConfig
 from app.services.openclaw.gateway_compat import check_gateway_sessions_usage_capability
+from app.services.openclaw.gateway_rpc import GatewayConfig
 
 
 @pytest.mark.asyncio
@@ -56,4 +56,3 @@ async def test_check_gateway_sessions_usage_capability_force_refresh_bypasses_ca
     await check_gateway_sessions_usage_capability(config, force_refresh=True)
 
     assert calls == 2
-

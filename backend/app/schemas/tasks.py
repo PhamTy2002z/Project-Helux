@@ -27,7 +27,10 @@ class TaskBase(SQLModel):
     description: str | None = None
     status: TaskStatus = "inbox"
     priority: str = "medium"
+    task_group_id: UUID | None = None
+    sort_index: int | None = None
     due_at: datetime | None = None
+    archived_at: datetime | None = None
     assigned_agent_id: UUID | None = None
     depends_on_task_ids: list[UUID] = Field(default_factory=list)
     tag_ids: list[UUID] = Field(default_factory=list)
@@ -47,7 +50,10 @@ class TaskUpdate(SQLModel):
     description: str | None = None
     status: TaskStatus | None = None
     priority: str | None = None
+    task_group_id: UUID | None = None
+    sort_index: int | None = None
     due_at: datetime | None = None
+    archived_at: datetime | None = None
     assigned_agent_id: UUID | None = None
     depends_on_task_ids: list[UUID] | None = None
     tag_ids: list[UUID] | None = None

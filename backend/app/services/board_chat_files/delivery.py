@@ -15,9 +15,10 @@ from app.models.board_chat_file_tasks import BoardChatFileTask
 from app.models.board_chat_message_files import BoardChatMessageFile
 
 if TYPE_CHECKING:
+    from sqlmodel.ext.asyncio.session import AsyncSession
+
     from app.models.agents import Agent
     from app.models.board_memory import BoardMemory
-    from sqlmodel.ext.asyncio.session import AsyncSession
 
 logger = get_logger(__name__)
 

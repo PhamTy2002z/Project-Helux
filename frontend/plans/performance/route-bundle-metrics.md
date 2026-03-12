@@ -26,4 +26,3 @@ Shared root main JS: **400.9 KB** (7 chunks)
 | /dashboard | 484.1 | 885 | 17 |
 | /settings | 482.1 | 883.1 | 16 |
 | /custom-fields/[fieldId]/edit | 472.4 | 873.4 | 16 |
-

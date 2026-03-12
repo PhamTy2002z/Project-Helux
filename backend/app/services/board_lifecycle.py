@@ -16,9 +16,9 @@ from app.models.activity_events import ActivityEvent
 from app.models.agents import Agent
 from app.models.approval_task_links import ApprovalTaskLink
 from app.models.approvals import Approval
+from app.models.board_chat_sessions import BoardChatSession
 from app.models.board_memory import BoardMemory
 from app.models.board_onboarding import BoardOnboardingSession
-from app.models.board_chat_sessions import BoardChatSession
 from app.models.board_webhook_payloads import BoardWebhookPayload
 from app.models.board_webhooks import BoardWebhook
 from app.models.organization_board_access import OrganizationBoardAccess

@@ -23,17 +23,17 @@ const COLUMNS: { title: string; links: FooterLink[] }[] = [
     links: [
       {
         label: "Documentation",
-        href: "https://github.com/abhi1693/openclaw-mission-control/tree/master/docs",
+        href: "https://github.com/PhamTy2002z/Project-Helux/tree/master/docs",
         external: true,
       },
       {
         label: "Deployment Guide",
-        href: "https://github.com/abhi1693/openclaw-mission-control/blob/master/docs/deployment-guide.md",
+        href: "https://github.com/PhamTy2002z/Project-Helux/blob/master/docs/deployment-guide.md",
         external: true,
       },
       {
         label: "API Reference",
-        href: "https://github.com/abhi1693/openclaw-mission-control/blob/master/docs/reference/api.md",
+        href: "https://github.com/PhamTy2002z/Project-Helux/blob/master/docs/reference/api.md",
         external: true,
       },
     ],
@@ -43,12 +43,12 @@ const COLUMNS: { title: string; links: FooterLink[] }[] = [
     links: [
       {
         label: "GitHub Issues",
-        href: "https://github.com/abhi1693/openclaw-mission-control/issues",
+        href: "https://github.com/PhamTy2002z/Project-Helux/issues",
         external: true,
       },
       {
         label: "Discussions",
-        href: "https://github.com/abhi1693/openclaw-mission-control/discussions",
+        href: "https://github.com/PhamTy2002z/Project-Helux/discussions",
         external: true,
       },
       {
@@ -63,7 +63,7 @@ const COLUMNS: { title: string; links: FooterLink[] }[] = [
 const SOCIAL_LINKS = [
   {
     icon: Github,
-    href: "https://github.com/abhi1693/openclaw-mission-control",
+    href: "https://github.com/PhamTy2002z/Project-Helux",
     label: "GitHub",
   },
   {
@@ -127,7 +127,7 @@ export default function LandingFooter() {
         {/* Bottom: copyright + social */}
         <div className="mt-8 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-8 sm:flex-row">
           <p className="text-xs text-white/35">
-            &copy; {new Date().getFullYear()} OpenClaw. All rights reserved.
+            &copy; {new Date().getFullYear()} Helux. All rights reserved.
           </p>
           <div className="flex gap-4">
             {SOCIAL_LINKS.map((social) => {
