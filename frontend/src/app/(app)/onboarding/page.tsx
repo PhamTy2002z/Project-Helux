@@ -8,6 +8,14 @@ import { SignInButton, SignedIn, SignedOut, useAuth } from "@/auth/clerk";
 import { DashboardShell } from "@/components/templates/DashboardShell";
 import { OnboardingWizard } from "@/components/onboarding/onboarding-wizard";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useOnboardingProgress, useUpdateOnboardingStep } from "@/lib/onboarding";
 
 export default function OnboardingPage() {
@@ -16,16 +24,14 @@ export default function OnboardingPage() {
   const progressQuery = useOnboardingProgress(Boolean(isSignedIn));
   const updateStepMutation = useUpdateOnboardingStep();
   const [skipError, setSkipError] = useState<string | null>(null);
+  const [showSkipDialog, setShowSkipDialog] = useState(false);
 
   const progress = progressQuery.data ?? null;
   const isBusy = progressQuery.isLoading || updateStepMutation.isPending;
 
-  const handleSkipAll = async () => {
+  const handleConfirmSkip = async () => {
     if (!progress) return;
-    const shouldSkip = window.confirm(
-      "Skip onboarding now? You can resume later from /onboarding.",
-    );
-    if (!shouldSkip) return;
+    setShowSkipDialog(false);
     setSkipError(null);
     try {
       const pendingSteps = progress.steps.filter((step) => step.status === "pending");
@@ -90,7 +96,7 @@ export default function OnboardingPage() {
                   variant="ghost"
                   className="text-slate-600"
                   disabled={isBusy}
-                  onClick={handleSkipAll}
+                  onClick={() => setShowSkipDialog(true)}
                 >
                   Skip onboarding for now
                 </Button>
@@ -101,6 +107,28 @@ export default function OnboardingPage() {
                 {skipError}
               </div>
             ) : null}
+
+            <Dialog open={showSkipDialog} onOpenChange={setShowSkipDialog}>
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Skip onboarding?</DialogTitle>
+                  <DialogDescription>
+                    You can resume later anytime from the onboarding page.
+                  </DialogDescription>
+                </DialogHeader>
+                <DialogFooter className="mt-4">
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowSkipDialog(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button onClick={handleConfirmSkip}>
+                    Skip
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
       </SignedIn>

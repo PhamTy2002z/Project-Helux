@@ -7,6 +7,7 @@ import {
 } from "@/api/generated/board-memory/board-memory";
 import type { BoardMemoryRead } from "@/api/generated/model";
 import { apiDatetimeToMs } from "@/lib/datetime";
+import { DEFAULT_HUMAN_LABEL, resolveHumanActorName } from "@/lib/display-name";
 import { useSSEStream } from "@/lib/hooks/use-sse-stream";
 
 const PAGE_SIZE = 50;
@@ -17,6 +18,8 @@ type UseBoardChatMessagesOptions = {
   enabled: boolean;
   source: string;
   onMessageCreated?: (message: BoardMemoryRead) => void;
+  /** Skip initial fetch for freshly created sessions (known empty). */
+  skipInitialFetch?: boolean;
 };
 
 type UseBoardChatMessagesResult = {
@@ -24,6 +27,7 @@ type UseBoardChatMessagesResult = {
   isLoading: boolean;
   isLoadingOlder: boolean;
   isSending: boolean;
+  isAwaitingReply: boolean;
   hasMore: boolean;
   error: string | null;
   loadOlder: () => Promise<void>;
@@ -152,15 +156,19 @@ export const useBoardChatMessages = ({
   enabled,
   source,
   onMessageCreated,
+  skipInitialFetch,
 }: UseBoardChatMessagesOptions): UseBoardChatMessagesResult => {
   const [messages, setMessages] = useState<BoardMemoryRead[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingOlder, setIsLoadingOlder] = useState(false);
   const [isSending, setIsSending] = useState(false);
+  const [isAwaitingReply, setIsAwaitingReply] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(false);
   const fetchedCountRef = useRef(0);
   const messagesRef = useRef<BoardMemoryRead[]>([]);
+  const awaitingReplySourceRef = useRef<string | null>(null);
+  const awaitingSinceRef = useRef<number>(0);
 
   useEffect(() => {
     messagesRef.current = messages;
@@ -170,13 +178,25 @@ export const useBoardChatMessages = ({
     setMessages([]);
     setHasMore(false);
     fetchedCountRef.current = 0;
+    awaitingReplySourceRef.current = null;
+    awaitingSinceRef.current = 0;
+    setIsAwaitingReply(false);
     if (clearError) {
       setError(null);
     }
   }, []);
 
+  const skipInitialFetchRef = useRef(skipInitialFetch);
+  skipInitialFetchRef.current = skipInitialFetch;
+
   const fetchLatest = useCallback(async () => {
     if (!enabled || !boardId || !chatSessionId) {
+      resetState(true);
+      return;
+    }
+    // Fresh session — known empty, skip the network call
+    if (skipInitialFetchRef.current) {
+      skipInitialFetchRef.current = false;
       resetState(true);
       return;
     }
@@ -196,6 +216,18 @@ export const useBoardChatMessages = ({
       fetchedCountRef.current = items.length;
       setHasMore((result.data.total ?? items.length) > fetchedCountRef.current);
       setMessages(items);
+
+      // Restore awaiting-reply state: if the latest message is from the
+      // current user, the agent hasn't replied yet.
+      if (items.length > 0) {
+        const lastMsg = items[items.length - 1];
+        const lastSource = resolveHumanActorName(lastMsg.source, DEFAULT_HUMAN_LABEL);
+        if (lastSource === source) {
+          awaitingReplySourceRef.current = source;
+          awaitingSinceRef.current = apiDatetimeToMs(lastMsg.created_at) ?? Date.now();
+          setIsAwaitingReply(true);
+        }
+      }
     } catch (nextError) {
       resetState();
       setError(
@@ -278,6 +310,9 @@ export const useBoardChatMessages = ({
             : created;
         setMessages((prev) => mergeMessagesById(prev, [createdWithAttachments]));
         onMessageCreated?.(createdWithAttachments);
+        awaitingReplySourceRef.current = source;
+        awaitingSinceRef.current = Date.now();
+        setIsAwaitingReply(true);
         return true;
       } catch (nextError) {
         setError(
@@ -323,10 +358,16 @@ export const useBoardChatMessages = ({
             memory?: BoardMemoryRead;
           };
           if (payload.memory?.tags?.includes("chat")) {
-            setMessages((prev) =>
-              mergeMessagesById(prev, [payload.memory as BoardMemoryRead]),
-            );
-            onMessageCreated?.(payload.memory as BoardMemoryRead);
+            const mem = payload.memory as BoardMemoryRead;
+            setMessages((prev) => mergeMessagesById(prev, [mem]));
+            onMessageCreated?.(mem);
+            if (
+              awaitingReplySourceRef.current &&
+              mem.source !== awaitingReplySourceRef.current
+            ) {
+              awaitingReplySourceRef.current = null;
+              setIsAwaitingReply(false);
+            }
           }
         } catch {
           // Ignore malformed stream payloads.
@@ -341,6 +382,7 @@ export const useBoardChatMessages = ({
       isLoading,
       isLoadingOlder,
       isSending,
+      isAwaitingReply,
       hasMore,
       error,
       loadOlder,
@@ -349,6 +391,7 @@ export const useBoardChatMessages = ({
     [
       error,
       hasMore,
+      isAwaitingReply,
       isLoading,
       isLoadingOlder,
       isSending,

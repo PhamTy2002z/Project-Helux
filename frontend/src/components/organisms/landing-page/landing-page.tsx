@@ -10,6 +10,9 @@ import LandingHeroSection from "./landing-hero-section";
 const FeatureCards = dynamic(() => import("./feature-cards"), {
   loading: () => <LandingSectionSkeleton />,
 });
+const FeatureStoryShowcase = dynamic(() => import("./feature-story-showcase"), {
+  loading: () => <LandingSectionSkeleton />,
+});
 const ProductTabs = dynamic(() => import("./product-tabs"), {
   loading: () => <LandingSectionSkeleton />,
 });
@@ -54,6 +57,7 @@ export default function LandingPage() {
         <main>
           <LandingHeroSection />
           <FeatureCards />
+          <FeatureStoryShowcase />
           <ProductTabs />
           <TestimonialCarousel />
         </main>
