@@ -6,7 +6,13 @@
 **Status**: Pre-release, under active development
 **Last Updated**: 2026-03-12
 
-## Recent Updates
+## Recent Updates (March 2026)
+
+- ✅ **SaaS Hardening & Payment Enforcement Complete** (2026-03-12):
+  - Trial expiry blocks (402 blocked_for_payment response)
+  - Board-group and agents-per-board quota enforcement
+  - Entitlements service validation on write operations
+  - Billing observability endpoints live
 
 - ✅ Board planning overlay compatibility plan (`260311-2312`) phases 5-7 completed:
   - Added feature-flagged board overlay UX with URL-synced query state, saved
@@ -133,7 +139,7 @@
 
 ### Phase 3: Agent Operations & React Performance Optimization (In Progress)
 
-**Status**: 🔄 In Progress (92% complete)
+**Status**: 🔄 In Progress (98% complete)
 **Timeline**: Q1 2025 - Q2 2025
 
 #### Completed Features
@@ -146,12 +152,16 @@
 - ✅ OpenClaw gateway integration
 - ✅ Gateway WebSocket communication
 - ✅ Gateway health checks
+- ✅ Board planning overlay with TaskGroup model, cursor pagination, grouped rendering, density modes
+- ✅ Board chat multi-session with file upload (MinIO) + PDF OCR extraction
 - ✅ Frontend performance optimization (route groups, SSE consolidation)
 - ✅ Reusable SSE streaming patterns (`useSSEStream`, `parseSSEBuffer`)
 - ✅ React Query policy normalization with bundle budget enforcement
 - ✅ Markdown heavy dependency isolation (`LazyMarkdown`, `MarkdownLite`)
 - ✅ Chat render-path optimization (ordered upsert merge, render sort removal, content-visibility)
 - ✅ Performance hardening verification + rollout checklist for plan `260308-1727`
+- ✅ Token ledger + per-agent quota surfaces with ledger aggregation
+- ✅ SaaS hardening with billing enforcement (trial expiry, quota blocks)
 
 #### In Progress
 

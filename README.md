@@ -1,7 +1,7 @@
 # Project Helux
 
 A centralized operations and governance platform for AI agents, built on top of OpenClaw Mission Control.
-Provides a unified interface for work orchestration, agent management, approval-driven governance, and API-backed automation.
+Provides unified work orchestration, agent management, approval-driven governance, and API-backed automation with board chat, file uploads, and scalable planning overlays.
 
 ## Overview
 
@@ -39,10 +39,14 @@ Project Helux is a SaaS platform for teams to operate AI agents with:
 cp .env.example .env
 # Set LOCAL_AUTH_TOKEN (minimum 50 characters) when AUTH_MODE=local
 
-# 2. Start
+# 2. Start services
 docker compose -f compose.yml --env-file .env up -d --build
 
-# 3. Access
+# 3. Run database migrations (automatic on startup, or manual)
+# Migrations run automatically in docker container init
+# For manual: docker exec project-helux-backend alembic upgrade head
+
+# 4. Access
 # UI:      http://localhost:3000
 # Backend: http://localhost:8000/healthz
 ```

@@ -75,6 +75,8 @@ pages/          # Full pages (app/ directory with Next.js App Router)
 - **Board overlay modules**: Keep scalable board-view logic in
   `src/lib/boards/*` and keep render primitives in focused organism components
   (`task-board-filter-bar.tsx`, `task-group-column-section.tsx`).
+- **Board chat**: Multi-session CRUD in `src/lib/api/boards` + SSE streaming via `useSSEStream` hook
+  with session-scoped filtering (`is_chat=true&chat_session_id=...`).
 
 #### File Size Guidelines
 - Target: < 200 lines per component file

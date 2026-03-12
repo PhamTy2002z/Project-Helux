@@ -2,6 +2,15 @@
 
 ## 2026-03-12
 
+### SaaS Hardening and Payment Enforcement
+- Trial expiry enforcement returns 402 `blocked_for_payment` on write operations.
+- Entitlements service enforces hard quotas:
+  - Board groups per organization (tier-specific limit)
+  - Agents per board (tier-specific limit)
+- Billing simulated checkout API with idempotent persistence.
+- Billing audit events for all signup/upgrade transactions.
+- Frontend upgrade modal with quota summary surfaces.
+
 ### Board planning overlay compatibility plan (`260311-2312`) phases 5-7
 - Added scalable board overlay UX behind rollout flags:
   - New global filter bar with saved views, status/priority filters, and URL
