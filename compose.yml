@@ -1,4 +1,4 @@
-name: project-helux-openclaw-mission-control
+name: project-helux
 
 # ---------- shared config ----------
 x-logging: &default-logging
@@ -100,8 +100,8 @@ services:
       AUTH_MODE: ${AUTH_MODE}
       LOCAL_AUTH_TOKEN: ${LOCAL_AUTH_TOKEN}
       RQ_REDIS_URL: redis://redis:6379/0
-      WORKER_HEARTBEAT_KEY: ${WORKER_HEARTBEAT_KEY:-mission-control:worker:heartbeat}
-      READINESS_WORKER_HEARTBEAT_KEY: ${READINESS_WORKER_HEARTBEAT_KEY:-mission-control:worker:heartbeat}
+      WORKER_HEARTBEAT_KEY: ${WORKER_HEARTBEAT_KEY:-helux:worker:heartbeat}
+      READINESS_WORKER_HEARTBEAT_KEY: ${READINESS_WORKER_HEARTBEAT_KEY:-helux:worker:heartbeat}
       OBJECT_STORAGE_ENDPOINT: http://minio:9000
       OBJECT_STORAGE_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
       OBJECT_STORAGE_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin}
@@ -218,7 +218,7 @@ services:
       OBJECT_STORAGE_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin}
       OBJECT_STORAGE_BUCKET: ${OBJECT_STORAGE_BUCKET:-board-chat-files}
       OBJECT_STORAGE_USE_SSL: "false"
-      WORKER_HEARTBEAT_KEY: ${WORKER_HEARTBEAT_KEY:-mission-control:worker:heartbeat}
+      WORKER_HEARTBEAT_KEY: ${WORKER_HEARTBEAT_KEY:-helux:worker:heartbeat}
       OPENCLAW_GATEWAY_DEVICE_IDENTITY_PATH: /shared/device-identity/device.json
     volumes:
       - device_identity:/shared/device-identity

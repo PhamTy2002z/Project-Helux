@@ -17,8 +17,8 @@ const NAV_LINKS = [
 
 const RESOURCE_LINKS = [
   { label: "Testimonials", href: "/testimonials" },
-  { label: "Documentation", href: "https://github.com/abhi1693/openclaw-mission-control/tree/master/docs", external: true },
-  { label: "Changelog", href: "https://github.com/abhi1693/openclaw-mission-control/releases", external: true },
+  { label: "Documentation", href: "https://github.com/PhamTy2002z/Project-Helux/tree/master/docs", external: true },
+  { label: "Changelog", href: "https://github.com/PhamTy2002z/Project-Helux/releases", external: true },
 ];
 
 const BTN_SIGNIN =
@@ -76,7 +76,7 @@ export default function LandingNavbar() {
               <Logo />
             </button>
           ) : (
-            <Link href="/" aria-label="OpenClaw home">
+            <Link href="/" aria-label="Helux home">
               <Logo />
             </Link>
           )}
