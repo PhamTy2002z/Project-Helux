@@ -88,7 +88,7 @@ export default function EditAgentPage() {
 
   const [name, setName] = useState<string | undefined>(undefined);
   const [boardId, setBoardId] = useState<string | undefined>(undefined);
-  const [isGatewayMain, setIsGatewayMain] = useState<boolean | undefined>(
+  const [isGatewayMain, _setIsGatewayMain] = useState<boolean | undefined>(
     undefined,
   );
   const [heartbeatEvery, setHeartbeatEvery] = useState<string | undefined>(

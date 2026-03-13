@@ -5,7 +5,7 @@ import {
   resolveHumanActorName,
 } from "@/lib/display-name";
 import { isLiveFeedEventType } from "./board-constants";
-import type { Agent, Approval, BoardChatMessage, LiveFeedEventType, LiveFeedItem, TaskComment } from "./board-types";
+import type { Agent, BoardChatMessage, LiveFeedEventType, LiveFeedItem, TaskComment } from "./board-types";
 
 export const toLiveFeedFromActivity = (
   event: ActivityEventRead,
