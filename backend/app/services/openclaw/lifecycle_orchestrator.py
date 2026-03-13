@@ -68,6 +68,7 @@ class AgentLifecycleOrchestrator(OpenClawDBService):
         wakeup_verb: str | None = None,
         clear_confirm_token: bool = False,
         raise_gateway_errors: bool = True,
+        workspace_template_files: dict[str, str] | None = None,
     ) -> Agent:
         """Provision or update any agent under a per-agent lock."""
 
@@ -121,6 +122,7 @@ class AgentLifecycleOrchestrator(OpenClawDBService):
                     wake=wake,
                     deliver_wakeup=deliver_wakeup,
                     wakeup_verb=wakeup_verb,
+                    workspace_template_files=workspace_template_files,
                 ),
                 timeout=settings.gateway_lifecycle_timeout_seconds,
             )
