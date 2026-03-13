@@ -1,4 +1,4 @@
-"""Authentication bootstrap endpoints for the Mission Control API."""
+"""Authentication bootstrap endpoints for the FlowGrid API."""
 
 from __future__ import annotations
 

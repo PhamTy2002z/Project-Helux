@@ -1,8 +1,8 @@
-# Mission Control Frontend (`frontend/`)
+# FlowGrid Frontend (`frontend/`)
 
-This package is the **Next.js** web UI for OpenClaw Mission Control.
+This package is the **Next.js** web UI for FlowGrid.
 
-- Talks to the Mission Control **backend** over HTTP (typically `http://localhost:8000`).
+- Talks to the FlowGrid **backend** over HTTP (typically `http://localhost:8000`).
 - Uses **React Query** for data fetching.
 - Supports two auth modes:
   - **local** shared bearer token mode (self-host default)

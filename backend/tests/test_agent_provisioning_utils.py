@@ -49,7 +49,7 @@ def test_agent_key_uses_session_key_when_present():
 
 
 def test_workspace_path_preserves_tilde_in_workspace_root():
-    # Mission Control accepts a user-entered workspace root (from the UI) and must
+    # FlowGrid accepts a user-entered workspace root (from the UI) and must
     # treat it as an opaque string. In particular, we must not expand "~" to a
     # filesystem path since that behavior depends on the host environment.
     agent = _AgentStub(name="Alice", openclaw_session_id="agent:alice:main")

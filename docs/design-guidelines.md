@@ -4,7 +4,7 @@
 
 ### Core Design Philosophy
 
-OpenClaw Mission Control follows a **function-first, clarity-focused** design approach. The interface prioritizes operational efficiency over visual flourish, ensuring operators can quickly understand system state and take action.
+FlowGrid follows a **function-first, clarity-focused** design approach. The interface prioritizes operational efficiency over visual flourish, ensuring operators can quickly understand system state and take action.
 
 ### Design Principles
 

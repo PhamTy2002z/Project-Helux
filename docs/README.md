@@ -1,6 +1,6 @@
-# Mission Control docs
+# FlowGrid docs
 
-This folder is the documentation home for **OpenClaw Mission Control**.
+This folder is the documentation home for **FlowGrid**.
 
 ## Start here
 

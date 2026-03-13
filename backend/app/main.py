@@ -474,7 +474,7 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
 
 
 app = MissionControlFastAPI(
-    title="Mission Control API",
+    title="FlowGrid API",
     version="0.1.0",
     lifespan=lifespan,
     openapi_tags=OPENAPI_TAGS,

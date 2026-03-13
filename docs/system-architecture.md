@@ -2,7 +2,7 @@
 
 ## High-Level Architecture
 
-OpenClaw Mission Control follows a three-tier architecture with clear separation between presentation, application, and data layers.
+FlowGrid follows a three-tier architecture with clear separation between presentation, application, and data layers.
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -361,7 +361,7 @@ Organization bootstrap service
 ### Gateway Communication Flow
 
 ```
-Mission Control Backend
+FlowGrid Backend
     │
     ▼
 WebSocket Connection
@@ -384,7 +384,7 @@ WebSocket Connection
     │   └─→ Return Agent Status
     │
     └─→ Agent Lifecycle Events
-        └─→ Update Mission Control state
+        └─→ Update FlowGrid state
 ```
 
 ## Authentication and Authorization Flow

@@ -2,7 +2,7 @@
 
 ## Project Vision
 
-OpenClaw Mission Control is a centralized operations and governance platform for running OpenClaw across teams and organizations. It provides unified visibility, approval controls, and gateway-aware orchestration for AI agent operations at scale.
+FlowGrid is a centralized operations and governance platform for running OpenClaw across teams and organizations. It provides unified visibility, approval controls, and gateway-aware orchestration for AI agent operations at scale.
 
 ## Core Mission
 
@@ -20,7 +20,7 @@ Provide a SaaS platform for platform teams to operate OpenClaw reliably with cle
 1. **Platform Operator**: Manages infrastructure, gateways, and system health
 2. **Work Coordinator**: Creates and manages boards, tasks, and agent assignments
 3. **Governance Lead**: Reviews and approves sensitive operations
-4. **API Consumer**: Integrates Mission Control into automated workflows
+4. **API Consumer**: Integrates FlowGrid into automated workflows
 
 ## Use Cases
 

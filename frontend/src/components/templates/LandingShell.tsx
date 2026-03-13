@@ -19,13 +19,13 @@ export function LandingShell({ children }: { children: ReactNode }) {
     <div className="landing-enterprise">
       <nav className="landing-nav" aria-label="Primary navigation">
         <div className="nav-container">
-          <Link href="/" className="logo-section" aria-label="OpenClaw home">
+          <Link href="/" className="logo-section" aria-label="FlowGrid home">
             <div className="logo-icon" aria-hidden="true">
               OC
             </div>
             <div className="logo-text">
               <div className="logo-name">OpenClaw</div>
-              <div className="logo-tagline">Mission Control</div>
+              <div className="logo-tagline">FlowGrid</div>
             </div>
           </Link>
 

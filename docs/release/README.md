@@ -1,6 +1,6 @@
 # Release checklist
 
-Use this checklist to release Mission Control with SaaS hardening gates enabled.
+Use this checklist to release FlowGrid with SaaS hardening gates enabled.
 This checklist is for beta releases that prioritize tenant isolation, reliability,
 and safe rollback.
 

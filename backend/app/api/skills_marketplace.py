@@ -684,7 +684,7 @@ def _collect_pack_skills_with_warnings(
 def _install_instruction(*, skill: MarketplaceSkill, gateway: Gateway) -> str:
     install_dir = _skills_install_dir(gateway.workspace_root)
     return (
-        "MISSION CONTROL SKILL INSTALL REQUEST\n"
+        "FLOWGRID SKILL INSTALL REQUEST\n"
         f"Skill name: {skill.name}\n"
         f"Skill source URL: {skill.source_url}\n"
         f"Install destination: {install_dir}\n\n"
@@ -699,7 +699,7 @@ def _install_instruction(*, skill: MarketplaceSkill, gateway: Gateway) -> str:
 def _uninstall_instruction(*, skill: MarketplaceSkill, gateway: Gateway) -> str:
     install_dir = _skills_install_dir(gateway.workspace_root)
     return (
-        "MISSION CONTROL SKILL UNINSTALL REQUEST\n"
+        "FLOWGRID SKILL UNINSTALL REQUEST\n"
         f"Skill name: {skill.name}\n"
         f"Skill source URL: {skill.source_url}\n"
         f"Install destination: {install_dir}\n\n"

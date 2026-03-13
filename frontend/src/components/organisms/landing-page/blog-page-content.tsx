@@ -32,8 +32,9 @@ export default function BlogPageContent({ selectedCategory, filteredPosts }: Blo
               Practical Stories, Ideas, and Patterns for Multi-Agent Operations.
             </h1>
             <p className="mt-5 max-w-3xl text-base leading-relaxed text-white/70">
-              From open-source experiments to enterprise deployments, OpenClaw insights help teams design
-              resilient AI workflows that scale from first prototype to production governance.
+              From open-source experiments to enterprise deployments, FlowGrid insights help
+              teams design resilient AI workflows that scale from first prototype to production
+              governance.
             </p>
             <nav className="mt-8 flex flex-wrap gap-3" aria-label="Blog Categories">
               {BLOG_CATEGORIES.map((categoryItem) => {
