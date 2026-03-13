@@ -5,7 +5,7 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type ListTasksApiV1AgentBoardsBoardIdTasksGetParams = {
+export type ListTasksCursorApiV1BoardsBoardIdTasksCursorGetParams = {
   status?: string | null;
   assigned_agent_id?: string | null;
   unassigned?: boolean | null;
@@ -18,13 +18,10 @@ export type ListTasksApiV1AgentBoardsBoardIdTasksGetParams = {
   has_pending_approval?: boolean | null;
   task_group_id?: string | null;
   archived?: boolean | null;
+  cursor?: string | null;
   /**
    * @minimum 1
    * @maximum 200
    */
   limit?: number;
-  /**
-   * @minimum 0
-   */
-  offset?: number;
 };

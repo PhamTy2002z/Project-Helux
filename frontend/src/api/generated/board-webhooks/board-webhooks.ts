@@ -27,8 +27,8 @@ import type {
   BoardWebhookRead,
   BoardWebhookUpdate,
   HTTPValidationError,
-  LimitOffsetPageTypeVarCustomizedBoardWebhookPayloadRead,
-  LimitOffsetPageTypeVarCustomizedBoardWebhookRead,
+  LimitOffsetPageTCustomizedBoardWebhookPayloadRead,
+  LimitOffsetPageTCustomizedBoardWebhookRead,
   ListBoardWebhookPayloadsApiV1BoardsBoardIdWebhooksWebhookIdPayloadsGetParams,
   ListBoardWebhooksApiV1BoardsBoardIdWebhooksGetParams,
   OkResponse,
@@ -43,7 +43,7 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
  * @summary List Board Webhooks
  */
 export type listBoardWebhooksApiV1BoardsBoardIdWebhooksGetResponse200 = {
-  data: LimitOffsetPageTypeVarCustomizedBoardWebhookRead;
+  data: LimitOffsetPageTCustomizedBoardWebhookRead;
   status: 200;
 };
 
@@ -1192,7 +1192,7 @@ export const useIngestBoardWebhookApiV1BoardsBoardIdWebhooksWebhookIdPost = <
  */
 export type listBoardWebhookPayloadsApiV1BoardsBoardIdWebhooksWebhookIdPayloadsGetResponse200 =
   {
-    data: LimitOffsetPageTypeVarCustomizedBoardWebhookPayloadRead;
+    data: LimitOffsetPageTCustomizedBoardWebhookPayloadRead;
     status: 200;
   };
 

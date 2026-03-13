@@ -28,4 +28,6 @@ export interface AgentCreate {
   identity_template?: string | null;
   /** Template representing deeper agent instructions. */
   soul_template?: string | null;
+  /** Workspace template to apply. Overrides identity_template/soul_template. */
+  template_id?: string | null;
 }

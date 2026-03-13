@@ -22,8 +22,8 @@ import type {
 
 import type {
   HTTPValidationError,
-  LimitOffsetPageTypeVarCustomizedOrganizationInviteRead,
-  LimitOffsetPageTypeVarCustomizedOrganizationMemberRead,
+  LimitOffsetPageTCustomizedOrganizationInviteRead,
+  LimitOffsetPageTCustomizedOrganizationMemberRead,
   ListOrgInvitesApiV1OrganizationsMeInvitesGetParams,
   ListOrgMembersApiV1OrganizationsMeMembersGetParams,
   OkResponse,
@@ -1272,7 +1272,7 @@ export function useGetMyMembershipApiV1OrganizationsMeMemberGet<
  * @summary List Org Members
  */
 export type listOrgMembersApiV1OrganizationsMeMembersGetResponse200 = {
-  data: LimitOffsetPageTypeVarCustomizedOrganizationMemberRead;
+  data: LimitOffsetPageTCustomizedOrganizationMemberRead;
   status: 200;
 };
 
@@ -2233,7 +2233,7 @@ export const useUpdateMemberAccessApiV1OrganizationsMeMembersMemberIdAccessPut =
  * @summary List Org Invites
  */
 export type listOrgInvitesApiV1OrganizationsMeInvitesGetResponse200 = {
-  data: LimitOffsetPageTypeVarCustomizedOrganizationInviteRead;
+  data: LimitOffsetPageTCustomizedOrganizationInviteRead;
   status: 200;
 };
 

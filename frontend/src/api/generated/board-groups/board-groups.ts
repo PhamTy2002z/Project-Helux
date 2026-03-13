@@ -29,7 +29,7 @@ import type {
   BoardGroupUpdate,
   GetBoardGroupSnapshotApiV1BoardGroupsGroupIdSnapshotGetParams,
   HTTPValidationError,
-  LimitOffsetPageTypeVarCustomizedBoardGroupRead,
+  LimitOffsetPageTCustomizedBoardGroupRead,
   ListBoardGroupsApiV1BoardGroupsGetParams,
   OkResponse,
 } from "../model";
@@ -43,7 +43,7 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
  * @summary List Board Groups
  */
 export type listBoardGroupsApiV1BoardGroupsGetResponse200 = {
-  data: LimitOffsetPageTypeVarCustomizedBoardGroupRead;
+  data: LimitOffsetPageTCustomizedBoardGroupRead;
   status: 200;
 };
 

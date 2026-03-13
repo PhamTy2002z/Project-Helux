@@ -9,6 +9,15 @@ export type ListTasksApiV1BoardsBoardIdTasksGetParams = {
   status?: string | null;
   assigned_agent_id?: string | null;
   unassigned?: boolean | null;
+  q?: string | null;
+  tag_ids?: string | null;
+  priority?: string | null;
+  blocked?: boolean | null;
+  due_before?: string | null;
+  due_after?: string | null;
+  has_pending_approval?: boolean | null;
+  task_group_id?: string | null;
+  archived?: boolean | null;
   /**
    * @minimum 1
    * @maximum 200

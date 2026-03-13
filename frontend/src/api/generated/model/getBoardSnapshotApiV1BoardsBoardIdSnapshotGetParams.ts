@@ -5,8 +5,6 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface ValidationError {
-  loc: (string | number)[];
-  msg: string;
-  type: string;
-}
+export type GetBoardSnapshotApiV1BoardsBoardIdSnapshotGetParams = {
+  compact?: boolean;
+};

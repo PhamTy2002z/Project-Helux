@@ -16,7 +16,10 @@ export interface TaskRead {
   description?: string | null;
   status?: TaskReadStatus;
   priority?: string;
+  task_group_id?: string | null;
+  sort_index?: number | null;
   due_at?: string | null;
+  archived_at?: string | null;
   assigned_agent_id?: string | null;
   depends_on_task_ids?: string[];
   tag_ids?: string[];
