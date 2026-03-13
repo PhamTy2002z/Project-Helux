@@ -11,6 +11,7 @@ import { DEFAULT_HUMAN_LABEL, resolveHumanActorName } from "@/lib/display-name";
 import { useSSEStream } from "@/lib/hooks/use-sse-stream";
 
 const PAGE_SIZE = 50;
+const AWAITING_REPLY_TIMEOUT_MS = 45_000;
 
 type UseBoardChatMessagesOptions = {
   boardId: string;
@@ -170,6 +171,21 @@ export const useBoardChatMessages = ({
   const awaitingReplySourceRef = useRef<string | null>(null);
   const awaitingSinceRef = useRef<number>(0);
 
+  const clearAwaitingReply = useCallback(() => {
+    awaitingReplySourceRef.current = null;
+    awaitingSinceRef.current = 0;
+    setIsAwaitingReply(false);
+  }, []);
+
+  const startAwaitingReply = useCallback(
+    (sinceMs: number) => {
+      awaitingReplySourceRef.current = source;
+      awaitingSinceRef.current = sinceMs;
+      setIsAwaitingReply(true);
+    },
+    [source],
+  );
+
   useEffect(() => {
     messagesRef.current = messages;
   }, [messages]);
@@ -178,13 +194,25 @@ export const useBoardChatMessages = ({
     setMessages([]);
     setHasMore(false);
     fetchedCountRef.current = 0;
-    awaitingReplySourceRef.current = null;
-    awaitingSinceRef.current = 0;
-    setIsAwaitingReply(false);
+    clearAwaitingReply();
     if (clearError) {
       setError(null);
     }
-  }, []);
+  }, [clearAwaitingReply]);
+
+  useEffect(() => {
+    if (!isAwaitingReply || !awaitingSinceRef.current) return;
+    const elapsed = Date.now() - awaitingSinceRef.current;
+    const remaining = AWAITING_REPLY_TIMEOUT_MS - elapsed;
+    if (remaining <= 0) {
+      clearAwaitingReply();
+      return;
+    }
+    const timeoutId = window.setTimeout(() => {
+      clearAwaitingReply();
+    }, remaining);
+    return () => window.clearTimeout(timeoutId);
+  }, [clearAwaitingReply, isAwaitingReply]);
 
   const skipInitialFetchRef = useRef(skipInitialFetch);
   skipInitialFetchRef.current = skipInitialFetch;
@@ -223,10 +251,18 @@ export const useBoardChatMessages = ({
         const lastMsg = items[items.length - 1];
         const lastSource = resolveHumanActorName(lastMsg.source, DEFAULT_HUMAN_LABEL);
         if (lastSource === source) {
-          awaitingReplySourceRef.current = source;
-          awaitingSinceRef.current = apiDatetimeToMs(lastMsg.created_at) ?? Date.now();
-          setIsAwaitingReply(true);
+          const lastAt = apiDatetimeToMs(lastMsg.created_at) ?? 0;
+          const age = lastAt ? Date.now() - lastAt : Number.POSITIVE_INFINITY;
+          if (age <= AWAITING_REPLY_TIMEOUT_MS) {
+            startAwaitingReply(lastAt || Date.now());
+          } else {
+            clearAwaitingReply();
+          }
+        } else {
+          clearAwaitingReply();
         }
+      } else {
+        clearAwaitingReply();
       }
     } catch (nextError) {
       resetState();
@@ -238,7 +274,15 @@ export const useBoardChatMessages = ({
     } finally {
       setIsLoading(false);
     }
-  }, [boardId, chatSessionId, enabled, resetState]);
+  }, [
+    boardId,
+    chatSessionId,
+    clearAwaitingReply,
+    enabled,
+    resetState,
+    source,
+    startAwaitingReply,
+  ]);
 
   useEffect(() => {
     void fetchLatest();
@@ -287,6 +331,7 @@ export const useBoardChatMessages = ({
       const trimmed = content.trim();
       if (!trimmed) return false;
 
+      clearAwaitingReply();
       setIsSending(true);
       setError(null);
       try {
@@ -310,11 +355,12 @@ export const useBoardChatMessages = ({
             : created;
         setMessages((prev) => mergeMessagesById(prev, [createdWithAttachments]));
         onMessageCreated?.(createdWithAttachments);
-        awaitingReplySourceRef.current = source;
-        awaitingSinceRef.current = Date.now();
-        setIsAwaitingReply(true);
+        startAwaitingReply(
+          apiDatetimeToMs(createdWithAttachments.created_at) ?? Date.now(),
+        );
         return true;
       } catch (nextError) {
+        clearAwaitingReply();
         setError(
           nextError instanceof Error
             ? nextError.message
@@ -325,7 +371,15 @@ export const useBoardChatMessages = ({
         setIsSending(false);
       }
     },
-    [boardId, chatSessionId, enabled, onMessageCreated, source],
+    [
+      boardId,
+      chatSessionId,
+      clearAwaitingReply,
+      enabled,
+      onMessageCreated,
+      source,
+      startAwaitingReply,
+    ],
   );
 
   useSSEStream({
@@ -363,10 +417,12 @@ export const useBoardChatMessages = ({
             onMessageCreated?.(mem);
             if (
               awaitingReplySourceRef.current &&
-              mem.source !== awaitingReplySourceRef.current
+              resolveHumanActorName(mem.source, DEFAULT_HUMAN_LABEL) !==
+                awaitingReplySourceRef.current &&
+              (apiDatetimeToMs(mem.created_at) ?? Date.now()) >=
+                awaitingSinceRef.current
             ) {
-              awaitingReplySourceRef.current = null;
-              setIsAwaitingReply(false);
+              clearAwaitingReply();
             }
           }
         } catch {

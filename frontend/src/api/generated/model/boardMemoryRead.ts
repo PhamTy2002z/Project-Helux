@@ -4,6 +4,7 @@
  * Mission Control API
  * OpenAPI spec version: 0.1.0
  */
+import type { BoardChatMessageAttachmentRead } from "./boardChatMessageAttachmentRead";
 
 /**
  * Serialized board memory entry returned from read endpoints.
@@ -17,4 +18,5 @@ export interface BoardMemoryRead {
   is_chat?: boolean;
   chat_session_id?: string | null;
   created_at: string;
+  attachments?: BoardChatMessageAttachmentRead[] | null;
 }

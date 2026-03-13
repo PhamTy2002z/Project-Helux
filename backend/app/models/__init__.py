@@ -39,6 +39,7 @@ from app.models.task_groups import TaskGroup
 from app.models.tasks import Task
 from app.models.user_onboarding_progress import UserOnboardingProgress
 from app.models.users import User
+from app.models.workspace_templates import WorkspaceTemplate
 
 __all__ = [
     "ActivityEvent",
@@ -80,4 +81,5 @@ __all__ = [
     "TagAssignment",
     "User",
     "UserOnboardingProgress",
+    "WorkspaceTemplate",
 ]

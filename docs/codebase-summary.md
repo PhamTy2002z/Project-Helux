@@ -9,9 +9,9 @@ OpenClaw Mission Control is a full-stack web application with FastAPI backend, N
 ### Backend (Python)
 - **Total Python Files**: ~1,899 files
 - **Core Application Files**: ~150 files (excluding migrations, tests, cache)
-- **API Routes**: 28 route modules
-- **Database Models**: 38 SQLModel models
-- **Service Modules**: 18 core services + 20+ OpenClaw integration services
+- **API Routes**: 29 route modules
+- **Database Models**: 39 SQLModel models
+- **Service Modules**: 19 core services + 20+ OpenClaw integration services
 - **Primary Language**: Python 3.12
 - **Framework**: FastAPI 0.131.0
 
@@ -92,7 +92,7 @@ GitHub Actions             - CI/CD pipeline
 ```
 backend/
 ├── app/
-│   ├── api/               # API route handlers (24 modules)
+│   ├── api/               # API route handlers (29 modules)
 │   │   ├── activity.py
 │   │   ├── agent.py       # Primary agent operations (69KB)
 │   │   ├── agents.py
@@ -113,6 +113,7 @@ backend/
 │   │   ├── task_custom_fields.py
 │   │   ├── tasks.py       # Primary task operations (86KB)
 │   │   ├── users.py
+│   │   ├── workspace_templates.py # Template CRUD operations
 │   │   └── deps.py        # Dependency injection
 │   ├── core/              # Core utilities
 │   │   ├── config.py      # Settings management
@@ -121,7 +122,7 @@ backend/
 │   ├── db/                # Database configuration
 │   │   ├── session.py     # Async session management
 │   │   └── base.py        # Base model imports
-│   ├── models/            # SQLModel database models (38 models)
+│   ├── models/            # SQLModel database models (39 models)
 │   │   ├── activity_events.py
 │   │   ├── agent_token_daily_usage.py
 │   │   ├── agents.py
@@ -156,10 +157,11 @@ backend/
 │   │   ├── tasks.py
 │   │   ├── tenancy.py
 │   │   ├── user_onboarding_progress.py
-│   │   └── users.py
+│   │   ├── users.py
+│   │   └── workspace_templates.py
 │   ├── schemas/           # Pydantic schemas (30 modules)
 │   │   └── [request/response schemas]
-│   ├── services/          # Business logic (18+ modules)
+│   ├── services/          # Business logic (19+ modules)
 │   │   ├── activity_log.py
 │   │   ├── admin_access.py
 │   │   ├── approval_task_links.py

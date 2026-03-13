@@ -14,4 +14,5 @@ export interface BoardMemoryCreate {
   tags?: string[] | null;
   source?: string | null;
   chat_session_id?: string | null;
+  file_ids?: string[] | null;
 }

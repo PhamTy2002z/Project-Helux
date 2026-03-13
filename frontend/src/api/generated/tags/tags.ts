@@ -22,7 +22,7 @@ import type {
 
 import type {
   HTTPValidationError,
-  LimitOffsetPageTypeVarCustomizedTagRead,
+  LimitOffsetPageTCustomizedTagRead,
   ListTagsApiV1TagsGetParams,
   OkResponse,
   TagCreate,
@@ -39,7 +39,7 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
  * @summary List Tags
  */
 export type listTagsApiV1TagsGetResponse200 = {
-  data: LimitOffsetPageTypeVarCustomizedTagRead;
+  data: LimitOffsetPageTCustomizedTagRead;
   status: 200;
 };
 

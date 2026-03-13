@@ -262,6 +262,103 @@ async def test_provision_overwrites_user_md_on_first_provision(monkeypatch):
 
 
 @pytest.mark.asyncio
+async def test_provision_with_workspace_template_preserves_default_runtime_files(monkeypatch):
+    """Workspace templates should override selected files, not replace runtime contract files."""
+
+    class _ControlPlaneStub:
+        async def ensure_agent_session(self, session_key, *, label=None):
+            return None
+
+        async def reset_agent_session(self, session_key):
+            return None
+
+        async def delete_agent_session(self, session_key):
+            return None
+
+        async def upsert_agent(self, registration):
+            return None
+
+        async def delete_agent(self, agent_id, *, delete_files=True):
+            return None
+
+        async def list_agent_files(self, agent_id):
+            return {}
+
+        async def set_agent_file(self, *, agent_id, name, content):
+            _ = (agent_id, name, content)
+
+        async def patch_agent_heartbeats(self, entries):
+            return None
+
+    @dataclass
+    class _GatewayTiny:
+        id: UUID
+        name: str
+        url: str
+        token: str | None
+        workspace_root: str
+        allow_insecure_tls: bool = False
+        disable_device_pairing: bool = False
+
+    class _Manager(agent_provisioning.BaseAgentLifecycleManager):
+        def _agent_id(self, agent):
+            return "agent-x"
+
+        def _build_context(self, *, agent, auth_token, user, board):
+            _ = (agent, auth_token, user, board)
+            return {}
+
+    captured: dict[str, object] = {}
+
+    async def _capture_set_agent_files(self, **kwargs):
+        _ = self
+        captured.update(kwargs)
+        return None
+
+    def _fake_render_agent_files(*args, **kwargs):
+        _ = (args, kwargs)
+        return {
+            "AGENTS.md": "default-agents",
+            "HEARTBEAT.md": "default-heartbeat",
+            "USER.md": "default-user",
+        }
+
+    monkeypatch.setattr(
+        agent_provisioning.BaseAgentLifecycleManager,
+        "_set_agent_files",
+        _capture_set_agent_files,
+    )
+    monkeypatch.setattr(agent_provisioning, "_render_agent_files", _fake_render_agent_files)
+
+    gateway = _GatewayTiny(
+        id=uuid4(),
+        name="G",
+        url="ws://x",
+        token=None,
+        workspace_root="/tmp",
+    )
+    cp = _ControlPlaneStub()
+    mgr = _Manager(gateway, cp)  # type: ignore[arg-type]
+    agent = _AgentStub(name="Worker")
+
+    await mgr.provision(
+        agent=agent,  # type: ignore[arg-type]
+        session_key="agent:worker:main",
+        auth_token="token",
+        user=None,
+        options=agent_provisioning.ProvisionOptions(action="provision"),
+        workspace_template_files={"AGENTS.md": "custom-agents"},
+    )
+
+    rendered = captured["rendered"]
+    assert isinstance(rendered, dict)
+    assert rendered["AGENTS.md"] == "custom-agents"
+    assert rendered["HEARTBEAT.md"] == "default-heartbeat"
+    assert rendered["USER.md"] == "default-user"
+    assert captured["desired_file_names"] == {"AGENTS.md", "HEARTBEAT.md", "USER.md"}
+
+
+@pytest.mark.asyncio
 async def test_set_agent_files_update_preserves_user_md_even_when_size_zero():
     """Update should preserve editable files unless overwrite is explicitly requested."""
 

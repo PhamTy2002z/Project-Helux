@@ -91,6 +91,9 @@ LEAD_GATEWAY_FILES = frozenset(
 # - MEMORY.md: curated long-term memory (consolidated)
 PRESERVE_AGENT_EDITABLE_FILES = frozenset({"USER.md", "MEMORY.md"})
 
+# Allowed file keys for workspace templates (user-provided content).
+ALLOWED_WORKSPACE_TEMPLATE_FILES = frozenset({"AGENTS.md", "SOUL.md", "IDENTITY.md", "TOOLS.md"})
+
 HEARTBEAT_LEAD_TEMPLATE = "BOARD_HEARTBEAT.md.j2"
 HEARTBEAT_AGENT_TEMPLATE = "BOARD_HEARTBEAT.md.j2"
 SESSION_KEY_PARTS_MIN = 2

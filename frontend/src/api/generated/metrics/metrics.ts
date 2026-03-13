@@ -18,6 +18,7 @@ import type {
 } from "@tanstack/react-query";
 
 import type {
+  BoardOverlayMetrics,
   DashboardMetrics,
   DashboardMetricsApiV1MetricsDashboardGetParams,
   EntitlementUsageRead,
@@ -412,6 +413,213 @@ export function useQuotaUsageApiV1MetricsQuotasGet<
   queryKey: DataTag<QueryKey, TData, TError>;
 } {
   const queryOptions = getQuotaUsageApiV1MetricsQuotasGetQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * Return rollout flags and runtime telemetry for board overlay compatibility.
+ * @summary Board Overlay Metrics
+ */
+export type boardOverlayMetricsApiV1MetricsBoardOverlayGetResponse200 = {
+  data: BoardOverlayMetrics;
+  status: 200;
+};
+
+export type boardOverlayMetricsApiV1MetricsBoardOverlayGetResponseSuccess =
+  boardOverlayMetricsApiV1MetricsBoardOverlayGetResponse200 & {
+    headers: Headers;
+  };
+export type boardOverlayMetricsApiV1MetricsBoardOverlayGetResponse =
+  boardOverlayMetricsApiV1MetricsBoardOverlayGetResponseSuccess;
+
+export const getBoardOverlayMetricsApiV1MetricsBoardOverlayGetUrl = () => {
+  return `/api/v1/metrics/board-overlay`;
+};
+
+export const boardOverlayMetricsApiV1MetricsBoardOverlayGet = async (
+  options?: RequestInit,
+): Promise<boardOverlayMetricsApiV1MetricsBoardOverlayGetResponse> => {
+  return customFetch<boardOverlayMetricsApiV1MetricsBoardOverlayGetResponse>(
+    getBoardOverlayMetricsApiV1MetricsBoardOverlayGetUrl(),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getBoardOverlayMetricsApiV1MetricsBoardOverlayGetQueryKey = () => {
+  return [`/api/v1/metrics/board-overlay`] as const;
+};
+
+export const getBoardOverlayMetricsApiV1MetricsBoardOverlayGetQueryOptions = <
+  TData = Awaited<
+    ReturnType<typeof boardOverlayMetricsApiV1MetricsBoardOverlayGet>
+  >,
+  TError = unknown,
+>(options?: {
+  query?: Partial<
+    UseQueryOptions<
+      Awaited<
+        ReturnType<typeof boardOverlayMetricsApiV1MetricsBoardOverlayGet>
+      >,
+      TError,
+      TData
+    >
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ??
+    getBoardOverlayMetricsApiV1MetricsBoardOverlayGetQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof boardOverlayMetricsApiV1MetricsBoardOverlayGet>>
+  > = ({ signal }) =>
+    boardOverlayMetricsApiV1MetricsBoardOverlayGet({
+      signal,
+      ...requestOptions,
+    });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof boardOverlayMetricsApiV1MetricsBoardOverlayGet>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type BoardOverlayMetricsApiV1MetricsBoardOverlayGetQueryResult =
+  NonNullable<
+    Awaited<ReturnType<typeof boardOverlayMetricsApiV1MetricsBoardOverlayGet>>
+  >;
+export type BoardOverlayMetricsApiV1MetricsBoardOverlayGetQueryError = unknown;
+
+export function useBoardOverlayMetricsApiV1MetricsBoardOverlayGet<
+  TData = Awaited<
+    ReturnType<typeof boardOverlayMetricsApiV1MetricsBoardOverlayGet>
+  >,
+  TError = unknown,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<
+          ReturnType<typeof boardOverlayMetricsApiV1MetricsBoardOverlayGet>
+        >,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<
+            ReturnType<typeof boardOverlayMetricsApiV1MetricsBoardOverlayGet>
+          >,
+          TError,
+          Awaited<
+            ReturnType<typeof boardOverlayMetricsApiV1MetricsBoardOverlayGet>
+          >
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useBoardOverlayMetricsApiV1MetricsBoardOverlayGet<
+  TData = Awaited<
+    ReturnType<typeof boardOverlayMetricsApiV1MetricsBoardOverlayGet>
+  >,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<
+          ReturnType<typeof boardOverlayMetricsApiV1MetricsBoardOverlayGet>
+        >,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<
+            ReturnType<typeof boardOverlayMetricsApiV1MetricsBoardOverlayGet>
+          >,
+          TError,
+          Awaited<
+            ReturnType<typeof boardOverlayMetricsApiV1MetricsBoardOverlayGet>
+          >
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useBoardOverlayMetricsApiV1MetricsBoardOverlayGet<
+  TData = Awaited<
+    ReturnType<typeof boardOverlayMetricsApiV1MetricsBoardOverlayGet>
+  >,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<
+          ReturnType<typeof boardOverlayMetricsApiV1MetricsBoardOverlayGet>
+        >,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+/**
+ * @summary Board Overlay Metrics
+ */
+
+export function useBoardOverlayMetricsApiV1MetricsBoardOverlayGet<
+  TData = Awaited<
+    ReturnType<typeof boardOverlayMetricsApiV1MetricsBoardOverlayGet>
+  >,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<
+          ReturnType<typeof boardOverlayMetricsApiV1MetricsBoardOverlayGet>
+        >,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions =
+    getBoardOverlayMetricsApiV1MetricsBoardOverlayGetQueryOptions(options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<
     TData,

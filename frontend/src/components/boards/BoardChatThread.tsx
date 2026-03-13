@@ -254,7 +254,7 @@ export const BoardChatThread = memo(function BoardChatThread({
                 <span className="h-1.5 w-1.5 rounded-full bg-slate-400 animate-typing-dot-3" />
               </div>
               <span className="text-xs text-slate-400">
-                {isSending ? "Sending..." : "Thinking..."}
+                {isSending ? "Sending..." : "Awaiting reply..."}
               </span>
             </div>
           </div>

@@ -126,6 +126,11 @@ class AgentBase(SQLModel):
 class AgentCreate(AgentBase):
     """Payload for creating a new agent."""
 
+    template_id: UUID | None = Field(
+        default=None,
+        description="Workspace template to apply. Overrides identity_template/soul_template.",
+    )
+
 
 class AgentUpdate(SQLModel):
     """Payload for patching an existing agent."""
@@ -228,6 +233,10 @@ class AgentRead(AgentBase):
 
     id: UUID = Field(description="Agent UUID.")
     gateway_id: UUID = Field(description="Gateway UUID that manages this agent.")
+    template_id: UUID | None = Field(
+        default=None,
+        description="Workspace template applied to this agent.",
+    )
     is_board_lead: bool = Field(
         default=False,
         description="Whether this agent is the board lead.",

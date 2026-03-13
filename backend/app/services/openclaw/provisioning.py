@@ -930,6 +930,7 @@ class BaseAgentLifecycleManager(ABC):
         options: ProvisionOptions,
         board: Board | None = None,
         session_label: str | None = None,
+        workspace_template_files: dict[str, str] | None = None,
     ) -> None:
         if not self._gateway.workspace_root:
             msg = "gateway_workspace_root is required"
@@ -949,6 +950,8 @@ class BaseAgentLifecycleManager(ABC):
             ),
         )
 
+        existing_files = await self._control_plane.list_agent_files(agent_id)
+
         context = self._build_context(
             agent=agent,
             auth_token=auth_token,
@@ -959,7 +962,6 @@ class BaseAgentLifecycleManager(ABC):
         # Always attempt to sync Mission Control's full template set.
         # Do not introspect gateway defaults (avoids touching gateway "main" agent state).
         file_names = self._file_names(agent)
-        existing_files = await self._control_plane.list_agent_files(agent_id)
         include_bootstrap = _should_include_bootstrap(
             action=options.action,
             force_bootstrap=options.force_bootstrap,
@@ -972,6 +974,12 @@ class BaseAgentLifecycleManager(ABC):
             include_bootstrap=include_bootstrap,
             template_overrides=self._template_overrides(agent),
         )
+
+        # Workspace template files override the default rendered files
+        # (e.g. AGENTS.md, SOUL.md) while keeping all other provisioned
+        # files intact (BOOTSTRAP.md, HEARTBEAT.md, USER.md, etc.).
+        if workspace_template_files:
+            rendered.update(workspace_template_files)
 
         await self._set_agent_files(
             agent=agent,
@@ -1165,6 +1173,7 @@ class OpenClawGatewayProvisioner:
         wake: bool = True,
         deliver_wakeup: bool = True,
         wakeup_verb: str | None = None,
+        workspace_template_files: dict[str, str] | None = None,
     ) -> None:
         """Create/update an agent, sync all template files, and optionally wake the agent.
 
@@ -1210,6 +1219,7 @@ class OpenClawGatewayProvisioner:
                 overwrite=overwrite,
             ),
             session_label=agent.name or "Gateway Agent",
+            workspace_template_files=workspace_template_files,
         )
 
         # Gateway hot-reloads after file writes.  Wait for the reload to

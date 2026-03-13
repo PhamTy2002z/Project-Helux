@@ -23,15 +23,17 @@ import type {
 import type {
   BlockedTaskError,
   HTTPValidationError,
-  LimitOffsetPageTypeVarCustomizedTaskCommentRead,
-  LimitOffsetPageTypeVarCustomizedTaskRead,
+  LimitOffsetPageTCustomizedTaskCommentRead,
+  LimitOffsetPageTCustomizedTaskRead,
   ListTaskCommentsApiV1BoardsBoardIdTasksTaskIdCommentsGetParams,
   ListTasksApiV1BoardsBoardIdTasksGetParams,
+  ListTasksCursorApiV1BoardsBoardIdTasksCursorGetParams,
   OkResponse,
   StreamTasksApiV1BoardsBoardIdTasksStreamGetParams,
   TaskCommentCreate,
   TaskCommentRead,
   TaskCreate,
+  TaskCursorPage,
   TaskRead,
   TaskUpdate,
 } from "../model";
@@ -298,7 +300,7 @@ export function useStreamTasksApiV1BoardsBoardIdTasksStreamGet<
  * @summary List Tasks
  */
 export type listTasksApiV1BoardsBoardIdTasksGetResponse200 = {
-  data: LimitOffsetPageTypeVarCustomizedTaskRead;
+  data: LimitOffsetPageTCustomizedTaskRead;
   status: 200;
 };
 
@@ -656,6 +658,269 @@ export const useCreateTaskApiV1BoardsBoardIdTasksPost = <
   );
 };
 /**
+ * List board tasks using cursor pagination for high-volume board views.
+ * @summary List Tasks Cursor
+ */
+export type listTasksCursorApiV1BoardsBoardIdTasksCursorGetResponse200 = {
+  data: TaskCursorPage;
+  status: 200;
+};
+
+export type listTasksCursorApiV1BoardsBoardIdTasksCursorGetResponse422 = {
+  data: HTTPValidationError;
+  status: 422;
+};
+
+export type listTasksCursorApiV1BoardsBoardIdTasksCursorGetResponseSuccess =
+  listTasksCursorApiV1BoardsBoardIdTasksCursorGetResponse200 & {
+    headers: Headers;
+  };
+export type listTasksCursorApiV1BoardsBoardIdTasksCursorGetResponseError =
+  listTasksCursorApiV1BoardsBoardIdTasksCursorGetResponse422 & {
+    headers: Headers;
+  };
+
+export type listTasksCursorApiV1BoardsBoardIdTasksCursorGetResponse =
+  | listTasksCursorApiV1BoardsBoardIdTasksCursorGetResponseSuccess
+  | listTasksCursorApiV1BoardsBoardIdTasksCursorGetResponseError;
+
+export const getListTasksCursorApiV1BoardsBoardIdTasksCursorGetUrl = (
+  boardId: string,
+  params?: ListTasksCursorApiV1BoardsBoardIdTasksCursorGetParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/v1/boards/${boardId}/tasks/cursor?${stringifiedParams}`
+    : `/api/v1/boards/${boardId}/tasks/cursor`;
+};
+
+export const listTasksCursorApiV1BoardsBoardIdTasksCursorGet = async (
+  boardId: string,
+  params?: ListTasksCursorApiV1BoardsBoardIdTasksCursorGetParams,
+  options?: RequestInit,
+): Promise<listTasksCursorApiV1BoardsBoardIdTasksCursorGetResponse> => {
+  return customFetch<listTasksCursorApiV1BoardsBoardIdTasksCursorGetResponse>(
+    getListTasksCursorApiV1BoardsBoardIdTasksCursorGetUrl(boardId, params),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getListTasksCursorApiV1BoardsBoardIdTasksCursorGetQueryKey = (
+  boardId: string,
+  params?: ListTasksCursorApiV1BoardsBoardIdTasksCursorGetParams,
+) => {
+  return [
+    `/api/v1/boards/${boardId}/tasks/cursor`,
+    ...(params ? [params] : []),
+  ] as const;
+};
+
+export const getListTasksCursorApiV1BoardsBoardIdTasksCursorGetQueryOptions = <
+  TData = Awaited<
+    ReturnType<typeof listTasksCursorApiV1BoardsBoardIdTasksCursorGet>
+  >,
+  TError = HTTPValidationError,
+>(
+  boardId: string,
+  params?: ListTasksCursorApiV1BoardsBoardIdTasksCursorGetParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<
+          ReturnType<typeof listTasksCursorApiV1BoardsBoardIdTasksCursorGet>
+        >,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ??
+    getListTasksCursorApiV1BoardsBoardIdTasksCursorGetQueryKey(boardId, params);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listTasksCursorApiV1BoardsBoardIdTasksCursorGet>>
+  > = ({ signal }) =>
+    listTasksCursorApiV1BoardsBoardIdTasksCursorGet(boardId, params, {
+      signal,
+      ...requestOptions,
+    });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!boardId,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof listTasksCursorApiV1BoardsBoardIdTasksCursorGet>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ListTasksCursorApiV1BoardsBoardIdTasksCursorGetQueryResult =
+  NonNullable<
+    Awaited<ReturnType<typeof listTasksCursorApiV1BoardsBoardIdTasksCursorGet>>
+  >;
+export type ListTasksCursorApiV1BoardsBoardIdTasksCursorGetQueryError =
+  HTTPValidationError;
+
+export function useListTasksCursorApiV1BoardsBoardIdTasksCursorGet<
+  TData = Awaited<
+    ReturnType<typeof listTasksCursorApiV1BoardsBoardIdTasksCursorGet>
+  >,
+  TError = HTTPValidationError,
+>(
+  boardId: string,
+  params: undefined | ListTasksCursorApiV1BoardsBoardIdTasksCursorGetParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<
+          ReturnType<typeof listTasksCursorApiV1BoardsBoardIdTasksCursorGet>
+        >,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<
+            ReturnType<typeof listTasksCursorApiV1BoardsBoardIdTasksCursorGet>
+          >,
+          TError,
+          Awaited<
+            ReturnType<typeof listTasksCursorApiV1BoardsBoardIdTasksCursorGet>
+          >
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useListTasksCursorApiV1BoardsBoardIdTasksCursorGet<
+  TData = Awaited<
+    ReturnType<typeof listTasksCursorApiV1BoardsBoardIdTasksCursorGet>
+  >,
+  TError = HTTPValidationError,
+>(
+  boardId: string,
+  params?: ListTasksCursorApiV1BoardsBoardIdTasksCursorGetParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<
+          ReturnType<typeof listTasksCursorApiV1BoardsBoardIdTasksCursorGet>
+        >,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<
+            ReturnType<typeof listTasksCursorApiV1BoardsBoardIdTasksCursorGet>
+          >,
+          TError,
+          Awaited<
+            ReturnType<typeof listTasksCursorApiV1BoardsBoardIdTasksCursorGet>
+          >
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useListTasksCursorApiV1BoardsBoardIdTasksCursorGet<
+  TData = Awaited<
+    ReturnType<typeof listTasksCursorApiV1BoardsBoardIdTasksCursorGet>
+  >,
+  TError = HTTPValidationError,
+>(
+  boardId: string,
+  params?: ListTasksCursorApiV1BoardsBoardIdTasksCursorGetParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<
+          ReturnType<typeof listTasksCursorApiV1BoardsBoardIdTasksCursorGet>
+        >,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+/**
+ * @summary List Tasks Cursor
+ */
+
+export function useListTasksCursorApiV1BoardsBoardIdTasksCursorGet<
+  TData = Awaited<
+    ReturnType<typeof listTasksCursorApiV1BoardsBoardIdTasksCursorGet>
+  >,
+  TError = HTTPValidationError,
+>(
+  boardId: string,
+  params?: ListTasksCursorApiV1BoardsBoardIdTasksCursorGetParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<
+          ReturnType<typeof listTasksCursorApiV1BoardsBoardIdTasksCursorGet>
+        >,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions =
+    getListTasksCursorApiV1BoardsBoardIdTasksCursorGetQueryOptions(
+      boardId,
+      params,
+      options,
+    );
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
  * Update task status, assignment, comment, and dependency state.
  * @summary Update Task
  */
@@ -926,7 +1191,7 @@ export const useDeleteTaskApiV1BoardsBoardIdTasksTaskIdDelete = <
  */
 export type listTaskCommentsApiV1BoardsBoardIdTasksTaskIdCommentsGetResponse200 =
   {
-    data: LimitOffsetPageTypeVarCustomizedTaskCommentRead;
+    data: LimitOffsetPageTCustomizedTaskCommentRead;
     status: 200;
   };
 
