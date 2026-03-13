@@ -952,20 +952,6 @@ class BaseAgentLifecycleManager(ABC):
 
         existing_files = await self._control_plane.list_agent_files(agent_id)
 
-        # When workspace template files are provided, write them directly
-        # instead of rendering default Jinja2 templates.
-        if workspace_template_files:
-            await self._set_agent_files(
-                agent=agent,
-                agent_id=agent_id,
-                rendered=workspace_template_files,
-                desired_file_names=set(workspace_template_files.keys()),
-                existing_files=existing_files,
-                action=options.action,
-                overwrite=True,
-            )
-            return
-
         context = self._build_context(
             agent=agent,
             auth_token=auth_token,
@@ -988,6 +974,12 @@ class BaseAgentLifecycleManager(ABC):
             include_bootstrap=include_bootstrap,
             template_overrides=self._template_overrides(agent),
         )
+
+        # Workspace template files override the default rendered files
+        # (e.g. AGENTS.md, SOUL.md) while keeping all other provisioned
+        # files intact (BOOTSTRAP.md, HEARTBEAT.md, USER.md, etc.).
+        if workspace_template_files:
+            rendered.update(workspace_template_files)
 
         await self._set_agent_files(
             agent=agent,
