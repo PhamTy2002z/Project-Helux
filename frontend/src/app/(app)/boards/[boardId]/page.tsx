@@ -3,7 +3,6 @@
 export const dynamic = "force-dynamic";
 
 import {
-  memo,
   startTransition,
   useCallback,
   useEffect,
@@ -39,10 +38,6 @@ import { TaskBoard } from "@/components/organisms/TaskBoard";
 import type { DependencyBannerDependency } from "@/components/molecules/DependencyBanner";
 import { DashboardShell } from "@/components/templates/DashboardShell";
 import nextDynamic from "next/dynamic";
-const BoardChatComposer = nextDynamic(
-  () => import("@/components/BoardChatComposer").then(m => m.BoardChatComposer),
-  { ssr: false }
-);
 const BoardChatPanel = nextDynamic(
   () => import("@/components/boards/BoardChatPanel").then(m => m.BoardChatPanel),
   { ssr: false }
@@ -88,10 +83,7 @@ import type {
   AgentRead,
   ApprovalRead,
   BoardGroupSnapshot,
-  BoardMemoryRead,
-  BoardRead,
   ActivityEventRead,
-  OrganizationMemberRead,
   TaskCardRead,
   TaskCommentRead,
   TaskCustomFieldDefinitionRead,
@@ -118,14 +110,12 @@ import { loadBoardDetailBootstrap } from "@/lib/hooks/board-detail/load-board-de
 import { isBoardOverlayEnabled } from "@/lib/query-policy";
 import {
   boardCustomFieldValues,
-  type TaskCustomFieldValues,
 } from "./custom-field-utils";
 import type {
   Agent,
   Approval,
   Board,
   BoardChatMessage,
-  LiveFeedEventType,
   LiveFeedItem,
   Task,
   TaskComment,
@@ -133,13 +123,11 @@ import type {
   ToastMessage,
 } from "./board-types";
 import {
-  isLiveFeedEventType,
   SSE_RECONNECT_BACKOFF,
 } from "./board-constants";
 import {
   commentElementId,
   formatActionError,
-  formatShortTimestamp,
   latestAgentTimestamp,
   latestApprovalTimestamp,
   latestChatTimestamp,
@@ -153,8 +141,6 @@ import {
   normalizeTask,
 } from "./board-normalizers";
 import {
-  liveFeedEventLabel,
-  liveFeedEventPillClass,
   mergeCommentsById,
   toLiveFeedFromActivity,
   toLiveFeedFromAgentSnapshot,
@@ -1064,7 +1050,7 @@ export default function BoardDetailPage() {
     return [...options];
   }, [agents]);
 
-  const tagById = useMemo(() => {
+  const _tagById = useMemo(() => {
     const map = new Map<string, TagRead>();
     tags.forEach((tag) => {
       map.set(tag.id, tag);

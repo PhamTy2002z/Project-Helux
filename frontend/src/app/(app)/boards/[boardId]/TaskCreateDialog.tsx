@@ -29,7 +29,6 @@ import { createTaskApiV1BoardsBoardIdTasksPost } from "@/api/generated/tasks/tas
 import type { TaskCardRead } from "@/api/generated/model";
 import { localDateInputToUtcIso } from "@/lib/datetime";
 import {
-  boardCustomFieldValues,
   customFieldPayload,
   firstMissingRequiredCustomField,
   type TaskCustomFieldValues,
