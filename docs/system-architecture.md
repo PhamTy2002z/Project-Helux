@@ -474,6 +474,8 @@ Organizations
     │
     ├─→ OrganizationBoardAccess (board permissions)
     │
+    ├─→ WorkspaceTemplates (pre-built agent configurations)
+    │
     └─→ BoardGroups
             │
             ├─→ BoardGroupMemory (shared memory)
@@ -488,6 +490,7 @@ Organizations
                     │   └─→ BoardWebhookPayloads
                     │
                     ├─→ Agents (assigned to board)
+                    │   └─→ uses WorkspaceTemplate during provisioning
                     │
                     └─→ Tasks
                             │
@@ -611,9 +614,16 @@ Organizations
 ├── /metrics
 │   └── GET    /metrics
 │
-└── /skills
-    ├── GET    /skills/marketplace
-    └── POST   /skills/install
+├── /skills
+│   ├── GET    /skills/marketplace
+│   └── POST   /skills/install
+│
+└── /workspace-templates
+    ├── GET    /workspace-templates
+    ├── POST   /workspace-templates
+    ├── GET    /workspace-templates/{id}
+    ├── PATCH  /workspace-templates/{id}
+    └── DELETE /workspace-templates/{id}
 ```
 
 ### WebSocket Endpoints
