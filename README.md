@@ -1,11 +1,11 @@
-# Project Helux
+# FlowGrid
 
-A centralized operations and governance platform for AI agents, built on top of OpenClaw Mission Control.
+A centralized operations and governance platform for AI agents.
 Provides unified work orchestration, agent management, approval-driven governance, and API-backed automation with board chat, file uploads, and scalable planning overlays.
 
 ## Overview
 
-Project Helux is a SaaS platform for teams to operate AI agents with:
+FlowGrid is a SaaS platform for teams to operate AI agents with:
 
 - **Work orchestration**: organization → board group → board → task → tag
 - **Agent management**: create, configure, and monitor agent lifecycle
@@ -44,7 +44,7 @@ docker compose -f compose.yml --env-file .env up -d --build
 
 # 3. Run database migrations (automatic on startup, or manual)
 # Migrations run automatically in docker container init
-# For manual: docker exec project-helux-backend alembic upgrade head
+# For manual: docker compose -f compose.yml --env-file .env exec backend alembic upgrade head
 
 # 4. Access
 # UI:      http://localhost:3000
@@ -92,7 +92,7 @@ See `.env.example` files in root, `backend/`, and `frontend/`.
 ## Project Structure
 
 ```
-Project-Helux/
+FlowGrid/
 ├── backend/          # FastAPI application
 │   ├── app/
 │   │   ├── api/      # Route handlers
@@ -129,7 +129,7 @@ Under active development. APIs and features may change between releases.
 
 Issues and pull requests are welcome.
 
-- [Open issues](https://github.com/PhamTy2002z/Project-Helux/issues)
+- [Open issues](https://github.com/PhamTy2002z/FlowGrid/issues)
 
 ## License
 

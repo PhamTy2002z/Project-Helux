@@ -255,7 +255,7 @@ export default function LandingHeroSection() {
               } as CSSProperties
             }
           >
-            Mission Control for Coordinating Multi-Agent Work Across Every Board
+            FlowGrid for Coordinating Multi-Agent Work Across Every Board
           </h1>
 
           <p

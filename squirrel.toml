@@ -1,6 +1,6 @@
 [project]
 domains = []
-name = "Project-Helux"
+name = "FlowGrid"
 
 [crawler]
 max_pages = 100

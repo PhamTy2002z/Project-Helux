@@ -1,6 +1,6 @@
 # Development
 
-This section is for contributors developing Mission Control locally.
+This section is for contributors developing FlowGrid locally.
 
 ## Recommended workflow (fast loop)
 

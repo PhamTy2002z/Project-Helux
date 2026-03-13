@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { ScrollReveal } from "./scroll-reveal";
 
@@ -55,11 +56,13 @@ export default function PricingCards() {
     <section id="pricing" className="relative overflow-hidden bg-black px-[5%] pb-16 pt-8 sm:pb-20 sm:pt-10">
       {/* Hero-style background image with overlay + blur */}
       <div className="pointer-events-none absolute inset-0">
-        <img
-          src="/videos/hero-animation-poster.jpg?v=20260310"
+        <Image
+          src="/videos/hero-animation-poster.jpg"
           alt=""
-          aria-hidden="true"
-          className="absolute inset-0 h-full w-full object-cover"
+          fill
+          sizes="100vw"
+          priority
+          className="object-cover"
         />
         <div className="absolute inset-0 bg-black/70 backdrop-blur-md" />
         <div className="absolute -left-28 top-6 h-72 w-72 rounded-full bg-white/10 blur-[120px]" />

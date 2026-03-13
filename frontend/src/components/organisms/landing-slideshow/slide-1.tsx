@@ -22,7 +22,7 @@ const deckMeta = [
   { label: "Type", value: "Landing Deck" },
   { label: "Product", value: "OpenClaw" },
   { label: "Date", value: "March 2026" },
-  { label: "Mode", value: "Mission Control" },
+  { label: "Mode", value: "FlowGrid" },
 ];
 
 export default function Slide1() {

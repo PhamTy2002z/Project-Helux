@@ -60,7 +60,7 @@ export default function TestimonialsPageContent() {
             </h1>
             <p className="mx-auto mt-5 max-w-2xl text-balance text-base leading-relaxed text-white/55 sm:text-lg">
               Hear from engineering leaders, DevOps teams, and operators who
-              run production workloads on OpenClaw Mission Control every day.
+              run production workloads on FlowGrid every day.
             </p>
           </ScrollReveal>
 

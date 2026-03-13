@@ -145,7 +145,7 @@ export default function GatewaysPage() {
         title="Delete gateway?"
         description={
           <>
-            This removes the gateway connection from Mission Control. Boards
+            This removes the gateway connection from FlowGrid. Boards
             using it will need a new gateway assigned.
           </>
         }

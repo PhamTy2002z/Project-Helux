@@ -23,17 +23,17 @@ const COLUMNS: { title: string; links: FooterLink[] }[] = [
     links: [
       {
         label: "Documentation",
-        href: "https://github.com/PhamTy2002z/Project-Helux/tree/master/docs",
+        href: "https://github.com/PhamTy2002z/FlowGrid/tree/master/docs",
         external: true,
       },
       {
         label: "Deployment Guide",
-        href: "https://github.com/PhamTy2002z/Project-Helux/blob/master/docs/deployment-guide.md",
+        href: "https://github.com/PhamTy2002z/FlowGrid/blob/master/docs/deployment-guide.md",
         external: true,
       },
       {
         label: "API Reference",
-        href: "https://github.com/PhamTy2002z/Project-Helux/blob/master/docs/reference/api.md",
+        href: "https://github.com/PhamTy2002z/FlowGrid/blob/master/docs/reference/api.md",
         external: true,
       },
     ],
@@ -43,12 +43,12 @@ const COLUMNS: { title: string; links: FooterLink[] }[] = [
     links: [
       {
         label: "GitHub Issues",
-        href: "https://github.com/PhamTy2002z/Project-Helux/issues",
+        href: "https://github.com/PhamTy2002z/FlowGrid/issues",
         external: true,
       },
       {
         label: "Discussions",
-        href: "https://github.com/PhamTy2002z/Project-Helux/discussions",
+        href: "https://github.com/PhamTy2002z/FlowGrid/discussions",
         external: true,
       },
       {
@@ -63,7 +63,7 @@ const COLUMNS: { title: string; links: FooterLink[] }[] = [
 const SOCIAL_LINKS = [
   {
     icon: Github,
-    href: "https://github.com/PhamTy2002z/Project-Helux",
+    href: "https://github.com/PhamTy2002z/FlowGrid",
     label: "GitHub",
   },
   {
@@ -87,7 +87,7 @@ export default function LandingFooter() {
           <div className="max-w-[280px]">
             <Logo />
             <p className="mt-4 text-[15px] leading-relaxed text-white/55 sm:text-base">
-              The mission control platform for boards, agents, and operations.
+              The FlowGrid platform for boards, agents, and operations.
             </p>
           </div>
 
@@ -127,7 +127,7 @@ export default function LandingFooter() {
         {/* Bottom: copyright + social */}
         <div className="mt-8 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-8 sm:flex-row">
           <p className="text-xs text-white/35">
-            &copy; {new Date().getFullYear()} Helux. All rights reserved.
+            &copy; {new Date().getFullYear()} FlowGrid. All rights reserved.
           </p>
           <div className="flex gap-4">
             {SOCIAL_LINKS.map((social) => {

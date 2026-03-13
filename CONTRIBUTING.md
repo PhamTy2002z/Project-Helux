@@ -1,6 +1,6 @@
-# Contributing to OpenClaw Mission Control
+# Contributing to FlowGrid
 
-Thanks for your interest in improving Mission Control.
+Thanks for your interest in improving FlowGrid.
 
 This repo welcomes contributions in three broad categories:
 
@@ -68,7 +68,7 @@ If you believe you’ve found a security vulnerability:
 
 - **Do not** open a public issue.
 - Prefer GitHub’s private reporting flow:
-  - https://github.com/PhamTy2002z/Project-Helux/security/advisories/new
+  - https://github.com/PhamTy2002z/FlowGrid/security/advisories/new
 
 If that’s not available in your environment, contact the maintainers privately.
 

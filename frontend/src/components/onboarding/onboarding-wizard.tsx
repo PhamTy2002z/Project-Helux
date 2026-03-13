@@ -29,7 +29,7 @@ type StepMeta = {
 
 const STEP_META: Record<OnboardingStepKey, StepMeta> = {
   use_case: {
-    description: "Define the main mission you want Mission Control to handle first.",
+    description: "Define the main mission you want FlowGrid to handle first.",
     href: "/onboarding",
     actionLabel: "Save use case",
   },

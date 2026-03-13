@@ -1,6 +1,6 @@
 # Testing
 
-This guide describes how to run Mission Control tests locally.
+This guide describes how to run FlowGrid tests locally.
 
 ## Quick start (repo root)
 

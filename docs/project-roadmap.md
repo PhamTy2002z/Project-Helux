@@ -47,7 +47,7 @@
   - Added landing regression tests for hero media policy and mobile drawer behavior
 - ✅ Landing page feature section refresh:
   - Replaced the `One platform for every operational surface` placeholder cards with two poster-based spotlight cards
-  - Integrated CrewAI `Trusted` and `Scalable` visuals into the current Helux landing page
+  - Integrated CrewAI `Trusted` and `Scalable` visuals into the current FlowGrid landing page
   - Added component test coverage for the refreshed landing feature section
 - ✅ Token ledger + quota enforcement plan (`260309-2123`) phases 4-6 completed first:
   - Backend agent read surfaces now expose token fields (`token_used_today`, `token_limit_today`, `token_remaining_today`, `token_blocked`, `token_reset_at`)

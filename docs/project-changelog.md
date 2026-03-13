@@ -110,7 +110,7 @@
   - `Trusted`
   - `Scalable`
 - Added the original CrewAI poster assets to the frontend public bundle for the landing page feature section.
-- Updated the landing page feature section copy to frame trusted execution and scalable rollout in the current Helux narrative.
+- Updated the landing page feature section copy to frame trusted execution and scalable rollout in the current FlowGrid narrative.
 - Added frontend component test coverage for the new feature card rendering.
 
 ## 2026-03-09

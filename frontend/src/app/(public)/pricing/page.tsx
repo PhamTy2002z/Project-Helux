@@ -6,10 +6,17 @@ import LandingFooter from "@/components/organisms/landing-page/landing-footer";
 import LandingNavbar from "@/components/organisms/landing-page/landing-navbar";
 import PricingCards from "@/components/organisms/landing-page/pricing-cards";
 import { ScrollReveal } from "@/components/organisms/landing-page/scroll-reveal";
+import {
+  DEFAULT_SEO_IMAGE,
+  DEFAULT_SEO_IMAGE_ALT,
+  PRODUCT_NAME,
+} from "@/lib/seo";
+import { getSiteUrl } from "@/lib/site-url";
 
-const pricingTitle = "Pricing for OpenClaw Mission Control";
+const pricingTitle = `Pricing for ${PRODUCT_NAME}`;
 const pricingDescription =
-  "Compare OpenClaw Mission Control plans for teams operating boards, agent workflows, and approvals at different scales.";
+  "Compare FlowGrid plans for teams operating boards, agent workflows, and approvals at different scales.";
+const siteUrl = getSiteUrl();
 
 export const metadata: Metadata = {
   title: pricingTitle,
@@ -22,11 +29,49 @@ export const metadata: Metadata = {
     description: pricingDescription,
     url: "/pricing",
     type: "website",
+    images: [{ url: DEFAULT_SEO_IMAGE, alt: DEFAULT_SEO_IMAGE_ALT }],
   },
   twitter: {
     card: "summary_large_image",
     title: pricingTitle,
     description: pricingDescription,
+    images: [DEFAULT_SEO_IMAGE],
+  },
+};
+
+const pricingStructuredData = {
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  name: pricingTitle,
+  description: pricingDescription,
+  url: `${siteUrl}/pricing`,
+  mainEntity: {
+    "@type": "SoftwareApplication",
+    name: PRODUCT_NAME,
+    applicationCategory: "BusinessApplication",
+    operatingSystem: "Web",
+    offers: {
+      "@type": "OfferCatalog",
+      name: "Pricing Plans",
+      itemListElement: [
+        {
+          "@type": "Offer",
+          name: "Basic",
+          price: "0",
+          priceCurrency: "USD",
+        },
+        {
+          "@type": "Offer",
+          name: "Professional",
+          price: "25",
+          priceCurrency: "USD",
+          priceSpecification: {
+            "@type": "UnitPriceSpecification",
+            unitText: "month",
+          },
+        },
+      ],
+    },
   },
 };
 
@@ -78,11 +123,18 @@ const FAQ_ITEMS = [
 ];
 export default function PricingPage() {
   return (
-    <ScrollProvider>
-      <div className="landing-page min-h-screen bg-black">
-        <LandingNavbar />
-        <main className="bg-black pt-24">
-          <h1 className="sr-only">OpenClaw Mission Control pricing plans</h1>
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(pricingStructuredData),
+        }}
+      />
+      <ScrollProvider>
+        <div className="landing-page min-h-screen bg-black">
+          <LandingNavbar />
+          <main className="bg-black pt-24">
+          <h1 className="sr-only">FlowGrid pricing plans</h1>
           <PricingCards />
 
           {/* Enterprise plan */}
@@ -221,7 +273,7 @@ export default function PricingPage() {
             <ScrollReveal>
               <div className="hero-glass-card mx-auto max-w-5xl rounded-3xl border border-white/15 px-8 py-12 text-center">
                 <h2 className="text-balance text-3xl font-bold tracking-tight text-white sm:text-4xl">
-                  Get started with OpenClaw Mission Control.
+                  Get started with FlowGrid.
                 </h2>
                 <p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-white/65">
                   Launch your first board, route approvals, and monitor agent
@@ -244,9 +296,10 @@ export default function PricingPage() {
               </div>
             </ScrollReveal>
           </section>
-        </main>
-        <LandingFooter />
-      </div>
-    </ScrollProvider>
+          </main>
+          <LandingFooter />
+        </div>
+      </ScrollProvider>
+    </>
   );
 }

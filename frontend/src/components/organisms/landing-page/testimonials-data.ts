@@ -44,7 +44,7 @@ export const TESTIMONIALS: Testimonial[] = [
   },
   {
     quote:
-      "We cut our incident response time by 60% after routing all agent alerts through Mission Control.",
+      "We cut our incident response time by 60% after routing all agent alerts through FlowGrid.",
     author: "James Wu",
     role: "SRE Team Lead",
     company: "FinTech Scale-up",
@@ -60,7 +60,7 @@ export const TESTIMONIALS: Testimonial[] = [
   },
   {
     quote:
-      "Running 200+ agents across 12 boards — Mission Control is the only tool that keeps it all visible.",
+      "Running 200+ agents across 12 boards — FlowGrid is the only tool that keeps it all visible.",
     author: "Alex Tanaka",
     role: "Staff Engineer",
     company: "AI Research Lab",
@@ -86,7 +86,7 @@ export const TESTIMONIALS: Testimonial[] = [
 
 /** Stats shown on the testimonials page hero */
 export const TESTIMONIAL_STATS = [
-  { value: "10,000+", label: "Teams using Mission Control" },
+  { value: "10,000+", label: "Teams using FlowGrid" },
   { value: "99.9%", label: "Platform uptime" },
   { value: "60%", label: "Faster incident response" },
   { value: "4.8/5", label: "Average satisfaction score" },

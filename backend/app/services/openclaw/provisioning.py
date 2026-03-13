@@ -872,7 +872,7 @@ class BaseAgentLifecycleManager(ABC):
                 continue
             # Preserve "editable" files only during updates. During first-time provisioning,
             # the gateway may pre-create defaults for USER/MEMORY/etc, and we still want to
-            # apply Mission Control's templates.
+            # apply FlowGrid's templates.
             if action == "update" and not overwrite and name in preserve_files:
                 entry = existing_files.get(name)
                 if entry and not bool(entry.get("missing")):
@@ -959,7 +959,7 @@ class BaseAgentLifecycleManager(ABC):
             board=board,
         )
         context = await self._augment_context(agent=agent, context=context)
-        # Always attempt to sync Mission Control's full template set.
+        # Always attempt to sync FlowGrid's full template set.
         # Do not introspect gateway defaults (avoids touching gateway "main" agent state).
         file_names = self._file_names(agent)
         include_bootstrap = _should_include_bootstrap(

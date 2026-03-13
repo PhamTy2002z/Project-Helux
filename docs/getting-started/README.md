@@ -1,8 +1,8 @@
 # Getting started
 
-## What is Mission Control?
+## What is FlowGrid?
 
-Mission Control is the web UI and HTTP API for operating OpenClaw.
+FlowGrid is the web UI and HTTP API for operating OpenClaw.
 
 It provides a control plane for boards, tasks, agents, approvals, and (optionally) gateway connections.
 

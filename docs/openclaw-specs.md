@@ -485,11 +485,11 @@ macOS (native app + bundled gateway), iOS, Android, Linux, Windows (WSL2), Raspb
 
 ---
 
-## 17. Key Integration Patterns for Helux
+## 17. Key Integration Patterns for FlowGrid
 
 ### Pattern A: HTTP API Integration
 ```
-Helux Backend → POST /v1/chat/completions → OpenClaw Gateway → Agent → Response
+FlowGrid Backend → POST /v1/chat/completions → OpenClaw Gateway → Agent → Response
 ```
 - Use `x-openclaw-agent-id` header for agent routing
 - Use `user` field for persistent sessions
@@ -503,13 +503,13 @@ External Event → POST /hooks/agent → OpenClaw → Process → Deliver to cha
 
 ### Pattern C: Tools Invoke
 ```
-Helux Backend → POST /tools/invoke → Execute specific tool → Result
+FlowGrid Backend → POST /tools/invoke → Execute specific tool → Result
 ```
 - Direct tool execution without agent context
 
 ### Pattern D: WebSocket Control
 ```
-Helux Service → WebSocket 127.0.0.1:18789 → Full bidirectional control
+FlowGrid Service → WebSocket 127.0.0.1:18789 → Full bidirectional control
 ```
 - Real-time events, presence, device management
 

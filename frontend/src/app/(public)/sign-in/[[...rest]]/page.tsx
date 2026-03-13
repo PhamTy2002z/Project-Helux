@@ -104,7 +104,7 @@ export default function SignInPage() {
               </Link>
               <div className="space-y-3">
                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/55">
-                  OpenClaw Mission Control
+                  FlowGrid
                 </p>
                 <h1 className="text-balance font-[var(--font-display)] text-4xl leading-tight text-white sm:text-5xl">
                   Sign In and Continue Operating.
