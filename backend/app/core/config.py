@@ -25,7 +25,7 @@ LOCAL_AUTH_TOKEN_PLACEHOLDERS = frozenset(
     },
 )
 BILLING_MODES = frozenset({"simulated", "provider"})
-PAYMENT_PROVIDERS = frozenset({"none", "stripe", "paddle"})
+PAYMENT_PROVIDERS = frozenset({"none", "stripe", "paddle", "polar"})
 OPENCLAW_USAGE_ENFORCEMENT_MODES = frozenset({"observe", "enforce"})
 
 
@@ -147,6 +147,13 @@ class Settings(BaseSettings):
     billing_mode: str = "simulated"
     payment_provider: str = "none"
 
+    # Polar payment provider (only required when PAYMENT_PROVIDER=polar)
+    polar_access_token: str = ""
+    polar_webhook_secret: str = ""
+    polar_product_id_pro: str = ""
+    polar_environment: str = "sandbox"
+    polar_success_url: str = ""
+
     @model_validator(mode="after")
     def _defaults(self) -> Self:
         if self.auth_profile == AuthProfile.SAAS and self.auth_mode != AuthMode.CLERK:
@@ -198,7 +205,16 @@ class Settings(BaseSettings):
             raise ValueError("BILLING_MODE must be one of: simulated, provider.")
         self.payment_provider = self.payment_provider.strip().lower()
         if self.payment_provider not in PAYMENT_PROVIDERS:
-            raise ValueError("PAYMENT_PROVIDER must be one of: none, stripe, paddle.")
+            raise ValueError("PAYMENT_PROVIDER must be one of: none, stripe, paddle, polar.")
+        if self.payment_provider == "polar":
+            if not self.polar_access_token.strip():
+                raise ValueError("POLAR_ACCESS_TOKEN required when PAYMENT_PROVIDER=polar.")
+            if not self.polar_webhook_secret.strip():
+                raise ValueError("POLAR_WEBHOOK_SECRET required when PAYMENT_PROVIDER=polar.")
+            if not self.polar_product_id_pro.strip():
+                raise ValueError("POLAR_PRODUCT_ID_PRO required when PAYMENT_PROVIDER=polar.")
+            if self.polar_environment not in ("sandbox", "production"):
+                raise ValueError("POLAR_ENVIRONMENT must be 'sandbox' or 'production'.")
         self.openclaw_usage_enforcement_mode = self.openclaw_usage_enforcement_mode.strip().lower()
         if self.openclaw_usage_enforcement_mode not in OPENCLAW_USAGE_ENFORCEMENT_MODES:
             raise ValueError("OPENCLAW_USAGE_ENFORCEMENT_MODE must be one of: observe, enforce.")

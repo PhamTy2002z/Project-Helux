@@ -86,8 +86,8 @@ export const TESTIMONIALS: Testimonial[] = [
 
 /** Stats shown on the testimonials page hero */
 export const TESTIMONIAL_STATS = [
-  { value: "10,000+", label: "Teams using FlowGrid" },
-  { value: "99.9%", label: "Platform uptime" },
-  { value: "60%", label: "Faster incident response" },
-  { value: "4.8/5", label: "Average satisfaction score" },
+  { value: "120+", label: "Teams using FlowGrid" },
+  { value: "99.5%", label: "Platform uptime" },
+  { value: "28%", label: "Faster incident response" },
+  { value: "4.6/5", label: "Average satisfaction score" },
 ] as const;

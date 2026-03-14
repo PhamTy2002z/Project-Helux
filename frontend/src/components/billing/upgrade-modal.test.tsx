@@ -24,11 +24,15 @@ vi.mock("@/lib/billing", () => ({
   BILLING_SUBSCRIPTION_QUERY_KEY: ["/api/v1/billing/me/subscription"],
   createIdempotencyKey: () => "idem-123",
   useBillingSubscription: () => ({
-    data: { plan_tier: "trial_7d", status: "active" },
+    data: { plan_tier: "trial_7d", status: "active", billing_mode: "simulated" },
   }),
   useSimulateCheckout: () => ({
     isPending: false,
     mutateAsync: simulateCheckoutMock,
+  }),
+  useCreateCheckout: () => ({
+    isPending: false,
+    mutateAsync: vi.fn(),
   }),
   useTrackUpgradeModalOpen: () => ({
     mutate: trackOpenMock,

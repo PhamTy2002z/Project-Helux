@@ -44,6 +44,21 @@ class BillingSimulateCheckoutResponse(SQLModel):
     subscription: BillingSubscriptionRead
 
 
+class BillingCheckoutRequest(SQLModel):
+    """Request to create a real checkout session via payment provider."""
+
+    plan_tier: PlanTier
+    idempotency_key: str = Field(min_length=4, max_length=128)
+
+
+class BillingCheckoutResponse(SQLModel):
+    """Response with checkout URL for redirect."""
+
+    checkout_url: str
+    checkout_id: str
+    provider: str
+
+
 class BillingUpgradeModalOpenEvent(SQLModel):
     """Payload for tracking upgrade modal open events."""
 

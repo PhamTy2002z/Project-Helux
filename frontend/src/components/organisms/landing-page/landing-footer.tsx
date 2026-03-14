@@ -1,6 +1,4 @@
 import Link from "next/link";
-import { Github, MessageCircle } from "lucide-react";
-import Logo from "@/components/organisms/landing-slideshow/logo";
 
 type FooterLink = {
   label: string;
@@ -19,57 +17,28 @@ const COLUMNS: { title: string; links: FooterLink[] }[] = [
     ],
   },
   {
-    title: "Resources",
+    title: "Company",
     links: [
-      {
-        label: "Documentation",
-        href: "https://github.com/PhamTy2002z/FlowGrid/tree/master/docs",
-        external: true,
-      },
-      {
-        label: "Deployment Guide",
-        href: "https://github.com/PhamTy2002z/FlowGrid/blob/master/docs/deployment-guide.md",
-        external: true,
-      },
-      {
-        label: "API Reference",
-        href: "https://github.com/PhamTy2002z/FlowGrid/blob/master/docs/reference/api.md",
-        external: true,
-      },
+      { label: "Features", href: "/#features" },
+      { label: "Testimonials", href: "/testimonials" },
+      { label: "Blog", href: "/blog" },
     ],
   },
   {
-    title: "Help",
+    title: "Support",
     links: [
       {
-        label: "GitHub Issues",
-        href: "https://github.com/PhamTy2002z/FlowGrid/issues",
+        label: "Contact Sales",
+        href: "mailto:sales@flowgrid.ai",
         external: true,
       },
       {
-        label: "Discussions",
-        href: "https://github.com/PhamTy2002z/FlowGrid/discussions",
+        label: "Customer Support",
+        href: "mailto:support@flowgrid.ai",
         external: true,
       },
-      {
-        label: "Slack Community",
-        href: "https://join.slack.com/t/oc-mission-control/shared_invite/zt-3qpcm57xh-AI9C~smc3MDBVzEhvwf7gg",
-        external: true,
-      },
+      { label: "Start Free", href: "/sign-in" },
     ],
-  },
-];
-
-const SOCIAL_LINKS = [
-  {
-    icon: Github,
-    href: "https://github.com/PhamTy2002z/FlowGrid",
-    label: "GitHub",
-  },
-  {
-    icon: MessageCircle,
-    href: "https://join.slack.com/t/oc-mission-control/shared_invite/zt-3qpcm57xh-AI9C~smc3MDBVzEhvwf7gg",
-    label: "Slack",
   },
 ];
 
@@ -82,23 +51,26 @@ export default function LandingFooter() {
 
       <div className="mx-auto w-full max-w-[1280px] fhd:max-w-[1440px] qhd:max-w-[1600px] uhd:max-w-[1760px]">
         {/* Top: Logo + link columns */}
-        <div className="hero-glass-card flex flex-col gap-10 rounded-3xl border border-white/15 p-6 sm:p-8 md:p-10 xl:flex-row xl:gap-16 fhd:gap-20">
+        <div className="hero-glass-card grid items-start gap-10 rounded-3xl border border-white/15 p-6 sm:p-8 md:grid-cols-2 md:gap-8 md:p-10 lg:grid-cols-[minmax(240px,1.1fr)_repeat(3,minmax(0,1fr))] lg:gap-10 fhd:gap-16">
           {/* Logo column */}
-          <div className="max-w-[280px] shrink-0">
-            <Logo />
+          <div className="max-w-[320px] md:max-w-none lg:max-w-[320px]">
+            <p className="text-[22px] font-semibold tracking-[-0.02em] text-white">FlowGrid</p>
+            <p className="mt-1 text-[11px] uppercase tracking-[0.18em] text-white/55">
+              Cloud SaaS Platform
+            </p>
             <p className="mt-4 text-[15px] leading-relaxed text-white/55 sm:text-base">
-              The agent operations platform for boards, approvals, and gateways.
+              FlowGrid helps operations teams run boards, approvals, and gateways in one managed
+              SaaS workspace.
             </p>
           </div>
 
           {/* Link columns */}
-          <div className="grid flex-1 gap-10 sm:grid-cols-3">
           {COLUMNS.map((col) => (
-            <div key={col.title}>
-              <h4 className="mb-4 text-sm font-semibold text-white/70">
+            <div key={col.title} className="min-w-0">
+              <h4 className="mb-3 text-sm font-semibold text-white/75">
                 {col.title}
               </h4>
-              <ul className="space-y-3">
+              <ul className="space-y-2">
                 {col.links.map((link) => (
                   <li key={link.label}>
                     {link.external ? (
@@ -106,14 +78,14 @@ export default function LandingFooter() {
                         href={link.href}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex rounded-full px-3 py-1 text-sm text-white/50 transition-all hover:bg-white/[0.08] hover:text-white/85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                        className="inline-flex min-h-[44px] items-center rounded-lg px-0 text-sm text-white/55 transition-colors hover:text-white/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
                       >
                         {link.label}
                       </a>
                     ) : (
                       <Link
                         href={link.href}
-                        className="inline-flex rounded-full px-3 py-1 text-sm text-white/50 transition-all hover:bg-white/[0.08] hover:text-white/85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                        className="inline-flex min-h-[44px] items-center rounded-lg px-0 text-sm text-white/55 transition-colors hover:text-white/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
                       >
                         {link.label}
                       </Link>
@@ -123,30 +95,27 @@ export default function LandingFooter() {
               </ul>
             </div>
           ))}
-          </div>
         </div>
 
-        {/* Bottom: copyright + social */}
-        <div className="mt-8 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-8 sm:flex-row">
+        {/* Bottom: copyright + CTA */}
+        <div className="mt-8 flex flex-col gap-4 border-t border-white/10 pt-8 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-xs text-white/35">
             &copy; {new Date().getFullYear()} FlowGrid. All rights reserved.
           </p>
-          <div className="flex gap-4">
-            {SOCIAL_LINKS.map((social) => {
-              const Icon = social.icon;
-              return (
-                <a
-                  key={social.label}
-                  href={social.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={social.label}
-                  className="hero-glass-card inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/15 text-white/55 transition-all hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
-                >
-                  <Icon size={18} />
-                </a>
-              );
-            })}
+          <div className="flex items-center gap-3">
+            <a
+              href="mailto:sales@flowgrid.ai"
+              className="inline-flex min-h-[44px] items-center rounded-full border border-white/20 px-4 py-2 text-sm font-medium text-white/80 transition-colors hover:border-white/40 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+            >
+              Contact Sales
+            </a>
+            <Link
+              href="/sign-in"
+              prefetch={false}
+              className="inline-flex min-h-[44px] items-center rounded-full bg-white px-4 py-2 text-sm font-semibold text-black transition-colors hover:bg-white/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+            >
+              Start Free
+            </Link>
           </div>
         </div>
       </div>

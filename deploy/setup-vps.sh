@@ -9,12 +9,12 @@
 #   - Cloudflare Tunnel "flowgrid" already active for flowgrid.live
 #
 # What this does:
-#   1. Install Node.js 22 (for OpenClaw)
-#   2. Create /opt/flowgrid directory
-#   3. Generate .env.prod with secure random secrets
-#   4. Update cloudflared config (add api.flowgrid.live)
-#   5. Install GitHub Actions self-hosted runner
-#   6. Print next steps
+#   1. Create /opt/flowgrid directory
+#   2. Generate .env.prod with secure random secrets
+#   3. Update cloudflared config (add api.flowgrid.live)
+#   4. Install GitHub Actions self-hosted runner
+#   5. Print next steps
+# Note: OpenClaw runs in Docker (compose.prod.yml), no host install needed.
 
 set -euo pipefail
 
@@ -29,23 +29,13 @@ echo "    Domain: ${DOMAIN}"
 echo "    User:   ${DEPLOY_USER}"
 echo ""
 
-# --- 1. Install Node.js 22 (for OpenClaw) ---
-echo "==> [1/5] Installing Node.js 22"
-if ! command -v node &>/dev/null || [[ "$(node -v)" != v22* ]]; then
-  curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
-  apt-get install -y nodejs
-  echo "    Node.js $(node -v) installed"
-else
-  echo "    Node.js $(node -v) already installed, skipping"
-fi
-
-# --- 2. Create project directory ---
-echo "==> [2/5] Creating /opt/flowgrid"
+# --- 1. Create project directory ---
+echo "==> [1/4] Creating /opt/flowgrid"
 mkdir -p /opt/flowgrid
 chown "${DEPLOY_USER}:${DEPLOY_USER}" /opt/flowgrid
 
-# --- 3. Generate .env.prod ---
-echo "==> [3/5] Generating .env.prod"
+# --- 2. Generate .env.prod ---
+echo "==> [2/4] Generating .env.prod"
 ENV_FILE="/opt/flowgrid/.env.prod"
 if [ ! -f "$ENV_FILE" ]; then
   PG_PASS=$(openssl rand -base64 24 | tr -d '/+=' | head -c 32)
@@ -81,9 +71,8 @@ RATE_LIMIT_ENABLED=true
 
 # OpenClaw Gateway
 MANAGED_GATEWAY_AUTO_PROVISION=true
-MANAGED_GATEWAY_URL=ws://127.0.0.1:18789/ws
+MANAGED_GATEWAY_URL=ws://openclaw:18789/ws
 MANAGED_GATEWAY_TOKEN=
-MANAGED_GATEWAY_WORKSPACE_ROOT=/home/${DEPLOY_USER}/.openclaw/managed
 
 # Worker
 WORKER_HEARTBEAT_KEY=mission-control:worker:heartbeat
@@ -97,8 +86,8 @@ else
   echo "    .env.prod already exists, skipping"
 fi
 
-# --- 4. Update cloudflared config ---
-echo "==> [4/5] Updating cloudflared config"
+# --- 3. Update cloudflared config ---
+echo "==> [3/4] Updating cloudflared config"
 CF_CONFIG="/etc/cloudflared/config.yml"
 if [ -f "$CF_CONFIG" ]; then
   # Backup current config
@@ -135,8 +124,8 @@ echo "    DNS route: api.${DOMAIN} → tunnel"
 systemctl restart cloudflared
 echo "    cloudflared restarted"
 
-# --- 5. Setup GitHub Actions self-hosted runner ---
-echo "==> [5/5] GitHub Actions runner setup"
+# --- 4. Setup GitHub Actions self-hosted runner ---
+echo "==> [4/4] GitHub Actions runner setup"
 RUNNER_DIR="/home/${DEPLOY_USER}/actions-runner"
 if [ ! -d "$RUNNER_DIR" ]; then
   echo "    Creating runner directory..."
@@ -167,7 +156,7 @@ echo "Checklist before first deploy:"
 echo "  [ ] Review /opt/flowgrid/.env.prod"
 echo "  [ ] Copy compose.prod.yml to /opt/flowgrid/"
 echo "  [ ] Install GitHub Actions runner (see above)"
-echo "  [ ] Install OpenClaw: curl -fsSL https://openclaw.ai/install.sh | bash"
+echo "  [ ] OpenClaw runs in Docker — onboard via: docker compose exec openclaw openclaw onboard"
 echo "  [ ] Verify: curl https://${DOMAIN} and https://api.${DOMAIN}/health"
 echo ""
 echo "Deploy trigger: merge to main → GH Actions builds images → runner deploys"

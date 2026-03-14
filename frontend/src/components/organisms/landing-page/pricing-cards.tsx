@@ -15,10 +15,12 @@ const INDIVIDUAL_PLANS = [
       "No credit card required",
       "1 board group, 1 board",
       "3 agents total, 3 agents / board",
-      "40k org tokens / day",
+      "20M trial tokens, 5M agent tokens / day",
+      "8k max tokens / run",
     ],
     cta: { label: "Get Started", href: "/onboarding" },
     highlighted: false,
+    disabled: false,
   },
   {
     name: "Professional",
@@ -27,13 +29,14 @@ const INDIVIDUAL_PLANS = [
     bestFor: "Growing teams running multiple production boards",
     intro: "Everything in Basic, plus:",
     features: [
-      "1 board group, 3 boards",
+      "2 board groups, 3 boards",
       "15 agents total, 5 agents / board",
-      "300k org tokens / day",
-      "8M org tokens / month + 8k max tokens / run",
+      "20M agent tokens / day",
+      "200M org tokens / month, 16k max tokens / run",
     ],
     cta: { label: "Get Pro", href: "/onboarding" },
     highlighted: true,
+    disabled: false,
   },
   {
     name: "Enterprise",
@@ -46,8 +49,9 @@ const INDIVIDUAL_PLANS = [
       "Priority access to new platform features",
       "Dedicated onboarding assistance",
     ],
-    cta: { label: "Get Enterprise", href: "/onboarding" },
+    cta: { label: "Available Soon", href: "#" },
     highlighted: false,
+    disabled: true,
   },
 ];
 
@@ -138,14 +142,22 @@ export default function PricingCards() {
                       </li>
                     ))}
                   </ul>
-                  <Link
-                    href={plan.cta.href}
-                    className={`block text-center ${
-                      plan.highlighted ? "hero-btn-primary" : "hero-btn-secondary"
-                    }`}
-                  >
-                    {plan.cta.label}
-                  </Link>
+                  {plan.disabled ? (
+                    <span
+                      className="block cursor-not-allowed text-center opacity-50 hero-btn-secondary"
+                    >
+                      {plan.cta.label}
+                    </span>
+                  ) : (
+                    <Link
+                      href={plan.cta.href}
+                      className={`block text-center ${
+                        plan.highlighted ? "hero-btn-primary" : "hero-btn-secondary"
+                      }`}
+                    >
+                      {plan.cta.label}
+                    </Link>
+                  )}
                 </div>
               </ScrollReveal>
             );

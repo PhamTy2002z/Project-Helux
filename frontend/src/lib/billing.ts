@@ -98,6 +98,45 @@ export const useTrackUpgradeModalOpen = () =>
     mutationFn: trackUpgradeModalOpen,
   });
 
+// --- Real checkout (provider mode) ---
+
+type CheckoutPayload = {
+  plan_tier: BillingPlanTier;
+  idempotency_key: string;
+};
+
+type CheckoutResponse = {
+  checkout_url: string;
+  checkout_id: string;
+  provider: string;
+};
+
+type CheckoutApiResponse = {
+  data: CheckoutResponse;
+  status: number;
+  headers: Headers;
+};
+
+export const createCheckout = async (
+  payload: CheckoutPayload,
+): Promise<CheckoutResponse> => {
+  const response = await customFetch<CheckoutApiResponse>(
+    "/api/v1/billing/checkout",
+    {
+      method: "POST",
+      body: JSON.stringify(payload),
+    },
+  );
+  return response.data;
+};
+
+export const useCreateCheckout = () =>
+  useMutation({
+    mutationFn: createCheckout,
+  });
+
+// --- Helpers ---
+
 export const createIdempotencyKey = (): string => {
   if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
     return crypto.randomUUID();
