@@ -68,10 +68,10 @@ describe("LandingNavbar", () => {
     expect(screen.queryByRole("link", { name: "Sign up" })).not.toBeInTheDocument();
   });
 
-  it("routes Build you agent team CTA to sign-in for signed-out users", () => {
+  it("routes Start Building Free CTA to sign-in for signed-out users", () => {
     render(<LandingNavbar />);
 
-    expect(screen.getByRole("link", { name: "Build you agent team" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Start Building Free" })).toHaveAttribute(
       "href",
       "/sign-in",
     );
