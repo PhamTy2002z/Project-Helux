@@ -528,6 +528,7 @@ async def test_sync_and_enforce_applies_to_board_lead_agents(
                 "sync_session_usage",
                 _fake_sync_session_usage,
             )
+
             async def _fake_resolve_runtime_policy(
                 _session: AsyncSession,
                 *,

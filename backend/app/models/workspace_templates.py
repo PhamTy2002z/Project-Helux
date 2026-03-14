@@ -23,9 +23,7 @@ class WorkspaceTemplate(QueryModel, table=True):
     )
 
     id: UUID = Field(default_factory=uuid4, primary_key=True)
-    organization_id: UUID | None = Field(
-        default=None, foreign_key="organizations.id", index=True
-    )
+    organization_id: UUID | None = Field(default=None, foreign_key="organizations.id", index=True)
     name: str = Field(max_length=200)
     slug: str = Field(max_length=200, index=True)
     description: str | None = Field(default=None)
