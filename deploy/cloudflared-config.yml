@@ -1,0 +1,28 @@
+# Cloudflare Tunnel config for FlowGrid.
+# Place at: /etc/cloudflared/config.yml
+#
+# Replace <TUNNEL_ID> with your actual tunnel ID from:
+#   cloudflared tunnel create flowgrid
+#
+# Replace <DOMAIN> with your domain (e.g. flowgrid.example.com)
+
+tunnel: <TUNNEL_ID>
+credentials-file: /root/.cloudflared/<TUNNEL_ID>.json
+
+ingress:
+  # Frontend (Next.js)
+  - hostname: <DOMAIN>
+    service: http://localhost:3000
+
+  # Backend API
+  - hostname: api.<DOMAIN>
+    service: http://localhost:8000
+    originRequest:
+      # SSE + WebSocket support
+      noTLSVerify: false
+      connectTimeout: 30s
+      # Long timeout for SSE streams
+      disableChunkedEncoding: false
+
+  # Catch-all
+  - service: http_status:404

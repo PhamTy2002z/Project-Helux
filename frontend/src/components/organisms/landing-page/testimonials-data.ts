@@ -12,7 +12,7 @@ export type Testimonial = {
 export const TESTIMONIALS: Testimonial[] = [
   {
     quote:
-      "OpenClaw unified our board operations. Approvals that took days now take minutes.",
+      "FlowGrid unified our board operations. Approvals that took days now take minutes.",
     author: "Sarah Chen",
     role: "Engineering Lead",
     company: "Series B Startup",
@@ -36,7 +36,7 @@ export const TESTIMONIALS: Testimonial[] = [
   },
   {
     quote:
-      "Gateway management used to be our biggest bottleneck. OpenClaw made it seamless with one control surface.",
+      "Gateway management used to be our biggest bottleneck. FlowGrid made it seamless with one control surface.",
     author: "Priya Sharma",
     role: "Platform Engineer",
     company: "Cloud Infrastructure Co.",

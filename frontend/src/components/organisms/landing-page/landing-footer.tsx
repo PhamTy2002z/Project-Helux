@@ -82,16 +82,17 @@ export default function LandingFooter() {
 
       <div className="mx-auto w-full max-w-[1280px] fhd:max-w-[1440px] qhd:max-w-[1600px] uhd:max-w-[1760px]">
         {/* Top: Logo + link columns */}
-        <div className="hero-glass-card grid gap-10 rounded-3xl border border-white/15 p-6 sm:grid-cols-2 sm:p-8 md:p-10 xl:grid-cols-4 fhd:gap-12">
+        <div className="hero-glass-card flex flex-col gap-10 rounded-3xl border border-white/15 p-6 sm:p-8 md:p-10 xl:flex-row xl:gap-16 fhd:gap-20">
           {/* Logo column */}
-          <div className="max-w-[280px]">
+          <div className="max-w-[280px] shrink-0">
             <Logo />
             <p className="mt-4 text-[15px] leading-relaxed text-white/55 sm:text-base">
-              The FlowGrid platform for boards, agents, and operations.
+              The agent operations platform for boards, approvals, and gateways.
             </p>
           </div>
 
           {/* Link columns */}
+          <div className="grid flex-1 gap-10 sm:grid-cols-3">
           {COLUMNS.map((col) => (
             <div key={col.title}>
               <h4 className="mb-4 text-sm font-semibold text-white/70">
@@ -122,6 +123,7 @@ export default function LandingFooter() {
               </ul>
             </div>
           ))}
+          </div>
         </div>
 
         {/* Bottom: copyright + social */}

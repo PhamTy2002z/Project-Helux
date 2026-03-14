@@ -28,7 +28,7 @@ vi.mock("next/navigation", () => ({
 }));
 
 vi.mock("@/components/organisms/landing-slideshow/logo", () => ({
-  default: () => <span>OpenClaw</span>,
+  default: () => <span>FlowGrid</span>,
 }));
 
 vi.mock("lucide-react", () => ({

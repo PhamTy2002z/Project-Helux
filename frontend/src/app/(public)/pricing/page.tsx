@@ -15,7 +15,7 @@ import { getSiteUrl } from "@/lib/site-url";
 
 const pricingTitle = `Pricing for ${PRODUCT_NAME}`;
 const pricingDescription =
-  "Compare FlowGrid plans for teams operating boards, agent workflows, and approvals at different scales.";
+  "Simple pricing for FlowGrid. Start free, scale to Pro when ready. Enterprise plans available for custom governance and support.";
 const siteUrl = getSiteUrl();
 
 export const metadata: Metadata = {
@@ -76,12 +76,12 @@ const pricingStructuredData = {
 };
 
 const ENTERPRISE_FEATURES = [
+  "Higher model and token limits",
+  "Priority access to new platform features",
+  "Dedicated onboarding assistance",
   "Pooled usage across boards and teams",
-  "Invoice and procurement billing workflows (planned)",
-  "SCIM / SSO seat management (planned)",
   "Activity API access and audit exports",
   "Granular admin + model controls",
-  "Priority support and account management",
 ];
 
 const TRUSTED_BRANDS: Array<{ name: string; slug: string; icon?: string }> = [
@@ -198,7 +198,7 @@ export default function PricingPage() {
             <div className="mx-auto max-w-7xl">
               <ScrollReveal className="text-center">
                 <h2 className="mx-auto max-w-3xl text-balance text-2xl font-semibold leading-tight text-white sm:text-3xl">
-                  Trusted every day by teams that build world-class software.
+                  Built on the tools teams already trust
                 </h2>
               </ScrollReveal>
               <div className="mt-10 grid grid-cols-3 gap-4 sm:grid-cols-4 md:grid-cols-6">
@@ -273,18 +273,17 @@ export default function PricingPage() {
             <ScrollReveal>
               <div className="hero-glass-card mx-auto max-w-5xl rounded-3xl border border-white/15 px-8 py-12 text-center">
                 <h2 className="text-balance text-3xl font-bold tracking-tight text-white sm:text-4xl">
-                  Get started with FlowGrid.
+                  Start building with FlowGrid today
                 </h2>
                 <p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-white/65">
-                  Launch your first board, route approvals, and monitor agent
-                  health from one command surface.
+                  Launch your first board in minutes. No credit card required.
                 </p>
                 <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
                   <Link
                     href="/onboarding"
                     className="hero-btn-primary inline-flex items-center justify-center"
                   >
-                    Start Free in 2 Minutes
+                    Start Building Free
                   </Link>
                   <Link
                     href="/boards"

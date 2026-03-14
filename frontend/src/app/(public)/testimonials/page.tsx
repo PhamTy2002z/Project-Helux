@@ -29,7 +29,7 @@ const TestimonialsPageContent = dynamic(
 
 const pageTitle = `Customer Testimonials — ${PRODUCT_NAME}`;
 const pageDescription =
-  "Hear from engineering leaders, DevOps teams, and operators who run production workloads on FlowGrid every day.";
+  "Engineering leaders, DevOps teams, and platform operators share how FlowGrid transformed their agent operations.";
 const siteUrl = getSiteUrl();
 
 export const metadata: Metadata = {
@@ -65,7 +65,7 @@ const testimonialsStructuredData = {
       {
         "@type": "Review",
         reviewBody:
-          "OpenClaw unified our board operations. Approvals that took days now take minutes.",
+          "FlowGrid unified our board operations. Approvals that took days now take minutes.",
         author: { "@type": "Person", name: "Sarah Chen" },
       },
       {
@@ -104,18 +104,17 @@ export default function TestimonialsPage() {
               <ScrollReveal>
                 <div className="hero-glass-card mx-auto max-w-5xl rounded-3xl border border-white/15 px-8 py-12 text-center">
                   <h2 className="text-balance text-3xl font-bold tracking-tight text-white sm:text-4xl">
-                    Join thousands of teams using FlowGrid
+                    See what FlowGrid can do for your team
                   </h2>
                   <p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-white/65">
-                    Start operating boards, routing approvals, and monitoring
-                    agent health from one command surface.
+                    Launch your first board in minutes. No credit card required.
                   </p>
                   <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
                     <Link
                       href="/onboarding"
                       className="hero-btn-primary inline-flex items-center justify-center"
                     >
-                      Start Free in 2 Minutes
+                      Start Building Free
                     </Link>
                     <Link
                       href="/pricing"

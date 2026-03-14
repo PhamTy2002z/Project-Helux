@@ -14,6 +14,7 @@ export type { BlogCategorySlug };
 
 export type BlogPost = Omit<BlogArticle, "keywords" | "sections" | "slug"> & {
   href: string;
+  heroImage?: { src: string; alt: string };
 };
 
 export type BlogProductCard = {
@@ -29,7 +30,7 @@ export const BLOG_PRODUCT_CARDS: BlogProductCard[] = [
     title: "FlowGrid Cloud",
     description:
       "Manage the full AI agent lifecycle with visual controls, policy guardrails, and real-time telemetry.",
-    cta: "Request a Demo",
+    cta: "Start Building Free",
     href: "/onboarding",
     iconKey: "cloud",
   },
@@ -59,6 +60,7 @@ function toBlogPost(article: BlogArticle): BlogPost {
     publishDateISO: article.publishDateISO,
     publishDateLabel: article.publishDateLabel,
     readTime: article.readTime,
+    heroImage: article.heroImage,
     href: getBlogPostUrl(article.slug),
   };
 }

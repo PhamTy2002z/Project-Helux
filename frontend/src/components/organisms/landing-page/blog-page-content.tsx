@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Cloud, Code2, ShieldCheck } from "lucide-react";
 
@@ -65,7 +66,22 @@ export default function BlogPageContent({ selectedCategory, filteredPosts }: Blo
         <div className="mx-auto grid max-w-6xl gap-4 md:grid-cols-2 xl:grid-cols-3">
           {filteredPosts.map((post, index) => (
             <ScrollReveal key={post.title} delay={index * 0.04}>
-              <article className="group h-full rounded-3xl border border-white/10 bg-white/[0.03] p-6">
+              <article className="group h-full overflow-hidden rounded-3xl border border-white/10 bg-white/[0.03]">
+                {post.heroImage && (
+                  <Link href={post.href} prefetch={false} className="block">
+                    <div className="relative aspect-[16/9] overflow-hidden bg-[#0a1222]">
+                      <Image
+                        src={post.heroImage.src}
+                        alt={post.heroImage.alt}
+                        fill
+                        sizes="(min-width: 1280px) 384px, (min-width: 768px) 50vw, 100vw"
+                        className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+                        loading="lazy"
+                      />
+                    </div>
+                  </Link>
+                )}
+                <div className="p-6">
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/45">{post.category}</p>
                 <h2 className="mt-4 text-2xl font-semibold leading-tight text-white">{post.title}</h2>
                 <p className="mt-3 text-sm leading-relaxed text-white/65">{post.excerpt}</p>
@@ -81,6 +97,7 @@ export default function BlogPageContent({ selectedCategory, filteredPosts }: Blo
                   Read Story
                   <ArrowRight size={15} aria-hidden="true" />
                 </Link>
+                </div>
               </article>
             </ScrollReveal>
           ))}

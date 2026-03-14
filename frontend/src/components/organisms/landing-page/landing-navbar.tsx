@@ -145,7 +145,7 @@ export default function LandingNavbar() {
                 Sign in
               </Link>
               <Link href="/sign-in" prefetch={false} className={BTN_SIGNUP}>
-                Build you agent team
+                Start Building Free
               </Link>
             </>
           ) : (
@@ -231,7 +231,7 @@ export default function LandingNavbar() {
                     prefetch={false}
                     className={`${BTN_SIGNUP} min-h-[44px] text-center`}
                   >
-                    Build you agent team
+                    Start Building Free
                   </Link>
                 </>
               ) : (

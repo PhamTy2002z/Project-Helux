@@ -255,7 +255,7 @@ export default function LandingHeroSection() {
               } as CSSProperties
             }
           >
-            FlowGrid for Coordinating Multi-Agent Work Across Every Board
+            One Platform to Orchestrate Every Agent, Board, and Approval
           </h1>
 
           <p
@@ -266,8 +266,9 @@ export default function LandingHeroSection() {
               } as CSSProperties
             }
           >
-            Manage tasks, approvals, agent health, and gateway activity in one
-            secure workspace with full audit history.
+            FlowGrid gives your team one secure workspace to run agent
+            operations, approvals, and gateways — with full visibility and
+            zero handoff friction.
           </p>
 
           <div
@@ -284,7 +285,7 @@ export default function LandingHeroSection() {
                 prefetch={false}
                 className="hero-btn-demo min-h-12 px-8 text-base"
               >
-                Request a Demo
+                Start Building Free
                 <ArrowRight size={18} aria-hidden="true" />
               </Link>
             ) : (

@@ -9,9 +9,9 @@ import {
 } from "@/lib/seo";
 import { getSiteUrl } from "@/lib/site-url";
 
-const landingTitle = "AI Agent FlowGrid for Boards, Approvals, and Gateways";
+const landingTitle = "FlowGrid — One Platform to Orchestrate Agents, Boards, and Approvals";
 const landingDescription =
-  "FlowGrid helps teams run board operations, agent workflows, approvals, and gateways from one secure, real-time workspace.";
+  "FlowGrid gives teams one secure workspace to run agent operations, approvals, and gateways — with full visibility and zero handoff friction.";
 const siteUrl = getSiteUrl();
 
 export const metadata: Metadata = {
@@ -21,11 +21,13 @@ export const metadata: Metadata = {
     canonical: "/",
   },
   keywords: [
-    "ai orchestration platform",
-    "agent workflow management",
-    "board operations platform",
-    "approval orchestration",
+    "flowgrid",
+    "agent operations platform",
+    "ai orchestration",
+    "board management",
+    "approval workflow",
     "gateway routing",
+    "openclaw",
   ],
   openGraph: {
     title: landingTitle,

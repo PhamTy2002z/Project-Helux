@@ -17,7 +17,7 @@ const INDIVIDUAL_PLANS = [
       "3 agents total, 3 agents / board",
       "40k org tokens / day",
     ],
-    cta: { label: "Download", href: "/onboarding" },
+    cta: { label: "Get Started", href: "/onboarding" },
     highlighted: false,
   },
   {
@@ -72,7 +72,7 @@ export default function PricingCards() {
       <div className="relative mx-auto max-w-7xl">
         <ScrollReveal className="mb-10 text-center">
           <h2 className="text-balance text-3xl font-bold leading-[1.05] tracking-tight text-white sm:text-4xl md:text-5xl lg:text-6xl">
-            Pick the Plan for Your Mission
+            Simple pricing. Scale when ready.
           </h2>
         </ScrollReveal>
 

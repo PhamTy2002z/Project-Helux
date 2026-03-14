@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -53,13 +54,18 @@ export async function generateMetadata({ params }: BlogArticlePageProps): Promis
       title: article.title,
       description: article.excerpt,
       publishedTime: article.publishDateISO,
-      images: [{ url: DEFAULT_SEO_IMAGE, alt: DEFAULT_SEO_IMAGE_ALT }],
+      images: [
+        {
+          url: article.heroImage?.src ?? DEFAULT_SEO_IMAGE,
+          alt: article.heroImage?.alt ?? DEFAULT_SEO_IMAGE_ALT,
+        },
+      ],
     },
     twitter: {
       card: "summary_large_image",
       title: article.title,
       description: article.excerpt,
-      images: [DEFAULT_SEO_IMAGE],
+      images: [article.heroImage?.src ?? DEFAULT_SEO_IMAGE],
     },
   };
 }
@@ -88,7 +94,7 @@ export default async function BlogArticlePage({ params }: BlogArticlePageProps) 
       name: PRODUCT_NAME,
     },
     mainEntityOfPage: articleUrl,
-    image: [`${siteUrl}${DEFAULT_SEO_IMAGE}`],
+    image: [`${siteUrl}${article.heroImage?.src ?? DEFAULT_SEO_IMAGE}`],
   };
 
   return (
@@ -118,6 +124,19 @@ export default async function BlogArticlePage({ params }: BlogArticlePageProps) 
                 <span>{article.readTime}</span>
               </div>
 
+              {article.heroImage && (
+                <div className="relative mt-10 aspect-[16/9] overflow-hidden rounded-2xl border border-white/10 bg-[#0a1222]">
+                  <Image
+                    src={article.heroImage.src}
+                    alt={article.heroImage.alt}
+                    fill
+                    sizes="(min-width: 1024px) 896px, 100vw"
+                    priority
+                    className="object-cover"
+                  />
+                </div>
+              )}
+
               <div className="mt-10 space-y-10">
                 {article.sections.map((section) => (
                   <section key={section.heading}>
@@ -141,7 +160,7 @@ export default async function BlogArticlePage({ params }: BlogArticlePageProps) 
                 </p>
                 <div className="mt-6 flex flex-wrap gap-3">
                   <Link href="/onboarding" className="hero-btn-primary inline-flex items-center">
-                    Start Free in 2 Minutes
+                    Start Building Free
                   </Link>
                   <Link href="/pricing" className="hero-btn-secondary inline-flex items-center">
                     View Pricing
