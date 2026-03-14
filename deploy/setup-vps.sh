@@ -1,45 +1,36 @@
 #!/usr/bin/env bash
-# One-time setup script for FlowGrid on personal Ubuntu laptop + Cloudflare Tunnel.
-# Run as root.
+# FlowGrid production setup for Ubuntu laptop server + Cloudflare Tunnel.
+# Run as phamty (with sudo).
 #
-# Usage: sudo bash setup-vps.sh <DOMAIN> [GITHUB_USER]
+# Usage: sudo bash deploy/setup-vps.sh
+#
+# Prerequisites:
+#   - Ubuntu Server 24.04 with Docker + cloudflared already installed
+#   - Cloudflare Tunnel "flowgrid" already active for flowgrid.live
 #
 # What this does:
-#   1. System updates (no swap needed — 16GB RAM)
-#   2. Install Docker, Node.js (for OpenClaw)
-#   3. Install + configure Cloudflare Tunnel (cloudflared)
-#   4. Create deploy user + /opt/flowgrid
-#   5. Generate .env.prod template
-#   6. Setup systemd services for auto-start on boot
+#   1. Install Node.js 22 (for OpenClaw)
+#   2. Create /opt/flowgrid directory
+#   3. Generate .env.prod with secure random secrets
+#   4. Update cloudflared config (add api.flowgrid.live)
+#   5. Install GitHub Actions self-hosted runner
+#   6. Print next steps
 
 set -euo pipefail
 
-DOMAIN="${1:?Usage: sudo bash setup-vps.sh <DOMAIN> [GITHUB_USER]}"
-GITHUB_USER="${2:-phamty2002z}"
+DOMAIN="flowgrid.live"
+GITHUB_USER="<GITHUB_USER>"
+GITHUB_REPO="<GITHUB_ORG>/<GITHUB_REPO>"
+DEPLOY_USER="<DEPLOY_USER>"
+TUNNEL_ID="<TUNNEL_ID>"
 
-echo "==> Setting up FlowGrid on $(hostname)"
+echo "==> Setting up FlowGrid production on $(hostname)"
 echo "    Domain: ${DOMAIN}"
-echo "    GitHub: ${GITHUB_USER}"
+echo "    User:   ${DEPLOY_USER}"
 echo ""
 
-# --- 1. System updates ---
-echo "==> [1/6] System updates"
-apt-get update && apt-get upgrade -y
-apt-get install -y curl wget git unzip jq
-
-# --- 2. Install Docker ---
-echo "==> [2/6] Installing Docker"
-if ! command -v docker &>/dev/null; then
-  curl -fsSL https://get.docker.com | sh
-  systemctl enable docker
-  systemctl start docker
-  echo "    Docker installed"
-else
-  echo "    Docker already installed, skipping"
-fi
-
-# --- 3. Install Node.js 22 (for OpenClaw) ---
-echo "==> [3/6] Installing Node.js 22"
+# --- 1. Install Node.js 22 (for OpenClaw) ---
+echo "==> [1/5] Installing Node.js 22"
 if ! command -v node &>/dev/null || [[ "$(node -v)" != v22* ]]; then
   curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
   apt-get install -y nodejs
@@ -48,32 +39,13 @@ else
   echo "    Node.js $(node -v) already installed, skipping"
 fi
 
-# --- 4. Install Cloudflare Tunnel ---
-echo "==> [4/6] Installing cloudflared"
-if ! command -v cloudflared &>/dev/null; then
-  curl -L --output cloudflared.deb https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
-  dpkg -i cloudflared.deb
-  rm -f cloudflared.deb
-  echo "    cloudflared installed"
-else
-  echo "    cloudflared already installed, skipping"
-fi
-
-# --- 5. Create deploy user + project directory ---
-echo "==> [5/6] Creating deploy user + /opt/flowgrid"
-if ! id -u deploy &>/dev/null; then
-  useradd -m -s /bin/bash -G docker deploy
-  echo "    User 'deploy' created"
-else
-  usermod -aG docker deploy
-  echo "    User 'deploy' already exists, added to docker group"
-fi
-
+# --- 2. Create project directory ---
+echo "==> [2/5] Creating /opt/flowgrid"
 mkdir -p /opt/flowgrid
-chown deploy:deploy /opt/flowgrid
+chown "${DEPLOY_USER}:${DEPLOY_USER}" /opt/flowgrid
 
-# --- 6. Generate .env.prod template ---
-echo "==> [6/6] Generating .env.prod template"
+# --- 3. Generate .env.prod ---
+echo "==> [3/5] Generating .env.prod"
 ENV_FILE="/opt/flowgrid/.env.prod"
 if [ ! -f "$ENV_FILE" ]; then
   PG_PASS=$(openssl rand -base64 24 | tr -d '/+=' | head -c 32)
@@ -81,13 +53,10 @@ if [ ! -f "$ENV_FILE" ]; then
   AUTH_TOKEN=$(openssl rand -base64 48 | tr -d '/+=' | head -c 64)
 
   cat > "$ENV_FILE" <<ENVEOF
-# FlowGrid Production Environment
+# FlowGrid Production — flowgrid.live
 # Generated: $(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
-# Domain
 DOMAIN=${DOMAIN}
-
-# GHCR
 GHCR_OWNER=${GITHUB_USER}
 GHCR_IMAGE_TAG=latest
 
@@ -114,7 +83,7 @@ RATE_LIMIT_ENABLED=true
 MANAGED_GATEWAY_AUTO_PROVISION=true
 MANAGED_GATEWAY_URL=ws://127.0.0.1:18789/ws
 MANAGED_GATEWAY_TOKEN=
-MANAGED_GATEWAY_WORKSPACE_ROOT=/home/deploy/.openclaw/managed
+MANAGED_GATEWAY_WORKSPACE_ROOT=/home/${DEPLOY_USER}/.openclaw/managed
 
 # Worker
 WORKER_HEARTBEAT_KEY=mission-control:worker:heartbeat
@@ -122,49 +91,83 @@ READINESS_WORKER_HEARTBEAT_KEY=mission-control:worker:heartbeat
 ENVEOF
 
   chmod 600 "$ENV_FILE"
-  chown deploy:deploy "$ENV_FILE"
-  echo "    .env.prod created at ${ENV_FILE}"
+  chown "${DEPLOY_USER}:${DEPLOY_USER}" "$ENV_FILE"
+  echo "    .env.prod created — review before first deploy!"
 else
   echo "    .env.prod already exists, skipping"
+fi
+
+# --- 4. Update cloudflared config ---
+echo "==> [4/5] Updating cloudflared config"
+CF_CONFIG="/etc/cloudflared/config.yml"
+if [ -f "$CF_CONFIG" ]; then
+  # Backup current config
+  cp "$CF_CONFIG" "${CF_CONFIG}.bak.$(date +%s)"
+fi
+
+cat > "$CF_CONFIG" <<CFEOF
+tunnel: ${TUNNEL_ID}
+credentials-file: /home/${DEPLOY_USER}/.cloudflared/${TUNNEL_ID}.json
+
+ingress:
+  # Frontend (Next.js)
+  - hostname: ${DOMAIN}
+    service: http://localhost:3000
+
+  # Backend API (FastAPI)
+  - hostname: api.${DOMAIN}
+    service: http://localhost:8000
+    originRequest:
+      connectTimeout: 30s
+      noTLSVerify: false
+
+  # Catch-all
+  - service: http_status:404
+CFEOF
+
+echo "    cloudflared config updated"
+
+# Route api subdomain DNS (idempotent)
+cloudflared tunnel route dns flowgrid "api.${DOMAIN}" 2>/dev/null || true
+echo "    DNS route: api.${DOMAIN} → tunnel"
+
+# Restart tunnel
+systemctl restart cloudflared
+echo "    cloudflared restarted"
+
+# --- 5. Setup GitHub Actions self-hosted runner ---
+echo "==> [5/5] GitHub Actions runner setup"
+RUNNER_DIR="/home/${DEPLOY_USER}/actions-runner"
+if [ ! -d "$RUNNER_DIR" ]; then
+  echo "    Creating runner directory..."
+  mkdir -p "$RUNNER_DIR"
+  chown "${DEPLOY_USER}:${DEPLOY_USER}" "$RUNNER_DIR"
+
+  echo ""
+  echo "    To install the runner, run AS ${DEPLOY_USER}:"
+  echo "    cd ${RUNNER_DIR}"
+  echo "    curl -o actions-runner-linux-x64-2.322.0.tar.gz -L https://github.com/actions/runner/releases/download/v2.322.0/actions-runner-linux-x64-2.322.0.tar.gz"
+  echo "    tar xzf actions-runner-linux-x64-2.322.0.tar.gz"
+  echo "    ./config.sh --url https://github.com/${GITHUB_REPO} --token <RUNNER_TOKEN>"
+  echo ""
+  echo "    Get RUNNER_TOKEN from:"
+  echo "    https://github.com/${GITHUB_REPO}/settings/actions/runners/new"
+  echo ""
+  echo "    Then install as service:"
+  echo "    sudo ./svc.sh install ${DEPLOY_USER}"
+  echo "    sudo ./svc.sh start"
+else
+  echo "    Runner directory exists at ${RUNNER_DIR}"
 fi
 
 echo ""
 echo "==> Setup complete!"
 echo ""
-echo "Next steps:"
+echo "Checklist before first deploy:"
+echo "  [ ] Review /opt/flowgrid/.env.prod"
+echo "  [ ] Copy compose.prod.yml to /opt/flowgrid/"
+echo "  [ ] Install GitHub Actions runner (see above)"
+echo "  [ ] Install OpenClaw: curl -fsSL https://openclaw.ai/install.sh | bash"
+echo "  [ ] Verify: curl https://${DOMAIN} and https://api.${DOMAIN}/health"
 echo ""
-echo "  1. Authenticate cloudflared:"
-echo "     cloudflared tunnel login"
-echo ""
-echo "  2. Create tunnel:"
-echo "     cloudflared tunnel create flowgrid"
-echo ""
-echo "  3. Configure tunnel — create /etc/cloudflared/config.yml:"
-echo "     tunnel: <TUNNEL_ID>"
-echo "     credentials-file: /root/.cloudflared/<TUNNEL_ID>.json"
-echo "     ingress:"
-echo "       - hostname: ${DOMAIN}"
-echo "         service: http://localhost:3000"
-echo "       - hostname: api.${DOMAIN}"
-echo "         service: http://localhost:8000"
-echo "       - service: http_status:404"
-echo ""
-echo "  4. Route DNS:"
-echo "     cloudflared tunnel route dns flowgrid ${DOMAIN}"
-echo "     cloudflared tunnel route dns flowgrid api.${DOMAIN}"
-echo ""
-echo "  5. Install as service:"
-echo "     cloudflared service install"
-echo "     systemctl enable cloudflared"
-echo ""
-echo "  6. Copy compose.prod.yml to /opt/flowgrid/"
-echo "  7. Review /opt/flowgrid/.env.prod"
-echo "  8. Install OpenClaw:"
-echo "     su - deploy -c 'curl -fsSL https://openclaw.ai/install.sh | bash'"
-echo ""
-echo "  9. First deploy:"
-echo "     su - deploy -c 'cd /opt/flowgrid && docker compose -f compose.prod.yml --env-file .env.prod up -d'"
-echo ""
-echo "GitHub Secrets for CI/CD (self-hosted runner recommended):"
-echo "  Or use SSH: VPS_HOST, VPS_USER, VPS_SSH_KEY"
-echo "  NEXT_PUBLIC_API_URL = https://api.${DOMAIN}"
+echo "Deploy trigger: merge to main → GH Actions builds images → runner deploys"
