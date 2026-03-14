@@ -86,6 +86,10 @@ jobs:
 
       - name: Run migration integrity gate
         if: ${{ github.event_name == 'pull_request' }}
+        env:
+          BASE_URL: "http://localhost:8000"
+          AUTH_MODE: "local"
+          LOCAL_AUTH_TOKEN: "ci-local-auth-token-0123456789-0123456789-0123456789x"
         run: |
           set -euo pipefail
 
