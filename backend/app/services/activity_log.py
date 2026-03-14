@@ -19,6 +19,7 @@ ADMIN_AUDIT_EVENT_BY_ACTION: dict[str, str] = {
     "organization.member.access.update": "admin.organization.member_access_updated",
     "organization.member.remove": "admin.organization.member_removed",
     "organization.invite.create": "admin.organization.invite_created",
+    "organization.invite.resend": "admin.organization.invite_resent",
     "organization.invite.revoke": "admin.organization.invite_revoked",
     "organization.delete": "admin.organization.deleted",
     "gateway.create": "admin.gateway.created",

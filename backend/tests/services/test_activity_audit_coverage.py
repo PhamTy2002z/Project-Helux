@@ -13,6 +13,7 @@ EXPECTED_AUDIT_ACTIONS = {
     "organization.member.access.update",
     "organization.member.remove",
     "organization.invite.create",
+    "organization.invite.resend",
     "organization.invite.revoke",
     "organization.delete",
     "gateway.create",

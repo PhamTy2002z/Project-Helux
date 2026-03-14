@@ -2606,6 +2606,157 @@ export const useCreateOrgInviteApiV1OrganizationsMeInvitesPost = <
   );
 };
 /**
+ * Queue invite email re-delivery for a pending invite.
+ * @summary Resend Org Invite
+ */
+export type resendOrgInviteApiV1OrganizationsMeInvitesInviteIdResendPostResponse200 =
+  {
+    data: OrganizationInviteRead;
+    status: 200;
+  };
+
+export type resendOrgInviteApiV1OrganizationsMeInvitesInviteIdResendPostResponse422 =
+  {
+    data: HTTPValidationError;
+    status: 422;
+  };
+
+export type resendOrgInviteApiV1OrganizationsMeInvitesInviteIdResendPostResponseSuccess =
+  resendOrgInviteApiV1OrganizationsMeInvitesInviteIdResendPostResponse200 & {
+    headers: Headers;
+  };
+export type resendOrgInviteApiV1OrganizationsMeInvitesInviteIdResendPostResponseError =
+  resendOrgInviteApiV1OrganizationsMeInvitesInviteIdResendPostResponse422 & {
+    headers: Headers;
+  };
+
+export type resendOrgInviteApiV1OrganizationsMeInvitesInviteIdResendPostResponse =
+  | resendOrgInviteApiV1OrganizationsMeInvitesInviteIdResendPostResponseSuccess
+  | resendOrgInviteApiV1OrganizationsMeInvitesInviteIdResendPostResponseError;
+
+export const getResendOrgInviteApiV1OrganizationsMeInvitesInviteIdResendPostUrl =
+  (inviteId: string) => {
+    return `/api/v1/organizations/me/invites/${inviteId}/resend`;
+  };
+
+export const resendOrgInviteApiV1OrganizationsMeInvitesInviteIdResendPost =
+  async (
+    inviteId: string,
+    options?: RequestInit,
+  ): Promise<resendOrgInviteApiV1OrganizationsMeInvitesInviteIdResendPostResponse> => {
+    return customFetch<resendOrgInviteApiV1OrganizationsMeInvitesInviteIdResendPostResponse>(
+      getResendOrgInviteApiV1OrganizationsMeInvitesInviteIdResendPostUrl(
+        inviteId,
+      ),
+      {
+        ...options,
+        method: "POST",
+      },
+    );
+  };
+
+export const getResendOrgInviteApiV1OrganizationsMeInvitesInviteIdResendPostMutationOptions =
+  <TError = HTTPValidationError, TContext = unknown>(options?: {
+    mutation?: UseMutationOptions<
+      Awaited<
+        ReturnType<
+          typeof resendOrgInviteApiV1OrganizationsMeInvitesInviteIdResendPost
+        >
+      >,
+      TError,
+      { inviteId: string },
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  }): UseMutationOptions<
+    Awaited<
+      ReturnType<
+        typeof resendOrgInviteApiV1OrganizationsMeInvitesInviteIdResendPost
+      >
+    >,
+    TError,
+    { inviteId: string },
+    TContext
+  > => {
+    const mutationKey = [
+      "resendOrgInviteApiV1OrganizationsMeInvitesInviteIdResendPost",
+    ];
+    const { mutation: mutationOptions, request: requestOptions } = options
+      ? options.mutation &&
+        "mutationKey" in options.mutation &&
+        options.mutation.mutationKey
+        ? options
+        : { ...options, mutation: { ...options.mutation, mutationKey } }
+      : { mutation: { mutationKey }, request: undefined };
+
+    const mutationFn: MutationFunction<
+      Awaited<
+        ReturnType<
+          typeof resendOrgInviteApiV1OrganizationsMeInvitesInviteIdResendPost
+        >
+      >,
+      { inviteId: string }
+    > = (props) => {
+      const { inviteId } = props ?? {};
+
+      return resendOrgInviteApiV1OrganizationsMeInvitesInviteIdResendPost(
+        inviteId,
+        requestOptions,
+      );
+    };
+
+    return { mutationFn, ...mutationOptions };
+  };
+
+export type ResendOrgInviteApiV1OrganizationsMeInvitesInviteIdResendPostMutationResult =
+  NonNullable<
+    Awaited<
+      ReturnType<
+        typeof resendOrgInviteApiV1OrganizationsMeInvitesInviteIdResendPost
+      >
+    >
+  >;
+
+export type ResendOrgInviteApiV1OrganizationsMeInvitesInviteIdResendPostMutationError =
+  HTTPValidationError;
+
+/**
+ * @summary Resend Org Invite
+ */
+export const useResendOrgInviteApiV1OrganizationsMeInvitesInviteIdResendPost =
+  <TError = HTTPValidationError, TContext = unknown>(
+    options?: {
+      mutation?: UseMutationOptions<
+        Awaited<
+          ReturnType<
+            typeof resendOrgInviteApiV1OrganizationsMeInvitesInviteIdResendPost
+          >
+        >,
+        TError,
+        { inviteId: string },
+        TContext
+      >;
+      request?: SecondParameter<typeof customFetch>;
+    },
+    queryClient?: QueryClient,
+  ): UseMutationResult<
+    Awaited<
+      ReturnType<
+        typeof resendOrgInviteApiV1OrganizationsMeInvitesInviteIdResendPost
+      >
+    >,
+    TError,
+    { inviteId: string },
+    TContext
+  > => {
+    return useMutation(
+      getResendOrgInviteApiV1OrganizationsMeInvitesInviteIdResendPostMutationOptions(
+        options,
+      ),
+      queryClient,
+    );
+  };
+/**
  * Revoke a pending invite from the active organization.
  * @summary Revoke Org Invite
  */
