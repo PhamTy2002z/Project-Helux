@@ -38,7 +38,7 @@ class ResendInviteEmailSender(InviteEmailSender):
         import resend
 
         resend.api_key = api_key
-        self._send_email = resend.Emails.send
+        self._send_email = resend.Emails.send  # type: ignore[assignment]
 
     async def send_organization_invite_email(
         self,
@@ -78,6 +78,8 @@ def _is_retryable_resend_error(exc: Exception) -> bool:
     code_raw = getattr(exc, "status_code", None)
     if code_raw is None:
         code_raw = getattr(exc, "code", None)
+    if code_raw is None:
+        return False
     try:
         code = int(code_raw)
     except (TypeError, ValueError):
