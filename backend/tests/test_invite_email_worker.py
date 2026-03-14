@@ -108,8 +108,12 @@ async def test_process_invite_email_task_retries_on_retryable_error(
             del request
             raise InviteEmailDeliveryError("upstream timeout", retryable=True)
 
-    monkeypatch.setattr("app.services.email.worker.OrganizationInvite", type("I", (), {"objects": _Objects(invite)}))
-    monkeypatch.setattr("app.services.email.worker.Organization", type("O", (), {"objects": _Objects(org)}))
+    monkeypatch.setattr(
+        "app.services.email.worker.OrganizationInvite", type("I", (), {"objects": _Objects(invite)})
+    )
+    monkeypatch.setattr(
+        "app.services.email.worker.Organization", type("O", (), {"objects": _Objects(org)})
+    )
     monkeypatch.setattr("app.services.email.worker.async_session_maker", lambda: _FakeSessionCtx())
     monkeypatch.setattr("app.services.email.worker.get_invite_email_sender", lambda: _Sender())
     monkeypatch.setattr(

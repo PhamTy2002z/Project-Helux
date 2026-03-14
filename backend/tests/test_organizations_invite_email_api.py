@@ -77,7 +77,9 @@ async def test_create_org_invite_enqueues_email(monkeypatch: pytest.MonkeyPatch)
 
     monkeypatch.setattr(organizations, "apply_invite_board_access", _noop_apply)
     monkeypatch.setattr(organizations, "record_admin_audit", lambda *args, **kwargs: None)
-    monkeypatch.setattr(organizations, "_enqueue_invite_email_send", lambda **kwargs: captured.update(kwargs))
+    monkeypatch.setattr(
+        organizations, "_enqueue_invite_email_send", lambda **kwargs: captured.update(kwargs)
+    )
     monkeypatch.setattr(organizations.secrets, "token_urlsafe", lambda _n: "invite-token")
 
     payload = OrganizationInviteCreate(
@@ -111,7 +113,9 @@ async def test_resend_org_invite_enqueues_email(monkeypatch: pytest.MonkeyPatch)
         return invite
 
     monkeypatch.setattr(organizations, "_require_org_invite", _fake_require)
-    monkeypatch.setattr(organizations, "_enqueue_invite_email_send", lambda **kwargs: captured.update(kwargs))
+    monkeypatch.setattr(
+        organizations, "_enqueue_invite_email_send", lambda **kwargs: captured.update(kwargs)
+    )
     monkeypatch.setattr(organizations, "record_admin_audit", lambda *args, **kwargs: None)
 
     response = await organizations.resend_org_invite(
@@ -119,7 +123,9 @@ async def test_resend_org_invite_enqueues_email(monkeypatch: pytest.MonkeyPatch)
         session=session,
         ctx=OrganizationContext(
             organization=Organization(id=invite.organization_id, name="Alpha"),
-            member=OrganizationMember(organization_id=invite.organization_id, user_id=uuid4(), role="admin"),
+            member=OrganizationMember(
+                organization_id=invite.organization_id, user_id=uuid4(), role="admin"
+            ),
         ),
     )
 

@@ -50,12 +50,12 @@ def build_organization_invite_email(
         "If the button does not work, copy and paste the URL into your browser."
     )
     html = (
-        "<html><body style=\"font-family:Arial,sans-serif;line-height:1.5;\">"
+        '<html><body style="font-family:Arial,sans-serif;line-height:1.5;">'
         f"<p>You have been invited to join <strong>{escaped_org_name}</strong> on FlowGrid.</p>"
-        f"<p><a href=\"{escaped_accept_url}\" "
-        "style=\"display:inline-block;padding:10px 16px;background:#0f172a;color:#ffffff;"
-        "text-decoration:none;border-radius:8px;\">Accept invite</a></p>"
-        f"<p>If the button does not work, use this URL:<br><a href=\"{escaped_accept_url}\">"
+        f'<p><a href="{escaped_accept_url}" '
+        'style="display:inline-block;padding:10px 16px;background:#0f172a;color:#ffffff;'
+        'text-decoration:none;border-radius:8px;">Accept invite</a></p>'
+        f'<p>If the button does not work, use this URL:<br><a href="{escaped_accept_url}">'
         f"{escaped_accept_url}</a></p>"
         "</body></html>"
     )
