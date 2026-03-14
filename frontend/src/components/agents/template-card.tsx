@@ -65,7 +65,7 @@ function resolveIcon(iconStr: string | null | undefined): LucideIcon {
 
 function TemplateIcon({ iconStr }: { iconStr: string | null | undefined }) {
   const Icon = resolveIcon(iconStr);
-  // eslint-disable-next-line react-compiler/react-compiler -- dynamic icon from map lookup
+  // eslint-disable-next-line -- dynamic icon from map lookup requires component variable
   return <Icon className="h-5 w-5 text-slate-600" />;
 }
 
