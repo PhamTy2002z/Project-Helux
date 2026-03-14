@@ -22,6 +22,7 @@ import {
   type BillingPlanTier,
   createIdempotencyKey,
   useBillingSubscription,
+  useCreateCheckout,
   useSimulateCheckout,
   useTrackUpgradeModalOpen,
 } from "@/lib/billing";
@@ -58,9 +59,11 @@ export function UpgradeModal({
   });
 
   const simulateCheckoutMutation = useSimulateCheckout();
+  const createCheckoutMutation = useCreateCheckout();
   const trackOpenMutation = useTrackUpgradeModalOpen();
   const wasOpenRef = useRef(false);
-  const isSubmitting = simulateCheckoutMutation.isPending;
+  const isProviderMode = subscriptionQuery.data?.billing_mode === "provider";
+  const isSubmitting = simulateCheckoutMutation.isPending || createCheckoutMutation.isPending;
   const currentTier = subscriptionQuery.data?.plan_tier ?? null;
   const selectedTier = chosenTier ?? currentTier ?? initialTier;
   const trialExpired = subscriptionQuery.data?.status === "blocked_for_payment";
@@ -82,24 +85,43 @@ export function UpgradeModal({
 
   const onCheckout = async () => {
     setCheckoutError(null);
-    try {
-      await simulateCheckoutMutation.mutateAsync({
-        plan_tier: selectedTier,
-        idempotency_key: createIdempotencyKey(),
-      });
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: BILLING_SUBSCRIPTION_QUERY_KEY }),
-        queryClient.invalidateQueries({
-          queryKey: getQuotaUsageApiV1MetricsQuotasGetQueryKey(),
-        }),
-      ]);
-      handleOpenChange(false);
-    } catch (error) {
-      if (error instanceof ApiError) {
-        setCheckoutError(error.message || "Unable to unlock plan.");
-        return;
+
+    if (isProviderMode) {
+      // Real checkout: redirect to payment provider
+      try {
+        const result = await createCheckoutMutation.mutateAsync({
+          plan_tier: selectedTier,
+          idempotency_key: createIdempotencyKey(),
+        });
+        window.location.href = result.checkout_url;
+      } catch (error) {
+        if (error instanceof ApiError) {
+          setCheckoutError(error.message || "Unable to start checkout.");
+          return;
+        }
+        setCheckoutError("Unable to start checkout.");
       }
-      setCheckoutError("Unable to unlock plan.");
+    } else {
+      // Simulated checkout (existing flow)
+      try {
+        await simulateCheckoutMutation.mutateAsync({
+          plan_tier: selectedTier,
+          idempotency_key: createIdempotencyKey(),
+        });
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: BILLING_SUBSCRIPTION_QUERY_KEY }),
+          queryClient.invalidateQueries({
+            queryKey: getQuotaUsageApiV1MetricsQuotasGetQueryKey(),
+          }),
+        ]);
+        handleOpenChange(false);
+      } catch (error) {
+        if (error instanceof ApiError) {
+          setCheckoutError(error.message || "Unable to unlock plan.");
+          return;
+        }
+        setCheckoutError("Unable to unlock plan.");
+      }
     }
   };
 
@@ -110,7 +132,9 @@ export function UpgradeModal({
           <DialogTitle>Choose plan</DialogTitle>
           <DialogDescription className="mt-1 text-sm leading-6 text-slate-600">
             {reason ??
-              "Unlock subscription in one step. This billing flow is simulated in v1."}
+              (isProviderMode
+                ? "Choose a plan and proceed to secure checkout."
+                : "Unlock subscription in one step. This billing flow is simulated in v1.")}
           </DialogDescription>
         </DialogHeader>
 
@@ -150,7 +174,9 @@ export function UpgradeModal({
             Cancel
           </Button>
           <Button type="button" onClick={onCheckout} disabled={isSubmitting}>
-            {isSubmitting ? "Unlocking…" : "Confirm unlock"}
+            {isSubmitting
+              ? (isProviderMode ? "Redirecting…" : "Unlocking…")
+              : (isProviderMode ? "Proceed to checkout" : "Confirm unlock")}
           </Button>
         </DialogFooter>
       </DialogContent>

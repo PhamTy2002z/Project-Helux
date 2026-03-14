@@ -16,6 +16,7 @@ from app.api.agents import router as agents_router
 from app.api.approvals import router as approvals_router
 from app.api.auth import router as auth_router
 from app.api.billing import router as billing_router
+from app.api.billing_webhooks import router as billing_webhooks_router
 from app.api.board_chat_files import router as board_chat_files_router
 from app.api.board_chat_sessions import router as board_chat_sessions_router
 from app.api.board_group_memory import router as board_group_memory_router
@@ -599,6 +600,7 @@ api_v1.include_router(gateway_router)
 api_v1.include_router(gateways_router)
 api_v1.include_router(metrics_router)
 api_v1.include_router(billing_router)
+api_v1.include_router(billing_webhooks_router)
 api_v1.include_router(onboarding_progress_router)
 api_v1.include_router(organizations_router)
 api_v1.include_router(souls_directory_router)

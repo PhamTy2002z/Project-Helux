@@ -79,6 +79,32 @@ services:
         limits:
           memory: 512M
 
+  # ---------- openclaw gateway ----------
+  openclaw:
+    image: openclaw/gateway:latest
+    <<: *default-restart
+    logging: *default-logging
+    environment:
+      OPENCLAW_HOME: /data
+      OPENCLAW_GATEWAY_TOKEN: ${MANAGED_GATEWAY_TOKEN:-}
+    volumes:
+      - openclaw_data:/data
+      - device_identity:/shared/device-identity
+    ports:
+      - "127.0.0.1:18789:18789"
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:18789/healthz || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+
   # ---------- application ----------
   backend:
     image: ghcr.io/${GHCR_OWNER:-phamty2002z}/flowgrid-backend:${GHCR_IMAGE_TAG:-latest}
@@ -101,7 +127,7 @@ services:
       OBJECT_STORAGE_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
       OBJECT_STORAGE_BUCKET: ${OBJECT_STORAGE_BUCKET:-board-chat-files}
       OBJECT_STORAGE_USE_SSL: "false"
-      MANAGED_GATEWAY_URL: ws://127.0.0.1:18789/ws
+      MANAGED_GATEWAY_URL: ws://openclaw:18789/ws
       MANAGED_GATEWAY_TOKEN: ${MANAGED_GATEWAY_TOKEN:-}
       MANAGED_GATEWAY_WORKSPACE_ROOT: /shared/openclaw-managed
       OPENCLAW_GATEWAY_DEVICE_IDENTITY_PATH: /shared/device-identity/device.json
@@ -116,6 +142,8 @@ services:
       redis:
         condition: service_healthy
       minio:
+        condition: service_healthy
+      openclaw:
         condition: service_healthy
     ports:
       - "127.0.0.1:8000:8000"
@@ -211,3 +239,4 @@ volumes:
   postgres_data:
   minio_data:
   device_identity:
+  openclaw_data:

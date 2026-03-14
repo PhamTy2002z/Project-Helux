@@ -15,6 +15,8 @@ from app.core.logging import get_request_endpoint, get_request_id
 from app.db.session import get_session
 from app.models.activity_events import ActivityEvent
 from app.schemas.billing import (
+    BillingCheckoutRequest,
+    BillingCheckoutResponse,
     BillingSimulateCheckoutRequest,
     BillingSimulateCheckoutResponse,
     BillingSubscriptionRead,
@@ -23,7 +25,7 @@ from app.schemas.billing import (
 )
 from app.schemas.common import OkResponse
 from app.services.activity_log import record_activity, record_admin_audit
-from app.services.billing import get_subscription, simulate_checkout
+from app.services.billing import create_checkout_session, get_subscription, simulate_checkout
 from app.services.organizations import OrganizationContext
 
 if TYPE_CHECKING:
@@ -136,6 +138,52 @@ async def simulate_checkout_unlock(
             "resolved_plan_tier": result.subscription.plan_tier,
             "idempotent_replay": result.idempotent_replay,
             "billing_mode": settings.billing_mode,
+        },
+    )
+    await session.commit()
+    return result
+
+
+@router.post("/checkout", response_model=BillingCheckoutResponse)
+async def create_checkout(
+    payload: BillingCheckoutRequest,
+    session: AsyncSession = SESSION_DEP,
+    ctx: OrganizationContext = ORG_ADMIN_DEP,
+) -> BillingCheckoutResponse:
+    """Create real checkout session via payment provider (provider mode only)."""
+    user_email = getattr(ctx.member, "email", "") or ""
+    try:
+        result = await create_checkout_session(
+            session,
+            organization_id=ctx.organization.id,
+            user_email=user_email,
+            payload=payload,
+            billing_mode=settings.billing_mode,
+            payment_provider=settings.payment_provider,
+        )
+    except HTTPException:
+        raise
+    except Exception as exc:
+        _record_billing_metric_event(
+            session,
+            organization_id=ctx.organization.id,
+            event_type="saas.billing.checkout_failed",
+            payload={"error_type": type(exc).__name__},
+        )
+        await session.commit()
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Failed to create checkout session with payment provider.",
+        ) from exc
+
+    _record_billing_metric_event(
+        session,
+        organization_id=ctx.organization.id,
+        event_type="saas.billing.checkout_created",
+        payload={
+            "provider": "polar",
+            "plan_tier": payload.plan_tier,
+            "checkout_id": result.checkout_id,
         },
     )
     await session.commit()

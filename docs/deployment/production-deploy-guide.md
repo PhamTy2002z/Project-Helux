@@ -23,16 +23,17 @@ ssh phamty@192.168.1.5
 ### Step 1.2 — Tạo project directory
 
 ```bash
-sudo mkdir -p /opt/flowgrid
-sudo chown phamty:phamty /opt/flowgrid
+sudo mkdir -p /opt/projects
+sudo chown phamty:phamty /opt/projects
 ```
 
-### Step 1.3 — Install Node.js 22 (cho OpenClaw)
+### Step 1.3 — Clone source code
 
 ```bash
-curl -fsSL https://deb.nodesource.com/setup_22.x | sudo bash -
-sudo apt-get install -y nodejs
-node -v  # Expect: v22.x
+cd /opt/projects
+git clone https://github.com/PhamTy2002z/FlowGrid.git .
+# Hoặc dùng SSH:
+# git clone git@github.com:PhamTy2002z/FlowGrid.git .
 ```
 
 ### Step 1.4 — Update cloudflared config thêm api subdomain
@@ -73,7 +74,7 @@ sudo systemctl status cloudflared  # Verify: active (running)
 ### Step 2.1 — Tạo .env.prod
 
 ```bash
-cd /opt/flowgrid
+cd /opt/projects
 
 # Generate random passwords
 PG_PASS=$(openssl rand -base64 24 | tr -d '/+=' | head -c 32)
@@ -108,9 +109,8 @@ RATE_LIMIT_ENABLED=true
 
 # OpenClaw Gateway
 MANAGED_GATEWAY_AUTO_PROVISION=true
-MANAGED_GATEWAY_URL=ws://127.0.0.1:18789/ws
+MANAGED_GATEWAY_URL=ws://openclaw:18789/ws
 MANAGED_GATEWAY_TOKEN=
-MANAGED_GATEWAY_WORKSPACE_ROOT=/home/phamty/.openclaw/managed
 
 # Worker
 WORKER_HEARTBEAT_KEY=mission-control:worker:heartbeat
@@ -134,14 +134,14 @@ grep LOCAL_AUTH_TOKEN .env.prod
 ### Step 3.1 — Từ Mac (dev machine)
 
 ```bash
-scp compose.prod.yml phamty@192.168.1.5:/opt/flowgrid/
+scp compose.prod.yml phamty@192.168.1.5:/opt/projects/
 ```
 
 ### Step 3.2 — Verify trên server
 
 ```bash
 ssh phamty@192.168.1.5
-ls -la /opt/flowgrid/
+ls -la /opt/projects/
 # Should see: compose.prod.yml  .env.prod
 ```
 
@@ -179,14 +179,14 @@ cd ~/actions-runner
   --token <RUNNER_TOKEN_TU_BUOC_4.1> \
   --name flowgrid-laptop \
   --labels self-hosted,linux,x64,production \
-  --work /opt/flowgrid/_work \
+  --work /opt/projects/_work \
   --runasservice
 ```
 
 Khi hỏi:
 - Runner group: **Enter** (default)
 - Runner name: `flowgrid-laptop`
-- Work folder: `/opt/flowgrid/_work`
+- Work folder: `/opt/projects/_work`
 
 ### Step 4.4 — Install as systemd service (auto-start on boot)
 
@@ -266,7 +266,7 @@ docker push ghcr.io/phamty2002z/flowgrid-frontend:latest
 
 ```bash
 ssh phamty@192.168.1.5
-cd /opt/flowgrid
+cd /opt/projects
 
 # Pull images
 docker compose -f compose.prod.yml --env-file .env.prod pull
@@ -302,22 +302,33 @@ Mở browser:
 
 ---
 
-## Phase 7: Install OpenClaw
+## Phase 7: OpenClaw Gateway (Docker)
 
-### Step 7.1 — Install trên laptop server
+OpenClaw chạy trong Docker cùng stack, không cần cài trên host.
+
+### Step 7.1 — Verify OpenClaw container running
 
 ```bash
 ssh phamty@192.168.1.5
+cd /opt/projects
 
-curl -fsSL https://openclaw.ai/install.sh | bash
-openclaw onboard --install-daemon
+# OpenClaw đã start cùng lúc với docker compose up ở Phase 6
+docker compose -f compose.prod.yml --env-file .env.prod ps openclaw
+# Expected: openclaw  running (healthy)
+
+# Check logs
+docker compose -f compose.prod.yml --env-file .env.prod logs openclaw
 ```
 
-### Step 7.2 — Verify gateway
+### Step 7.2 — Onboard gateway (lần đầu)
 
 ```bash
-openclaw gateway status
-# Expected: Gateway running on port 18789
+# Exec vào container để chạy onboard wizard
+docker compose -f compose.prod.yml --env-file .env.prod exec openclaw openclaw onboard
+
+# Hoặc nếu cần interactive terminal:
+docker compose -f compose.prod.yml --env-file .env.prod exec -it openclaw sh
+openclaw onboard
 ```
 
 ### Step 7.3 — Update MANAGED_GATEWAY_TOKEN (if needed)
@@ -325,12 +336,20 @@ openclaw gateway status
 Nếu OpenClaw onboard generate token:
 
 ```bash
-nano /opt/flowgrid/.env.prod
+nano /opt/projects/.env.prod
 # Update: MANAGED_GATEWAY_TOKEN=<token_from_onboard>
 
-# Restart backend to pick up new token
-cd /opt/flowgrid
-docker compose -f compose.prod.yml --env-file .env.prod restart backend webhook-worker
+# Restart backend + openclaw to pick up new token
+cd /opt/projects
+docker compose -f compose.prod.yml --env-file .env.prod restart openclaw backend webhook-worker
+```
+
+### Step 7.4 — Verify backend connects to gateway
+
+```bash
+# Check backend logs for gateway connection
+docker compose -f compose.prod.yml --env-file .env.prod logs backend | grep -i gateway
+# Expected: no connection errors
 ```
 
 ---
@@ -382,7 +401,7 @@ git push -u origin test/cicd-verify
 ### Xem logs
 
 ```bash
-cd /opt/flowgrid
+cd /opt/projects
 
 # All services
 docker compose -f compose.prod.yml --env-file .env.prod logs -f
@@ -391,14 +410,15 @@ docker compose -f compose.prod.yml --env-file .env.prod logs -f
 docker compose -f compose.prod.yml --env-file .env.prod logs -f backend
 docker compose -f compose.prod.yml --env-file .env.prod logs -f frontend
 docker compose -f compose.prod.yml --env-file .env.prod logs -f webhook-worker
+docker compose -f compose.prod.yml --env-file .env.prod logs -f openclaw
 ```
 
 ### Restart services
 
 ```bash
-cd /opt/flowgrid
+cd /opt/projects
 
-# Restart app only (db/redis/minio stay up)
+# Restart app only (db/redis/minio/openclaw stay up)
 docker compose -f compose.prod.yml --env-file .env.prod restart backend webhook-worker frontend
 
 # Restart everything
@@ -408,14 +428,14 @@ docker compose -f compose.prod.yml --env-file .env.prod restart
 ### Stop everything
 
 ```bash
-cd /opt/flowgrid
+cd /opt/projects
 docker compose -f compose.prod.yml --env-file .env.prod down
 ```
 
 ### Manual deploy (without CI/CD)
 
 ```bash
-cd /opt/flowgrid
+cd /opt/projects
 docker compose -f compose.prod.yml --env-file .env.prod pull
 docker compose -f compose.prod.yml --env-file .env.prod up -d --no-deps backend webhook-worker frontend
 ```
@@ -423,7 +443,7 @@ docker compose -f compose.prod.yml --env-file .env.prod up -d --no-deps backend 
 ### Database backup
 
 ```bash
-cd /opt/flowgrid
+cd /opt/projects
 docker compose -f compose.prod.yml --env-file .env.prod exec db \
   pg_dump -U postgres mission_control > backup-$(date +%Y%m%d).sql
 ```
@@ -431,7 +451,7 @@ docker compose -f compose.prod.yml --env-file .env.prod exec db \
 ### Database restore
 
 ```bash
-cd /opt/flowgrid
+cd /opt/projects
 cat backup-20260314.sql | docker compose -f compose.prod.yml --env-file .env.prod exec -T db \
   psql -U postgres mission_control
 ```

@@ -14,6 +14,8 @@ from app.core.time import utcnow
 from app.models.billing_checkout_attempts import BillingCheckoutAttempt
 from app.models.organization_plans import OrganizationPlan
 from app.schemas.billing import (
+    BillingCheckoutRequest,
+    BillingCheckoutResponse,
     BillingSimulateCheckoutRequest,
     BillingSimulateCheckoutResponse,
     BillingSubscriptionRead,
@@ -188,4 +190,64 @@ async def simulate_checkout(
         checkout_id=attempt.id,
         idempotent_replay=False,
         subscription=subscription,
+    )
+
+
+async def create_checkout_session(
+    session: AsyncSession,
+    *,
+    organization_id: UUID,
+    user_email: str,
+    payload: BillingCheckoutRequest,
+    billing_mode: str,
+    payment_provider: str,
+) -> BillingCheckoutResponse:
+    """Create real checkout session via configured payment provider."""
+    if billing_mode != "provider":
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Real checkout only available when BILLING_MODE=provider.",
+        )
+    if payment_provider != "polar":
+        raise HTTPException(
+            status_code=status.HTTP_501_NOT_IMPLEMENTED,
+            detail=f"Payment provider '{payment_provider}' not yet supported.",
+        )
+
+    from app.core.config import settings as app_settings
+    from app.services.polar_client import get_polar_client
+
+    client = get_polar_client()
+    product_id = app_settings.polar_product_id_pro
+    success_url = (
+        app_settings.polar_success_url
+        or f"{app_settings.base_url}/checkout/success?checkout_id={{CHECKOUT_ID}}"
+    )
+
+    checkout = await client.checkouts.create_async(request={
+        "products": [product_id],
+        "success_url": success_url,
+        "customer_email": user_email or None,
+        "metadata": {
+            "organization_id": str(organization_id),
+            "plan_tier": payload.plan_tier,
+            "idempotency_key": payload.idempotency_key,
+        },
+    })
+
+    # Record checkout attempt as pending (webhook will finalize)
+    attempt = BillingCheckoutAttempt(
+        organization_id=organization_id,
+        idempotency_key=payload.idempotency_key,
+        requested_plan_tier=payload.plan_tier,
+        resolved_plan_tier=payload.plan_tier,
+        status="pending",
+    )
+    session.add(attempt)
+    await session.commit()
+
+    return BillingCheckoutResponse(
+        checkout_url=checkout.url,
+        checkout_id=str(checkout.id),
+        provider="polar",
     )
