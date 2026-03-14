@@ -224,16 +224,18 @@ async def create_checkout_session(
         or f"{app_settings.base_url}/checkout/success?checkout_id={{CHECKOUT_ID}}"
     )
 
-    checkout = await client.checkouts.create_async(request={
-        "products": [product_id],
-        "success_url": success_url,
-        "customer_email": user_email or None,
-        "metadata": {
-            "organization_id": str(organization_id),
-            "plan_tier": payload.plan_tier,
-            "idempotency_key": payload.idempotency_key,
-        },
-    })
+    checkout = await client.checkouts.create_async(
+        request={
+            "products": [product_id],
+            "success_url": success_url,
+            "customer_email": user_email or None,
+            "metadata": {
+                "organization_id": str(organization_id),
+                "plan_tier": payload.plan_tier,
+                "idempotency_key": payload.idempotency_key,
+            },
+        }
+    )
 
     # Record checkout attempt as pending (webhook will finalize)
     attempt = BillingCheckoutAttempt(

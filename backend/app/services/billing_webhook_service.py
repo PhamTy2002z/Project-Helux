@@ -44,7 +44,9 @@ async def _handle_subscription_active(
     plan.effective_from = now
     plan.effective_until = None  # pro has no expiry
     existing_meta = plan.plan_metadata if isinstance(plan.plan_metadata, dict) else {}
-    existing_billing = existing_meta.get("billing") if isinstance(existing_meta.get("billing"), dict) else {}
+    existing_billing = (
+        existing_meta.get("billing") if isinstance(existing_meta.get("billing"), dict) else {}
+    )
     plan.plan_metadata = {
         **existing_meta,
         "billing": {
@@ -121,6 +123,7 @@ async def process_polar_event(session: AsyncSession, *, event: Any) -> None:
     metadata = _safe_get(event_data, "metadata")
     if isinstance(metadata, str):
         import json
+
         try:
             metadata = json.loads(metadata)
         except (json.JSONDecodeError, TypeError):
