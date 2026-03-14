@@ -107,6 +107,15 @@ LOCAL_AUTH_TOKEN=${AUTH_TOKEN}
 LOG_LEVEL=WARNING
 RATE_LIMIT_ENABLED=true
 
+# Billing (Polar payment provider)
+BILLING_MODE=provider
+PAYMENT_PROVIDER=polar
+POLAR_ACCESS_TOKEN=<your_polar_access_token>
+POLAR_WEBHOOK_SECRET=<your_polar_webhook_secret>
+POLAR_PRODUCT_ID_PRO=1e83f145-db6f-41cb-ad76-00ba9d66a2f7
+POLAR_ENVIRONMENT=production
+POLAR_SUCCESS_URL=https://flowgrid.live/checkout/success?checkout_id={CHECKOUT_ID}
+
 # OpenClaw Gateway
 MANAGED_GATEWAY_AUTO_PROVISION=true
 MANAGED_GATEWAY_URL=ws://openclaw:18789/ws
