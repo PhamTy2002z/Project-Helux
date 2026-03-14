@@ -6,7 +6,7 @@ from datetime import datetime
 from typing import Any
 from uuid import UUID, uuid4
 
-from sqlalchemy import Column, UniqueConstraint
+from sqlalchemy import JSON, Column, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlmodel import Field
 
@@ -31,7 +31,9 @@ class WorkspaceTemplate(QueryModel, table=True):
     description: str | None = Field(default=None)
     category: str | None = Field(default=None, index=True)
     icon: str | None = Field(default=None, max_length=50)
-    file_contents: dict[str, Any] = Field(sa_column=Column(JSONB, nullable=False))
+    file_contents: dict[str, Any] = Field(
+        sa_column=Column(JSON().with_variant(JSONB, "postgresql"), nullable=False)
+    )
     is_system: bool = Field(default=False, index=True)
     created_by: UUID | None = Field(default=None, foreign_key="users.id")
     created_at: datetime = Field(default_factory=utcnow)
