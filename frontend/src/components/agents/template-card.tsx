@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import {
   FileText,
   Bot,
@@ -70,7 +71,7 @@ interface TemplateCardProps {
 }
 
 export function TemplateCard({ template, selected, onSelect }: TemplateCardProps) {
-  const Icon = resolveIcon(template.icon);
+  const Icon = useMemo(() => resolveIcon(template.icon), [template.icon]);
   const description = template.description
     ? template.description.length > 80
       ? template.description.slice(0, 77) + "..."
