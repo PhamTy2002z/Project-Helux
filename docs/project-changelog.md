@@ -1,5 +1,45 @@
 # Project Changelog
 
+## 2026-03-15
+
+### Organization invite email rollout (Resend + async queue)
+
+- Added invite email provider configuration in
+  `backend/app/core/config.py`:
+  - `EMAIL_PROVIDER=none|resend`
+  - `RESEND_API_KEY`
+  - `RESEND_WEBHOOK_SECRET`
+  - `EMAIL_FROM_INVITES`
+  - `EMAIL_REPLY_TO`
+  - `INVITE_ACCEPT_BASE_URL`
+- Added Resend dependency in `backend/pyproject.toml`:
+  - `resend>=2.23.0,<3`
+- Added invite email service modules:
+  - `backend/app/services/email/email_sender.py`
+  - `backend/app/services/email/organization_invite_email.py`
+  - `backend/app/services/email/resend_sender.py`
+  - `backend/app/services/email/queue.py`
+  - `backend/app/services/email/worker.py`
+- Registered invite email queue handler in
+  `backend/app/services/queue_worker.py` with existing retry/backoff policy.
+- Added async invite-email enqueue on invite creation:
+  - `POST /api/v1/organizations/me/invites` now commits invite then queues
+    `organization_invite_email_send` best-effort.
+- Added resend endpoint for pending invites:
+  - `POST /api/v1/organizations/me/invites/{invite_id}/resend`
+- Added frontend organization invites table resend action wired to the resend
+  endpoint.
+- Updated production compose wiring so backend + worker both read invite email
+  env vars (`EMAIL_PROVIDER`, `RESEND_*`, sender, invite URL).
+- Added admin audit action:
+  - `organization.invite.resend` →
+    `admin.organization.invite_resent`
+- Added test coverage for config validation, sender mapping, queue payloads,
+  worker behavior, queue worker registration, and invite create/resend API
+  behavior.
+
+---
+
 ## 2026-03-13
 
 ### Workspace Templates Feature

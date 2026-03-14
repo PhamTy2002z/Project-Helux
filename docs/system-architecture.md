@@ -327,6 +327,7 @@ RQ Worker Process
     │     - gateway activation/provisioning tasks
     │     - lifecycle reconcile tasks
     │     - webhook dispatch tasks
+    │     - organization invite email send tasks (Resend adapter)
     │
     ├─→ Update Job Status
     │
@@ -336,6 +337,31 @@ Job Completion
     ├─→ Webhook Notification (optional)
     │
     └─→ Database Update
+```
+
+### Organization invite email delivery flow
+
+```text
+POST /api/v1/organizations/me/invites
+  -> persist invite + commit
+  -> enqueue organization_invite_email_send (best-effort, non-blocking)
+  -> return invite token + payload
+
+POST /api/v1/organizations/me/invites/{invite_id}/resend
+  -> validate org admin + pending invite
+  -> enqueue organization_invite_email_send (best-effort)
+  -> return invite payload
+
+Frontend `/organization` invites table
+  -> Resend email action calls resend endpoint
+  -> keeps invite list refreshed via query invalidation
+
+queue worker
+  -> decode invite task + send_key
+  -> load invite/org from DB
+  -> build accept URL from INVITE_ACCEPT_BASE_URL + token
+  -> send via Resend with deterministic idempotency key
+  -> retry only retryable provider/network failures using existing queue policy
 ```
 
 ### Organization Bootstrap + Managed Gateway Flow
