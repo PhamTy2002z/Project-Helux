@@ -353,8 +353,8 @@ export const useBoardChatMessages = ({
           attachments?.length && !created.attachments?.length
             ? { ...created, attachments }
             : created;
-        setMessages((prev) => mergeMessagesById(prev, [createdWithAttachments]));
-        onMessageCreated?.(createdWithAttachments);
+        setMessages((prev) => mergeMessagesById(prev, [createdWithAttachments as BoardMemoryRead]));
+        onMessageCreated?.(createdWithAttachments as BoardMemoryRead);
         startAwaitingReply(
           apiDatetimeToMs(createdWithAttachments.created_at) ?? Date.now(),
         );
