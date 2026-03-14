@@ -2,15 +2,15 @@
 
 from __future__ import annotations
 
-import logging
 from typing import TYPE_CHECKING
 
 from app.core.config import settings
+from app.core.logging import get_logger
 
 if TYPE_CHECKING:
     from polar_sdk import Polar
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 _client: Polar | None = None
 

@@ -2,16 +2,16 @@
 
 from __future__ import annotations
 
-import logging
 from typing import Any
 from uuid import UUID
 
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from app.core.logging import get_logger
 from app.core.time import utcnow
 from app.services.entitlements import get_or_create_organization_plan
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 HANDLED_EVENTS = {
     "subscription.active",
