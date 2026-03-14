@@ -1759,7 +1759,7 @@ class AgentLifecycleService(OpenClawDBService):
         requested_name = (data.get("name") or "").strip()
         if not requested_name and template_id and workspace_template_files is not None:
             template = await self.session.get(
-                WorkspaceTemplate, template_id  # type: ignore[arg-type]
+                WorkspaceTemplate, template_id
             )
             if template:
                 data["name"] = template.name
