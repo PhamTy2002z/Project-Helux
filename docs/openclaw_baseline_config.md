@@ -1,6 +1,6 @@
 # OpenClaw Baseline Configuration (Getting Started)
 
-This guide turns the provided baseline into a practical starting point for local OpenClaw setup and Mission Control integration.
+This guide turns the provided baseline into a practical starting point for local OpenClaw setup and FlowGrid integration.
 
 For OpenClaw CLI installs, the default config path is:
 
@@ -220,7 +220,7 @@ Per-model override map keyed by full model id.
 Filesystem root for agent state/workspaces.
 
 - Must exist and be writable by the runtime.
-- Align this with Mission Control gateway `workspace_root` for consistency.
+- Align this with FlowGrid gateway `workspace_root` for consistency.
 
 #### `agents.defaults.contextPruning`
 
@@ -473,16 +473,16 @@ openclaw health
 openclaw dashboard
 ```
 
-## Mission Control Connection (This Repo)
+## FlowGrid Connection (This Repo)
 
-When adding a gateway in Mission Control:
+When adding a gateway in FlowGrid:
 
 - URL: `ws://127.0.0.1:18789` (or your host/IP with explicit port)
 - Token: provide only if your gateway requires token auth
 - Device pairing: enabled by default and recommended
   - Keep pairing enabled for normal operation.
   - Optional bypass: enable `Disable device pairing` per gateway only when the gateway is explicitly configured for control UI auth bypass (for example `gateway.controlUi.dangerouslyDisableDeviceAuth: true` plus appropriate `gateway.controlUi.allowedOrigins`).
-- Workspace root (in Mission Control gateway config): align with `agents.defaults.workspace` when possible
+- Workspace root (in FlowGrid gateway config): align with `agents.defaults.workspace` when possible
 
 ## Security Notes
 

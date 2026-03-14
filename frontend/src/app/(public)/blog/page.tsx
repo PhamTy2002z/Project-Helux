@@ -10,6 +10,7 @@ import {
   resolveBlogCategory,
 } from "@/components/organisms/landing-page/blog-page-content-data";
 import { ScrollProvider } from "@/components/providers/scroll-provider";
+import { DEFAULT_SEO_IMAGE, DEFAULT_SEO_IMAGE_ALT } from "@/lib/seo";
 import { getSiteUrl } from "@/lib/site-url";
 
 const siteUrl = getSiteUrl();
@@ -21,7 +22,7 @@ export const metadata: Metadata = {
     canonical: "/blog",
   },
   keywords: [
-    "openclaw blog",
+    "flowgrid blog",
     "ai agent tutorials",
     "enterprise ai operations",
     "agent factory deployment",
@@ -31,11 +32,13 @@ export const metadata: Metadata = {
     description: BLOG_PAGE_DESCRIPTION,
     url: "/blog",
     type: "website",
+    images: [{ url: DEFAULT_SEO_IMAGE, alt: DEFAULT_SEO_IMAGE_ALT }],
   },
   twitter: {
     card: "summary_large_image",
     title: BLOG_PAGE_TITLE,
     description: BLOG_PAGE_DESCRIPTION,
+    images: [DEFAULT_SEO_IMAGE],
   },
 };
 

@@ -14,7 +14,10 @@ export interface TaskUpdate {
   description?: string | null;
   status?: "inbox" | "in_progress" | "review" | "done" | null;
   priority?: string | null;
+  task_group_id?: string | null;
+  sort_index?: number | null;
   due_at?: string | null;
+  archived_at?: string | null;
   assigned_agent_id?: string | null;
   depends_on_task_ids?: string[] | null;
   tag_ids?: string[] | null;

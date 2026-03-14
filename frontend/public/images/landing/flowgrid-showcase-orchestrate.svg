@@ -30,7 +30,7 @@
     <rect x="299" y="178" width="58" height="58" rx="16" fill="#EA6F12"/>
     <path d="M328 191.5L331.5 199.5L339.5 203L331.5 206.5L328 214.5L324.5 206.5L316.5 203L324.5 199.5L328 191.5Z" fill="white"/>
     <circle cx="328" cy="203" r="13" stroke="white" stroke-width="3"/>
-    <text x="328" y="259" text-anchor="middle" fill="white" font-family="Arial, Helvetica, sans-serif" font-size="25" font-weight="500">Helux</text>
+    <text x="328" y="259" text-anchor="middle" fill="white" font-family="Arial, Helvetica, sans-serif" font-size="25" font-weight="500">FlowGrid</text>
     <text x="328" y="299" text-anchor="middle" fill="white" font-family="Arial, Helvetica, sans-serif" font-size="29" font-weight="500">Orchestration</text>
   </g>
 
@@ -56,9 +56,9 @@
 
   <g filter="url(#terminalShadow)">
     <rect x="542" y="430" width="532" height="188" rx="22" fill="url(#terminalGlow)" stroke="#E08242" stroke-opacity="0.55" stroke-width="2"/>
-    <text x="576" y="476" fill="#A5ABB4" font-family="Courier New, monospace" font-size="24"># Deploying Helux agent</text>
-    <text x="576" y="526" fill="#FF8B37" font-family="Courier New, monospace" font-size="24" font-weight="700">helux deploy</text>
-    <text x="576" y="586" fill="#B5BDC8" font-family="Courier New, monospace" font-size="18"># This command deploys the Helux agent based on the</text>
+    <text x="576" y="476" fill="#A5ABB4" font-family="Courier New, monospace" font-size="24"># Deploying FlowGrid agent</text>
+    <text x="576" y="526" fill="#FF8B37" font-family="Courier New, monospace" font-size="24" font-weight="700">flowgrid deploy</text>
+    <text x="576" y="586" fill="#B5BDC8" font-family="Courier New, monospace" font-size="18"># This command deploys the FlowGrid agent based on the</text>
     <text x="576" y="616" fill="#B5BDC8" font-family="Courier New, monospace" font-size="18">configuration set up in your environment.</text>
   </g>
 

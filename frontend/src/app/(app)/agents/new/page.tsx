@@ -14,7 +14,7 @@ import {
 } from "@/api/generated/boards/boards";
 import { useCreateAgentApiV1AgentsPost } from "@/api/generated/agents/agents";
 import { useOrganizationMembership } from "@/lib/use-organization-membership";
-import type { BoardRead } from "@/api/generated/model";
+import type { BoardRead, WorkspaceTemplateRead } from "@/api/generated/model";
 import { UpgradeModal } from "@/components/billing/upgrade-modal";
 import { DashboardPageLayout } from "@/components/templates/DashboardPageLayout";
 import { Button } from "@/components/ui/button";
@@ -32,6 +32,7 @@ import {
 import { getApiErrorCode, getUpgradeReasonFromError } from "@/lib/billing";
 import { AGENT_EMOJI_OPTIONS } from "@/lib/agent-emoji";
 import { DEFAULT_IDENTITY_PROFILE } from "@/lib/agent-templates";
+import { TemplatePickerStep } from "@/components/agents/template-picker-step";
 
 type IdentityProfile = {
   role: string;
@@ -66,6 +67,8 @@ export default function NewAgentPage() {
 
   const { isAdmin } = useOrganizationMembership(isSignedIn);
 
+  const [showTemplatePicker, setShowTemplatePicker] = useState(true);
+  const [selectedTemplate, setSelectedTemplate] = useState<WorkspaceTemplateRead | null>(null);
   const [name, setName] = useState("");
   const [boardId, setBoardId] = useState<string>("");
   const [heartbeatEvery, setHeartbeatEvery] = useState("10m");
@@ -75,6 +78,16 @@ export default function NewAgentPage() {
   const [error, setError] = useState<string | null>(null);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const [upgradeReason, setUpgradeReason] = useState(AGENT_UPGRADE_REASON);
+
+  const handleTemplateSelect = (template: WorkspaceTemplateRead) => {
+    setSelectedTemplate(template);
+    setName(template.name);
+    setShowTemplatePicker(false);
+  };
+
+  const handleTemplateSkip = () => {
+    setShowTemplatePicker(false);
+  };
 
   const boardsQuery = useListBoardsApiV1BoardsGet<
     listBoardsApiV1BoardsGetResponse,
@@ -136,6 +149,7 @@ export default function NewAgentPage() {
         identity_profile: normalizeIdentityProfile(
           identityProfile,
         ) as unknown as Record<string, unknown> | null,
+        template_id: selectedTemplate?.id ?? null,
       },
     });
   };
@@ -153,6 +167,47 @@ export default function NewAgentPage() {
         isAdmin={isAdmin}
         adminOnlyMessage="Only organization owners and admins can create agents."
       >
+        {showTemplatePicker ? (
+          <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
+            <div>
+              <p className="text-sm font-semibold text-slate-900">Choose a template</p>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Start from a pre-built workspace or skip to configure from scratch.
+              </p>
+            </div>
+            <TemplatePickerStep
+              onSelect={handleTemplateSelect}
+              onSkip={handleTemplateSkip}
+            />
+          </div>
+        ) : (
+        <div className="space-y-3">
+          {selectedTemplate ? (
+            <div className="flex items-center justify-between rounded-lg border border-blue-100 bg-blue-50 px-4 py-2">
+              <p className="text-sm text-blue-700">
+                Template: <span className="font-semibold">{selectedTemplate.name}</span>
+              </p>
+              <Button
+                variant="outline"
+                type="button"
+                size="sm"
+                onClick={() => setShowTemplatePicker(true)}
+              >
+                Change template
+              </Button>
+            </div>
+          ) : (
+            <div className="flex justify-end">
+              <Button
+                variant="outline"
+                type="button"
+                size="sm"
+                onClick={() => setShowTemplatePicker(true)}
+              >
+                Choose template
+              </Button>
+            </div>
+          )}
         <form
           onSubmit={handleSubmit}
           className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm space-y-6"
@@ -309,6 +364,8 @@ export default function NewAgentPage() {
           </Button>
         </div>
         </form>
+        </div>
+        )}
       </DashboardPageLayout>
       <UpgradeModal
         open={upgradeOpen}

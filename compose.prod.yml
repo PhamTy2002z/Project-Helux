@@ -1,0 +1,213 @@
+# Production Docker Compose — pulls pre-built images from GHCR.
+# Usage: docker compose -f compose.prod.yml --env-file .env.prod up -d
+#
+# Required env vars in .env.prod:
+#   GHCR_IMAGE_TAG, POSTGRES_PASSWORD, MINIO_ROOT_PASSWORD,
+#   LOCAL_AUTH_TOKEN, DOMAIN (for CORS/API URL)
+
+name: flowgrid-prod
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+x-restart: &default-restart
+  restart: unless-stopped
+
+services:
+  # ---------- data stores ----------
+  db:
+    image: postgres:16-alpine
+    <<: *default-restart
+    logging: *default-logging
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-mission_control}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 3s
+      retries: 20
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  redis:
+    image: redis:7-alpine
+    <<: *default-restart
+    logging: *default-logging
+    command: ["redis-server", "--maxmemory", "128mb", "--maxmemory-policy", "allkeys-lru"]
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  minio:
+    image: minio/minio:RELEASE.2025-02-28T09-55-16Z
+    <<: *default-restart
+    logging: *default-logging
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?Set MINIO_ROOT_PASSWORD}
+    volumes:
+      - minio_data:/data
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  # ---------- application ----------
+  backend:
+    image: ghcr.io/${GHCR_OWNER:-phamty2002z}/flowgrid-backend:${GHCR_IMAGE_TAG:-latest}
+    <<: *default-restart
+    logging: *default-logging
+    environment:
+      ENVIRONMENT: production
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-mission_control}
+      CORS_ORIGINS: https://${DOMAIN:?Set DOMAIN}
+      BASE_URL: https://api.${DOMAIN}
+      DB_AUTO_MIGRATE: "true"
+      AUTH_PROFILE: self_hosted
+      AUTH_MODE: local
+      LOCAL_AUTH_TOKEN: ${LOCAL_AUTH_TOKEN:?Set LOCAL_AUTH_TOKEN}
+      RQ_REDIS_URL: redis://redis:6379/0
+      WORKER_HEARTBEAT_KEY: ${WORKER_HEARTBEAT_KEY:-mission-control:worker:heartbeat}
+      READINESS_WORKER_HEARTBEAT_KEY: ${READINESS_WORKER_HEARTBEAT_KEY:-mission-control:worker:heartbeat}
+      OBJECT_STORAGE_ENDPOINT: http://minio:9000
+      OBJECT_STORAGE_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
+      OBJECT_STORAGE_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
+      OBJECT_STORAGE_BUCKET: ${OBJECT_STORAGE_BUCKET:-board-chat-files}
+      OBJECT_STORAGE_USE_SSL: "false"
+      MANAGED_GATEWAY_URL: ws://127.0.0.1:18789/ws
+      MANAGED_GATEWAY_TOKEN: ${MANAGED_GATEWAY_TOKEN:-}
+      MANAGED_GATEWAY_WORKSPACE_ROOT: /shared/openclaw-managed
+      OPENCLAW_GATEWAY_DEVICE_IDENTITY_PATH: /shared/device-identity/device.json
+      LOG_LEVEL: ${LOG_LEVEL:-WARNING}
+      LOG_FORMAT: json
+      RATE_LIMIT_ENABLED: "true"
+    volumes:
+      - device_identity:/shared/device-identity
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:8000:8000"
+    networks:
+      - internal
+      - public
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8000/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+
+  frontend:
+    image: ghcr.io/${GHCR_OWNER:-phamty2002z}/flowgrid-frontend:${GHCR_IMAGE_TAG:-latest}
+    <<: *default-restart
+    logging: *default-logging
+    environment:
+      NEXT_PUBLIC_API_URL: https://api.${DOMAIN}
+      NEXT_PUBLIC_AUTH_MODE: local
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:3000:3000"
+    networks:
+      - public
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:3000 || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  webhook-worker:
+    image: ghcr.io/${GHCR_OWNER:-phamty2002z}/flowgrid-backend:${GHCR_IMAGE_TAG:-latest}
+    command: ["python", "scripts/rq-docker", "worker"]
+    <<: *default-restart
+    logging: *default-logging
+    depends_on:
+      redis:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
+    environment:
+      ENVIRONMENT: production
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-mission_control}
+      AUTH_MODE: local
+      LOCAL_AUTH_TOKEN: ${LOCAL_AUTH_TOKEN}
+      RQ_REDIS_URL: redis://redis:6379/0
+      RQ_QUEUE_NAME: ${RQ_QUEUE_NAME:-default}
+      OBJECT_STORAGE_ENDPOINT: http://minio:9000
+      OBJECT_STORAGE_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
+      OBJECT_STORAGE_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
+      OBJECT_STORAGE_BUCKET: ${OBJECT_STORAGE_BUCKET:-board-chat-files}
+      OBJECT_STORAGE_USE_SSL: "false"
+      WORKER_HEARTBEAT_KEY: ${WORKER_HEARTBEAT_KEY:-mission-control:worker:heartbeat}
+      OPENCLAW_GATEWAY_DEVICE_IDENTITY_PATH: /shared/device-identity/device.json
+    volumes:
+      - device_identity:/shared/device-identity
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD-SHELL", "python -c 'from app.services.queue_worker import run_worker' || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+networks:
+  internal:
+    driver: bridge
+  public:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  minio_data:
+  device_identity:

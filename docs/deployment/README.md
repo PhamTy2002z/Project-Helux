@@ -1,6 +1,6 @@
 # Deployment
 
-This section covers internal deployment of Mission Control for development and staging environments. For production SaaS access, users subscribe to our platform at no self-deployment required.
+This section covers internal deployment of FlowGrid for development and staging environments. For production SaaS access, users subscribe to our platform at no self-deployment required.
 
 > **Goal**
 > A simple, reproducible deploy for the development team that preserves the Postgres volume and supports safe upgrades.

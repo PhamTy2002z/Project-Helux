@@ -995,7 +995,7 @@ export default function ActivityPage() {
           const boardChunk = allBoards.slice(index, index + snapshotChunkSize);
           const snapshotResults = await Promise.allSettled(
             boardChunk.map((board) =>
-              getBoardSnapshotApiV1BoardsBoardIdSnapshotGet(board.id, { signal }),
+              getBoardSnapshotApiV1BoardsBoardIdSnapshotGet(board.id, undefined, { signal }),
             ),
           );
           if (cancelled) return;

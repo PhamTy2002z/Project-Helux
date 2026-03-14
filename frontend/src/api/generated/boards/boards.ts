@@ -27,8 +27,9 @@ import type {
   BoardSnapshot,
   BoardUpdate,
   GetBoardGroupSnapshotApiV1BoardsBoardIdGroupSnapshotGetParams,
+  GetBoardSnapshotApiV1BoardsBoardIdSnapshotGetParams,
   HTTPValidationError,
-  LimitOffsetPageTypeVarCustomizedBoardRead,
+  LimitOffsetPageTCustomizedBoardRead,
   ListBoardsApiV1BoardsGetParams,
   OkResponse,
 } from "../model";
@@ -42,7 +43,7 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
  * @summary List Boards
  */
 export type listBoardsApiV1BoardsGetResponse200 = {
-  data: LimitOffsetPageTypeVarCustomizedBoardRead;
+  data: LimitOffsetPageTCustomizedBoardRead;
   status: 200;
 };
 
@@ -829,16 +830,30 @@ export type getBoardSnapshotApiV1BoardsBoardIdSnapshotGetResponse =
 
 export const getGetBoardSnapshotApiV1BoardsBoardIdSnapshotGetUrl = (
   boardId: string,
+  params?: GetBoardSnapshotApiV1BoardsBoardIdSnapshotGetParams,
 ) => {
-  return `/api/v1/boards/${boardId}/snapshot`;
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/v1/boards/${boardId}/snapshot?${stringifiedParams}`
+    : `/api/v1/boards/${boardId}/snapshot`;
 };
 
 export const getBoardSnapshotApiV1BoardsBoardIdSnapshotGet = async (
   boardId: string,
+  params?: GetBoardSnapshotApiV1BoardsBoardIdSnapshotGetParams,
   options?: RequestInit,
 ): Promise<getBoardSnapshotApiV1BoardsBoardIdSnapshotGetResponse> => {
   return customFetch<getBoardSnapshotApiV1BoardsBoardIdSnapshotGetResponse>(
-    getGetBoardSnapshotApiV1BoardsBoardIdSnapshotGetUrl(boardId),
+    getGetBoardSnapshotApiV1BoardsBoardIdSnapshotGetUrl(boardId, params),
     {
       ...options,
       method: "GET",
@@ -848,8 +863,12 @@ export const getBoardSnapshotApiV1BoardsBoardIdSnapshotGet = async (
 
 export const getGetBoardSnapshotApiV1BoardsBoardIdSnapshotGetQueryKey = (
   boardId: string,
+  params?: GetBoardSnapshotApiV1BoardsBoardIdSnapshotGetParams,
 ) => {
-  return [`/api/v1/boards/${boardId}/snapshot`] as const;
+  return [
+    `/api/v1/boards/${boardId}/snapshot`,
+    ...(params ? [params] : []),
+  ] as const;
 };
 
 export const getGetBoardSnapshotApiV1BoardsBoardIdSnapshotGetQueryOptions = <
@@ -859,6 +878,7 @@ export const getGetBoardSnapshotApiV1BoardsBoardIdSnapshotGetQueryOptions = <
   TError = HTTPValidationError,
 >(
   boardId: string,
+  params?: GetBoardSnapshotApiV1BoardsBoardIdSnapshotGetParams,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -876,12 +896,12 @@ export const getGetBoardSnapshotApiV1BoardsBoardIdSnapshotGetQueryOptions = <
 
   const queryKey =
     queryOptions?.queryKey ??
-    getGetBoardSnapshotApiV1BoardsBoardIdSnapshotGetQueryKey(boardId);
+    getGetBoardSnapshotApiV1BoardsBoardIdSnapshotGetQueryKey(boardId, params);
 
   const queryFn: QueryFunction<
     Awaited<ReturnType<typeof getBoardSnapshotApiV1BoardsBoardIdSnapshotGet>>
   > = ({ signal }) =>
-    getBoardSnapshotApiV1BoardsBoardIdSnapshotGet(boardId, {
+    getBoardSnapshotApiV1BoardsBoardIdSnapshotGet(boardId, params, {
       signal,
       ...requestOptions,
     });
@@ -912,6 +932,7 @@ export function useGetBoardSnapshotApiV1BoardsBoardIdSnapshotGet<
   TError = HTTPValidationError,
 >(
   boardId: string,
+  params: undefined | GetBoardSnapshotApiV1BoardsBoardIdSnapshotGetParams,
   options: {
     query: Partial<
       UseQueryOptions<
@@ -947,6 +968,7 @@ export function useGetBoardSnapshotApiV1BoardsBoardIdSnapshotGet<
   TError = HTTPValidationError,
 >(
   boardId: string,
+  params?: GetBoardSnapshotApiV1BoardsBoardIdSnapshotGetParams,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -982,6 +1004,7 @@ export function useGetBoardSnapshotApiV1BoardsBoardIdSnapshotGet<
   TError = HTTPValidationError,
 >(
   boardId: string,
+  params?: GetBoardSnapshotApiV1BoardsBoardIdSnapshotGetParams,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -1009,6 +1032,7 @@ export function useGetBoardSnapshotApiV1BoardsBoardIdSnapshotGet<
   TError = HTTPValidationError,
 >(
   boardId: string,
+  params?: GetBoardSnapshotApiV1BoardsBoardIdSnapshotGetParams,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -1028,6 +1052,7 @@ export function useGetBoardSnapshotApiV1BoardsBoardIdSnapshotGet<
   const queryOptions =
     getGetBoardSnapshotApiV1BoardsBoardIdSnapshotGetQueryOptions(
       boardId,
+      params,
       options,
     );
 

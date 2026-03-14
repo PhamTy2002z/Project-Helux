@@ -8,6 +8,15 @@
 
 ## Recent Updates (March 2026)
 
+- ✅ **Workspace Templates Feature Complete** (2026-03-13):
+  - New `WorkspaceTemplate` model with JSONB file_contents (org-scoped, system seeds)
+  - CRUD API endpoints: `GET /api/v1/workspace-templates`, `POST`, `PATCH`, `DELETE`
+  - Backend service layer for template management and provisioning
+  - Template picker UI on agent creation flow
+  - 12 system seed templates auto-created on startup
+  - Integration with agent provisioning pipeline via template writer service
+  - Comprehensive research and feasibility documentation
+
 - ✅ **SaaS Hardening & Payment Enforcement Complete** (2026-03-12):
   - Trial expiry blocks (402 blocked_for_payment response)
   - Board-group and agents-per-board quota enforcement
@@ -38,7 +47,7 @@
   - Added landing regression tests for hero media policy and mobile drawer behavior
 - ✅ Landing page feature section refresh:
   - Replaced the `One platform for every operational surface` placeholder cards with two poster-based spotlight cards
-  - Integrated CrewAI `Trusted` and `Scalable` visuals into the current Helux landing page
+  - Integrated CrewAI `Trusted` and `Scalable` visuals into the current FlowGrid landing page
   - Added component test coverage for the refreshed landing feature section
 - ✅ Token ledger + quota enforcement plan (`260309-2123`) phases 4-6 completed first:
   - Backend agent read surfaces now expose token fields (`token_used_today`, `token_limit_today`, `token_remaining_today`, `token_blocked`, `token_reset_at`)
@@ -170,12 +179,18 @@
 - 🔄 Multi-agent coordination patterns
 - 🔄 Agent failure recovery and retry logic
 
+#### Completed Features (Recent)
+
+- ✅ Agent templates (workspace templates) with CRUD API
+- ✅ Template picker UI on agent creation
+- ✅ System seed templates library
+
 #### Planned Features
 
 - ⏳ Agent resource limits and quotas
 - ⏳ Agent execution history and logs
-- ⏳ Agent templates and presets
 - ⏳ Agent cost tracking and budgeting
+- ⏳ Custom template creation and sharing
 
 ---
 

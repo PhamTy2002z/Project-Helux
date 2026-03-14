@@ -22,6 +22,7 @@ import type {
 
 import type {
   AgentCreate,
+  AgentFileContentResponse,
   AgentHealthStatusResponse,
   AgentNudge,
   AgentRead,
@@ -43,12 +44,12 @@ import type {
   GetWebhookPayloadApiV1AgentBoardsBoardIdWebhooksWebhookIdPayloadsPayloadIdGetParams,
   HTTPValidationError,
   LLMErrorResponse,
-  LimitOffsetPageTypeVarCustomizedAgentRead,
-  LimitOffsetPageTypeVarCustomizedApprovalRead,
-  LimitOffsetPageTypeVarCustomizedBoardMemoryRead,
-  LimitOffsetPageTypeVarCustomizedBoardRead,
-  LimitOffsetPageTypeVarCustomizedTaskCommentRead,
-  LimitOffsetPageTypeVarCustomizedTaskRead,
+  LimitOffsetPageTCustomizedAgentRead,
+  LimitOffsetPageTCustomizedApprovalRead,
+  LimitOffsetPageTCustomizedBoardMemoryRead,
+  LimitOffsetPageTCustomizedBoardRead,
+  LimitOffsetPageTCustomizedTaskCommentRead,
+  LimitOffsetPageTCustomizedTaskRead,
   ListAgentsApiV1AgentAgentsGetParams,
   ListApprovalsApiV1AgentBoardsBoardIdApprovalsGetParams,
   ListBoardMemoryApiV1AgentBoardsBoardIdMemoryGetParams,
@@ -262,7 +263,7 @@ Use this as a discovery step before board-scoped operations.
  * @summary List boards visible to the caller
  */
 export type listBoardsApiV1AgentBoardsGetResponse200 = {
-  data: LimitOffsetPageTypeVarCustomizedBoardRead;
+  data: LimitOffsetPageTCustomizedBoardRead;
   status: 200;
 };
 
@@ -680,7 +681,7 @@ Use when downstream routing or coordination needs recipient actors.
  * @summary List visible agents
  */
 export type listAgentsApiV1AgentAgentsGetResponse200 = {
-  data: LimitOffsetPageTypeVarCustomizedAgentRead;
+  data: LimitOffsetPageTCustomizedAgentRead;
   status: 200;
 };
 
@@ -1028,7 +1029,7 @@ Common patterns:
  * @summary List Tasks
  */
 export type listTasksApiV1AgentBoardsBoardIdTasksGetResponse200 = {
-  data: LimitOffsetPageTypeVarCustomizedTaskRead;
+  data: LimitOffsetPageTCustomizedTaskRead;
   status: 200;
 };
 
@@ -2251,7 +2252,7 @@ Read this before posting updates to avoid duplicate or low-value comments.
  */
 export type listTaskCommentsApiV1AgentBoardsBoardIdTasksTaskIdCommentsGetResponse200 =
   {
-    data: LimitOffsetPageTypeVarCustomizedTaskCommentRead;
+    data: LimitOffsetPageTCustomizedTaskCommentRead;
     status: 200;
   };
 
@@ -2748,7 +2749,7 @@ Use `is_chat=false` for durable context and `is_chat=true` for board chat.
  * @summary List Board Memory
  */
 export type listBoardMemoryApiV1AgentBoardsBoardIdMemoryGetResponse200 = {
-  data: LimitOffsetPageTypeVarCustomizedBoardMemoryRead;
+  data: LimitOffsetPageTCustomizedBoardMemoryRead;
   status: 200;
 };
 
@@ -3155,7 +3156,7 @@ Use status filtering to process pending approvals efficiently.
  * @summary List Approvals
  */
 export type listApprovalsApiV1AgentBoardsBoardIdApprovalsGetResponse200 = {
-  data: LimitOffsetPageTypeVarCustomizedApprovalRead;
+  data: LimitOffsetPageTCustomizedApprovalRead;
   status: 200;
 };
 
@@ -4971,3 +4972,300 @@ export const useAgentMainBroadcastLeadMessage = <
     queryClient,
   );
 };
+/**
+ * Returns the full extracted text of a file asset for an agent that has an active processing task (status: pending or reported) for that file.
+ * @summary Fetch extracted file content for agent processing
+ */
+export type getAgentFileContentApiV1AgentBoardsBoardIdChatFilesFileIdContentGetResponse200 =
+  {
+    data: AgentFileContentResponse;
+    status: 200;
+  };
+
+export type getAgentFileContentApiV1AgentBoardsBoardIdChatFilesFileIdContentGetResponse422 =
+  {
+    data: HTTPValidationError;
+    status: 422;
+  };
+
+export type getAgentFileContentApiV1AgentBoardsBoardIdChatFilesFileIdContentGetResponseSuccess =
+  getAgentFileContentApiV1AgentBoardsBoardIdChatFilesFileIdContentGetResponse200 & {
+    headers: Headers;
+  };
+export type getAgentFileContentApiV1AgentBoardsBoardIdChatFilesFileIdContentGetResponseError =
+  getAgentFileContentApiV1AgentBoardsBoardIdChatFilesFileIdContentGetResponse422 & {
+    headers: Headers;
+  };
+
+export type getAgentFileContentApiV1AgentBoardsBoardIdChatFilesFileIdContentGetResponse =
+
+    | getAgentFileContentApiV1AgentBoardsBoardIdChatFilesFileIdContentGetResponseSuccess
+    | getAgentFileContentApiV1AgentBoardsBoardIdChatFilesFileIdContentGetResponseError;
+
+export const getGetAgentFileContentApiV1AgentBoardsBoardIdChatFilesFileIdContentGetUrl =
+  (boardId: string, fileId: string) => {
+    return `/api/v1/agent/boards/${boardId}/chat-files/${fileId}/content`;
+  };
+
+export const getAgentFileContentApiV1AgentBoardsBoardIdChatFilesFileIdContentGet =
+  async (
+    boardId: string,
+    fileId: string,
+    options?: RequestInit,
+  ): Promise<getAgentFileContentApiV1AgentBoardsBoardIdChatFilesFileIdContentGetResponse> => {
+    return customFetch<getAgentFileContentApiV1AgentBoardsBoardIdChatFilesFileIdContentGetResponse>(
+      getGetAgentFileContentApiV1AgentBoardsBoardIdChatFilesFileIdContentGetUrl(
+        boardId,
+        fileId,
+      ),
+      {
+        ...options,
+        method: "GET",
+      },
+    );
+  };
+
+export const getGetAgentFileContentApiV1AgentBoardsBoardIdChatFilesFileIdContentGetQueryKey =
+  (boardId: string, fileId: string) => {
+    return [
+      `/api/v1/agent/boards/${boardId}/chat-files/${fileId}/content`,
+    ] as const;
+  };
+
+export const getGetAgentFileContentApiV1AgentBoardsBoardIdChatFilesFileIdContentGetQueryOptions =
+  <
+    TData = Awaited<
+      ReturnType<
+        typeof getAgentFileContentApiV1AgentBoardsBoardIdChatFilesFileIdContentGet
+      >
+    >,
+    TError = HTTPValidationError,
+  >(
+    boardId: string,
+    fileId: string,
+    options?: {
+      query?: Partial<
+        UseQueryOptions<
+          Awaited<
+            ReturnType<
+              typeof getAgentFileContentApiV1AgentBoardsBoardIdChatFilesFileIdContentGet
+            >
+          >,
+          TError,
+          TData
+        >
+      >;
+      request?: SecondParameter<typeof customFetch>;
+    },
+  ) => {
+    const { query: queryOptions, request: requestOptions } = options ?? {};
+
+    const queryKey =
+      queryOptions?.queryKey ??
+      getGetAgentFileContentApiV1AgentBoardsBoardIdChatFilesFileIdContentGetQueryKey(
+        boardId,
+        fileId,
+      );
+
+    const queryFn: QueryFunction<
+      Awaited<
+        ReturnType<
+          typeof getAgentFileContentApiV1AgentBoardsBoardIdChatFilesFileIdContentGet
+        >
+      >
+    > = ({ signal }) =>
+      getAgentFileContentApiV1AgentBoardsBoardIdChatFilesFileIdContentGet(
+        boardId,
+        fileId,
+        { signal, ...requestOptions },
+      );
+
+    return {
+      queryKey,
+      queryFn,
+      enabled: !!(boardId && fileId),
+      ...queryOptions,
+    } as UseQueryOptions<
+      Awaited<
+        ReturnType<
+          typeof getAgentFileContentApiV1AgentBoardsBoardIdChatFilesFileIdContentGet
+        >
+      >,
+      TError,
+      TData
+    > & { queryKey: DataTag<QueryKey, TData, TError> };
+  };
+
+export type GetAgentFileContentApiV1AgentBoardsBoardIdChatFilesFileIdContentGetQueryResult =
+  NonNullable<
+    Awaited<
+      ReturnType<
+        typeof getAgentFileContentApiV1AgentBoardsBoardIdChatFilesFileIdContentGet
+      >
+    >
+  >;
+export type GetAgentFileContentApiV1AgentBoardsBoardIdChatFilesFileIdContentGetQueryError =
+  HTTPValidationError;
+
+export function useGetAgentFileContentApiV1AgentBoardsBoardIdChatFilesFileIdContentGet<
+  TData = Awaited<
+    ReturnType<
+      typeof getAgentFileContentApiV1AgentBoardsBoardIdChatFilesFileIdContentGet
+    >
+  >,
+  TError = HTTPValidationError,
+>(
+  boardId: string,
+  fileId: string,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<
+          ReturnType<
+            typeof getAgentFileContentApiV1AgentBoardsBoardIdChatFilesFileIdContentGet
+          >
+        >,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<
+            ReturnType<
+              typeof getAgentFileContentApiV1AgentBoardsBoardIdChatFilesFileIdContentGet
+            >
+          >,
+          TError,
+          Awaited<
+            ReturnType<
+              typeof getAgentFileContentApiV1AgentBoardsBoardIdChatFilesFileIdContentGet
+            >
+          >
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useGetAgentFileContentApiV1AgentBoardsBoardIdChatFilesFileIdContentGet<
+  TData = Awaited<
+    ReturnType<
+      typeof getAgentFileContentApiV1AgentBoardsBoardIdChatFilesFileIdContentGet
+    >
+  >,
+  TError = HTTPValidationError,
+>(
+  boardId: string,
+  fileId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<
+          ReturnType<
+            typeof getAgentFileContentApiV1AgentBoardsBoardIdChatFilesFileIdContentGet
+          >
+        >,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<
+            ReturnType<
+              typeof getAgentFileContentApiV1AgentBoardsBoardIdChatFilesFileIdContentGet
+            >
+          >,
+          TError,
+          Awaited<
+            ReturnType<
+              typeof getAgentFileContentApiV1AgentBoardsBoardIdChatFilesFileIdContentGet
+            >
+          >
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useGetAgentFileContentApiV1AgentBoardsBoardIdChatFilesFileIdContentGet<
+  TData = Awaited<
+    ReturnType<
+      typeof getAgentFileContentApiV1AgentBoardsBoardIdChatFilesFileIdContentGet
+    >
+  >,
+  TError = HTTPValidationError,
+>(
+  boardId: string,
+  fileId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<
+          ReturnType<
+            typeof getAgentFileContentApiV1AgentBoardsBoardIdChatFilesFileIdContentGet
+          >
+        >,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+/**
+ * @summary Fetch extracted file content for agent processing
+ */
+
+export function useGetAgentFileContentApiV1AgentBoardsBoardIdChatFilesFileIdContentGet<
+  TData = Awaited<
+    ReturnType<
+      typeof getAgentFileContentApiV1AgentBoardsBoardIdChatFilesFileIdContentGet
+    >
+  >,
+  TError = HTTPValidationError,
+>(
+  boardId: string,
+  fileId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<
+          ReturnType<
+            typeof getAgentFileContentApiV1AgentBoardsBoardIdChatFilesFileIdContentGet
+          >
+        >,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions =
+    getGetAgentFileContentApiV1AgentBoardsBoardIdChatFilesFileIdContentGetQueryOptions(
+      boardId,
+      fileId,
+      options,
+    );
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}

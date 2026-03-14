@@ -27,7 +27,7 @@ import type {
   AgentRead,
   AgentUpdate,
   HTTPValidationError,
-  LimitOffsetPageTypeVarCustomizedAgentRead,
+  LimitOffsetPageTCustomizedAgentRead,
   ListAgentsApiV1AgentsGetParams,
   OkResponse,
   RotateAgentTokenApiV1AgentsAgentIdRotateTokenPost200,
@@ -44,7 +44,7 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
  * @summary List Agents
  */
 export type listAgentsApiV1AgentsGetResponse200 = {
-  data: LimitOffsetPageTypeVarCustomizedAgentRead;
+  data: LimitOffsetPageTCustomizedAgentRead;
   status: 200;
 };
 

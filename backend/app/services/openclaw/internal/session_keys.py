@@ -1,6 +1,6 @@
 """Deterministic session-key helpers for OpenClaw agents.
 
-Session keys are part of Mission Control's contract with the OpenClaw gateway.
+Session keys are part of FlowGrid's contract with the OpenClaw gateway.
 Centralize the string formats here to avoid drift across provisioning, DB workflows,
 and API-facing services.
 """

@@ -1213,6 +1213,7 @@ class AgentLifecycleService(OpenClawDBService):
         wakeup_verb: str,
         force_bootstrap: bool,
         raise_gateway_errors: bool,
+        workspace_template_files: dict[str, str] | None = None,
     ) -> None:
         self.logger.log(
             TRACE_LEVEL,
@@ -1241,6 +1242,7 @@ class AgentLifecycleService(OpenClawDBService):
                 wakeup_verb=wakeup_verb,
                 clear_confirm_token=True,
                 raise_gateway_errors=raise_gateway_errors,
+                workspace_template_files=workspace_template_files,
             )
             record_activity(
                 self.session,
@@ -1298,6 +1300,7 @@ class AgentLifecycleService(OpenClawDBService):
         auth_token: str,
         user: User | None,
         force_bootstrap: bool,
+        workspace_template_files: dict[str, str] | None = None,
     ) -> None:
         await self._apply_gateway_provisioning(
             agent=agent,
@@ -1308,6 +1311,7 @@ class AgentLifecycleService(OpenClawDBService):
             wakeup_verb="provisioned",
             force_bootstrap=force_bootstrap,
             raise_gateway_errors=True,
+            workspace_template_files=workspace_template_files,
         )
 
     async def validate_agent_update_inputs(
@@ -1720,10 +1724,44 @@ class AgentLifecycleService(OpenClawDBService):
             board_id=board.id,
         )
         gateway, _client_config = await self.require_gateway(board)
+
+        # Resolve workspace template if template_id provided
+        workspace_template_files: dict[str, str] | None = None
+        template_id = getattr(payload, "template_id", None)
+        if template_id:
+            from app.models.workspace_templates import WorkspaceTemplate
+            from app.services.openclaw.workspace_template_writer import render_template_files
+
+            template = await self.session.get(WorkspaceTemplate, template_id)
+            if template is None:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Template not found",
+                )
+            if template.organization_id and template.organization_id != board.organization_id:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Template not accessible",
+                )
+            org = await Organization.objects.by_id(board.organization_id).first(self.session)
+            org_name = org.name if org else ""
+            workspace_template_files = render_template_files(
+                template.file_contents,
+                agent_name=payload.name,
+                board_name=board.name,
+                org_name=org_name,
+            )
+
         data = payload.model_dump()
         data["organization_id"] = board.organization_id
         data["gateway_id"] = gateway.id
+        # Default name from template if not explicitly provided
         requested_name = (data.get("name") or "").strip()
+        if not requested_name and template_id and workspace_template_files is not None:
+            template = await self.session.get(WorkspaceTemplate, template_id)
+            if template:
+                data["name"] = template.name
+                requested_name = template.name
         await self.ensure_unique_agent_name(
             board=board,
             gateway=gateway,
@@ -1737,6 +1775,7 @@ class AgentLifecycleService(OpenClawDBService):
             auth_token=raw_token,
             user=actor.user if actor.actor_type == "user" else None,
             force_bootstrap=False,
+            workspace_template_files=workspace_template_files,
         )
         self.logger.info("agent.create.success agent_id=%s board_id=%s", agent.id, board.id)
         return self.to_agent_read(self.with_computed_status(agent))

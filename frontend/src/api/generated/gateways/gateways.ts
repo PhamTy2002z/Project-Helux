@@ -35,7 +35,7 @@ import type {
   GetGatewaySessionApiV1GatewaysSessionsSessionIdGetParams,
   GetSessionHistoryApiV1GatewaysSessionsSessionIdHistoryGetParams,
   HTTPValidationError,
-  LimitOffsetPageTypeVarCustomizedGatewayRead,
+  LimitOffsetPageTCustomizedGatewayRead,
   ListGatewaySessionsApiV1GatewaysSessionsGetParams,
   ListGatewaysApiV1GatewaysGetParams,
   OkResponse,
@@ -1462,7 +1462,7 @@ export function useGatewayCommandsApiV1GatewaysCommandsGet<
  * @summary List Gateways
  */
 export type listGatewaysApiV1GatewaysGetResponse200 = {
-  data: LimitOffsetPageTypeVarCustomizedGatewayRead;
+  data: LimitOffsetPageTCustomizedGatewayRead;
   status: 200;
 };
 

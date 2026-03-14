@@ -35,6 +35,7 @@ from app.api.tags import router as tags_router
 from app.api.task_custom_fields import router as task_custom_fields_router
 from app.api.tasks import router as tasks_router
 from app.api.users import router as users_router
+from app.api.workspace_templates import router as workspace_templates_router
 from app.core.config import settings
 from app.core.error_handling import install_error_handling
 from app.core.logging import configure_logging, get_logger
@@ -466,6 +467,17 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
         settings.db_auto_migrate,
     )
     await init_db()
+    # Seed workspace templates on startup
+    try:
+        from app.db.session import async_session_maker
+        from app.services.workspace_template_seeds import ensure_seed_templates
+
+        async with async_session_maker() as seed_session:
+            created = await ensure_seed_templates(seed_session)
+            if created:
+                logger.info("app.lifecycle.workspace_templates.seeded count=%d", created)
+    except Exception:
+        logger.warning("app.lifecycle.workspace_templates.seed_failed", exc_info=True)
     logger.info("app.lifecycle.started")
     try:
         yield
@@ -474,7 +486,7 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
 
 
 app = MissionControlFastAPI(
-    title="Mission Control API",
+    title="FlowGrid API",
     version="0.1.0",
     lifespan=lifespan,
     openapi_tags=OPENAPI_TAGS,
@@ -604,6 +616,7 @@ api_v1.include_router(tasks_router)
 api_v1.include_router(task_custom_fields_router)
 api_v1.include_router(tags_router)
 api_v1.include_router(users_router)
+api_v1.include_router(workspace_templates_router)
 app.include_router(api_v1)
 
 add_pagination(app)

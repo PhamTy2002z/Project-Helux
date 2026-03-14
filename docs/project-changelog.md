@@ -1,5 +1,25 @@
 # Project Changelog
 
+## 2026-03-13
+
+### Workspace Templates Feature
+
+- Added `workspace_templates` database table with JSONB file_contents and org-scoping.
+- New API endpoints for template CRUD:
+  - `GET /api/v1/workspace-templates` — List org templates (including system seeds)
+  - `POST /api/v1/workspace-templates` — Create custom org template
+  - `GET /api/v1/workspace-templates/{id}` — Get template details
+  - `PATCH /api/v1/workspace-templates/{id}` — Update template
+  - `DELETE /api/v1/workspace-templates/{id}` — Delete template
+- Backend service layer: `WorkspaceTemplateService` for list, get, create, update, delete operations.
+- Template provisioning integration: `WorkspaceTemplateWriter` called during agent provisioning pipeline.
+- Frontend template picker UI added to `/agents/new` page for template selection.
+- 12 system seed templates auto-created on startup covering common OpenClaw agent personas.
+- Template seeding service: `WorkspaceTemplateSeedService` creates system templates and manages migrations.
+- New models: `WorkspaceTemplate`, schemas: `WorkspaceTemplateCreate`, `WorkspaceTemplateRead`, `WorkspaceTemplateUpdate`.
+
+---
+
 ## 2026-03-12
 
 ### SaaS Hardening and Payment Enforcement
@@ -90,7 +110,7 @@
   - `Trusted`
   - `Scalable`
 - Added the original CrewAI poster assets to the frontend public bundle for the landing page feature section.
-- Updated the landing page feature section copy to frame trusted execution and scalable rollout in the current Helux narrative.
+- Updated the landing page feature section copy to frame trusted execution and scalable rollout in the current FlowGrid narrative.
 - Added frontend component test coverage for the new feature card rendering.
 
 ## 2026-03-09

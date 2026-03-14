@@ -1,5 +1,5 @@
 ## Task / context
-- Mission Control task: <link or id>
+- FlowGrid task: <link or id>
 - Why: <what problem this PR solves>
 
 ## Scope

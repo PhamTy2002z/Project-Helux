@@ -32,6 +32,8 @@ export interface AgentRead {
   id: string;
   /** Gateway UUID that manages this agent. */
   gateway_id: string;
+  /** Workspace template applied to this agent. */
+  template_id?: string | null;
   /** Whether this agent is the board lead. */
   is_board_lead?: boolean;
   /** Whether this agent is the primary gateway agent. */
@@ -50,11 +52,11 @@ export interface AgentRead {
   token_blocked?: boolean | null;
   /** UTC timestamp for next VN-local day reset. */
   token_reset_at?: string | null;
-  /** Billed cost (USD) for current VN-local day. */
+  /** USD cost for current day. */
   cost_used_today?: number | null;
-  /** Daily cost limit (USD) for this agent under current plan tier. */
+  /** Daily cost limit (USD). */
   cost_limit_today?: number | null;
-  /** Remaining cost budget (USD) before the daily cap is reached. */
+  /** Remaining cost budget (USD). */
   cost_remaining_today?: number | null;
   /** Creation timestamp. */
   created_at: string;

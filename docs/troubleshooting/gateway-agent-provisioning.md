@@ -4,7 +4,7 @@ This guide explains how agent provisioning converges to a healthy state, and how
 
 ## Fast Convergence Policy
 
-Mission Control now uses a fast convergence policy for wake/check-in:
+FlowGrid now uses a fast convergence policy for wake/check-in:
 
 - Check-in deadline after each wake: **30 seconds**
 - Maximum wake attempts without check-in: **3**
@@ -14,7 +14,7 @@ This applies to both gateway-main and board agents.
 
 ## Expected Lifecycle
 
-1. Mission Control provisions/updates the agent and sends wake.
+1. FlowGrid provisions/updates the agent and sends wake.
 2. A delayed reconcile task is queued for the check-in deadline.
 3. Agent should call heartbeat quickly after startup/bootstrap.
 4. If heartbeat arrives:
@@ -67,7 +67,7 @@ Actions:
 
 1. Confirm current templates were synced to gateway.
 2. Re-run provisioning/update to trigger a fresh wake.
-3. Verify agent can reach Mission Control API and send heartbeat with `X-Agent-Token`.
+3. Verify agent can reach FlowGrid API and send heartbeat with `X-Agent-Token`.
 
 ### Agent stays provisioning/updating with no retries
 
@@ -95,7 +95,7 @@ Actions:
 
 1. Ensure queue worker is running.
 2. Sync templates for the gateway.
-3. Trigger agent update/provision from Mission Control.
+3. Trigger agent update/provision from FlowGrid.
 4. Watch logs for:
    - `lifecycle.queue.enqueued`
    - `lifecycle.reconcile.retriggered` (if needed)

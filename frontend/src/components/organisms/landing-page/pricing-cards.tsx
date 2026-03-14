@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { ScrollReveal } from "./scroll-reveal";
 
@@ -16,7 +17,7 @@ const INDIVIDUAL_PLANS = [
       "3 agents total, 3 agents / board",
       "40k org tokens / day",
     ],
-    cta: { label: "Download", href: "/onboarding" },
+    cta: { label: "Get Started", href: "/onboarding" },
     highlighted: false,
   },
   {
@@ -55,11 +56,13 @@ export default function PricingCards() {
     <section id="pricing" className="relative overflow-hidden bg-black px-[5%] pb-16 pt-8 sm:pb-20 sm:pt-10">
       {/* Hero-style background image with overlay + blur */}
       <div className="pointer-events-none absolute inset-0">
-        <img
-          src="/videos/hero-animation-poster.jpg?v=20260310"
+        <Image
+          src="/videos/hero-animation-poster.jpg"
           alt=""
-          aria-hidden="true"
-          className="absolute inset-0 h-full w-full object-cover"
+          fill
+          sizes="100vw"
+          priority
+          className="object-cover"
         />
         <div className="absolute inset-0 bg-black/70 backdrop-blur-md" />
         <div className="absolute -left-28 top-6 h-72 w-72 rounded-full bg-white/10 blur-[120px]" />
@@ -69,7 +72,7 @@ export default function PricingCards() {
       <div className="relative mx-auto max-w-7xl">
         <ScrollReveal className="mb-10 text-center">
           <h2 className="text-balance text-3xl font-bold leading-[1.05] tracking-tight text-white sm:text-4xl md:text-5xl lg:text-6xl">
-            Pick the Plan for Your Mission
+            Simple pricing. Scale when ready.
           </h2>
         </ScrollReveal>
 

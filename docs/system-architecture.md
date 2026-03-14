@@ -2,7 +2,7 @@
 
 ## High-Level Architecture
 
-OpenClaw Mission Control follows a three-tier architecture with clear separation between presentation, application, and data layers.
+FlowGrid follows a three-tier architecture with clear separation between presentation, application, and data layers.
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -361,7 +361,7 @@ Organization bootstrap service
 ### Gateway Communication Flow
 
 ```
-Mission Control Backend
+FlowGrid Backend
     │
     ▼
 WebSocket Connection
@@ -384,7 +384,7 @@ WebSocket Connection
     │   └─→ Return Agent Status
     │
     └─→ Agent Lifecycle Events
-        └─→ Update Mission Control state
+        └─→ Update FlowGrid state
 ```
 
 ## Authentication and Authorization Flow
@@ -474,6 +474,8 @@ Organizations
     │
     ├─→ OrganizationBoardAccess (board permissions)
     │
+    ├─→ WorkspaceTemplates (pre-built agent configurations)
+    │
     └─→ BoardGroups
             │
             ├─→ BoardGroupMemory (shared memory)
@@ -488,6 +490,7 @@ Organizations
                     │   └─→ BoardWebhookPayloads
                     │
                     ├─→ Agents (assigned to board)
+                    │   └─→ uses WorkspaceTemplate during provisioning
                     │
                     └─→ Tasks
                             │
@@ -611,9 +614,16 @@ Organizations
 ├── /metrics
 │   └── GET    /metrics
 │
-└── /skills
-    ├── GET    /skills/marketplace
-    └── POST   /skills/install
+├── /skills
+│   ├── GET    /skills/marketplace
+│   └── POST   /skills/install
+│
+└── /workspace-templates
+    ├── GET    /workspace-templates
+    ├── POST   /workspace-templates
+    ├── GET    /workspace-templates/{id}
+    ├── PATCH  /workspace-templates/{id}
+    └── DELETE /workspace-templates/{id}
 ```
 
 ### WebSocket Endpoints

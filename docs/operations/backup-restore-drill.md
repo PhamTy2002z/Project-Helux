@@ -27,7 +27,7 @@ Run the backup script with retention and encryption enabled.
 ```bash
 export POSTGRES_HOST=127.0.0.1
 export POSTGRES_PORT=5432
-export POSTGRES_DB=mission_control
+export POSTGRES_DB=flowgrid
 export POSTGRES_USER=postgres
 export POSTGRES_PASSWORD='replace-me'
 export BACKUP_DIR=./backups

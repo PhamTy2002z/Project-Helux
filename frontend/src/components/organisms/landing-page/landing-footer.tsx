@@ -23,17 +23,17 @@ const COLUMNS: { title: string; links: FooterLink[] }[] = [
     links: [
       {
         label: "Documentation",
-        href: "https://github.com/PhamTy2002z/Project-Helux/tree/master/docs",
+        href: "https://github.com/PhamTy2002z/FlowGrid/tree/master/docs",
         external: true,
       },
       {
         label: "Deployment Guide",
-        href: "https://github.com/PhamTy2002z/Project-Helux/blob/master/docs/deployment-guide.md",
+        href: "https://github.com/PhamTy2002z/FlowGrid/blob/master/docs/deployment-guide.md",
         external: true,
       },
       {
         label: "API Reference",
-        href: "https://github.com/PhamTy2002z/Project-Helux/blob/master/docs/reference/api.md",
+        href: "https://github.com/PhamTy2002z/FlowGrid/blob/master/docs/reference/api.md",
         external: true,
       },
     ],
@@ -43,12 +43,12 @@ const COLUMNS: { title: string; links: FooterLink[] }[] = [
     links: [
       {
         label: "GitHub Issues",
-        href: "https://github.com/PhamTy2002z/Project-Helux/issues",
+        href: "https://github.com/PhamTy2002z/FlowGrid/issues",
         external: true,
       },
       {
         label: "Discussions",
-        href: "https://github.com/PhamTy2002z/Project-Helux/discussions",
+        href: "https://github.com/PhamTy2002z/FlowGrid/discussions",
         external: true,
       },
       {
@@ -63,7 +63,7 @@ const COLUMNS: { title: string; links: FooterLink[] }[] = [
 const SOCIAL_LINKS = [
   {
     icon: Github,
-    href: "https://github.com/PhamTy2002z/Project-Helux",
+    href: "https://github.com/PhamTy2002z/FlowGrid",
     label: "GitHub",
   },
   {
@@ -82,16 +82,17 @@ export default function LandingFooter() {
 
       <div className="mx-auto w-full max-w-[1280px] fhd:max-w-[1440px] qhd:max-w-[1600px] uhd:max-w-[1760px]">
         {/* Top: Logo + link columns */}
-        <div className="hero-glass-card grid gap-10 rounded-3xl border border-white/15 p-6 sm:grid-cols-2 sm:p-8 md:p-10 xl:grid-cols-4 fhd:gap-12">
+        <div className="hero-glass-card flex flex-col gap-10 rounded-3xl border border-white/15 p-6 sm:p-8 md:p-10 xl:flex-row xl:gap-16 fhd:gap-20">
           {/* Logo column */}
-          <div className="max-w-[280px]">
+          <div className="max-w-[280px] shrink-0">
             <Logo />
             <p className="mt-4 text-[15px] leading-relaxed text-white/55 sm:text-base">
-              The mission control platform for boards, agents, and operations.
+              The agent operations platform for boards, approvals, and gateways.
             </p>
           </div>
 
           {/* Link columns */}
+          <div className="grid flex-1 gap-10 sm:grid-cols-3">
           {COLUMNS.map((col) => (
             <div key={col.title}>
               <h4 className="mb-4 text-sm font-semibold text-white/70">
@@ -122,12 +123,13 @@ export default function LandingFooter() {
               </ul>
             </div>
           ))}
+          </div>
         </div>
 
         {/* Bottom: copyright + social */}
         <div className="mt-8 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-8 sm:flex-row">
           <p className="text-xs text-white/35">
-            &copy; {new Date().getFullYear()} Helux. All rights reserved.
+            &copy; {new Date().getFullYear()} FlowGrid. All rights reserved.
           </p>
           <div className="flex gap-4">
             {SOCIAL_LINKS.map((social) => {

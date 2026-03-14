@@ -6,6 +6,11 @@ import dynamic from "next/dynamic";
 
 import { DM_Serif_Display, IBM_Plex_Sans, Sora } from "next/font/google";
 
+import {
+  DEFAULT_SEO_IMAGE,
+  DEFAULT_SEO_IMAGE_ALT,
+  PRODUCT_NAME,
+} from "@/lib/seo";
 import { getSiteOrigin } from "@/lib/site-url";
 
 const siteOrigin = getSiteOrigin();
@@ -13,36 +18,35 @@ const siteOrigin = getSiteOrigin();
 export const metadata: Metadata = {
   metadataBase: siteOrigin,
   title: {
-    default: "OpenClaw Mission Control | AI Agent Operations Platform",
-    template: "%s | OpenClaw Mission Control",
+    default: `${PRODUCT_NAME} | AI Agent Operations Platform`,
+    template: `%s | ${PRODUCT_NAME}`,
   },
   description:
     "Operate boards, agents, approvals, and gateways from one control plane with real-time visibility, governance workflows, and API-first automation.",
-  applicationName: "OpenClaw Mission Control",
+  applicationName: PRODUCT_NAME,
   keywords: [
     "ai agent operations platform",
-    "mission control",
+    "flowgrid ai operations",
     "board orchestration",
     "approval workflows",
     "gateway management",
-    "openclaw",
+    "flowgrid",
   ],
-  alternates: {
-    canonical: "/",
-  },
   openGraph: {
     type: "website",
     url: "/",
-    title: "OpenClaw Mission Control | AI Agent Operations Platform",
+    title: `${PRODUCT_NAME} | AI Agent Operations Platform`,
     description:
       "Operate boards, agents, approvals, and gateways from one control plane with real-time visibility, governance workflows, and API-first automation.",
-    siteName: "OpenClaw Mission Control",
+    siteName: PRODUCT_NAME,
+    images: [{ url: DEFAULT_SEO_IMAGE, alt: DEFAULT_SEO_IMAGE_ALT }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "OpenClaw Mission Control | AI Agent Operations Platform",
+    title: `${PRODUCT_NAME} | AI Agent Operations Platform`,
     description:
       "Operate boards, agents, approvals, and gateways from one control plane with real-time visibility, governance workflows, and API-first automation.",
+    images: [DEFAULT_SEO_IMAGE],
   },
   robots: {
     index: true,

@@ -3,7 +3,7 @@
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
 from uuid import UUID, uuid4
 
@@ -425,7 +425,7 @@ async def test_sync_and_enforce_observe_mode_does_not_block_on_quota_reached(
 
 
 @pytest.mark.asyncio
-async def test_sync_and_enforce_skips_board_lead_agents(
+async def test_sync_and_enforce_applies_to_board_lead_agents(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     engine = await _make_engine()
@@ -455,10 +455,20 @@ async def test_sync_and_enforce_skips_board_lead_agents(
                 is_board_lead=True,
                 openclaw_session_id="agent:lead-demo:main",
             )
+            member_agent = Agent(
+                id=uuid4(),
+                organization_id=org.id,
+                board_id=board.id,
+                gateway_id=gateway.id,
+                name="Member",
+                is_board_lead=False,
+                openclaw_session_id="agent:member-demo:main",
+            )
             session.add(org)
             session.add(gateway)
             session.add(board)
             session.add(lead_agent)
+            session.add(member_agent)
             await session.commit()
 
             async def _fake_capability(_config: GatewayConfig) -> GatewayUsageCapabilityResult:
@@ -477,9 +487,31 @@ async def test_sync_and_enforce_skips_board_lead_agents(
                 _ = (self, session_key, organization_id)
                 return lead_agent
 
-            async def _unexpected_sync_session_usage(*args: object, **kwargs: object) -> object:
-                _ = (args, kwargs)
-                raise AssertionError("board lead should skip usage sync")
+            sync_called = False
+            trial_policy = policy_for_tier("trial_7d")
+            token_limit = trial_policy.agent_daily_tokens
+            assert token_limit is not None
+
+            async def _fake_sync_session_usage(
+                self: object,
+                *,
+                agent: Agent,
+                config: GatewayConfig,
+                usage_date_vn: date | None = None,
+            ) -> SessionUsageSyncResult:
+                nonlocal sync_called
+                _ = (self, config)
+                sync_called = True
+                return SessionUsageSyncResult(
+                    agent_id=str(agent.id),
+                    organization_id=str(org.id),
+                    usage_date_vn=usage_date_vn or date(2026, 3, 9),
+                    openclaw_total=token_limit + 1,
+                    openclaw_delta=token_limit + 1,
+                    billed_delta=token_limit + 1,
+                    billed_total=token_limit + 1,
+                    cost_data_available=False,
+                )
 
             monkeypatch.setattr(
                 quota_service_module,
@@ -494,7 +526,21 @@ async def test_sync_and_enforce_skips_board_lead_agents(
             monkeypatch.setattr(
                 quota_service_module.SessionUsageSyncService,
                 "sync_session_usage",
-                _unexpected_sync_session_usage,
+                _fake_sync_session_usage,
+            )
+
+            async def _fake_resolve_runtime_policy(
+                _session: AsyncSession,
+                *,
+                organization_id: UUID,
+            ) -> tuple[str, object]:
+                _ = organization_id
+                return ("trial_7d", policy_for_tier("trial_7d"))
+
+            monkeypatch.setattr(
+                quota_service_module,
+                "resolve_runtime_policy",
+                _fake_resolve_runtime_policy,
             )
 
             result = await AgentTokenQuotaService(session).sync_and_enforce(
@@ -503,7 +549,164 @@ async def test_sync_and_enforce_skips_board_lead_agents(
                 config=GatewayConfig(url="ws://gateway.example/ws"),
             )
 
-            assert result is None
+            assert sync_called is True
+            assert result is not None
+            assert result.agent_id == lead_agent.id
+            assert result.billed_total == token_limit + 1
+            assert result.quota_reached is False
+            assert result.blocked_by is None
+    finally:
+        await engine.dispose()
+
+
+@pytest.mark.asyncio
+async def test_sync_and_enforce_blocks_board_lead_when_all_members_are_blocked(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    engine = await _make_engine()
+    try:
+        async with AsyncSession(engine, expire_on_commit=False) as session:
+            monkeypatch.setattr(settings, "openclaw_usage_enforcement_mode", "enforce")
+            trial_policy = policy_for_tier("trial_7d")
+            token_limit = trial_policy.agent_daily_tokens
+            assert token_limit is not None
+            usage_date = date(2026, 3, 9)
+
+            org = Organization(id=uuid4(), name="Org")
+            gateway = Gateway(
+                id=uuid4(),
+                organization_id=org.id,
+                name="Gateway",
+                url="ws://gateway.example/ws",
+                workspace_root="/workspace",
+            )
+            board = Board(
+                id=uuid4(),
+                organization_id=org.id,
+                gateway_id=gateway.id,
+                name="Board",
+                slug="board",
+            )
+            lead_agent = Agent(
+                id=uuid4(),
+                organization_id=org.id,
+                board_id=board.id,
+                gateway_id=gateway.id,
+                name="Lead",
+                is_board_lead=True,
+                openclaw_session_id="agent:lead-demo:main",
+            )
+            member_agent = Agent(
+                id=uuid4(),
+                organization_id=org.id,
+                board_id=board.id,
+                gateway_id=gateway.id,
+                name="Member",
+                is_board_lead=False,
+                openclaw_session_id="agent:member-demo:main",
+            )
+            session.add(org)
+            session.add(gateway)
+            session.add(board)
+            session.add(lead_agent)
+            session.add(member_agent)
+            session.add(
+                AgentTokenDailyUsage(
+                    organization_id=org.id,
+                    agent_id=lead_agent.id,
+                    usage_date_vn=usage_date,
+                    openclaw_tokens_total=0,
+                    billed_tokens_used=0,
+                ),
+            )
+            session.add(
+                AgentTokenDailyUsage(
+                    organization_id=org.id,
+                    agent_id=member_agent.id,
+                    usage_date_vn=usage_date,
+                    openclaw_tokens_total=token_limit + 1,
+                    billed_tokens_used=token_limit + 1,
+                    blocked_at=datetime(2026, 3, 9, 10, 0, 0),
+                ),
+            )
+            await session.commit()
+
+            async def _fake_capability(_config: GatewayConfig) -> GatewayUsageCapabilityResult:
+                return GatewayUsageCapabilityResult(
+                    supported=True,
+                    code="supported",
+                    message=None,
+                )
+
+            async def _fake_resolve_agent(
+                self: object,
+                *,
+                session_key: str,
+                organization_id: object | None = None,
+            ) -> Agent | None:
+                _ = (self, organization_id)
+                if session_key == lead_agent.openclaw_session_id:
+                    return lead_agent
+                return None
+
+            async def _fake_sync_session_usage(
+                self: object,
+                *,
+                agent: Agent,
+                config: GatewayConfig,
+                usage_date_vn: date | None = None,
+            ) -> SessionUsageSyncResult:
+                _ = (self, config)
+                return SessionUsageSyncResult(
+                    agent_id=str(agent.id),
+                    organization_id=str(org.id),
+                    usage_date_vn=usage_date_vn or usage_date,
+                    openclaw_total=token_limit + 1,
+                    openclaw_delta=token_limit + 1,
+                    billed_delta=token_limit + 1,
+                    billed_total=token_limit + 1,
+                    cost_data_available=False,
+                )
+
+            async def _fake_resolve_runtime_policy(
+                _session: AsyncSession,
+                *,
+                organization_id: UUID,
+            ) -> tuple[str, object]:
+                _ = organization_id
+                return ("trial_7d", policy_for_tier("trial_7d"))
+
+            monkeypatch.setattr(
+                quota_service_module,
+                "check_gateway_sessions_usage_capability",
+                _fake_capability,
+            )
+            monkeypatch.setattr(
+                quota_service_module.SessionUsageSyncService,
+                "resolve_board_scoped_agent",
+                _fake_resolve_agent,
+            )
+            monkeypatch.setattr(
+                quota_service_module.SessionUsageSyncService,
+                "sync_session_usage",
+                _fake_sync_session_usage,
+            )
+            monkeypatch.setattr(
+                quota_service_module,
+                "resolve_runtime_policy",
+                _fake_resolve_runtime_policy,
+            )
+
+            service = AgentTokenQuotaService(session)
+            with pytest.raises(HTTPException) as exc_info:
+                await service.sync_and_enforce(
+                    session_key=lead_agent.openclaw_session_id or "",
+                    organization_id=org.id,
+                    config=GatewayConfig(url="ws://gateway.example/ws"),
+                )
+            assert exc_info.value.status_code == 429
+            assert isinstance(exc_info.value.detail, dict)
+            assert exc_info.value.detail.get("resource") == "agent_daily_tokens"
     finally:
         await engine.dispose()
 

@@ -1,4 +1,4 @@
-"""OpenClaw Mission Control backend application package."""
+"""FlowGrid backend application package."""
 
 from __future__ import annotations
 

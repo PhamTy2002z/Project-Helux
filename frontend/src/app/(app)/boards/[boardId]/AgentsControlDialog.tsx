@@ -79,7 +79,7 @@ export function AgentsControlDialog({
               to board chat.
             </li>
             <li>
-              Mission Control forwards it to all agents on this board.
+              FlowGrid forwards it to all agents on this board.
             </li>
           </ul>
         </div>

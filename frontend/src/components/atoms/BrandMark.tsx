@@ -9,7 +9,7 @@ export function BrandMark() {
           OPENCLAW
         </div>
         <div className="text-[11px] font-medium text-quiet">
-          Mission Control
+          FlowGrid
         </div>
       </div>
     </div>

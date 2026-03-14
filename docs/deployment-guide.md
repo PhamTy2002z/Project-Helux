@@ -2,7 +2,7 @@
 
 ## Overview
 
-OpenClaw Mission Control supports two deployment modes:
+FlowGrid supports two deployment modes:
 - **Docker Mode**: Production-like deployment with all services containerized
 - **Local Mode**: Native development deployment for rapid iteration
 
@@ -43,7 +43,7 @@ The installer script handles all setup automatically:
 
 ```bash
 # If not cloned yet, installer will clone the repo
-curl -fsSL https://raw.githubusercontent.com/PhamTy2002z/Project-Helux/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/PhamTy2002z/FlowGrid/main/install.sh | bash
 
 # If already cloned
 ./install.sh
@@ -78,7 +78,7 @@ cp frontend/.env.example frontend/.env
 
 ### Step 2: Configure Authentication Mode
 
-Mission Control supports two authentication modes:
+FlowGrid supports two authentication modes:
 
 #### Local Bearer Token Mode (Default)
 

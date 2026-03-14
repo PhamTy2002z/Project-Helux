@@ -1,6 +1,6 @@
-# Mission Control Backend (FastAPI)
+# FlowGrid Backend (FastAPI)
 
-This directory contains the **Mission Control backend API** (FastAPI + SQLModel) and its database migrations (Alembic).
+This directory contains the **FlowGrid backend API** (FastAPI + SQLModel) and its database migrations (Alembic).
 
 - Default API base URL: http://localhost:8000
 - Health endpoints: `/healthz`, `/readyz`
@@ -52,7 +52,7 @@ A starter file exists at `backend/.env.example`.
   - In `dev`, if you **don’t** explicitly set `DB_AUTO_MIGRATE`, the backend defaults it to `true`.
 - `LOG_LEVEL` (default: `INFO`)
 - `DATABASE_URL`
-  - Default: `postgresql+psycopg://postgres:postgres@localhost:5432/mission_control`
+  - Default: `postgresql+psycopg://postgres:postgres@localhost:5432/flowgrid`
 - `CORS_ORIGINS` (comma-separated)
   - Example: `http://localhost:3000`
 - `BASE_URL` (required for gateway provisioning/agent heartbeat templates; no fallback)

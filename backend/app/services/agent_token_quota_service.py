@@ -154,10 +154,6 @@ class AgentTokenQuotaService(OpenClawDBService):
         )
         if agent is None:
             return None
-        # Board leads are exempt from per-agent quota sync/enforcement.
-        if bool(agent.is_board_lead):
-            return None
-
         capability = await check_gateway_sessions_usage_capability(config)
         if not capability.supported:
             self._capability_failure(
@@ -217,6 +213,32 @@ class AgentTokenQuotaService(OpenClawDBService):
             blocked_by = "agent_daily_tokens"
 
         if blocked_by is not None:
+            if bool(agent.is_board_lead):
+                members_all_blocked = await self._all_board_members_blocked(
+                    board_id=agent.board_id,
+                    organization_id=organization_id,
+                    usage_date_vn=sync_result.usage_date_vn,
+                )
+                if not members_all_blocked:
+                    self.logger.info(
+                        "agent.quota.lead_grace agent_id=%s resource=%s cost=%s tokens=%s",
+                        agent.id,
+                        blocked_by,
+                        sync_result.cost_total,
+                        sync_result.billed_total,
+                    )
+                    return AgentQuotaSyncOutcome(
+                        agent_id=agent.id,
+                        organization_id=organization_id,
+                        billed_total=sync_result.billed_total,
+                        billed_delta=sync_result.billed_delta,
+                        token_limit=token_limit,
+                        cost_total=sync_result.cost_total,
+                        cost_delta=sync_result.cost_delta,
+                        cost_limit=cost_limit,
+                        quota_reached=False,
+                        blocked_by=None,
+                    )
             if not self._enforce_mode_enabled():
                 self.logger.warning(
                     "agent.quota.observe_mode.quota_reached agent_id=%s resource=%s used_cost=%s used_tokens=%s",

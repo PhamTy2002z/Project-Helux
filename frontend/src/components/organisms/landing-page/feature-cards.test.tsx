@@ -30,7 +30,7 @@ describe("FeatureCards", () => {
 
     expect(
       screen.getByRole("heading", {
-        name: /one platform for every operational surface/i,
+        name: /trusted by teams\. built for scale\./i,
       }),
     ).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Trusted" })).toBeInTheDocument();

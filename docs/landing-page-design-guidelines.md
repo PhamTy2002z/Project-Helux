@@ -246,4 +246,4 @@ Before merging landing updates, run:
 8. Run `pnpm lint` — no errors
 9. Run `pnpm build` — no errors
 10. Run landing component tests: `pnpm test landing-page/`
-11. Verify copy matches product positioning (mission control, approvals, gateways)
+11. Verify copy matches product positioning (FlowGrid, approvals, gateways)
