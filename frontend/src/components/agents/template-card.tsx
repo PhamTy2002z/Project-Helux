@@ -1,6 +1,5 @@
 "use client";
 
-import { useMemo } from "react";
 import {
   FileText,
   Bot,
@@ -64,6 +63,11 @@ function resolveIcon(iconStr: string | null | undefined): LucideIcon {
   return ICON_MAP[key] ?? FileText;
 }
 
+function TemplateIcon({ iconStr }: { iconStr: string | null | undefined }) {
+  const Icon = resolveIcon(iconStr);
+  return <Icon className="h-5 w-5 text-slate-600" />;
+}
+
 interface TemplateCardProps {
   template: WorkspaceTemplateRead;
   selected: boolean;
@@ -71,7 +75,6 @@ interface TemplateCardProps {
 }
 
 export function TemplateCard({ template, selected, onSelect }: TemplateCardProps) {
-  const Icon = useMemo(() => resolveIcon(template.icon), [template.icon]);
   const description = template.description
     ? template.description.length > 80
       ? template.description.slice(0, 77) + "..."
@@ -92,7 +95,7 @@ export function TemplateCard({ template, selected, onSelect }: TemplateCardProps
     >
       <div className="flex items-start justify-between gap-2">
         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-100">
-          <Icon className="h-5 w-5 text-slate-600" />
+          <TemplateIcon iconStr={template.icon} />
         </div>
         {template.category ? (
           <Badge variant="outline" className="shrink-0 text-[10px]">
