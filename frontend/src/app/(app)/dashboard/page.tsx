@@ -116,7 +116,7 @@ export default function DashboardPage() {
   const router = useRouter();
   const { isSignedIn } = useAuth();
   const isPageActive = usePageActive();
-  const subscriptionQuery = useBillingSubscription(Boolean(isSignedIn));
+  const _subscriptionQuery = useBillingSubscription(Boolean(isSignedIn));
 
   const boardsQuery = useListBoardsApiV1BoardsGet<listBoardsApiV1BoardsGetResponse, ApiError>(
     { limit: 200 },

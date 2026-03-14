@@ -218,7 +218,7 @@ export const toSessionSummaries = (
       "chatType",
     ]);
     const model = readString(entry, ["model", "model_name", "provider", "engine"]);
-    const modelProvider = readString(entry, ["modelProvider", "model_provider", "provider"]);
+    const _modelProvider = readString(entry, ["modelProvider", "model_provider", "provider"]);
     const lastSeenAt = readTimestampFromRecords(candidateRecords, [
       "updated_at",
       "updatedAt",
