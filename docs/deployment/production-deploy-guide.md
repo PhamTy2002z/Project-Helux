@@ -108,6 +108,7 @@ LOG_LEVEL=WARNING
 RATE_LIMIT_ENABLED=true
 
 # Invite email delivery (organization invites)
+# Safe default rollout: keep disabled for first deploy
 EMAIL_PROVIDER=none
 # EMAIL_PROVIDER=resend
 # RESEND_API_KEY=re_xxx
@@ -143,6 +144,56 @@ chmod 600 .env.prod
 ```bash
 grep LOCAL_AUTH_TOKEN .env.prod
 # Copy giá trị này — cần dùng khi login vào FlowGrid UI
+```
+
+### Step 2.3 — Lấy cấu hình Resend trên dashboard
+
+1. Mở Resend dashboard: `https://resend.com`
+2. Vào **API Keys** -> **Create API Key** -> copy key dạng `re_...`
+3. Vào **Domains** -> chọn `flowgrid.live` (status phải là **Verified**)
+4. Chọn địa chỉ gửi tại domain đã verify:
+   `FlowGrid <noreply@flowgrid.live>` cho `EMAIL_FROM_INVITES`
+5. (Optional) Chọn mailbox nhận phản hồi cho `EMAIL_REPLY_TO`, for example
+   `support@flowgrid.live`
+
+> Note: scope hiện tại chỉ cần gửi outbound invite email. `RESEND_WEBHOOK_SECRET`
+> chưa bắt buộc vì backend chưa dùng inbound Resend webhook.
+
+### Step 2.4 — Bật Resend trong `.env.prod` (khi đã sẵn sàng production)
+
+```bash
+cd /opt/projects/Project-Helux
+nano .env.prod
+```
+
+Set giá trị như sau:
+
+```env
+EMAIL_PROVIDER=resend
+RESEND_API_KEY=re_xxx
+EMAIL_FROM_INVITES=FlowGrid <noreply@flowgrid.live>
+EMAIL_REPLY_TO=support@flowgrid.live
+INVITE_ACCEPT_BASE_URL=https://flowgrid.live/invite
+# Optional (reserved for future inbound webhook support):
+# RESEND_WEBHOOK_SECRET=whsec_xxx
+```
+
+Các biến bắt buộc khi `EMAIL_PROVIDER=resend`:
+- `RESEND_API_KEY`
+- `EMAIL_FROM_INVITES`
+- `INVITE_ACCEPT_BASE_URL`
+
+Restart backend + worker để nhận env mới:
+
+```bash
+cd /opt/projects/Project-Helux
+docker compose -f compose.prod.yml --env-file .env.prod restart backend webhook-worker
+```
+
+### Step 2.5 — Verify nhanh block env của Resend
+
+```bash
+grep -E '^(EMAIL_PROVIDER|RESEND_API_KEY|EMAIL_FROM_INVITES|EMAIL_REPLY_TO|INVITE_ACCEPT_BASE_URL|RESEND_WEBHOOK_SECRET)=' .env.prod
 ```
 
 ---
