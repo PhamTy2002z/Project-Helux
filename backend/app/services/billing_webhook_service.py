@@ -43,10 +43,11 @@ async def _handle_subscription_active(
     plan.tier = "pro"
     plan.effective_from = now
     plan.effective_until = None  # pro has no expiry
-    existing_meta = plan.plan_metadata if isinstance(plan.plan_metadata, dict) else {}
-    existing_billing = (
-        existing_meta.get("billing") if isinstance(existing_meta.get("billing"), dict) else {}
+    existing_meta: dict[str, Any] = (
+        plan.plan_metadata if isinstance(plan.plan_metadata, dict) else {}
     )
+    billing_val = existing_meta.get("billing")
+    existing_billing: dict[str, Any] = billing_val if isinstance(billing_val, dict) else {}
     plan.plan_metadata = {
         **existing_meta,
         "billing": {

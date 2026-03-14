@@ -31,7 +31,7 @@ async def handle_polar_webhook(
 
     # Verify webhook signature
     try:
-        from polar_sdk.webhooks import validate_event
+        from polar_sdk.webhooks import validate_event  # type: ignore[attr-defined]
 
         event = validate_event(
             body=body,
