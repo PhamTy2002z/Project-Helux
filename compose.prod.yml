@@ -85,15 +85,24 @@ services:
 
   # ---------- openclaw gateway ----------
   openclaw:
+    profiles:
+      - managed-gateway
     image: openclaw/gateway:latest
+    # Bind to 0.0.0.0 so backend/worker containers can reach the gateway.
+    # Config at /data/openclaw.json must set controlUi.dangerouslyAllowHostHeaderOriginFallback=true.
+    command: ["node", "openclaw.mjs", "gateway", "--allow-unconfigured", "--bind", "lan"]
     <<: *default-restart
     logging: *default-logging
     environment:
       OPENCLAW_HOME: /data
+      OPENCLAW_CONFIG_PATH: /data/config/openclaw.json
+      OPENCLAW_STATE_DIR: /data/.openclaw
       OPENCLAW_GATEWAY_TOKEN: ${MANAGED_GATEWAY_TOKEN:-}
     volumes:
       - openclaw_data:/data
       - device_identity:/shared/device-identity
+      - openclaw_managed:/shared/openclaw-managed
+      - ./openclaw:/data/config
     ports:
       - "127.0.0.1:18789:18789"
     networks:
@@ -141,6 +150,7 @@ services:
       EMAIL_FROM_INVITES: ${EMAIL_FROM_INVITES:-}
       EMAIL_REPLY_TO: ${EMAIL_REPLY_TO:-}
       INVITE_ACCEPT_BASE_URL: ${INVITE_ACCEPT_BASE_URL:-https://${DOMAIN}/invite}
+      CLERK_WEBHOOK_SECRET: ${CLERK_WEBHOOK_SECRET:-}
       BILLING_MODE: ${BILLING_MODE:-simulated}
       PAYMENT_PROVIDER: ${PAYMENT_PROVIDER:-none}
       POLAR_ACCESS_TOKEN: ${POLAR_ACCESS_TOKEN:-}
@@ -160,8 +170,6 @@ services:
       redis:
         condition: service_healthy
       minio:
-        condition: service_healthy
-      openclaw:
         condition: service_healthy
     ports:
       - "127.0.0.1:8000:8000"
@@ -264,3 +272,4 @@ volumes:
   minio_data:
   device_identity:
   openclaw_data:
+  openclaw_managed:

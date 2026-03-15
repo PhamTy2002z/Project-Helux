@@ -163,10 +163,10 @@
 
 ---
 
-### Phase 3: Agent Operations & React Performance Optimization (In Progress)
+### Phase 3: Agent Operations & React Performance Optimization (98% Complete)
 
 **Status**: 🔄 In Progress (98% complete)
-**Timeline**: Q1 2025 - Q2 2025
+**Timeline**: Q1 2025 - Q2 2025 (completed Q1 2026 + March 2026 enhancements)
 
 #### Completed Features
 
@@ -240,10 +240,10 @@
 
 ---
 
-### Phase 5: Gateway Management (In Progress)
+### Phase 5: Gateway Management & Docker Migration (In Progress)
 
-**Status**: 🔄 In Progress (75% complete)
-**Timeline**: Q2 2025 - Q3 2025
+**Status**: 🔄 In Progress (85% complete)
+**Timeline**: Q2 2025 - Q3 2025 (Docker migration completed March 2026)
 
 #### Completed Features
 
@@ -254,6 +254,8 @@
 - ✅ Gateway metadata and status tracking
 - ✅ Async gateway activation queue with retry-backed provisioning states (`activating`, `ready`, `degraded`)
 - ✅ Managed gateway auto-provision for newly created organizations (free + paid tiers) with non-blocking activation
+- ✅ OpenClaw Docker service with managed workspace volume (`MANAGED_GATEWAY_WORKSPACE_ROOT`)
+- ✅ 3 custom model providers configuration in Docker-based gateway
 
 #### In Progress
 

@@ -30,7 +30,7 @@ type MembersInvitesTableProps = {
   onCopyInvite: (invite: OrganizationInviteRead) => void;
   onResendInvite: (inviteId: string) => void;
   onRevokeInvite: (inviteId: string) => void;
-  isResending: boolean;
+  resendingInviteId: string | null;
   isRevoking: boolean;
 };
 
@@ -80,7 +80,7 @@ export function MembersInvitesTable({
   onCopyInvite,
   onResendInvite,
   onRevokeInvite,
-  isResending,
+  resendingInviteId,
   isRevoking,
 }: MembersInvitesTableProps) {
   const rows = useMemo<MemberInviteRow[]>(
@@ -101,7 +101,7 @@ export function MembersInvitesTable({
             const display = memberDisplay(row.original.member);
             return (
               <div className="flex items-center gap-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-indigo-500 text-xs font-semibold text-white">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-slate-700 to-slate-900 text-xs font-semibold text-white">
                   {display.initials}
                 </div>
                 <div>
@@ -203,9 +203,9 @@ export function MembersInvitesTable({
                 variant="outline"
                 size="sm"
                 onClick={() => onResendInvite(invite.id)}
-                disabled={isResending}
+                disabled={resendingInviteId === invite.id}
               >
-                Resend email
+                {resendingInviteId === invite.id ? "Sending..." : "Resend email"}
               </Button>
               <Button
                 type="button"
@@ -233,7 +233,6 @@ export function MembersInvitesTable({
     [
       copiedInviteId,
       isAdmin,
-      isResending,
       isRevoking,
       onCopyInvite,
       onManageAccess,

@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FlowGrid Logo — Final (Dark Amber)</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'DM Sans', sans-serif; background: #F8FAFC; color: #0F172A; padding: 48px 24px; }
+    .container { max-width: 1100px; margin: 0 auto; }
+    h1 { font-family: 'Space Grotesk'; font-size: 32px; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 6px; }
+    .sub { color: #64748B; font-size: 15px; margin-bottom: 48px; }
+    .stitle { font-family: 'Space Grotesk'; font-size: 20px; font-weight: 600; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #E2E8F0; }
+
+    /* Hero */
+    .hero { display: flex; gap: 48px; align-items: center; margin-bottom: 64px; padding: 48px; background: linear-gradient(135deg, #0F172A, #020617); border-radius: 24px; }
+    .hero img { width: 200px; height: 200px; filter: drop-shadow(0 16px 48px rgba(245,158,11,0.15)); }
+    .hero-text h2 { font-family: 'Space Grotesk'; font-size: 40px; font-weight: 700; color: #F1F5F9; letter-spacing: -0.02em; }
+    .hero-text p { font-size: 11px; text-transform: uppercase; letter-spacing: 0.18em; color: rgba(255,255,255,0.4); margin-top: 6px; }
+    .hero-text .desc { font-size: 15px; color: #94A3B8; margin-top: 16px; line-height: 1.6; letter-spacing: 0; text-transform: none; }
+
+    /* Variants grid */
+    .vgrid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 64px; }
+    .vcard { display: flex; align-items: center; gap: 16px; padding: 24px 28px; border-radius: 16px; }
+    .vcard.light { background: #fff; border: 1px solid #E2E8F0; }
+    .vcard.dark { background: #0F172A; border: 1px solid #1E293B; }
+    .vcard.brand { background: linear-gradient(135deg, #1E293B, #020617); border: 1px solid #334155; }
+    .vcard.surface { background: #F1F5F9; border: 1px solid #E2E8F0; }
+    .vcard img { width: 44px; height: 44px; flex-shrink: 0; }
+    .vcard .wm { display: flex; flex-direction: column; gap: 2px; }
+    .vcard .name { font-family: 'Space Grotesk'; font-size: 19px; font-weight: 700; letter-spacing: -0.02em; }
+    .vcard .tag { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.18em; }
+    .name.dk { color: #0F172A; } .name.wh { color: #F1F5F9; }
+    .tag.mu { color: #94A3B8; } .tag.wh { color: rgba(255,255,255,0.4); }
+    .vlabel { font-size: 11px; color: #94A3B8; text-align: center; margin-top: 6px; }
+
+    /* Scale */
+    .srow { display: flex; align-items: flex-end; gap: 32px; padding: 28px; border-radius: 16px; margin-bottom: 12px; }
+    .srow.light { background: #fff; border: 1px solid #E2E8F0; }
+    .srow.dark { background: #0F172A; border: 1px solid #1E293B; }
+    .si { text-align: center; }
+    .si img { display: block; margin: 0 auto 6px; }
+    .sl { font-size: 10px; color: #94A3B8; }
+
+    /* Favicon comparison */
+    .fav-section { margin-bottom: 64px; }
+    .fav-row { display: flex; gap: 24px; align-items: center; }
+    .fav-item { text-align: center; }
+    .fav-item .mock { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background: #E2E8F0; border-radius: 6px; font-size: 12px; color: #475569; }
+    .fav-item .mock img { width: 16px; height: 16px; }
+
+    /* Palette */
+    .pal-row { display: flex; gap: 8px; margin-bottom: 48px; }
+    .pal { flex: 1; height: 60px; border-radius: 10px; display: flex; align-items: flex-end; padding: 6px 10px; font-size: 10px; font-weight: 600; }
+    .pal.lt { color: rgba(255,255,255,0.8); }
+    .pal.dt { color: rgba(0,0,0,0.45); }
+
+    /* Assets list */
+    .assets { background: #fff; border: 1px solid #E2E8F0; border-radius: 16px; padding: 24px; margin-bottom: 48px; }
+    .assets h3 { font-family: 'Space Grotesk'; font-size: 15px; font-weight: 600; margin-bottom: 12px; }
+    .assets ul { list-style: none; }
+    .assets li { padding: 6px 0; font-size: 13px; color: #475569; border-bottom: 1px solid #F1F5F9; display: flex; gap: 8px; }
+    .assets li:last-child { border: none; }
+    .assets code { background: #F1F5F9; padding: 2px 6px; border-radius: 4px; font-size: 12px; color: #334155; }
+
+    @media (max-width: 768px) { .vgrid { grid-template-columns: 1fr; } .hero { flex-direction: column; text-align: center; } }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>FlowGrid Logo — Final</h1>
+  <p class="sub">Dark Slate + Amber — Premium Direction</p>
+
+  <!-- HERO -->
+  <div class="hero">
+    <img src="flowgrid-logo-icon.svg" alt="FlowGrid Logo">
+    <div class="hero-text">
+      <h2>FlowGrid</h2>
+      <p>OpenClaw · Agent Operations</p>
+      <p class="desc">AI agent operations & governance platform. Dark base conveys authority and precision. Amber accent represents the flow of intelligence through structured systems.</p>
+    </div>
+  </div>
+
+  <!-- WORDMARK VARIANTS -->
+  <h2 class="stitle">Wordmark Variants</h2>
+  <div class="vgrid">
+    <div>
+      <div class="vcard light">
+        <img src="flowgrid-logo-icon.svg" alt="">
+        <div class="wm"><span class="name dk">FlowGrid</span><span class="tag mu">OpenClaw · Agent Operations</span></div>
+      </div>
+      <p class="vlabel">Light background</p>
+    </div>
+    <div>
+      <div class="vcard dark">
+        <img src="flowgrid-logo-icon.svg" alt="">
+        <div class="wm"><span class="name wh">FlowGrid</span><span class="tag wh">OpenClaw · Agent Operations</span></div>
+      </div>
+      <p class="vlabel">Dark background</p>
+    </div>
+    <div>
+      <div class="vcard surface">
+        <img src="flowgrid-logo-icon.svg" alt="">
+        <div class="wm"><span class="name dk">FlowGrid</span><span class="tag mu">OpenClaw · Agent Operations</span></div>
+      </div>
+      <p class="vlabel">Surface / sidebar</p>
+    </div>
+    <div>
+      <div class="vcard brand">
+        <img src="flowgrid-logo-icon.svg" alt="">
+        <div class="wm"><span class="name wh">FlowGrid</span><span class="tag wh">OpenClaw · Agent Operations</span></div>
+      </div>
+      <p class="vlabel">Brand gradient</p>
+    </div>
+  </div>
+
+  <!-- WORDMARK SVG -->
+  <h2 class="stitle">Wordmark SVG (with embedded text)</h2>
+  <div class="vgrid">
+    <div>
+      <div class="vcard light" style="padding:16px 20px;">
+        <img src="flowgrid-wordmark-light.svg" alt="" style="width:260px;height:auto;">
+      </div>
+      <p class="vlabel">Light mode wordmark</p>
+    </div>
+    <div>
+      <div class="vcard dark" style="padding:16px 20px;">
+        <img src="flowgrid-wordmark-dark.svg" alt="" style="width:260px;height:auto;">
+      </div>
+      <p class="vlabel">Dark mode wordmark</p>
+    </div>
+  </div>
+
+  <!-- SCALE -->
+  <h2 class="stitle">Scale Test</h2>
+  <div style="margin-bottom:64px;">
+    <div class="srow light">
+      <div class="si"><img src="flowgrid-favicon.svg" width="16" height="16" alt=""><span class="sl">16px</span></div>
+      <div class="si"><img src="flowgrid-favicon.svg" width="24" height="24" alt=""><span class="sl">24px</span></div>
+      <div class="si"><img src="flowgrid-favicon.svg" width="32" height="32" alt=""><span class="sl">32px</span></div>
+      <div class="si"><img src="flowgrid-logo-icon.svg" width="40" height="40" alt=""><span class="sl">40px nav</span></div>
+      <div class="si"><img src="flowgrid-logo-icon.svg" width="48" height="48" alt=""><span class="sl">48px</span></div>
+      <div class="si"><img src="flowgrid-logo-icon.svg" width="64" height="64" alt=""><span class="sl">64px</span></div>
+      <div class="si"><img src="flowgrid-logo-icon.svg" width="96" height="96" alt=""><span class="sl">96px</span></div>
+      <div class="si"><img src="flowgrid-logo-icon.svg" width="128" height="128" alt=""><span class="sl">128px hero</span></div>
+    </div>
+    <div class="srow dark">
+      <div class="si"><img src="flowgrid-favicon.svg" width="16" height="16" alt=""><span class="sl">16px</span></div>
+      <div class="si"><img src="flowgrid-favicon.svg" width="24" height="24" alt=""><span class="sl">24px</span></div>
+      <div class="si"><img src="flowgrid-favicon.svg" width="32" height="32" alt=""><span class="sl">32px</span></div>
+      <div class="si"><img src="flowgrid-logo-icon.svg" width="40" height="40" alt=""><span class="sl">40px nav</span></div>
+      <div class="si"><img src="flowgrid-logo-icon.svg" width="48" height="48" alt=""><span class="sl">48px</span></div>
+      <div class="si"><img src="flowgrid-logo-icon.svg" width="64" height="64" alt=""><span class="sl">64px</span></div>
+      <div class="si"><img src="flowgrid-logo-icon.svg" width="96" height="96" alt=""><span class="sl">96px</span></div>
+      <div class="si"><img src="flowgrid-logo-icon.svg" width="128" height="128" alt=""><span class="sl">128px hero</span></div>
+    </div>
+  </div>
+
+  <!-- FAVICON MOCK -->
+  <h2 class="stitle">Favicon Preview</h2>
+  <div class="fav-section">
+    <div class="fav-row">
+      <div class="fav-item">
+        <div class="mock"><img src="flowgrid-favicon.svg" alt="">FlowGrid — Dashboard</div>
+        <p class="sl" style="margin-top:6px;">Browser tab mock</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- PALETTE -->
+  <h2 class="stitle">Brand Palette</h2>
+  <div class="pal-row">
+    <div class="pal lt" style="background:#020617;">Slate 950<br>#020617</div>
+    <div class="pal lt" style="background:#0F172A;">Slate 900<br>#0F172A</div>
+    <div class="pal lt" style="background:#1E293B;">Slate 800<br>#1E293B</div>
+    <div class="pal lt" style="background:#334155;">Slate 700<br>#334155</div>
+    <div class="pal dt" style="background:#F59E0B;">Amber 500<br>#F59E0B</div>
+    <div class="pal dt" style="background:#FCD34D;">Amber 300<br>#FCD34D</div>
+    <div class="pal dt" style="background:#CBD5E1;">Silver<br>#CBD5E1</div>
+    <div class="pal dt" style="background:#F8FAFC;">BG<br>#F8FAFC</div>
+  </div>
+
+  <!-- ASSETS -->
+  <div class="assets">
+    <h3>Deliverables</h3>
+    <ul>
+      <li><code>flowgrid-logo-icon.svg</code> — Full detail logo icon (512x512)</li>
+      <li><code>flowgrid-favicon.svg</code> — Simplified favicon version (4 nodes + center)</li>
+      <li><code>flowgrid-wordmark-light.svg</code> — Wordmark for light backgrounds</li>
+      <li><code>flowgrid-wordmark-dark.svg</code> — Wordmark for dark backgrounds</li>
+    </ul>
+  </div>
+</div>
+</body>
+</html>

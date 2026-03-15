@@ -1280,21 +1280,20 @@ export default function EditBoardPage() {
       <Dialog open={isOnboardingOpen} onOpenChange={setIsOnboardingOpen}>
         <DialogContent
           aria-label="Board onboarding"
+          className="max-w-4xl border border-white/70 bg-white/90 p-0 shadow-[0_24px_56px_rgba(15,23,42,0.16)] backdrop-blur-xl"
           onPointerDownOutside={(event) => event.preventDefault()}
           onInteractOutside={(event) => event.preventDefault()}
         >
           <DialogTitle className="sr-only">Board onboarding</DialogTitle>
-          <div className="flex">
-            <DialogClose asChild>
-              <button
-                type="button"
-                className="sticky top-4 z-10 ml-auto rounded-lg border border-slate-200 bg-[color:var(--surface)] p-2 text-slate-500 transition hover:bg-slate-50"
-                aria-label="Close onboarding"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </DialogClose>
-          </div>
+          <DialogClose asChild>
+            <button
+              type="button"
+              className="absolute right-4 top-4 z-20 inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-slate-200 bg-white/90 text-slate-500 transition duration-200 hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--accent)] sm:right-6 sm:top-6"
+              aria-label="Close onboarding"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </DialogClose>
           {boardId ? (
             <BoardOnboardingChat
               boardId={boardId}

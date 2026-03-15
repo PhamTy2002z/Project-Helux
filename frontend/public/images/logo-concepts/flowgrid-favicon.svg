@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="fbg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1E293B"/>
+      <stop offset="100%" stop-color="#020617"/>
+    </linearGradient>
+    <linearGradient id="fflow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FCD34D"/>
+      <stop offset="100%" stop-color="#F59E0B"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect x="16" y="16" width="480" height="480" rx="108" ry="108" fill="url(#fbg)"/>
+  <rect x="16" y="16" width="480" height="480" rx="108" ry="108" fill="none" stroke="#334155" stroke-width="1"/>
+
+  <!-- Simplified: 4 corner nodes + center node + flow -->
+  <!-- Corner nodes -->
+  <circle cx="176" cy="176" r="28" fill="#CBD5E1" opacity="0.75"/>
+  <circle cx="336" cy="176" r="28" fill="#CBD5E1" opacity="0.75"/>
+  <circle cx="176" cy="336" r="28" fill="#CBD5E1" opacity="0.75"/>
+  <circle cx="336" cy="336" r="28" fill="#CBD5E1" opacity="0.75"/>
+
+  <!-- Flow S-curve -->
+  <path d="M256 164 C256 200, 216 224, 212 256 C208 288, 256 310, 256 348"
+        stroke="url(#fflow)" stroke-width="8" fill="none" opacity="0.9" stroke-linecap="round"/>
+
+  <!-- Center amber node -->
+  <circle cx="256" cy="256" r="32" fill="#FCD34D"/>
+  <circle cx="256" cy="256" r="15" fill="#78350F"/>
+</svg>

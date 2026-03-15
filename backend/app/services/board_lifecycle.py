@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING
 from fastapi import HTTPException, status
 from sqlmodel import col, select
 
+from app.core.time import utcnow
 from app.db import crud
 from app.models.activity_events import ActivityEvent
 from app.models.agents import Agent
@@ -160,13 +161,21 @@ async def delete_board(session: AsyncSession, *, board: Board) -> OkResponse:
 
     if agents:
         agent_ids = [agent.id for agent in agents]
-        await crud.delete_where(
+        await crud.update_where(
             session,
             ActivityEvent,
             col(ActivityEvent.agent_id).in_(agent_ids),
+            agent_id=None,
             commit=False,
         )
-        await crud.delete_where(session, Agent, col(Agent.id).in_(agent_ids))
+        # Soft-delete agents to preserve usage billing data (RESTRICT FK).
+        now = utcnow()
+        for agent in agents:
+            if agent.deleted_at is None:
+                agent.deleted_at = now
+                agent.updated_at = now
+                session.add(agent)
+        await session.flush()
 
     await session.delete(board)
     await session.commit()

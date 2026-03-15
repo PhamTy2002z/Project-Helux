@@ -49,7 +49,9 @@ class AgentAuthContext:
 async def _find_agent_for_token(session: AsyncSession, token: str) -> Agent | None:
     agents = list(
         await session.exec(
-            select(Agent).where(col(Agent.agent_token_hash).is_not(None)),
+            select(Agent)
+            .where(col(Agent.agent_token_hash).is_not(None))
+            .where(col(Agent.deleted_at).is_(None)),
         ),
     )
     for agent in agents:

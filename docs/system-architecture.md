@@ -727,33 +727,13 @@ Organizations
 
 ## Security Architecture
 
-### Network Security
+**Network**: Localhost in dev, reverse proxy (nginx/traefik) in prod with HTTPS termination and CORS
 
-- All services bind to localhost in development
-- Production deployment behind reverse proxy (nginx/traefik)
-- HTTPS termination at reverse proxy
-- CORS configuration for allowed origins
+**Authentication**: JWT with expiration (Clerk) or Bearer token validation (local mode), httpOnly cookies preferred
 
-### Authentication Security
+**Database**: Connection pooling, parameterized queries (SQLModel), row-level multi-tenant isolation, automated backups
 
-- JWT tokens with expiration (Clerk mode)
-- Secure token storage (httpOnly cookies preferred)
-- Bearer token validation (local mode)
-- Environment-based secret management
-
-### Database Security
-
-- Connection pooling with max connections limit
-- Parameterized queries (SQLModel/SQLAlchemy)
-- Row-level security for multi-tenant isolation
-- Regular automated backups
-
-### API Security
-
-- Rate limiting per endpoint
-- Input validation with Pydantic
-- SQL injection prevention (ORM)
-- XSS prevention (output encoding)
+**API**: Rate limiting, Pydantic input validation, SQL injection/XSS prevention
 
 ## Performance Considerations
 
@@ -783,31 +763,31 @@ Organizations
 - Eager loading to prevent N+1 queries
 - Query optimization with EXPLAIN ANALYZE
 
-## Scalability Patterns
+## Scalability & Observability
 
-### Horizontal Scaling
+**Horizontal Scaling**: Stateless API behind load balancer, shared PostgreSQL/Redis, database session storage
 
-- Stateless backend API (multiple instances behind load balancer)
-- Shared PostgreSQL database
-- Shared Redis instance for job queue
-- Session storage in database or Redis (not in-memory)
+**Vertical Scaling**: Increase database/Redis resources and backend worker processes
 
-### Vertical Scaling
+**Monitoring**:
+- `/healthz` health check (db, redis, gateway status)
+- `/api/v1/metrics/board-overlay` (latency, filters, cursor usage, regression markers)
+- `/api/v1/metrics/saas-billing-health` (trial status, entitlements, events)
+- Structured JSON logging via ActivityEvents for audit trail
 
-- Increase database resources (CPU, RAM, storage)
-- Increase Redis memory + backend worker processes
+## Managed Gateway & Email Architecture
 
-### Future Scaling
+**Managed Gateway** (Docker service at port 18789):
+- Auto-provisioned per organization with workspace volume (`MANAGED_GATEWAY_WORKSPACE_ROOT`)
+- Status transitions: `activating` → `ready` | `degraded`
+- Compatibility checked against FlowGrid agent/heartbeat contract
+- 3 custom OpenClaw model providers configured
 
-- Database read replicas, Redis cluster, message queues, CDN
-
-## Monitoring and Observability
-
-- `/healthz` health check endpoint with db, redis, gateway status
-- API latency metrics (P50, P95, P99) + job queue monitoring
-- Board overlay telemetry: `/api/v1/metrics/board-overlay` (latency, filters, cursor usage, regression markers)
-- Billing health: `/api/v1/metrics/saas-billing-health` (trial status, entitlements, events)
-- Structured JSON logging with audit trail via ActivityEvents
+**Email Delivery** (Resend provider + RQ async queue):
+- `organization_invite_email_send` async job with retry/backoff
+- Deterministic idempotency key per invitation send attempt
+- Admin resend endpoint: `POST /api/v1/organizations/me/invites/{invite_id}/resend`
+- Non-blocking enqueue in invite creation; worker handles retries
 
 ## Board Planning Overlay Compatibility Guardrails
 

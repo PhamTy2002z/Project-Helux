@@ -129,6 +129,7 @@ export default function SignInPage() {
                   routing="path"
                   path="/sign-in"
                   forceRedirectUrl={forceRedirectUrl}
+                  signUpForceRedirectUrl={forceRedirectUrl}
                   appearance={clerkAppearance}
                 />
               ) : (

@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from datetime import timedelta
 from types import SimpleNamespace
 from typing import Any
 from uuid import uuid4
@@ -57,7 +58,7 @@ async def test_start_onboarding_redispatches_when_last_message_is_user(
             {
                 "role": "user",
                 "content": "I prefer concise updates.",
-                "timestamp": utcnow().isoformat(),
+                "timestamp": (utcnow() - timedelta(minutes=2)).isoformat(),
             },
         ],
     )
@@ -107,6 +108,67 @@ async def test_start_onboarding_redispatches_when_last_message_is_user(
     assert session.added == [onboarding]
     assert session.committed == 1
     assert session.refreshed == [onboarding]
+
+
+@pytest.mark.asyncio
+async def test_start_onboarding_does_not_redispatch_recent_last_user_message(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    board_id = uuid4()
+    onboarding = BoardOnboardingSession(
+        board_id=board_id,
+        session_key="session-key",
+        status="active",
+        messages=[
+            {
+                "role": "user",
+                "content": "NO",
+                "timestamp": utcnow().isoformat(),
+            },
+        ],
+    )
+    session: Any = _FakeSession(first_value=onboarding)
+    board = SimpleNamespace(id=board_id, name="Roadmap", description="Build v1")
+    captured_calls: list[dict[str, object]] = []
+
+    class _FakeMessagingService:
+        def __init__(self, _session: object) -> None:
+            self._session = _session
+
+        async def dispatch_answer(
+            self,
+            *,
+            board: object,
+            onboarding: object,
+            answer_text: str,
+            correlation_id: str,
+        ) -> None:
+            captured_calls.append(
+                {
+                    "board": board,
+                    "onboarding": onboarding,
+                    "answer_text": answer_text,
+                    "correlation_id": correlation_id,
+                },
+            )
+
+    monkeypatch.setattr(
+        board_onboarding,
+        "BoardOnboardingMessagingService",
+        _FakeMessagingService,
+    )
+
+    result = await board_onboarding.start_onboarding(
+        _payload=BoardOnboardingStart(),
+        board=board,
+        session=session,
+    )
+
+    assert result is onboarding
+    assert captured_calls == []
+    assert session.added == []
+    assert session.committed == 0
+    assert session.refreshed == []
 
 
 @pytest.mark.asyncio

@@ -121,6 +121,7 @@ class AgentTokenQuotaService(OpenClawDBService):
                 .where(col(Agent.board_id) == board_id)
                 .where(col(Agent.organization_id) == organization_id)
                 .where(col(Agent.is_board_lead) == False)  # noqa: E712
+                .where(col(Agent.deleted_at).is_(None))
             )
         ).all()
         if not members:

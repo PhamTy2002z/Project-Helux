@@ -889,8 +889,15 @@ main() {
 
     upsert_env_value "$REPO_ROOT/.env" "DB_AUTO_MIGRATE" "true"
 
+    local -a compose_profiles=("--profile" "docker-frontend")
+    # Only include the managed-gateway (openclaw) profile when a token is configured;
+    # otherwise the gateway service is non-functional and the image may not be available.
+    if [[ -n "${MANAGED_GATEWAY_TOKEN:-}" ]]; then
+      compose_profiles+=("--profile" "managed-gateway")
+    fi
+
     info "Starting production-like Docker stack..."
-    docker_compose --profile docker-frontend -f compose.yml --env-file .env up -d --build
+    docker_compose "${compose_profiles[@]}" -f compose.yml --env-file .env up -d --build
 
     wait_for_http "http://127.0.0.1:$backend_port/healthz" "Backend" 180 || true
     wait_for_http "http://127.0.0.1:$frontend_port" "Frontend" 180 || true

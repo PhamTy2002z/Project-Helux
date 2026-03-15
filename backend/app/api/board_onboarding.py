@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -56,6 +57,8 @@ BOARD_OR_404_DEP = Depends(get_board_or_404)
 SESSION_DEP = Depends(get_session)
 ACTOR_DEP = Depends(require_admin_or_agent)
 ADMIN_AUTH_DEP = Depends(require_admin_auth)
+RESUME_REDISPATCH_COOLDOWN = timedelta(seconds=20)
+QUESTION_PAYLOAD_DEDUP_COOLDOWN = timedelta(minutes=5)
 
 
 def _parse_draft_user_profile(
@@ -93,6 +96,87 @@ def _normalize_autonomy_token(value: object) -> str | None:
     if not text:
         return None
     return text.replace("_", "-")
+
+
+def _parse_message_timestamp(value: object) -> datetime | None:
+    if not isinstance(value, str):
+        return None
+    raw = value.strip()
+    if not raw:
+        return None
+    normalized = raw.replace("Z", "+00:00")
+    try:
+        parsed = datetime.fromisoformat(normalized)
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        return parsed
+    return parsed.astimezone(UTC).replace(tzinfo=None)
+
+
+def _get_last_message(messages: list[dict[str, object]]) -> dict[str, object] | None:
+    if not messages:
+        return None
+    last = messages[-1]
+    if not isinstance(last, dict):
+        return None
+    return last
+
+
+def _get_last_assistant_message(
+    messages: list[dict[str, object]],
+) -> dict[str, object] | None:
+    for raw in reversed(messages):
+        if not isinstance(raw, dict):
+            continue
+        if raw.get("role") == "assistant":
+            return raw
+    return None
+
+
+def _should_redispatch_last_user_message(
+    messages: list[dict[str, object]],
+) -> str | None:
+    last = _get_last_message(messages)
+    if last is None:
+        return None
+    role = last.get("role")
+    content = last.get("content")
+    if role != "user" or not isinstance(content, str) or not content:
+        return None
+    timestamp = _parse_message_timestamp(last.get("timestamp"))
+    if timestamp is not None and (utcnow() - timestamp) < RESUME_REDISPATCH_COOLDOWN:
+        return None
+    return content
+
+
+def _is_duplicate_user_answer(
+    messages: list[dict[str, object]],
+    answer_text: str,
+) -> bool:
+    last = _get_last_message(messages)
+    if last is None:
+        return False
+    return last.get("role") == "user" and last.get("content") == answer_text
+
+
+def _is_duplicate_assistant_payload(
+    messages: list[dict[str, object]],
+    payload_text: str,
+    *,
+    max_age: timedelta | None = None,
+) -> bool:
+    last = _get_last_assistant_message(messages)
+    if last is None:
+        return False
+    if last.get("content") != payload_text:
+        return False
+    if max_age is None:
+        return True
+    timestamp = _parse_message_timestamp(last.get("timestamp"))
+    if timestamp is None:
+        return True
+    return (utcnow() - timestamp) < max_age
 
 
 def _is_fully_autonomous_choice(value: object) -> bool:
@@ -203,15 +287,8 @@ async def start_onboarding(
         .first(session)
     )
     if onboarding:
-        last_user_content: str | None = None
         messages = onboarding.messages or []
-        if messages:
-            last_message = messages[-1]
-            if isinstance(last_message, dict):
-                last_role = last_message.get("role")
-                content = last_message.get("content")
-                if last_role == "user" and isinstance(content, str) and content:
-                    last_user_content = content
+        last_user_content = _should_redispatch_last_user_message(messages)
 
         if last_user_content:
             # Retrigger the agent when the session is waiting on a response.
@@ -337,9 +414,22 @@ async def answer_onboarding(
         answer_text = f"{payload.answer}: {payload.other_text}"
 
     messages = list(onboarding.messages or [])
+    if _is_duplicate_user_answer(messages, answer_text):
+        logger.info(
+            "onboarding.answer.deduplicated board_id=%s onboarding_id=%s",
+            board.id,
+            onboarding.id,
+        )
+        return onboarding
+
     messages.append(
         {"role": "user", "content": answer_text, "timestamp": utcnow().isoformat()},
     )
+    onboarding.messages = messages
+    onboarding.updated_at = utcnow()
+    session.add(onboarding)
+    await session.commit()
+    await session.refresh(onboarding)
 
     await dispatcher.dispatch_answer(
         board=board,
@@ -347,13 +437,8 @@ async def answer_onboarding(
         answer_text=answer_text,
         correlation_id=f"onboarding.answer:{board.id}:{onboarding.id}",
     )
-
-    onboarding.messages = messages
-    onboarding.updated_at = utcnow()
-    session.add(onboarding)
-    await session.commit()
-    await session.refresh(onboarding)
-    return onboarding
+    latest = await BoardOnboardingSession.objects.by_id(onboarding.id).first(session)
+    return latest or onboarding
 
 
 @router.post("/agent", response_model=BoardOnboardingRead)
@@ -396,6 +481,30 @@ async def agent_onboarding_update(
         agent.id,
         payload_text,
     )
+    dedup_window = (
+        None
+        if isinstance(payload, BoardOnboardingAgentComplete)
+        else QUESTION_PAYLOAD_DEDUP_COOLDOWN
+    )
+    if _is_duplicate_assistant_payload(
+        messages,
+        payload_text,
+        max_age=dedup_window,
+    ):
+        logger.info(
+            "onboarding.agent.update deduplicated board_id=%s agent_id=%s",
+            board.id,
+            agent.id,
+        )
+        if isinstance(payload, BoardOnboardingAgentComplete):
+            onboarding.draft_goal = payload_data
+            onboarding.status = "completed"
+            onboarding.updated_at = utcnow()
+            session.add(onboarding)
+            await session.commit()
+            await session.refresh(onboarding)
+        return onboarding
+
     if isinstance(payload, BoardOnboardingAgentComplete):
         onboarding.draft_goal = payload_data
         onboarding.status = "completed"

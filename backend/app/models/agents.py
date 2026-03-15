@@ -51,5 +51,6 @@ class Agent(QueryModel, table=True):
     last_provision_error: str | None = Field(default=None, sa_column=Column(Text))
     is_board_lead: bool = Field(default=False, index=True)
     template_id: UUID | None = Field(default=None, foreign_key="workspace_templates.id", index=True)
+    deleted_at: datetime | None = Field(default=None, index=True)
     created_at: datetime = Field(default_factory=utcnow)
     updated_at: datetime = Field(default_factory=utcnow)

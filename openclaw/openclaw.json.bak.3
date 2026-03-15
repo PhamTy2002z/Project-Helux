@@ -1,0 +1,159 @@
+{
+  "meta": {
+    "lastTouchedVersion": "2026.3.8",
+    "lastTouchedAt": "2026-03-15T06:16:26.936Z"
+  },
+  "models": {
+    "mode": "merge",
+    "providers": {
+      "custom-provider-ccs": {
+        "baseUrl": "http://host.docker.internal:8317/api/provider/codex",
+        "apiKey": "ccs-internal-managed",
+        "api": "anthropic-messages",
+        "models": [
+          {
+            "id": "gpt-5.1-codex-min",
+            "name": "gpt-5.1-codex-mini (Custom Provider)",
+            "api": "anthropic-messages",
+            "reasoning": true,
+            "input": [
+              "text"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 200000,
+            "maxTokens": 16384
+          }
+        ]
+      },
+      "ccs-custom-2": {
+        "baseUrl": "http://host.docker.internal:8317/api/provider/codex",
+        "apiKey": "ccs-internal-managed",
+        "api": "anthropic-messages",
+        "models": [
+          {
+            "id": "gpt-5.3-codex",
+            "name": "gpt-5.3-codex (Custom Provider)",
+            "api": "anthropic-messages",
+            "reasoning": false,
+            "input": [
+              "text"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 400000,
+            "maxTokens": 16384
+          }
+        ]
+      }
+    }
+  },
+  "agents": {
+    "defaults": {
+      "model": {
+        "primary": "ccs-custom-2/gpt-5.3-codex"
+      },
+      "models": {
+        "custom-provider-ccs/gpt-5.1-codex-mini": {},
+        "ccs-custom-2/gpt-5.3-codex": {}
+      },
+      "workspace": "/data/.openclaw/workspace",
+      "contextTokens": 400000,
+      "compaction": {
+        "mode": "safeguard"
+      }
+    },
+    "list": [
+      {
+        "id": "main",
+        "model": "ccs-custom-2/gpt-5.3-codex"
+      },
+      {
+        "id": "mc-gateway-1e6b9bbf-c322-4d42-81d6-acab6de903f8",
+        "name": "Managed GateWay Agent - 1e6b9bbf-c322-4d42-81d6-acab6de903f8",
+        "workspace": "/shared/openclaw-managed/org-233705c7-87c5-4bef-82fa-5caf15032c85/workspace-gateway-1e6b9bbf-c322-4d42-81d6-acab6de903f8",
+        "agentDir": "/data/.openclaw/agents/mc-gateway-1e6b9bbf-c322-4d42-81d6-acab6de903f8/agent",
+        "heartbeat": {
+          "every": "10m",
+          "includeReasoning": false,
+          "target": "last"
+        },
+        "tools": {
+          "profile": "full"
+        }
+      },
+      {
+        "id": "lead-843935b0-81ef-4f82-93e6-99b3b4f4120f",
+        "name": "Ava",
+        "workspace": "/shared/openclaw-managed/org-233705c7-87c5-4bef-82fa-5caf15032c85/workspace-lead-843935b0-81ef-4f82-93e6-99b3b4f4120f",
+        "agentDir": "/data/.openclaw/agents/lead-843935b0-81ef-4f82-93e6-99b3b4f4120f/agent",
+        "heartbeat": {
+          "every": "10m",
+          "includeReasoning": false,
+          "target": "last"
+        },
+        "tools": {
+          "profile": "full"
+        }
+      }
+    ]
+  },
+  "tools": {
+    "profile": "full",
+    "web": {
+      "search": {
+        "enabled": true,
+        "provider": "gemini",
+        "gemini": {
+          "apiKey": "AIzaSyC4idwdvawkaOK8K6yulcsG_GavwKz4IKw"
+        }
+      }
+    },
+    "exec": {
+      "host": "gateway",
+      "security": "full"
+    }
+  },
+  "commands": {
+    "native": "auto",
+    "nativeSkills": "auto",
+    "restart": true,
+    "ownerDisplay": "raw"
+  },
+  "session": {
+    "dmScope": "per-channel-peer"
+  },
+  "channels": {
+    "defaults": {
+      "heartbeat": {
+        "showOk": false,
+        "showAlerts": true,
+        "useIndicator": true
+      }
+    }
+  },
+  "gateway": {
+    "port": 18789,
+    "mode": "local",
+    "bind": "lan",
+    "controlUi": {
+      "dangerouslyAllowHostHeaderOriginFallback": true
+    },
+    "auth": {
+      "mode": "token",
+      "token": "5b65568376c384c5689b826cf425294d98cabeeef67e6ad0"
+    },
+    "tailscale": {
+      "mode": "off",
+      "resetOnExit": false
+    }
+  }
+}

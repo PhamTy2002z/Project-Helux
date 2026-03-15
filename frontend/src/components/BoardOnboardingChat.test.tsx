@@ -43,7 +43,10 @@ vi.mock("@/api/generated/board-onboarding/board-onboarding", () => ({
   ) => confirmOnboardingMock(...args),
 }));
 
-const buildQuestionSession = (question: string): BoardOnboardingRead => ({
+const buildQuestionSession = (
+  question: string,
+  timestamp = "2026-02-15T00:00:00Z",
+): BoardOnboardingRead => ({
   id: "session-1",
   board_id: "board-1",
   session_key: "session:key",
@@ -55,7 +58,7 @@ const buildQuestionSession = (question: string): BoardOnboardingRead => ({
         question,
         options: ["Option A", "Option B"],
       }),
-      timestamp: "2026-02-15T00:00:00Z",
+      timestamp,
     },
   ],
   draft_goal: null,
@@ -129,5 +132,45 @@ describe("BoardOnboardingChat polling", () => {
         callsBeforePoll,
       );
     });
+  });
+
+  it("keeps waiting when backend repeats the same question with a new timestamp", async () => {
+    const initial = buildQuestionSession("Pick a style", "2026-02-15T00:00:00Z");
+    const repeated = buildQuestionSession("Pick a style", "2026-02-15T00:00:05Z");
+    const next = buildQuestionSession(
+      "What timeline should we target?",
+      "2026-02-15T00:00:10Z",
+    );
+    startOnboardingMock.mockResolvedValue({ status: 200, data: initial });
+    answerOnboardingMock.mockResolvedValue({ status: 200, data: repeated });
+    getOnboardingMock
+      .mockResolvedValueOnce({ status: 200, data: initial })
+      .mockResolvedValue({ status: 200, data: next });
+
+    render(
+      <BoardOnboardingChat boardId="board-1" onConfirmed={() => undefined} />,
+    );
+
+    await screen.findByText("Pick a style");
+
+    fireEvent.click(screen.getByRole("button", { name: "Option A" }));
+    fireEvent.click(screen.getByRole("button", { name: "Next" }));
+
+    await waitFor(() => {
+      expect(answerOnboardingMock).toHaveBeenCalledTimes(1);
+    });
+
+    const callsBeforePoll = getOnboardingMock.mock.calls.length;
+    await act(async () => {
+      vi.advanceTimersByTime(2500);
+      await Promise.resolve();
+    });
+
+    await waitFor(() => {
+      expect(getOnboardingMock.mock.calls.length).toBeGreaterThan(
+        callsBeforePoll,
+      );
+    });
+    await screen.findByText("What timeline should we target?");
   });
 });

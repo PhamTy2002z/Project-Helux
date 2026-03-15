@@ -569,7 +569,7 @@ Clarify environment variable requirements.
   - `/dashboard`: `<= 1250 KB` initial JS
   - `/boards`: `<= 1150 KB` initial JS
   - `/activity`: `<= 1250 KB` initial JS
-- Latest validated run (March 8, 2026):
+- Latest validated run (March 15, 2026):
   - Shared root main JS: `400.8 KB`
   - `/`: `951.4 KB`
   - `/dashboard`: `1072.2 KB`
@@ -581,6 +581,21 @@ Clarify environment variable requirements.
 - Use database connection pooling
 - Avoid N+1 queries with eager loading
 - Monitor slow query log
+
+## Service Integration Patterns
+
+### Email Service (Resend Provider)
+- Use `email_sender.py` abstract interface with provider adapters
+- `ResendSender` adapter: builds `resend.emails.send(...)` with deterministic idempotency key
+- Queue pattern: Enqueue `organization_invite_email_send` job (non-blocking, best-effort)
+- Retry policy: Existing RQ retry/backoff applies to retryable failures (network, transient provider errors)
+- Admin resend endpoint: `POST /api/v1/organizations/me/invites/{invite_id}/resend` for manual retry
+
+### Async Job Queue (RQ + Redis)
+- Service layer enqueues jobs asynchronously
+- Worker handler in `queue_worker.py` processes jobs with retry/backoff
+- Use deterministic keys for idempotency (example: `f"{org_id}:{invite_id}:{attempt}"`)
+- Return job ID immediately to API caller; job execution is eventual
 
 ## Compatibility Standards (OpenClaw Board Workflows)
 

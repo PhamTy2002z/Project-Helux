@@ -81,6 +81,41 @@ services:
         limits:
           memory: 512M
 
+  # ---------- openclaw gateway ----------
+  openclaw:
+    profiles:
+      - managed-gateway
+    image: openclaw/gateway:latest
+    # Bind to 0.0.0.0 so other containers can reach the gateway via Docker network.
+    # Config in openclaw/openclaw.json sets controlUi fallback for non-loopback bind.
+    command: ["node", "openclaw.mjs", "gateway", "--allow-unconfigured", "--bind", "lan"]
+    <<: *default-restart
+    logging: *default-logging
+    environment:
+      OPENCLAW_HOME: /data
+      OPENCLAW_CONFIG_PATH: /data/config/openclaw.json
+      OPENCLAW_STATE_DIR: /data/.openclaw
+      OPENCLAW_GATEWAY_TOKEN: ${MANAGED_GATEWAY_TOKEN:-}
+    volumes:
+      - openclaw_data:/data
+      - device_identity:/shared/device-identity
+      - openclaw_managed:/shared/openclaw-managed
+      - ./openclaw:/data/config
+    ports:
+      - "127.0.0.1:18789:18789"
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:18789/healthz || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+
   # ---------- application ----------
   backend:
     build:
@@ -95,6 +130,8 @@ services:
     environment:
       # Override localhost defaults for container networking
       DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-mission_control}
+      # BASE_URL must be reachable from openclaw container (not localhost)
+      BASE_URL: http://backend:8000
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
       DB_AUTO_MIGRATE: ${DB_AUTO_MIGRATE:-true}
       AUTH_MODE: ${AUTH_MODE}
@@ -107,6 +144,9 @@ services:
       OBJECT_STORAGE_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin}
       OBJECT_STORAGE_BUCKET: ${OBJECT_STORAGE_BUCKET:-board-chat-files}
       OBJECT_STORAGE_USE_SSL: "false"
+      MANAGED_GATEWAY_URL: ws://openclaw:18789/ws
+      MANAGED_GATEWAY_TOKEN: ${MANAGED_GATEWAY_TOKEN:-}
+      MANAGED_GATEWAY_WORKSPACE_ROOT: /shared/openclaw-managed
       OPENCLAW_GATEWAY_DEVICE_IDENTITY_PATH: /shared/device-identity/device.json
     volumes:
       - device_identity:/shared/device-identity
@@ -140,12 +180,17 @@ services:
       context: ./frontend
       args:
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-auto}
-        NEXT_PUBLIC_AUTH_MODE: ${AUTH_MODE}
+        NEXT_PUBLIC_AUTH_MODE: ${NEXT_PUBLIC_AUTH_MODE:-${AUTH_MODE:-local}}
+        NEXT_PUBLIC_AUTH_PROFILE: ${NEXT_PUBLIC_AUTH_PROFILE:-self_hosted}
+        NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY:-}
+        NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL: ${NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL:-/boards}
+        NEXT_PUBLIC_CLERK_AFTER_SIGN_OUT_URL: ${NEXT_PUBLIC_CLERK_AFTER_SIGN_OUT_URL:-/}
+        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-}
+        NEXT_PUBLIC_BOARD_PLANNING_OVERLAY_V1: ${NEXT_PUBLIC_BOARD_PLANNING_OVERLAY_V1:-false}
+        NEXT_PUBLIC_BOARD_QUERY_V2: ${NEXT_PUBLIC_BOARD_QUERY_V2:-false}
     <<: *default-restart
     logging: *default-logging
-    # Optional, user-managed env file.
-    # IMPORTANT: do NOT load `.env.example` here because it contains non-empty
-    # placeholder Clerk keys, which can accidentally flip Clerk "on".
+    # Optional, user-managed env file for runtime vars (CLERK_SECRET_KEY, etc.).
     env_file:
       - path: ./frontend/.env
         required: false
@@ -219,6 +264,8 @@ services:
       OBJECT_STORAGE_BUCKET: ${OBJECT_STORAGE_BUCKET:-board-chat-files}
       OBJECT_STORAGE_USE_SSL: "false"
       WORKER_HEARTBEAT_KEY: ${WORKER_HEARTBEAT_KEY:-helux:worker:heartbeat}
+      MANAGED_GATEWAY_URL: ws://openclaw:18789/ws
+      MANAGED_GATEWAY_TOKEN: ${MANAGED_GATEWAY_TOKEN:-}
       OPENCLAW_GATEWAY_DEVICE_IDENTITY_PATH: /shared/device-identity/device.json
     volumes:
       - device_identity:/shared/device-identity
@@ -247,4 +294,6 @@ networks:
 volumes:
   postgres_data:
   minio_data:
+  openclaw_data:
+  openclaw_managed:
   device_identity:

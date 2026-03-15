@@ -25,6 +25,7 @@ from app.api.board_memory import router as board_memory_router
 from app.api.board_onboarding import router as board_onboarding_router
 from app.api.board_webhooks import router as board_webhooks_router
 from app.api.boards import router as boards_router
+from app.api.clerk_webhooks import router as clerk_webhooks_router
 from app.api.gateway import router as gateway_router
 from app.api.gateways import router as gateways_router
 from app.api.metrics import router as metrics_router
@@ -37,6 +38,7 @@ from app.api.task_custom_fields import router as task_custom_fields_router
 from app.api.tasks import router as tasks_router
 from app.api.users import router as users_router
 from app.api.workspace_templates import router as workspace_templates_router
+from app.core.auth_mode import AuthMode
 from app.core.config import settings
 from app.core.error_handling import install_error_handling
 from app.core.logging import configure_logging, get_logger
@@ -619,6 +621,8 @@ api_v1.include_router(task_custom_fields_router)
 api_v1.include_router(tags_router)
 api_v1.include_router(users_router)
 api_v1.include_router(workspace_templates_router)
+if settings.auth_mode == AuthMode.CLERK:
+    api_v1.include_router(clerk_webhooks_router)
 app.include_router(api_v1)
 
 add_pagination(app)

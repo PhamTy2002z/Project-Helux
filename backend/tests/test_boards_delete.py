@@ -23,6 +23,7 @@ class _FakeSession:
     exec_results: list[object]
     executed: list[object] = field(default_factory=list)
     deleted: list[object] = field(default_factory=list)
+    added: list[object] = field(default_factory=list)
     committed: int = 0
 
     async def exec(self, statement: object) -> object | None:
@@ -37,8 +38,14 @@ class _FakeSession:
     async def execute(self, statement: object) -> None:
         self.executed.append(statement)
 
+    def add(self, value: object) -> None:
+        self.added.append(value)
+
     async def delete(self, value: object) -> None:
         self.deleted.append(value)
+
+    async def flush(self) -> None:
+        pass
 
     async def commit(self) -> None:
         self.committed += 1
@@ -108,7 +115,7 @@ async def test_delete_board_ignores_missing_gateway_agent(monkeypatch: pytest.Mo
         slug="demo-board",
         gateway_id=uuid4(),
     )
-    agent = SimpleNamespace(id=uuid4(), board_id=board.id)
+    agent = SimpleNamespace(id=uuid4(), board_id=board.id, deleted_at=None, updated_at=None)
     gateway = SimpleNamespace(url="ws://gateway.example/ws", token=None, workspace_root="/tmp")
     called = {"delete_agent_lifecycle": 0}
 

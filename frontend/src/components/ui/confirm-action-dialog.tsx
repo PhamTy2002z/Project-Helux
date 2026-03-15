@@ -43,7 +43,7 @@ export function ConfirmActionDialog({
 }: ConfirmActionDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent aria-label={ariaLabel}>
+      <DialogContent className="max-w-md" aria-label={ariaLabel}>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>

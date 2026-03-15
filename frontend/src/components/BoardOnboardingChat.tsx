@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { RefreshCcw } from "lucide-react";
+import { CheckCircle2, Circle, RefreshCcw, Sparkles } from "lucide-react";
 
 import {
   DialogFooter,
@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { usePageActive } from "@/hooks/usePageActive";
+import { cn } from "@/lib/utils";
 
 import {
   answerOnboardingApiV1BoardsBoardIdOnboardingAnswerPost,
@@ -64,6 +65,19 @@ const FREE_TEXT_OPTION_RE =
   /(i'?ll type|i will type|type it|type my|other|custom|free\\s*text)/i;
 
 const isFreeTextOption = (label: string) => FREE_TEXT_OPTION_RE.test(label);
+
+const normalizeQuestionFragment = (value: string) =>
+  value.trim().toLowerCase().replace(/\s+/g, " ");
+
+const questionFingerprint = (question: Question | null): string | null => {
+  if (!question) return null;
+  const normalizedQuestion = normalizeQuestionFragment(question.question);
+  const normalizedOptions = question.options
+    .map((option) => normalizeQuestionFragment(option.label))
+    .sort()
+    .join("|");
+  return `${normalizedQuestion}::${normalizedOptions}`;
+};
 
 /**
  * Best-effort parser for assistant-produced question payloads.
@@ -133,6 +147,41 @@ const parseQuestion = (messages?: NormalizedMessage[] | null) => {
   return null;
 };
 
+function WaitingStateCard({
+  title,
+  submittedAnswer,
+}: {
+  title: string;
+  submittedAnswer: string | null;
+}) {
+  return (
+    <div className="rounded-2xl border border-slate-200/90 bg-gradient-to-br from-slate-50 via-white to-sky-50/70 px-4 py-4 text-sm text-slate-700 shadow-sm">
+      <div className="flex items-start gap-3">
+        <span className="mt-0.5 inline-flex h-8 w-8 items-center justify-center rounded-full bg-sky-100 text-sky-700">
+          <RefreshCcw className="h-4 w-4 animate-spin motion-reduce:animate-none" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="font-semibold text-slate-900">{title}</p>
+          {submittedAnswer ? (
+            <p className="mt-1 text-xs text-slate-600">
+              Sent:{" "}
+              <span className="font-medium text-slate-900">
+                {submittedAnswer}
+              </span>
+            </p>
+          ) : null}
+          <p className="mt-1 text-xs text-slate-500">
+            This usually takes a few seconds.
+          </p>
+          <div className="relative mt-3 h-1.5 overflow-hidden rounded-full bg-slate-200/80">
+            <span className="absolute inset-y-0 left-0 w-1/3 rounded-full bg-[color:var(--accent)] animate-progress-shimmer motion-reduce:animate-none" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function BoardOnboardingChat({
   boardId,
   onConfirmed,
@@ -156,6 +205,8 @@ export function BoardOnboardingChat({
   const [extraContextOpen, setExtraContextOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
+  const [lastAnsweredQuestionFingerprint, setLastAnsweredQuestionFingerprint] =
+    useState<string | null>(null);
   const freeTextRef = useRef<HTMLTextAreaElement | null>(null);
   const extraContextRef = useRef<HTMLTextAreaElement | null>(null);
 
@@ -181,6 +232,10 @@ export function BoardOnboardingChat({
     () => parseQuestion(normalizedMessages),
     [normalizedMessages],
   );
+  const currentQuestionFingerprint = useMemo(
+    () => questionFingerprint(question),
+    [question],
+  );
   const draft: BoardOnboardingAgentComplete | null =
     session?.draft_goal ?? null;
 
@@ -193,6 +248,19 @@ export function BoardOnboardingChat({
     () => selectedOptions.some((label) => isFreeTextOption(label)),
     [selectedOptions],
   );
+  const isDuplicateQuestionAfterAnswer = useMemo(() => {
+    if (!currentQuestionFingerprint || !lastAnsweredQuestionFingerprint)
+      return false;
+    if (currentQuestionFingerprint !== lastAnsweredQuestionFingerprint)
+      return false;
+    if (!lastSubmittedAnswer) return false;
+    return !draft;
+  }, [
+    currentQuestionFingerprint,
+    draft,
+    lastAnsweredQuestionFingerprint,
+    lastSubmittedAnswer,
+  ]);
 
   useEffect(() => {
     if (!wantsFreeText) return;
@@ -248,7 +316,11 @@ export function BoardOnboardingChat({
   }, [startSession]);
 
   const shouldPollSession =
-    isPageActive && (loading || isAwaitingAgent || (!question && !draft));
+    isPageActive &&
+    (loading ||
+      isAwaitingAgent ||
+      isDuplicateQuestionAfterAnswer ||
+      (!question && !draft));
 
   useEffect(() => {
     if (!shouldPollSession) return;
@@ -338,9 +410,18 @@ export function BoardOnboardingChat({
     const trimmedOther = otherText.trim();
     if (selectedOptions.length === 0) return;
     if (wantsFreeText && !trimmedOther) return;
+    if (currentQuestionFingerprint) {
+      setLastAnsweredQuestionFingerprint(currentQuestionFingerprint);
+    }
     const answer = selectedOptions.join(", ");
     void handleAnswer(answer, wantsFreeText ? trimmedOther : undefined);
-  }, [handleAnswer, otherText, selectedOptions, wantsFreeText]);
+  }, [
+    currentQuestionFingerprint,
+    handleAnswer,
+    otherText,
+    selectedOptions,
+    wantsFreeText,
+  ]);
 
   useEffect(() => {
     if (!awaitingAssistantFingerprint) return;
@@ -350,6 +431,12 @@ export function BoardOnboardingChat({
       setLastSubmittedAnswer(null);
     }
   }, [awaitingAssistantFingerprint, lastAssistantFingerprint]);
+
+  useEffect(() => {
+    if (!isDuplicateQuestionAfterAnswer) return;
+    setAwaitingAssistantFingerprint(lastAssistantFingerprint);
+    setAwaitingKind("answer");
+  }, [isDuplicateQuestionAfterAnswer, lastAssistantFingerprint]);
 
   const confirmGoal = async () => {
     if (!draft) return;
@@ -378,274 +465,292 @@ export function BoardOnboardingChat({
     }
   };
 
+  const headerHint = draft
+    ? "Review and confirm the generated goal before continuing."
+    : "Answer a few quick prompts so the lead agent can draft your goal.";
+  const phaseLabel = draft
+    ? "Final review"
+    : question
+      ? "Question in progress"
+      : "Initializing";
+
   return (
-    <div className="space-y-4">
-      <DialogHeader>
-        <DialogTitle>Board onboarding</DialogTitle>
-      </DialogHeader>
-
-      {error ? (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-          {error}
-        </div>
-      ) : null}
-
-      {draft ? (
-        <div className="space-y-3">
-          <p className="text-sm text-slate-600">
-            Review the lead agent draft and confirm.
-          </p>
-          {isAwaitingAgent ? (
-            <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
-              <div className="flex items-center gap-2 font-medium text-slate-900">
-                <RefreshCcw className="h-4 w-4 animate-spin text-slate-500" />
-                <span>
-                  {awaitingKind === "extra_context"
-                    ? "Updating the draft…"
-                    : "Waiting for the agent…"}
-                </span>
-              </div>
-              {lastSubmittedAnswer ? (
-                <p className="mt-2 text-xs text-slate-600">
-                  Sent:{" "}
-                  <span className="font-medium text-slate-900">
-                    {lastSubmittedAnswer}
-                  </span>
-                </p>
-              ) : null}
-              <p className="mt-1 text-xs text-slate-500">
-                This usually takes a few seconds.
-              </p>
-            </div>
-          ) : null}
-          <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm">
-            <p className="font-semibold text-slate-900">Objective</p>
-            <p className="text-slate-700">{draft.objective || "—"}</p>
-            <p className="mt-3 font-semibold text-slate-900">Success metrics</p>
-            <pre className="mt-1 whitespace-pre-wrap text-xs text-slate-600">
-              {JSON.stringify(draft.success_metrics ?? {}, null, 2)}
-            </pre>
-            <p className="mt-3 font-semibold text-slate-900">Target date</p>
-            <p className="text-slate-700">{draft.target_date || "—"}</p>
-            <p className="mt-3 font-semibold text-slate-900">Board type</p>
-            <p className="text-slate-700">{draft.board_type || "goal"}</p>
-            {draft.user_profile ? (
-              <>
-                <p className="mt-4 font-semibold text-slate-900">
-                  User profile
-                </p>
-                <p className="text-slate-700">
-                  <span className="font-medium text-slate-900">
-                    Preferred name:
-                  </span>{" "}
-                  {draft.user_profile.preferred_name || "—"}
-                </p>
-                <p className="text-slate-700">
-                  <span className="font-medium text-slate-900">Pronouns:</span>{" "}
-                  {draft.user_profile.pronouns || "—"}
-                </p>
-                <p className="text-slate-700">
-                  <span className="font-medium text-slate-900">Timezone:</span>{" "}
-                  {draft.user_profile.timezone || "—"}
-                </p>
-              </>
-            ) : null}
-            {draft.lead_agent ? (
-              <>
-                <p className="mt-4 font-semibold text-slate-900">
-                  Lead agent preferences
-                </p>
-                <p className="text-slate-700">
-                  <span className="font-medium text-slate-900">Name:</span>{" "}
-                  {draft.lead_agent.name || "—"}
-                </p>
-                <p className="text-slate-700">
-                  <span className="font-medium text-slate-900">Role:</span>{" "}
-                  {draft.lead_agent.identity_profile?.role || "—"}
-                </p>
-                <p className="text-slate-700">
-                  <span className="font-medium text-slate-900">
-                    Communication:
-                  </span>{" "}
-                  {draft.lead_agent.identity_profile?.communication_style ||
-                    "—"}
-                </p>
-                <p className="text-slate-700">
-                  <span className="font-medium text-slate-900">Emoji:</span>{" "}
-                  {draft.lead_agent.identity_profile?.emoji || "—"}
-                </p>
-              </>
-            ) : null}
+    <div className="relative overflow-hidden rounded-[1.6rem] border border-slate-200/90 bg-gradient-to-br from-white via-white to-slate-50/80 shadow-lush">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-r from-sky-100/50 via-white to-blue-100/30" />
+      <div className="relative space-y-4 p-4 sm:p-6">
+        <DialogHeader className="space-y-2.5 border-b border-slate-200/80 pb-4">
+          <div className="inline-flex w-fit items-center gap-2 rounded-full border border-slate-200 bg-white/80 px-3 py-1 text-xs font-medium text-slate-600 backdrop-blur">
+            <Sparkles className="h-3.5 w-3.5 text-sky-700" />
+            {phaseLabel}
           </div>
-          <div className="rounded-lg border border-slate-200 bg-white p-3">
-            <div className="flex items-center justify-between gap-2">
-              <p className="text-sm font-semibold text-slate-900">
-                Extra context (optional)
-              </p>
-              <Button
-                variant="ghost"
-                size="sm"
-                type="button"
-                onClick={() => setExtraContextOpen((prev) => !prev)}
-                disabled={loading || isAwaitingAgent}
-              >
-                {extraContextOpen ? "Hide" : "Add"}
-              </Button>
+          <DialogTitle className="font-[var(--font-heading)] text-3xl leading-tight text-slate-900 sm:text-[2.1rem]">
+            Board onboarding
+          </DialogTitle>
+          <p className="max-w-2xl text-sm leading-6 text-slate-600">
+            {headerHint}
+          </p>
+        </DialogHeader>
+
+        {error ? (
+          <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {error}
+          </div>
+        ) : null}
+
+        {draft ? (
+          <div className="space-y-4">
+            {isAwaitingAgent ? (
+              <WaitingStateCard
+                title={
+                  awaitingKind === "extra_context"
+                    ? "Updating the draft..."
+                    : "Waiting for the agent..."
+                }
+                submittedAnswer={lastSubmittedAnswer}
+              />
+            ) : null}
+            <div className="rounded-2xl border border-slate-200 bg-white/80 p-4 text-sm backdrop-blur-sm">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-1">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    Objective
+                  </p>
+                  <p className="text-sm text-slate-800">{draft.objective || "—"}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    Target date
+                  </p>
+                  <p className="text-sm text-slate-800">{draft.target_date || "—"}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    Board type
+                  </p>
+                  <p className="text-sm capitalize text-slate-800">
+                    {draft.board_type || "goal"}
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    Success metrics
+                  </p>
+                  <pre className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
+                    {JSON.stringify(draft.success_metrics ?? {}, null, 2)}
+                  </pre>
+                </div>
+              </div>
+              {draft.user_profile ? (
+                <div className="mt-4 space-y-2 rounded-xl border border-slate-200/90 bg-slate-50/80 p-3">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    User profile
+                  </p>
+                  <p className="text-slate-700">
+                    <span className="font-medium text-slate-900">
+                      Preferred name:
+                    </span>{" "}
+                    {draft.user_profile.preferred_name || "—"}
+                  </p>
+                  <p className="text-slate-700">
+                    <span className="font-medium text-slate-900">Pronouns:</span>{" "}
+                    {draft.user_profile.pronouns || "—"}
+                  </p>
+                  <p className="text-slate-700">
+                    <span className="font-medium text-slate-900">Timezone:</span>{" "}
+                    {draft.user_profile.timezone || "—"}
+                  </p>
+                </div>
+              ) : null}
+              {draft.lead_agent ? (
+                <div className="mt-4 space-y-2 rounded-xl border border-slate-200/90 bg-slate-50/80 p-3">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    Lead agent preferences
+                  </p>
+                  <p className="text-slate-700">
+                    <span className="font-medium text-slate-900">Name:</span>{" "}
+                    {draft.lead_agent.name || "—"}
+                  </p>
+                  <p className="text-slate-700">
+                    <span className="font-medium text-slate-900">Role:</span>{" "}
+                    {draft.lead_agent.identity_profile?.role || "—"}
+                  </p>
+                  <p className="text-slate-700">
+                    <span className="font-medium text-slate-900">
+                      Communication:
+                    </span>{" "}
+                    {draft.lead_agent.identity_profile?.communication_style ||
+                      "—"}
+                  </p>
+                  <p className="text-slate-700">
+                    <span className="font-medium text-slate-900">Emoji:</span>{" "}
+                    {draft.lead_agent.identity_profile?.emoji || "—"}
+                  </p>
+                </div>
+              ) : null}
             </div>
-            {extraContextOpen ? (
-              <div className="mt-2 space-y-2">
+            <div className="rounded-2xl border border-slate-200 bg-white/80 p-4 backdrop-blur-sm">
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-sm font-semibold text-slate-900">
+                  Extra context (optional)
+                </p>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  type="button"
+                  onClick={() => setExtraContextOpen((prev) => !prev)}
+                  disabled={loading || isAwaitingAgent}
+                >
+                  {extraContextOpen ? "Hide" : "Add"}
+                </Button>
+              </div>
+              {extraContextOpen ? (
+                <div className="mt-3 space-y-3">
+                  <Textarea
+                    ref={extraContextRef}
+                    className="min-h-[88px]"
+                    placeholder="Anything else the agent should know before you confirm? (constraints, context, preferences, links, etc.)"
+                    value={extraContext}
+                    onChange={(event) => setExtraContext(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key !== "Enter") return;
+                      if (event.nativeEvent.isComposing) return;
+                      if (event.shiftKey) return;
+                      event.preventDefault();
+                      if (loading || isAwaitingAgent) return;
+                      void submitExtraContext();
+                    }}
+                    disabled={loading || isAwaitingAgent}
+                  />
+                  <div className="flex items-center justify-end">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      type="button"
+                      onClick={() => void submitExtraContext()}
+                      disabled={
+                        loading || isAwaitingAgent || !extraContext.trim()
+                      }
+                    >
+                      {loading
+                        ? "Sending..."
+                        : isAwaitingAgent
+                          ? "Waiting..."
+                          : "Send context"}
+                    </Button>
+                  </div>
+                  <p className="text-xs text-slate-500">
+                    Tip: press Enter to send. Shift+Enter for a newline.
+                  </p>
+                </div>
+              ) : (
+                <p className="mt-2 text-xs text-slate-600">
+                  Add anything that wasn&apos;t covered in the agent&apos;s
+                  questions.
+                </p>
+              )}
+            </div>
+            <DialogFooter>
+              <Button
+                className="min-w-28"
+                onClick={confirmGoal}
+                disabled={loading || isAwaitingAgent}
+                type="button"
+              >
+                Confirm goal
+              </Button>
+            </DialogFooter>
+          </div>
+        ) : question && (isAwaitingAgent || isDuplicateQuestionAfterAnswer) ? (
+          <WaitingStateCard
+            title="Waiting for the next question..."
+            submittedAnswer={lastSubmittedAnswer}
+          />
+        ) : question ? (
+          <div className="space-y-4">
+            <div className="rounded-2xl border border-slate-200 bg-white/80 p-4 backdrop-blur-sm">
+              <p className="text-base font-semibold text-slate-900">
+                {question.question}
+              </p>
+              <p className="mt-1 text-xs text-slate-500">
+                Select one or more options.
+              </p>
+            </div>
+            <div className="space-y-2.5">
+              {question.options.map((option) => {
+                const isSelected = selectedOptions.includes(option.label);
+                return (
+                  <button
+                    key={option.id}
+                    className={cn(
+                      "flex min-h-12 w-full cursor-pointer items-center justify-between rounded-2xl border px-4 py-3 text-left text-sm font-medium transition duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--accent)]",
+                      isSelected
+                        ? "border-[color:var(--accent)] bg-[color:var(--accent-soft)] text-[color:var(--accent)]"
+                        : "border-slate-200 bg-white/90 text-slate-800 hover:border-slate-300 hover:bg-slate-50",
+                      loading && "cursor-not-allowed opacity-70",
+                    )}
+                    onClick={() => toggleOption(option.label)}
+                    disabled={loading}
+                    type="button"
+                  >
+                    <span>{option.label}</span>
+                    {isSelected ? (
+                      <CheckCircle2 className="h-4 w-4 shrink-0" />
+                    ) : (
+                      <Circle className="h-4 w-4 shrink-0 text-slate-400" />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+            {wantsFreeText ? (
+              <div className="space-y-2">
                 <Textarea
-                  ref={extraContextRef}
-                  className="min-h-[84px]"
-                  placeholder="Anything else the agent should know before you confirm? (constraints, context, preferences, links, etc.)"
-                  value={extraContext}
-                  onChange={(event) => setExtraContext(event.target.value)}
+                  ref={freeTextRef}
+                  className="min-h-[88px]"
+                  placeholder="Type your answer..."
+                  value={otherText}
+                  onChange={(event) => setOtherText(event.target.value)}
                   onKeyDown={(event) => {
                     if (event.key !== "Enter") return;
                     if (event.nativeEvent.isComposing) return;
                     if (event.shiftKey) return;
                     event.preventDefault();
-                    if (loading || isAwaitingAgent) return;
-                    void submitExtraContext();
+                    if (loading) return;
+                    submitAnswer();
                   }}
-                  disabled={loading || isAwaitingAgent}
+                  disabled={loading}
                 />
-                <div className="flex items-center justify-end">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    type="button"
-                    onClick={() => void submitExtraContext()}
-                    disabled={
-                      loading || isAwaitingAgent || !extraContext.trim()
-                    }
-                  >
-                    {loading
-                      ? "Sending..."
-                      : isAwaitingAgent
-                        ? "Waiting..."
-                        : "Send context"}
-                  </Button>
-                </div>
                 <p className="text-xs text-slate-500">
                   Tip: press Enter to send. Shift+Enter for a newline.
                 </p>
               </div>
-            ) : (
-              <p className="mt-2 text-xs text-slate-600">
-                Add anything that wasn&apos;t covered in the agent&apos;s
-                questions.
-              </p>
-            )}
-          </div>
-          <DialogFooter>
-            <Button
-              onClick={confirmGoal}
-              disabled={loading || isAwaitingAgent}
-              type="button"
-            >
-              Confirm goal
-            </Button>
-          </DialogFooter>
-        </div>
-      ) : question ? (
-        <div className="space-y-3">
-          <p className="text-sm font-medium text-slate-900">
-            {question.question}
-          </p>
-          {isAwaitingAgent ? (
-            <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
-              <div className="flex items-center gap-2 font-medium text-slate-900">
-                <RefreshCcw className="h-4 w-4 animate-spin text-slate-500" />
-                <span>
-                  {awaitingKind === "extra_context"
-                    ? "Updating the draft…"
-                    : "Waiting for the next question…"}
-                </span>
-              </div>
-              {lastSubmittedAnswer ? (
-                <p className="mt-2 text-xs text-slate-600">
-                  Sent:{" "}
-                  <span className="font-medium text-slate-900">
-                    {lastSubmittedAnswer}
-                  </span>
-                </p>
-              ) : null}
-              <p className="mt-1 text-xs text-slate-500">
-                This usually takes a few seconds.
-              </p>
-            </div>
-          ) : null}
-          <div className="space-y-2">
-            {question.options.map((option) => {
-              const isSelected = selectedOptions.includes(option.label);
-              return (
-                <Button
-                  key={option.id}
-                  variant={isSelected ? "primary" : "secondary"}
-                  className="w-full justify-start"
-                  onClick={() => toggleOption(option.label)}
-                  disabled={loading || isAwaitingAgent}
-                  type="button"
-                >
-                  {option.label}
-                </Button>
-              );
-            })}
-          </div>
-          {wantsFreeText ? (
-            <div className="space-y-2">
-              <Textarea
-                ref={freeTextRef}
-                className="min-h-[84px]"
-                placeholder="Type your answer..."
-                value={otherText}
-                onChange={(event) => setOtherText(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key !== "Enter") return;
-                  if (event.nativeEvent.isComposing) return;
-                  if (event.shiftKey) return;
-                  event.preventDefault();
-                  if (loading || isAwaitingAgent) return;
-                  submitAnswer();
-                }}
-                disabled={loading || isAwaitingAgent}
-              />
-              <p className="text-xs text-slate-500">
-                Tip: press Enter to send. Shift+Enter for a newline.
-              </p>
-            </div>
-          ) : null}
-          <div className="space-y-2">
-            <Button
-              variant="outline"
-              onClick={submitAnswer}
-              type="button"
-              disabled={
-                loading ||
-                isAwaitingAgent ||
-                selectedOptions.length === 0 ||
-                (wantsFreeText && !otherText.trim())
-              }
-            >
-              {loading ? "Sending..." : isAwaitingAgent ? "Waiting..." : "Next"}
-            </Button>
-            {loading ? (
-              <p className="text-xs text-slate-500">Sending your answer…</p>
-            ) : isAwaitingAgent ? (
-              <p className="text-xs text-slate-500">
-                Waiting for the agent to respond…
-              </p>
             ) : null}
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-xs text-slate-500">
+                {loading ? "Sending your answer..." : "Press Next to continue."}
+              </p>
+              <Button
+                variant="outline"
+                onClick={submitAnswer}
+                type="button"
+                disabled={
+                  loading ||
+                  selectedOptions.length === 0 ||
+                  (wantsFreeText && !otherText.trim())
+                }
+              >
+                {loading ? "Sending..." : "Next"}
+              </Button>
+            </div>
           </div>
-        </div>
-      ) : (
-        <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-600">
-          {loading
-            ? "Waiting for the lead agent..."
-            : "Preparing onboarding..."}
-        </div>
-      )}
+        ) : (
+          <div className="rounded-2xl border border-slate-200 bg-white/80 p-4 text-sm text-slate-600 backdrop-blur-sm">
+            {loading
+              ? "Waiting for the lead agent..."
+              : "Preparing onboarding..."}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

@@ -56,6 +56,7 @@ class Settings(BaseSettings):
     clerk_api_url: str = "https://api.clerk.com"
     clerk_verify_iat: bool = True
     clerk_leeway: float = 10.0
+    clerk_webhook_secret: str = ""
 
     cors_origins: str = ""
     base_url: str

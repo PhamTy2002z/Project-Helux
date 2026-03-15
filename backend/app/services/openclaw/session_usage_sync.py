@@ -64,6 +64,7 @@ class SessionUsageSyncService(OpenClawDBService):
             select(Agent)
             .where(col(Agent.openclaw_session_id) == normalized_key)
             .where(col(Agent.board_id).is_not(None))
+            .where(col(Agent.deleted_at).is_(None))
         )
         if organization_id is not None:
             statement = statement.where(col(Agent.organization_id) == organization_id)
