@@ -99,9 +99,29 @@ export default function LandingFooter() {
 
         {/* Bottom: copyright + CTA */}
         <div className="mt-8 flex flex-col gap-4 border-t border-white/10 pt-8 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-xs text-white/35">
-            &copy; {new Date().getFullYear()} FlowGrid. All rights reserved.
-          </p>
+          <div className="flex flex-col gap-2 sm:gap-1">
+            <p className="text-xs text-white/35">
+              &copy; {new Date().getFullYear()} FlowGrid. All rights reserved.
+            </p>
+            <div className="flex items-center gap-2 text-[11px] text-white/30">
+              <svg
+                className="h-3.5 w-3.5 text-white/40"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                <path d="m9 12 2 2 4-4" />
+              </svg>
+              <span>Stripe Verified</span>
+              <span className="text-white/20">|</span>
+              <span>SOC 2 Certified</span>
+            </div>
+          </div>
           <div className="flex items-center gap-3">
             <a
               href="mailto:sales@flowgrid.ai"
