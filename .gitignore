@@ -28,3 +28,4 @@ backend/app/services/openclaw/.device-keys
 
 # OpenClaw gateway config (contains API keys/tokens)
 openclaw/openclaw.json
+openclaw/openclaw.prod.json

@@ -417,52 +417,109 @@ Mở browser:
 
 ## Phase 7: OpenClaw Gateway (Docker)
 
-OpenClaw chạy trong Docker cùng stack, không cần cài trên host.
+OpenClaw chạy trong Docker cùng stack. The gateway image must be built from
+source (no public registry image). Config is mounted via bind mount.
 
-### Step 7.1 — Verify OpenClaw container running
+### Step 7.1 — Build OpenClaw image (lần đầu)
 
 ```bash
 ssh phamty@192.168.1.5
+
+# Clone openclaw source (one-time build only)
+cd /tmp
+git clone https://github.com/openclaw/openclaw.git
+cd openclaw
+
+# Build image (requires ~6GB Docker memory)
+docker build -t openclaw/gateway:latest .
+
+# Cleanup source after build
+cd /opt/projects/Project-Helux
+rm -rf /tmp/openclaw
+```
+
+### Step 7.2 — Tạo openclaw config cho production
+
+Gateway bind `0.0.0.0` (lan) trong Docker → cần `controlUi.dangerouslyAllowHostHeaderOriginFallback`.
+Container environment sets `OPENCLAW_CONFIG_PATH=/data/openclaw.json`.
+
+```bash
 cd /opt/projects/Project-Helux
 
-# OpenClaw đã start cùng lúc với docker compose up ở Phase 6
+# Copy example config
+cp openclaw/openclaw.json.example openclaw/openclaw.prod.json
+
+# Edit: set real gateway token + API keys
+nano openclaw/openclaw.prod.json
+```
+
+Thay đổi cần thiết trong `openclaw.prod.json`:
+- `gateway.auth.token` → set strong random token (must match `MANAGED_GATEWAY_TOKEN` in `.env.prod`)
+- `tools.web.search.gemini.apiKey` → set real Gemini API key (nếu dùng)
+- `models.providers.*.baseUrl` → đổi `host.docker.internal` thành IP/hostname phù hợp
+
+> **Note:** Production KHÔNG dùng `host.docker.internal` (chỉ macOS/Windows).
+> Nếu cliproxy chạy trên host, dùng Docker host IP hoặc `extra_hosts` trong compose.
+
+### Step 7.3 — Mount config vào compose
+
+Config đã được mount qua `compose.prod.yml`:
+```yaml
+volumes:
+  - ./openclaw/openclaw.prod.json:/data/openclaw.json:ro
+```
+
+Nếu chưa có dòng này trong `compose.prod.yml`, thêm vào service `openclaw`:
+
+```bash
+nano compose.prod.yml
+# Thêm vào openclaw service volumes:
+#   - ./openclaw/openclaw.prod.json:/data/openclaw.json:ro
+```
+
+### Step 7.4 — Update MANAGED_GATEWAY_TOKEN
+
+Token trong `.env.prod` phải khớp với `gateway.auth.token` trong `openclaw.prod.json`:
+
+```bash
+# Generate token
+GW_TOKEN=$(openssl rand -hex 24)
+echo "MANAGED_GATEWAY_TOKEN=${GW_TOKEN}"
+
+# Update .env.prod
+nano .env.prod
+# Set: MANAGED_GATEWAY_TOKEN=<token_above>
+
+# Also update openclaw.prod.json gateway.auth.token to same value
+nano openclaw/openclaw.prod.json
+```
+
+### Step 7.5 — Start và verify
+
+```bash
+cd /opt/projects/Project-Helux
+
+# Start (or restart) all services
+docker compose -f compose.prod.yml --env-file .env.prod up -d
+
+# Check openclaw health
 docker compose -f compose.prod.yml --env-file .env.prod ps openclaw
 # Expected: openclaw  running (healthy)
 
-# Check logs
-docker compose -f compose.prod.yml --env-file .env.prod logs openclaw
-```
+# Test healthz endpoint
+curl -s http://localhost:18789/healthz
+# Expected: {"ok":true,"status":"live"}
 
-### Step 7.2 — Onboard gateway (lần đầu)
-
-```bash
-# Exec vào container để chạy onboard wizard
-docker compose -f compose.prod.yml --env-file .env.prod exec openclaw openclaw onboard
-
-# Hoặc nếu cần interactive terminal:
-docker compose -f compose.prod.yml --env-file .env.prod exec -it openclaw sh
-openclaw onboard
-```
-
-### Step 7.3 — Update MANAGED_GATEWAY_TOKEN (if needed)
-
-Nếu OpenClaw onboard generate token:
-
-```bash
-nano /opt/projects/Project-Helux/.env.prod
-# Update: MANAGED_GATEWAY_TOKEN=<token_from_onboard>
-
-# Restart backend + openclaw to pick up new token
-cd /opt/projects/Project-Helux
-docker compose -f compose.prod.yml --env-file .env.prod restart openclaw backend webhook-worker
-```
-
-### Step 7.4 — Verify backend connects to gateway
-
-```bash
-# Check backend logs for gateway connection
+# Check backend connects to gateway
 docker compose -f compose.prod.yml --env-file .env.prod logs backend | grep -i gateway
 # Expected: no connection errors
+```
+
+### Step 7.6 — Onboard gateway (nếu cần device pairing)
+
+```bash
+docker compose -f compose.prod.yml --env-file .env.prod exec -it openclaw sh
+openclaw onboard
 ```
 
 ---
