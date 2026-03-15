@@ -86,10 +86,15 @@ services:
   # ---------- openclaw gateway ----------
   openclaw:
     image: openclaw/gateway:latest
+    # Bind to 0.0.0.0 so backend/worker containers can reach the gateway.
+    # Config at /data/openclaw.json must set controlUi.dangerouslyAllowHostHeaderOriginFallback=true.
+    command: ["node", "openclaw.mjs", "gateway", "--allow-unconfigured", "--bind", "lan"]
     <<: *default-restart
     logging: *default-logging
     environment:
       OPENCLAW_HOME: /data
+      OPENCLAW_CONFIG_PATH: /data/openclaw.json
+      OPENCLAW_STATE_DIR: /data/.openclaw
       OPENCLAW_GATEWAY_TOKEN: ${MANAGED_GATEWAY_TOKEN:-}
     volumes:
       - openclaw_data:/data
