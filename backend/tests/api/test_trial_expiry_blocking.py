@@ -72,9 +72,9 @@ def _build_test_app(
     app.dependency_overrides[get_session] = _override_get_session
     app.dependency_overrides[require_org_admin] = _override_require_org_admin
     app.dependency_overrides[boards_api._require_gateway_for_create] = _override_gateway_for_create
-    app.dependency_overrides[boards_api._require_board_group_for_create] = (
-        _override_group_for_create
-    )
+    app.dependency_overrides[
+        boards_api._require_board_group_for_create
+    ] = _override_group_for_create
     return app
 
 

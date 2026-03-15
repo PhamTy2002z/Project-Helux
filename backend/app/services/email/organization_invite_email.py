@@ -60,14 +60,14 @@ def build_organization_invite_email(
         # Outer wrapper
         '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" '
         'style="background-color:#f8fafc;padding:40px 0;">'
-        "<tr><td align=\"center\">"
+        '<tr><td align="center">'
         # Inner card
         '<table role="presentation" width="520" cellpadding="0" cellspacing="0" '
         'style="background-color:#ffffff;border-radius:16px;'
-        "border:1px solid #e2e8f0;overflow:hidden;\">"
+        'border:1px solid #e2e8f0;overflow:hidden;">'
         # Header bar
-        "<tr><td style=\"background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%);"
-        'padding:32px 40px;\'>'
+        '<tr><td style="background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%);'
+        "padding:32px 40px;'>"
         '<p style="margin:0;font-size:13px;font-weight:600;letter-spacing:0.5px;'
         'text-transform:uppercase;color:#94a3b8;">FlowGrid</p>'
         '<p style="margin:8px 0 0;font-size:22px;font-weight:700;color:#ffffff;">'
@@ -77,16 +77,16 @@ def build_organization_invite_email(
         '<tr><td style="padding:32px 40px;">'
         f'<p style="margin:0 0 6px;font-size:15px;color:#475569;">Hi there,</p>'
         f'<p style="margin:0 0 24px;font-size:15px;color:#475569;line-height:1.6;">'
-        f"You've been invited to join <strong style=\"color:#0f172a;\">"
+        f'You\'ve been invited to join <strong style="color:#0f172a;">'
         f"{escaped_org_name}</strong> on FlowGrid. Click the button below to "
         "accept and get started.</p>"
         # CTA button
         '<table role="presentation" cellpadding="0" cellspacing="0" '
         'style="margin:0 0 24px;">'
-        "<tr><td style=\"background-color:#0f172a;border-radius:10px;\">"
+        '<tr><td style="background-color:#0f172a;border-radius:10px;">'
         f'<a href="{escaped_accept_url}" target="_blank" '
         'style="display:inline-block;padding:12px 28px;font-size:14px;'
-        "font-weight:600;color:#ffffff;text-decoration:none;\">"
+        'font-weight:600;color:#ffffff;text-decoration:none;">'
         "Accept Invite</a>"
         "</td></tr></table>"
         # Divider

@@ -482,7 +482,9 @@ async def agent_onboarding_update(
         payload_text,
     )
     dedup_window = (
-        None if isinstance(payload, BoardOnboardingAgentComplete) else QUESTION_PAYLOAD_DEDUP_COOLDOWN
+        None
+        if isinstance(payload, BoardOnboardingAgentComplete)
+        else QUESTION_PAYLOAD_DEDUP_COOLDOWN
     )
     if _is_duplicate_assistant_payload(
         messages,
