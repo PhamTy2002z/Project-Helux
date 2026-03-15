@@ -125,7 +125,10 @@ async def build_board_snapshot(
     )
 
     agents = (
-        await Agent.objects.filter_by(board_id=board.id)
+        await Agent.objects.filter(
+            col(Agent.board_id) == board.id,
+            col(Agent.deleted_at).is_(None),
+        )
         .order_by(col(Agent.created_at).desc())
         .all(session)
     )

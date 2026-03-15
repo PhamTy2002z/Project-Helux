@@ -128,6 +128,8 @@ services:
     environment:
       # Override localhost defaults for container networking
       DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-mission_control}
+      # BASE_URL must be reachable from openclaw container (not localhost)
+      BASE_URL: http://backend:8000
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
       DB_AUTO_MIGRATE: ${DB_AUTO_MIGRATE:-true}
       AUTH_MODE: ${AUTH_MODE}
@@ -178,12 +180,17 @@ services:
       context: ./frontend
       args:
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-auto}
-        NEXT_PUBLIC_AUTH_MODE: ${AUTH_MODE}
+        NEXT_PUBLIC_AUTH_MODE: ${NEXT_PUBLIC_AUTH_MODE:-${AUTH_MODE:-local}}
+        NEXT_PUBLIC_AUTH_PROFILE: ${NEXT_PUBLIC_AUTH_PROFILE:-self_hosted}
+        NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY:-}
+        NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL: ${NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL:-/boards}
+        NEXT_PUBLIC_CLERK_AFTER_SIGN_OUT_URL: ${NEXT_PUBLIC_CLERK_AFTER_SIGN_OUT_URL:-/}
+        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-}
+        NEXT_PUBLIC_BOARD_PLANNING_OVERLAY_V1: ${NEXT_PUBLIC_BOARD_PLANNING_OVERLAY_V1:-false}
+        NEXT_PUBLIC_BOARD_QUERY_V2: ${NEXT_PUBLIC_BOARD_QUERY_V2:-false}
     <<: *default-restart
     logging: *default-logging
-    # Optional, user-managed env file.
-    # IMPORTANT: do NOT load `.env.example` here because it contains non-empty
-    # placeholder Clerk keys, which can accidentally flip Clerk "on".
+    # Optional, user-managed env file for runtime vars (CLERK_SECRET_KEY, etc.).
     env_file:
       - path: ./frontend/.env
         required: false

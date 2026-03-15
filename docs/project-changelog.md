@@ -2,6 +2,29 @@
 
 ## 2026-03-15
 
+### OpenClaw Docker gateway migration + managed workspace volume
+
+- Migrated gateway from standalone binary to Docker service at port 18789 in `compose.yml`
+- Added managed workspace volume mount: `MANAGED_GATEWAY_WORKSPACE_ROOT` env var
+- Configured 3 custom OpenClaw model providers in Docker gateway
+- Added health check for openclaw service with container readiness validation
+- Updated prod deploy guide with OpenClaw Docker service documentation
+- Updated infrastructure setup scripts with openclaw-specific configuration
+- Added volume management in docker-compose for persistent gateway workspace
+- Integrated managed gateway auto-provisioning with async activation flow
+
+### Brand and UI updates
+
+- Added new BrandLoader component with animated SVG loading state
+- Updated BrandMark component with new logo variations
+- Added useSidebarCollapse hook for dashboard sidebar state management
+- Added brand image assets to public/images/brand/
+- Updated favicon with new FlowGrid brand mark
+
+---
+
+## 2026-03-15 (Earlier)
+
 ### Organization invite email rollout (Resend + async queue)
 
 - Added invite email provider configuration in

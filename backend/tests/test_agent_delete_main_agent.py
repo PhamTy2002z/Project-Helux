@@ -37,6 +37,7 @@ class _AgentStub:
     organization_id: UUID
     board_id: UUID | None = None
     openclaw_session_id: str | None = None
+    deleted_at: object | None = None
 
 
 @pytest.mark.asyncio

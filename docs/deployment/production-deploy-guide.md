@@ -77,6 +77,11 @@ sudo systemctl status cloudflared  # Verify: active (running)
 > DB_AUTO_MIGRATE, DATABASE_URL, etc.) from `DOMAIN`. Only set variables that
 > compose passes through via `${VAR}`. See `compose.prod.yml` for the full list.
 
+> **Frontend env:** `NEXT_PUBLIC_*` vars are baked into the Next.js bundle at
+> build time — they cannot be injected at runtime. Set them in `frontend/.env`
+> on the build machine (Mac/CI) before building the frontend image. They do
+> **not** need to be in `.env.prod` on the server.
+
 ```bash
 cd /opt/projects/Project-Helux
 
@@ -89,7 +94,7 @@ GW_TOKEN=$(openssl rand -hex 24)
 cat > .env.prod <<EOF
 # FlowGrid Production — flowgrid.live
 # See compose.prod.yml for which vars are passed to each container.
-# See root .env.example for local dev defaults.
+# NEXT_PUBLIC_* vars live in frontend/.env on the build machine, NOT here.
 
 # --- Domain & images ---
 DOMAIN=flowgrid.live
@@ -102,8 +107,6 @@ POSTGRES_USER=postgres
 POSTGRES_PASSWORD=${PG_PASS}
 
 # --- Object storage (MinIO) ---
-# These map to OBJECT_STORAGE_ACCESS_KEY / OBJECT_STORAGE_SECRET_KEY
-# inside backend/worker containers.
 MINIO_ROOT_USER=minioadmin
 MINIO_ROOT_PASSWORD=${MINIO_PASS}
 OBJECT_STORAGE_BUCKET=board-chat-files
@@ -117,7 +120,6 @@ LOCAL_AUTH_TOKEN=${AUTH_TOKEN}
 LOG_LEVEL=WARNING
 
 # --- Billing & payments ---
-# Set to provider + polar when ready to accept payments.
 BILLING_MODE=simulated
 PAYMENT_PROVIDER=none
 # Polar (required when PAYMENT_PROVIDER=polar):
@@ -128,12 +130,9 @@ PAYMENT_PROVIDER=none
 # POLAR_SUCCESS_URL=https://flowgrid.live/checkout/success?checkout_id={CHECKOUT_ID}
 
 # --- Invite email (organization invite delivery only) ---
-# Safe default: keep disabled for first deploy.
 EMAIL_PROVIDER=none
-# Enable when ready (see Step 2.3–2.5):
 # EMAIL_PROVIDER=resend
 # RESEND_API_KEY=re_xxx
-# RESEND_WEBHOOK_SECRET=whsec_xxx
 # EMAIL_FROM_INVITES=FlowGrid <noreply@flowgrid.live>
 # EMAIL_REPLY_TO=support@flowgrid.live
 # INVITE_ACCEPT_BASE_URL=https://flowgrid.live/invite
@@ -150,6 +149,22 @@ EOF
 
 chmod 600 .env.prod
 ```
+
+### Step 2.1b — Chuẩn bị frontend/.env trên build machine (Mac)
+
+Edit `frontend/.env` before building the frontend image. Key production values:
+
+```env
+NEXT_PUBLIC_API_URL=https://api.flowgrid.live
+NEXT_PUBLIC_AUTH_MODE=local
+NEXT_PUBLIC_AUTH_PROFILE=self_hosted
+NEXT_PUBLIC_SITE_URL=https://flowgrid.live
+NEXT_PUBLIC_BOARD_PLANNING_OVERLAY_V1=false
+NEXT_PUBLIC_BOARD_QUERY_V2=false
+# NEXT_PUBLIC_CLERK_* — only needed when AUTH_MODE=clerk
+```
+
+All vars in `frontend/.env.example` are accepted as build ARGs in `frontend/Dockerfile`.
 
 ### Step 2.2 — Ghi lại LOCAL_AUTH_TOKEN và MANAGED_GATEWAY_TOKEN
 
@@ -326,13 +341,26 @@ sudo ./svc.sh status  # Verify: active (running)
 
 Mở: `https://github.com/PhamTy2002z/FlowGrid/settings/secrets/actions`
 
-Add **Repository secrets**:
+Add **Repository secrets** — these are injected as build args when CI builds
+the frontend image (`NEXT_PUBLIC_*` are baked into the Next.js bundle):
 
 | Secret | Value |
 |--------|-------|
 | `NEXT_PUBLIC_API_URL` | `https://api.flowgrid.live` |
+| `NEXT_PUBLIC_AUTH_MODE` | `local` |
+| `NEXT_PUBLIC_AUTH_PROFILE` | `self_hosted` |
+| `NEXT_PUBLIC_SITE_URL` | `https://flowgrid.live` |
+| `NEXT_PUBLIC_BOARD_PLANNING_OVERLAY_V1` | `false` |
+| `NEXT_PUBLIC_BOARD_QUERY_V2` | `false` |
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | _(leave empty unless AUTH_MODE=clerk)_ |
+| `NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL` | `/boards` |
+| `NEXT_PUBLIC_CLERK_AFTER_SIGN_OUT_URL` | `/` |
 
 > Note: `GITHUB_TOKEN` tự động có sẵn, không cần add.
+>
+> These secrets must be passed as `--build-arg` in the CI workflow's
+> `docker build` step for frontend. See `frontend/Dockerfile` for the full
+> ARG list.
 
 ### Step 5.2 — Create "production" environment
 
@@ -364,14 +392,15 @@ cd ~/Documents/GitHub/Project-Helux
 # Login GHCR
 echo "<GITHUB_PAT>" | docker login ghcr.io -u phamty2002z --password-stdin
 
-# Build backend
+# Build backend (context: repo root)
 docker build -t ghcr.io/phamty2002z/flowgrid-backend:latest -f backend/Dockerfile .
 
-# Build frontend
-docker build -t ghcr.io/phamty2002z/flowgrid-frontend:latest \
-  --build-arg NEXT_PUBLIC_API_URL=https://api.flowgrid.live \
-  --build-arg NEXT_PUBLIC_AUTH_MODE=local \
-  frontend/
+# Build frontend — NEXT_PUBLIC_* baked at build time, inject from frontend/.env
+# frontend/Dockerfile accepts all vars as ARGs; compose.yml wires them automatically
+env $(grep -E '^NEXT_PUBLIC_' frontend/.env | xargs) \
+  docker compose --profile docker-frontend build frontend
+
+docker tag project-helux-frontend:latest ghcr.io/phamty2002z/flowgrid-frontend:latest
 
 # Push
 docker push ghcr.io/phamty2002z/flowgrid-backend:latest
@@ -387,11 +416,11 @@ cd /opt/projects/Project-Helux
 # Pull images
 docker compose -f compose.prod.yml --env-file .env.prod pull
 
-# Start all services
-docker compose -f compose.prod.yml --env-file .env.prod up -d
+# Start all services (frontend requires --profile docker-frontend)
+docker compose -f compose.prod.yml --env-file .env.prod --profile docker-frontend up -d
 
 # Watch logs
-docker compose -f compose.prod.yml --env-file .env.prod logs -f
+docker compose -f compose.prod.yml --env-file .env.prod --profile docker-frontend logs -f
 ```
 
 ### Step 6.4 — Verify
@@ -415,6 +444,36 @@ Mở browser:
 - `https://flowgrid.live` → Frontend load
 - `https://api.flowgrid.live/health` → Backend health response
 - `https://api.flowgrid.live/docs` → Swagger UI
+
+---
+
+## Phase 6b: Database Migrations
+
+Migrations run automatically on startup when `DB_AUTO_MIGRATE=true` (default in
+compose). If auto-migrate is disabled or you want to run migrations manually:
+
+```bash
+ssh phamty@192.168.1.5
+cd /opt/projects/Project-Helux
+
+docker compose -f compose.prod.yml --env-file .env.prod exec backend \
+  alembic upgrade head
+```
+
+### Notable migration: CASCADE delete on agent_token_daily_usage
+
+Migration `95fef896018c_cascade_delete_agent_token_daily_usage_.py` adds
+`ON DELETE CASCADE` to `agent_token_daily_usage.agent_id` FK. This migration
+must run before deleting agents — otherwise deleting an agent with daily usage
+records will fail with a FK constraint error.
+
+If upgrading an existing deployment, verify migration has been applied:
+
+```bash
+docker compose -f compose.prod.yml --env-file .env.prod exec backend \
+  alembic current
+# Should include: 95fef896018c (head)
+```
 
 ---
 
@@ -695,25 +754,27 @@ docker compose -f compose.prod.yml --env-file .env.prod logs -f openclaw
 cd /opt/projects/Project-Helux
 
 # Restart app only (db/redis/minio/openclaw stay up)
-docker compose -f compose.prod.yml --env-file .env.prod restart backend webhook-worker frontend
+docker compose -f compose.prod.yml --env-file .env.prod --profile docker-frontend \
+  restart backend webhook-worker frontend
 
 # Restart everything
-docker compose -f compose.prod.yml --env-file .env.prod restart
+docker compose -f compose.prod.yml --env-file .env.prod --profile docker-frontend restart
 ```
 
 ### Stop everything
 
 ```bash
 cd /opt/projects/Project-Helux
-docker compose -f compose.prod.yml --env-file .env.prod down
+docker compose -f compose.prod.yml --env-file .env.prod --profile docker-frontend down
 ```
 
 ### Manual deploy (without CI/CD)
 
 ```bash
 cd /opt/projects/Project-Helux
-docker compose -f compose.prod.yml --env-file .env.prod pull
-docker compose -f compose.prod.yml --env-file .env.prod up -d --no-deps backend webhook-worker frontend
+docker compose -f compose.prod.yml --env-file .env.prod --profile docker-frontend pull
+docker compose -f compose.prod.yml --env-file .env.prod --profile docker-frontend \
+  up -d --no-deps backend webhook-worker frontend
 ```
 
 ### Database backup
@@ -773,9 +834,21 @@ docker compose -f compose.prod.yml --env-file .env.prod logs backend
 
 ### Frontend shows "Failed to fetch"
 
-- Check `NEXT_PUBLIC_API_URL` in frontend build = `https://api.flowgrid.live`
+- `NEXT_PUBLIC_API_URL` is baked at **build time** — verify the image was built
+  with the correct value: `docker inspect <image> | grep NEXT_PUBLIC_API_URL`
+- If wrong, rebuild the frontend image with the correct `frontend/.env` and
+  use `env $(grep -E '^NEXT_PUBLIC_' frontend/.env | xargs) docker compose --profile docker-frontend build frontend`
 - Check `CORS_ORIGINS` in backend = `https://flowgrid.live` (set via DOMAIN in compose.prod.yml)
 - Check cloudflared config has `api.flowgrid.live` entry
+
+### Frontend container not starting (profile not activated)
+
+The frontend service requires `--profile docker-frontend`. Without it, `docker compose up`
+silently skips the frontend container. Always include the flag:
+
+```bash
+docker compose -f compose.prod.yml --env-file .env.prod --profile docker-frontend up -d
+```
 
 ### Billing/payments not working
 

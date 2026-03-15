@@ -198,11 +198,12 @@ async def _count_boards(session: AsyncSession, *, organization_id: UUID) -> int:
 
 
 async def _count_agents_total(session: AsyncSession, *, organization_id: UUID) -> int:
-    # Count board-scoped agents only. Gateway-main agents remain platform overhead.
+    # Count board-scoped active agents only. Gateway-main agents remain platform overhead.
     statement = (
         select(func.count(col(Agent.id)))
         .where(col(Agent.organization_id) == organization_id)
         .where(col(Agent.board_id).is_not(None))
+        .where(col(Agent.deleted_at).is_(None))
     )
     return int((await session.exec(statement)).one() or 0)
 
@@ -217,6 +218,7 @@ async def _count_agents_for_board(
         select(func.count(col(Agent.id)))
         .where(col(Agent.organization_id) == organization_id)
         .where(col(Agent.board_id) == board_id)
+        .where(col(Agent.deleted_at).is_(None))
     )
     return int((await session.exec(statement)).one() or 0)
 
@@ -226,6 +228,7 @@ async def _max_agents_on_single_board(session: AsyncSession, *, organization_id:
         select(func.count(col(Agent.id)))
         .where(col(Agent.organization_id) == organization_id)
         .where(col(Agent.board_id).is_not(None))
+        .where(col(Agent.deleted_at).is_(None))
         .group_by(col(Agent.board_id))
     )
     values = [int(value or 0) for value in (await session.exec(statement)).all()]

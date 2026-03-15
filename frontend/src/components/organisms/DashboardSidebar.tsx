@@ -34,8 +34,10 @@ import { Button } from "@/components/ui/button";
 import { useBillingSubscription } from "@/lib/billing";
 import { useOnboardingProgress } from "@/lib/onboarding";
 import { cn } from "@/lib/utils";
+import { useSidebarCollapse } from "@/hooks/useSidebarCollapse";
 
 export function DashboardSidebar() {
+  const { collapsed } = useSidebarCollapse();
   const pathname = usePathname();
   const { isSignedIn } = useAuth();
   const isPageActive = usePageActive();
@@ -96,7 +98,12 @@ export function DashboardSidebar() {
   );
 
   return (
-    <aside className="flex h-full w-64 flex-col border-r border-slate-200 bg-white">
+    <aside
+      className={cn(
+        "flex h-full flex-col border-r border-slate-200 bg-white transition-[width,opacity] duration-200 ease-in-out",
+        collapsed ? "w-0 overflow-hidden opacity-0" : "w-64 opacity-100",
+      )}
+    >
       <div className="flex-1 px-3 py-4">
         <p className="px-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
           Navigation

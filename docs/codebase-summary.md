@@ -9,25 +9,28 @@ FlowGrid is a full-stack web application with FastAPI backend, Next.js frontend,
 ### Backend (Python)
 - **Total Python Files**: ~1,899 files
 - **Core Application Files**: ~150 files (excluding migrations, tests, cache)
-- **API Routes**: 29 route modules
-- **Database Models**: 39 SQLModel models
-- **Service Modules**: 19 core services + 20+ OpenClaw integration services
+- **API Routes**: 30 route modules (activity, agents, approvals, auth, billing, board-chat, board-groups, board-memory, board-onboarding, board-webhooks, boards, gateways, metrics, onboarding-progress, organizations, skills-marketplace, souls-directory, tags, task-custom-fields, tasks, users, workspace-templates)
+- **Database Models**: 39 SQLModel models + CASCADE delete migration for AgentTokenDailyUsage
+- **Service Modules**: 19 core services + 30+ OpenClaw integration services + email services
+- **Email Services**: Resend provider integration with async queue + worker
 - **Primary Language**: Python 3.12
 - **Framework**: FastAPI 0.131.0
 
 ### Frontend (TypeScript/React)
 - **Total TypeScript Files**: ~411 files
 - **Pages**: 40+ routes using Next.js App Router
-- **Components**: 200+ React components
-- **API Client Modules**: 26 generated API endpoints
+- **Components**: 200+ React components (atomic design + domain-specific)
+- **API Client Modules**: 30+ generated API endpoints via Orval
+- **New Components**: BrandLoader (animated SVG), BrandMark variations, useSidebarCollapse hook
 - **Primary Language**: TypeScript 5
 - **Framework**: Next.js 16.1.6, React 19.2.4
 
 ### Infrastructure
-- **Docker Services**: 5 (db, redis, backend, frontend, webhook-worker)
+- **Docker Services**: 7 (db, redis, minio, openclaw, backend, webhook-worker, frontend)
 - **Configuration Files**: 15+ (Docker, CI/CD, linting, testing)
 - **Documentation Files**: 20+ markdown files
 - **Install Script**: 1,000+ lines comprehensive installer
+- **OpenClaw**: Docker gateway with managed workspace volume support
 
 ## Technology Stack
 
@@ -45,6 +48,10 @@ Uvicorn (0.40.0)           - ASGI server
 Pydantic Settings (2.12.0) - Configuration management
 SSE Starlette (3.2.0)      - Server-sent events
 WebSockets (16.0)          - Real-time communication
+Resend (2.23.0+)           - Email provider (invites, notifications)
+Polar SDK                  - Billing provider (subscriptions)
+MinIO                      - S3-compatible object storage (chat files)
+pypdfium2 + Tesseract      - PDF OCR for chat file extraction
 ```
 
 ### Frontend Stack
@@ -392,10 +399,16 @@ frontend/
 - `/api/v1/metrics` - General system metrics endpoint
 - `/api/v1/billing/support/timeline` - Billing event history for debugging
 - `/api/v1/onboarding/progress/me` - Step-based onboarding checklist completion
+- `/api/v1/billing/me/subscription` - Current subscription status and trial details
 
 ### Feature Flags & Canary Targeting
-- `board_planning_overlay_v1` - Board overlay UX rollout (board/org-level canary targeting)
-- `board_query_v2` - New task query endpoint for cursor pagination
+- `board_planning_overlay_v1` - Board overlay UX with saved views, density modes, compression (board/org-level canary)
+- `board_query_v2` - New cursor pagination task query endpoint
+
+### Email & Notifications
+- `EMAIL_PROVIDER=resend` - Enable Resend email provider for organization invites
+- Async queue integration: `organization_invite_email_send` job handler with retry/backoff
+- Admin resend endpoint: `POST /api/v1/organizations/me/invites/{invite_id}/resend`
 
 ## Unresolved Questions
 

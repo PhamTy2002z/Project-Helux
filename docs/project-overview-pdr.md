@@ -44,11 +44,13 @@ Connect internal workflows and automation clients to the same operational model 
 ### Work Orchestration
 - **Organizations**: Multi-tenant structure for team isolation
 - **Board Groups**: Logical grouping of related boards
-- **Boards**: Work containers with lifecycle management and multi-session chat
-- **Tasks**: Individual work items with dependencies, custom fields, and planning overlay support
+- **Boards**: Work containers with lifecycle management, multi-session chat, and planning overlay
+- **Tasks**: Individual work items with dependencies, custom fields, grouping, and cursor pagination
+- **Task Groups**: Planning overlay support with visual grouping and sort ordering
 - **Tags**: Cross-cutting categorization and filtering
 - **Custom Fields**: Extensible metadata for domain-specific requirements
 - **File Upload**: Board chat file attachment with PDF OCR extraction and full-text indexing
+- **Workspace Templates**: 12 pre-configured agent templates with auto-provisioning
 
 ### Agent Operations
 - **Agent Lifecycle**: Create, configure, inspect, and manage agents
@@ -185,7 +187,7 @@ Organizations, board groups, boards, tasks, tags, and users in one system of rec
 - PostgreSQL as primary database (no multi-database support)
 - English-only UI (no i18n currently)
 - Single-region deployment (no multi-region support)
-- Billing v1 scope locked to trial expiry + board-group/agent quotas (Stripe integration out-of-scope)
+- Billing v1 scope: trial expiry, board-group/agent quotas, Polar provider integration (simulated + provider modes)
 
 ### Assumptions
 - Users subscribe to use the platform (trial or paid tier)

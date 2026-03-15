@@ -101,7 +101,7 @@ export function MembersInvitesTable({
             const display = memberDisplay(row.original.member);
             return (
               <div className="flex items-center gap-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-indigo-500 text-xs font-semibold text-white">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-slate-700 to-slate-900 text-xs font-semibold text-white">
                   {display.initials}
                 </div>
                 <div>

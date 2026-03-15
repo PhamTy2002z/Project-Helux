@@ -19,9 +19,10 @@ from app.services.openclaw.gateway_rpc import GatewayConfig as GatewayClientConf
 class _FakeSession:
     committed: int = 0
     deleted: list[object] = field(default_factory=list)
+    added: list[object] = field(default_factory=list)
 
-    def add(self, _value: object) -> None:
-        return None
+    def add(self, value: object) -> None:
+        self.added.append(value)
 
     async def commit(self) -> None:
         self.committed += 1
@@ -38,6 +39,7 @@ class _AgentStub:
     organization_id: UUID
     board_id: UUID | None = None
     is_board_lead: bool = False
+    deleted_at: object | None = None
 
 
 @dataclass
@@ -138,7 +140,8 @@ async def test_delete_agent_as_lead_removes_board_agent(
     )
 
     assert result.ok is True
-    assert session.deleted and session.deleted[0] == target
+    assert session.added and session.added[0] == target
+    assert target.deleted_at is not None
     assert BoardWebhook in update_models
 
 

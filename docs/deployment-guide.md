@@ -166,6 +166,24 @@ Rollback:
 2. Restart backend and worker.
 3. Continue using invite copy-link flow while provider issues are triaged.
 
+### Step 7: OpenClaw Gateway Configuration (optional)
+
+OpenClaw Docker gateway is auto-started in compose.yml. Configure workspace mounting:
+
+```bash
+# In .env file
+MANAGED_GATEWAY_WORKSPACE_ROOT=/var/openclaw/workspace
+MANAGED_GATEWAY_AUTO_PROVISION=true
+MANAGED_GATEWAY_URL=http://openclaw:18789
+```
+
+Gateway health check: `GET http://localhost:18789/health` (verify port 18789 accessible)
+
+Model providers auto-configured:
+- `gpt-5.1-codex-mini` (fast)
+- `gpt-5.3-codex` (standard)
+- `gpt-5.4-codex` (advanced)
+
 ## Docker Deployment
 
 ### Standard Deployment

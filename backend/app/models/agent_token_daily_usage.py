@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import date, datetime
 from uuid import UUID, uuid4
 
-from sqlalchemy import Column, Index, Numeric, UniqueConstraint
+from sqlalchemy import Column, ForeignKey, Index, Numeric, UniqueConstraint
 from sqlmodel import Field
 
 from app.core.time import utcnow
@@ -39,7 +39,13 @@ class AgentTokenDailyUsage(QueryModel, table=True):
 
     id: UUID = Field(default_factory=uuid4, primary_key=True)
     organization_id: UUID = Field(foreign_key="organizations.id", index=True)
-    agent_id: UUID = Field(foreign_key="agents.id", index=True)
+    agent_id: UUID = Field(
+        sa_column=Column(
+            ForeignKey("agents.id", ondelete="RESTRICT"),
+            index=True,
+            nullable=False,
+        ),
+    )
     usage_date_vn: date = Field(index=True)
     openclaw_tokens_total: int = Field(default=0)
     billed_tokens_used: int = Field(default=0)

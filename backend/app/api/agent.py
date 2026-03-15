@@ -555,7 +555,7 @@ async def list_agents(
 
     Useful for lead delegation and workload balancing.
     """
-    statement = select(Agent)
+    statement = select(Agent).where(col(Agent.deleted_at).is_(None))
     if agent_ctx.agent.board_id:
         if board_id:
             OpenClawAuthorizationPolicy.require_board_write_access(

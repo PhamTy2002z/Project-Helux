@@ -1,4 +1,4 @@
-const DEFAULT_SIGN_IN_REDIRECT = "/onboarding";
+const DEFAULT_SIGN_IN_REDIRECT = "/dashboard";
 
 function isSafeRelativePath(value: string): boolean {
   return value.startsWith("/") && !value.startsWith("//");
@@ -12,7 +12,7 @@ export function resolveSignInRedirectUrl(rawRedirect: string | null): string {
   if (!rawRedirect) return fallback;
 
   if (isSafeRelativePath(rawRedirect)) {
-    return rawRedirect;
+    return rawRedirect === "/" ? fallback : rawRedirect;
   }
 
   if (typeof window === "undefined") {
@@ -24,7 +24,8 @@ export function resolveSignInRedirectUrl(rawRedirect: string | null): string {
     if (parsed.origin !== window.location.origin) {
       return fallback;
     }
-    return `${parsed.pathname}${parsed.search}${parsed.hash}`;
+    const normalizedPath = `${parsed.pathname}${parsed.search}${parsed.hash}`;
+    return normalizedPath === "/" ? fallback : normalizedPath;
   } catch {
     return fallback;
   }

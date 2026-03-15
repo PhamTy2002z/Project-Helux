@@ -13,8 +13,8 @@ describe("resolveSignInRedirectUrl", () => {
     expect(resolveSignInRedirectUrl(null)).toBe("/boards");
   });
 
-  it("defaults to /onboarding when no env fallback is set", () => {
-    expect(resolveSignInRedirectUrl(null)).toBe("/onboarding");
+  it("defaults to /dashboard when no env fallback is set", () => {
+    expect(resolveSignInRedirectUrl(null)).toBe("/dashboard");
   });
 
   it("allows safe relative paths", () => {
@@ -42,5 +42,12 @@ describe("resolveSignInRedirectUrl", () => {
   it("accepts same-origin absolute urls and normalizes to path", () => {
     const url = `${window.location.origin}/boards/new?src=invite#top`;
     expect(resolveSignInRedirectUrl(url)).toBe("/boards/new?src=invite#top");
+  });
+
+  it("rejects root redirects and keeps users off landing after auth", () => {
+    vi.stubEnv("NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL", "/dashboard");
+
+    expect(resolveSignInRedirectUrl("/")).toBe("/dashboard");
+    expect(resolveSignInRedirectUrl(window.location.origin)).toBe("/dashboard");
   });
 });

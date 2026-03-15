@@ -256,7 +256,8 @@ class OpenClawProvisioningService(OpenClawDBService):
             await self.session.exec(
                 select(Agent)
                 .where(Agent.board_id == board.id)
-                .where(col(Agent.is_board_lead).is_(True)),
+                .where(col(Agent.is_board_lead).is_(True))
+                .where(col(Agent.deleted_at).is_(None)),
             )
         ).first()
         if existing:
@@ -1016,7 +1017,7 @@ class AgentLifecycleService(OpenClawDBService):
         board_id: UUID | None,
         since: datetime,
     ) -> list[Agent]:
-        statement = select(Agent)
+        statement = select(Agent).where(col(Agent.deleted_at).is_(None))
         if board_id:
             statement = statement.where(col(Agent.board_id) == board_id)
         statement = statement.where(
@@ -1121,6 +1122,7 @@ class AgentLifecycleService(OpenClawDBService):
             select(func.count(col(Agent.id)))
             .where(col(Agent.board_id) == board_id)
             .where(col(Agent.is_board_lead).is_(False))
+            .where(col(Agent.deleted_at).is_(None))
         )
         count = (await self.session.exec(statement)).one()
         return int(count or 0)
@@ -1168,7 +1170,8 @@ class AgentLifecycleService(OpenClawDBService):
             await self.session.exec(
                 select(Agent)
                 .where(Agent.board_id == board.id)
-                .where(col(Agent.name).ilike(requested_name)),
+                .where(col(Agent.name).ilike(requested_name))
+                .where(col(Agent.deleted_at).is_(None)),
             )
         ).first()
         if existing:
@@ -1182,7 +1185,8 @@ class AgentLifecycleService(OpenClawDBService):
                 select(Agent)
                 .join(Board, col(Agent.board_id) == col(Board.id))
                 .where(col(Board.gateway_id) == gateway.id)
-                .where(col(Agent.name).ilike(requested_name)),
+                .where(col(Agent.name).ilike(requested_name))
+                .where(col(Agent.deleted_at).is_(None)),
             )
         ).first()
         if existing_gateway:
@@ -1475,6 +1479,7 @@ class AgentLifecycleService(OpenClawDBService):
     @staticmethod
     def heartbeat_lookup_statement(payload: AgentHeartbeatCreate) -> SelectOfScalar[Agent]:
         statement = Agent.objects.filter_by(name=payload.name).statement
+        statement = statement.where(col(Agent.deleted_at).is_(None))
         if payload.board_id is not None:
             statement = statement.where(Agent.board_id == payload.board_id)
         return statement
@@ -1635,6 +1640,7 @@ class AgentLifecycleService(OpenClawDBService):
                 ),
             )
         statement = statement.where(col(Agent.organization_id) == ctx.organization.id)
+        statement = statement.where(col(Agent.deleted_at).is_(None))
         statement = statement.order_by(col(Agent.created_at).desc())
 
         usage_read_model = AgentTokenUsageReadModel(self.session)
@@ -1787,7 +1793,7 @@ class AgentLifecycleService(OpenClawDBService):
         ctx: OrganizationContext,
     ) -> AgentRead:
         agent = await Agent.objects.by_id(self._normalize_uuid_lookup(agent_id)).first(self.session)
-        if agent is None:
+        if agent is None or agent.deleted_at is not None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
         await self.require_agent_access(agent=agent, ctx=ctx, write=False)
         token_snapshot = await AgentTokenUsageReadModel(self.session).snapshot_for_agent(
@@ -1810,7 +1816,7 @@ class AgentLifecycleService(OpenClawDBService):
             options.force,
         )
         agent = await Agent.objects.by_id(agent_id).first(self.session)
-        if agent is None:
+        if agent is None or agent.deleted_at is not None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
         await self.require_agent_access(agent=agent, ctx=options.context, write=True)
         self.raise_if_gateway_main_protected(agent=agent)
@@ -1865,7 +1871,7 @@ class AgentLifecycleService(OpenClawDBService):
             actor.actor_type,
         )
         agent = await Agent.objects.by_id(agent_id).first(self.session)
-        if agent is None:
+        if agent is None or agent.deleted_at is not None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
         if actor.actor_type == "agent":
             OpenClawAuthorizationPolicy.require_same_agent_actor(
@@ -1935,7 +1941,7 @@ class AgentLifecycleService(OpenClawDBService):
     ) -> OkResponse:
         self.logger.log(TRACE_LEVEL, "agent.delete.start agent_id=%s", agent_id)
         agent = await Agent.objects.by_id(agent_id).first(self.session)
-        if agent is None:
+        if agent is None or agent.deleted_at is not None:
             return OkResponse()
         await self.require_agent_access(agent=agent, ctx=ctx, write=True)
         self.raise_if_gateway_main_protected(agent=agent)
@@ -1959,7 +1965,7 @@ class AgentLifecycleService(OpenClawDBService):
             detail="Only board leads can delete agents",
         )
         agent = await Agent.objects.by_id(agent_id).first(self.session)
-        if agent is None:
+        if agent is None or agent.deleted_at is not None:
             return OkResponse()
         if agent.board_id is None:
             raise HTTPException(
@@ -2078,7 +2084,10 @@ class AgentLifecycleService(OpenClawDBService):
             updated_at=now,
             commit=False,
         )
-        await self.session.delete(agent)
+        agent.deleted_at = now
+        agent.agent_token_hash = None
+        agent.updated_at = now
+        self.session.add(agent)
         await self.session.commit()
 
         try:

@@ -7,23 +7,29 @@ Provides unified work orchestration, agent management, approval-driven governanc
 
 FlowGrid is a SaaS platform for teams to operate AI agents with:
 
-- **Work orchestration**: organization → board group → board → task → tag
-- **Agent management**: create, configure, and monitor agent lifecycle
-- **Approvals & governance**: approval flows for sensitive actions
-- **Gateway**: connect and control distributed execution environments
+- **Work orchestration**: organization → board group → board → task → tag → custom fields
+- **Agent management**: create, configure, monitor with workspace templates
+- **Board planning overlay**: grouped rendering, density modes, cursor pagination, saved views
+- **Board chat**: multi-session with file upload, PDF OCR extraction, full-text indexing
+- **Approvals & governance**: approval workflows for sensitive actions
+- **Gateway**: OpenClaw Docker gateway with managed workspace provisioning
 - **Activity history**: event timeline for debugging and auditing
-- **API-first**: supports both web UI and automation clients
+- **SaaS model**: trial (7d) → pro tiers, token quota enforcement
+- **API-first**: REST API + SSE streaming, dual auth (Clerk JWT / Bearer token)
 
 ## Tech Stack
 
 | Layer    | Technology                                           |
 | -------- | ---------------------------------------------------- |
-| Frontend | Next.js (React 19), TanStack Query, Orval, SSE      |
-| Backend  | FastAPI (Python 3.12+), SQLModel, Pydantic           |
-| Database | PostgreSQL 14+                                       |
-| Queue    | Redis 6+ (RQ Worker)                                 |
+| Frontend | Next.js 16.1.6 (React 19), TanStack Query 5, Orval, SSE |
+| Backend  | FastAPI 0.131.0 (Python 3.12+), SQLModel, Pydantic   |
+| Database | PostgreSQL 14+ with Alembic migrations              |
+| Queue    | Redis 6+ (RQ Worker), async email delivery          |
+| Email    | Resend provider (org invites, notifications)         |
+| Storage  | MinIO (S3-compatible, board chat files)              |
+| Gateway  | OpenClaw Docker service, workspace templates         |
 | Auth     | Clerk JWT or Local Bearer Token                      |
-| Deploy   | Docker Compose                                       |
+| Deploy   | Docker Compose (7 services)                          |
 
 ## Quick Start
 
