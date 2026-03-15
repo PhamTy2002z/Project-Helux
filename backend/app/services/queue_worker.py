@@ -17,13 +17,14 @@ from app.services.board_chat_files.queue import requeue_extraction_task
 from app.services.board_chat_files.report_deadline_queue import (
     TASK_TYPE as REPORT_DEADLINE_TASK_TYPE,
 )
-from app.services.board_chat_files.report_deadline_queue import (
-    requeue_deadline_task,
-)
+from app.services.board_chat_files.report_deadline_queue import requeue_deadline_task
 from app.services.board_chat_files.report_deadline_worker import process_report_deadline_task
 from app.services.board_chat_files.worker import process_extraction_task
 from app.services.email.queue import TASK_TYPE as ORG_INVITE_EMAIL_TASK_TYPE
 from app.services.email.queue import requeue_invite_email_task
+from app.services.email.welcome_email_queue import TASK_TYPE as WELCOME_EMAIL_TASK_TYPE
+from app.services.email.welcome_email_queue import requeue_welcome_email_task
+from app.services.email.welcome_email_worker import process_welcome_email_task
 from app.services.email.worker import process_invite_email_task
 from app.services.openclaw.gateway_activation_queue import TASK_TYPE as GATEWAY_ACTIVATION_TASK_TYPE
 from app.services.openclaw.gateway_activation_queue import requeue_gateway_activation_task
@@ -54,6 +55,14 @@ _TASK_HANDLERS: dict[str, _TaskHandler] = {
             settings.rq_dispatch_retry_max_seconds,
         ),
         requeue=lambda task, delay: requeue_invite_email_task(task, delay_seconds=delay),
+    ),
+    WELCOME_EMAIL_TASK_TYPE: _TaskHandler(
+        handler=process_welcome_email_task,
+        attempts_to_delay=lambda attempts: min(
+            settings.rq_dispatch_retry_base_seconds * (2 ** max(0, attempts)),
+            settings.rq_dispatch_retry_max_seconds,
+        ),
+        requeue=lambda task, delay: requeue_welcome_email_task(task, delay_seconds=delay),
     ),
     FILE_EXTRACT_TASK_TYPE: _TaskHandler(
         handler=process_extraction_task,

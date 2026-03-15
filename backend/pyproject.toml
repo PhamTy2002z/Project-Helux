@@ -36,6 +36,7 @@ dependencies = [
     "python-multipart==0.0.20",
     "polar-sdk>=0.18.0",
     "resend>=2.23.0,<3",
+    "svix>=1.21.0",
 ]
 
 [project.optional-dependencies]
