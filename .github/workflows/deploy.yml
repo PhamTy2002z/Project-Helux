@@ -95,7 +95,7 @@ jobs:
       - name: Pull and restart containers
         run: |
           set -euo pipefail
-          cd /opt/projects/Project-Helux
+          cd /opt/projects/Project-FlowGrid
 
           # Login to GHCR
           echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin

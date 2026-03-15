@@ -7,7 +7,7 @@ Full step-by-step guide to deploy FlowGrid + OpenClaw on Ubuntu laptop server wi
 - Ubuntu Server 24.04 laptop (hostname: `flowgrid`, user: `phamty`)
 - Docker (with at least **6GB memory** allocated) + cloudflared installed and tunnel active
 - Domain `flowgrid.live` on Cloudflare (tunnel working)
-- GitHub repo: `PhamTy2002z/FlowGrid`
+- GitHub repo: `PhamTy2002z/Project-FlowGrid`
 - Mac (dev machine) can SSH to laptop: `ssh phamty@192.168.1.5`
 
 ---
@@ -31,9 +31,9 @@ sudo chown phamty:phamty /opt/projects
 
 ```bash
 cd /opt/projects
-git clone https://github.com/PhamTy2002z/FlowGrid.git Project-Helux
+git clone https://github.com/PhamTy2002z/Project-FlowGrid.git Project-FlowGrid
 # Hoặc dùng SSH:
-# git clone git@github.com:PhamTy2002z/FlowGrid.git Project-Helux
+# git clone git@github.com:PhamTy2002z/Project-FlowGrid.git Project-FlowGrid
 ```
 
 ### Step 1.4 — Update cloudflared config thêm api subdomain
@@ -83,7 +83,7 @@ sudo systemctl status cloudflared  # Verify: active (running)
 > **not** need to be in `.env.prod` on the server.
 
 ```bash
-cd /opt/projects/Project-Helux
+cd /opt/projects/Project-FlowGrid
 
 # Generate random passwords
 PG_PASS=$(openssl rand -base64 24 | tr -d '/+=' | head -c 32)
@@ -194,7 +194,7 @@ grep -E '(LOCAL_AUTH_TOKEN|MANAGED_GATEWAY_TOKEN)' .env.prod
 ### Step 2.4 — Bật Resend trong `.env.prod` (khi đã sẵn sàng production)
 
 ```bash
-cd /opt/projects/Project-Helux
+cd /opt/projects/Project-FlowGrid
 nano .env.prod
 ```
 
@@ -230,7 +230,7 @@ Setup trên Clerk Dashboard:
 Restart backend + worker để nhận env mới:
 
 ```bash
-cd /opt/projects/Project-Helux
+cd /opt/projects/Project-FlowGrid
 docker compose -f compose.prod.yml --env-file .env.prod restart backend webhook-worker
 ```
 
@@ -260,7 +260,7 @@ Các biến bắt buộc khi `PAYMENT_PROVIDER=polar`:
 Restart backend:
 
 ```bash
-cd /opt/projects/Project-Helux
+cd /opt/projects/Project-FlowGrid
 docker compose -f compose.prod.yml --env-file .env.prod restart backend
 ```
 
@@ -281,14 +281,14 @@ grep -E '^(BILLING_MODE|PAYMENT_PROVIDER|POLAR_)' .env.prod
 ### Step 3.1 — Từ Mac (dev machine)
 
 ```bash
-scp compose.prod.yml phamty@192.168.1.5:/opt/projects/Project-Helux/
+scp compose.prod.yml phamty@192.168.1.5:/opt/projects/Project-FlowGrid/
 ```
 
 ### Step 3.2 — Verify trên server
 
 ```bash
 ssh phamty@192.168.1.5
-ls -la /opt/projects/Project-Helux/
+ls -la /opt/projects/Project-FlowGrid/
 # Should see: compose.prod.yml  .env.prod  backend/  frontend/  ...
 ```
 
@@ -298,7 +298,7 @@ ls -la /opt/projects/Project-Helux/
 
 ### Step 4.1 — Lấy runner token từ GitHub
 
-1. Mở browser: `https://github.com/PhamTy2002z/FlowGrid/settings/actions/runners/new`
+1. Mở browser: `https://github.com/PhamTy2002z/Project-FlowGrid/settings/actions/runners/new`
 2. Chọn **Linux**, **x64**
 3. Copy token hiển thị (dùng ở bước 4.3)
 
@@ -322,7 +322,7 @@ tar xzf actions-runner-linux-x64-2.322.0.tar.gz
 cd ~/actions-runner
 
 ./config.sh \
-  --url https://github.com/PhamTy2002z/FlowGrid \
+  --url https://github.com/PhamTy2002z/Project-FlowGrid \
   --token <RUNNER_TOKEN_TU_BUOC_4.1> \
   --name flowgrid-laptop \
   --labels self-hosted,linux,x64,production \
@@ -346,7 +346,7 @@ sudo ./svc.sh status  # Verify: active (running)
 
 ### Step 4.5 — Verify runner online
 
-1. Mở: `https://github.com/PhamTy2002z/FlowGrid/settings/actions/runners`
+1. Mở: `https://github.com/PhamTy2002z/Project-FlowGrid/settings/actions/runners`
 2. Runner `flowgrid-laptop` hiển thị **Idle** = OK
 
 ---
@@ -355,7 +355,7 @@ sudo ./svc.sh status  # Verify: active (running)
 
 ### Step 5.1 — Add secrets
 
-Mở: `https://github.com/PhamTy2002z/FlowGrid/settings/secrets/actions`
+Mở: `https://github.com/PhamTy2002z/Project-FlowGrid/settings/secrets/actions`
 
 Add **Repository secrets** — these are injected as build args when CI builds
 the frontend image (`NEXT_PUBLIC_*` are baked into the Next.js bundle):
@@ -380,7 +380,7 @@ the frontend image (`NEXT_PUBLIC_*` are baked into the Next.js bundle):
 
 ### Step 5.2 — Create "production" environment
 
-1. Mở: `https://github.com/PhamTy2002z/FlowGrid/settings/environments`
+1. Mở: `https://github.com/PhamTy2002z/Project-FlowGrid/settings/environments`
 2. Click **New environment** → name: `production`
 3. (Optional) Enable **Required reviewers** nếu muốn approve trước khi deploy
 
@@ -403,7 +403,7 @@ echo "<GITHUB_PAT>" | docker login ghcr.io -u phamty2002z --password-stdin
 
 ```bash
 # Trên Mac (dev machine), tại project root
-cd ~/Documents/GitHub/Project-Helux
+cd ~/Documents/GitHub/Project-FlowGrid
 
 # Login GHCR
 echo "<GITHUB_PAT>" | docker login ghcr.io -u phamty2002z --password-stdin
@@ -427,7 +427,7 @@ docker push ghcr.io/phamty2002z/flowgrid-frontend:latest
 
 ```bash
 ssh phamty@192.168.1.5
-cd /opt/projects/Project-Helux
+cd /opt/projects/Project-FlowGrid
 
 # Pull images (add --profile managed-gateway if using OpenClaw)
 docker compose -f compose.prod.yml --profile managed-gateway --env-file .env.prod pull
@@ -470,7 +470,7 @@ compose). If auto-migrate is disabled or you want to run migrations manually:
 
 ```bash
 ssh phamty@192.168.1.5
-cd /opt/projects/Project-Helux
+cd /opt/projects/Project-FlowGrid
 
 docker compose -f compose.prod.yml --env-file .env.prod exec backend \
   alembic upgrade head
@@ -534,14 +534,14 @@ cd openclaw
 docker build -t openclaw/gateway:latest .
 
 # Cleanup source after build
-cd /opt/projects/Project-Helux
+cd /opt/projects/Project-FlowGrid
 rm -rf /tmp/openclaw
 ```
 
 ### Step 7.2 — Tạo openclaw config directory
 
 ```bash
-cd /opt/projects/Project-Helux
+cd /opt/projects/Project-FlowGrid
 mkdir -p openclaw
 ```
 
@@ -554,7 +554,7 @@ Config file: `openclaw/openclaw.json` (not `.prod.json` — compose reads this n
 > `gateway.auth.token` trong config file.
 
 ```bash
-cd /opt/projects/Project-Helux
+cd /opt/projects/Project-FlowGrid
 
 # Lấy gateway token đã tạo ở Step 2.1
 GW_TOKEN=$(grep MANAGED_GATEWAY_TOKEN .env.prod | cut -d= -f2)
@@ -640,7 +640,7 @@ docker compose -f compose.prod.yml --profile managed-gateway --env-file .env.pro
 ### Step 7.5 — Onboard gateway + device pairing
 
 ```bash
-cd /opt/projects/Project-Helux
+cd /opt/projects/Project-FlowGrid
 
 # Chạy onboard wizard
 docker compose -f compose.prod.yml --env-file .env.prod exec -it openclaw openclaw onboard
@@ -653,7 +653,7 @@ docker compose -f compose.prod.yml --env-file .env.prod exec -it openclaw opencl
 ### Step 7.6 — Verify gateway
 
 ```bash
-cd /opt/projects/Project-Helux
+cd /opt/projects/Project-FlowGrid
 
 # Check container health
 docker compose -f compose.prod.yml --env-file .env.prod ps openclaw
@@ -696,7 +696,7 @@ cd openclaw && git checkout v2026.x.x  # specific version
 docker build -t openclaw/gateway:latest .
 rm -rf /tmp/openclaw
 
-cd /opt/projects/Project-Helux
+cd /opt/projects/Project-FlowGrid
 docker compose -f compose.prod.yml --profile managed-gateway --env-file .env.prod up -d openclaw
 ```
 
@@ -741,7 +741,7 @@ git push -u origin test/cicd-verify
 ```
 
 1. Tạo PR → merge vào `main`
-2. Xem Actions tab: `https://github.com/PhamTy2002z/FlowGrid/actions`
+2. Xem Actions tab: `https://github.com/PhamTy2002z/Project-FlowGrid/actions`
 3. Verify cả 2 jobs pass: `build-and-push` + `deploy`
 4. Check `https://flowgrid.live` load OK
 
@@ -752,7 +752,7 @@ git push -u origin test/cicd-verify
 ### Xem logs
 
 ```bash
-cd /opt/projects/Project-Helux
+cd /opt/projects/Project-FlowGrid
 
 # All services
 docker compose -f compose.prod.yml --env-file .env.prod logs -f
@@ -767,7 +767,7 @@ docker compose -f compose.prod.yml --env-file .env.prod logs -f openclaw
 ### Restart services
 
 ```bash
-cd /opt/projects/Project-Helux
+cd /opt/projects/Project-FlowGrid
 
 # Restart app only (db/redis/minio/openclaw stay up)
 docker compose -f compose.prod.yml --env-file .env.prod \
@@ -780,14 +780,14 @@ docker compose -f compose.prod.yml --env-file .env.prod restart
 ### Stop everything
 
 ```bash
-cd /opt/projects/Project-Helux
+cd /opt/projects/Project-FlowGrid
 docker compose -f compose.prod.yml --env-file .env.prod down
 ```
 
 ### Manual deploy (without CI/CD)
 
 ```bash
-cd /opt/projects/Project-Helux
+cd /opt/projects/Project-FlowGrid
 docker compose -f compose.prod.yml --env-file .env.prod pull
 docker compose -f compose.prod.yml --env-file .env.prod \
   up -d --no-deps backend webhook-worker frontend
@@ -796,7 +796,7 @@ docker compose -f compose.prod.yml --env-file .env.prod \
 ### Database backup
 
 ```bash
-cd /opt/projects/Project-Helux
+cd /opt/projects/Project-FlowGrid
 docker compose -f compose.prod.yml --env-file .env.prod exec db \
   pg_dump -U postgres mission_control > backup-$(date +%Y%m%d).sql
 ```
@@ -804,7 +804,7 @@ docker compose -f compose.prod.yml --env-file .env.prod exec db \
 ### Database restore
 
 ```bash
-cd /opt/projects/Project-Helux
+cd /opt/projects/Project-FlowGrid
 cat backup-20260314.sql | docker compose -f compose.prod.yml --env-file .env.prod exec -T db \
   psql -U postgres mission_control
 ```
