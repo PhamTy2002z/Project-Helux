@@ -12,6 +12,7 @@ from sqlmodel import col, select
 
 from app.api.deps import require_org_admin, require_org_member
 from app.core.auth import get_auth_context
+from app.core.logging import get_logger
 from app.core.time import utcnow
 from app.db import crud
 from app.db.pagination import paginate
@@ -58,6 +59,7 @@ from app.schemas.organizations import (
 )
 from app.schemas.pagination import DefaultLimitOffsetPage
 from app.services.activity_log import record_admin_audit
+from app.services.email.queue import enqueue_invite_email_send
 from app.services.entitlements import assign_organization_plan, get_or_create_organization_plan
 from app.services.openclaw.managed_gateway_bootstrap import ensure_managed_gateway_for_organization
 from app.services.organizations import (
@@ -83,6 +85,7 @@ if TYPE_CHECKING:
     from app.core.auth import AuthContext
 
 router = APIRouter(prefix="/organizations", tags=["organizations"])
+logger = get_logger(__name__)
 SESSION_DEP = Depends(get_session)
 AUTH_DEP = Depends(get_auth_context)
 ORG_MEMBER_DEP = Depends(require_org_member)
@@ -97,6 +100,22 @@ def _member_to_read(
     if user is not None:
         model.user = OrganizationUserRead.model_validate(user, from_attributes=True)
     return model
+
+
+def _enqueue_invite_email_send(*, invite_id: UUID, trigger: str) -> None:
+    try:
+        enqueued = enqueue_invite_email_send(invite_id=invite_id, trigger=trigger)
+    except Exception:
+        logger.exception(
+            "organization.invite.email_enqueue_failed",
+            extra={"invite_id": str(invite_id), "trigger": trigger},
+        )
+        return
+    if not enqueued:
+        logger.warning(
+            "organization.invite.email_enqueue_failed",
+            extra={"invite_id": str(invite_id), "trigger": trigger},
+        )
 
 
 async def _require_org_member(
@@ -776,6 +795,40 @@ async def create_org_invite(
             "all_boards_write": invite.all_boards_write,
             "board_access_entries": len(payload.board_access),
         },
+    )
+    await session.commit()
+    await session.refresh(invite)
+    _enqueue_invite_email_send(invite_id=invite.id, trigger="create")
+    return OrganizationInviteRead.model_validate(invite, from_attributes=True)
+
+
+@router.post("/me/invites/{invite_id}/resend", response_model=OrganizationInviteRead)
+async def resend_org_invite(
+    invite_id: UUID,
+    session: AsyncSession = SESSION_DEP,
+    ctx: OrganizationContext = ORG_ADMIN_DEP,
+) -> OrganizationInviteRead:
+    """Queue invite email re-delivery for a pending invite."""
+    invite = await _require_org_invite(
+        session,
+        organization_id=ctx.organization.id,
+        invite_id=invite_id,
+    )
+    if invite.accepted_at is not None:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Cannot resend an accepted invite",
+        )
+
+    _enqueue_invite_email_send(invite_id=invite.id, trigger="resend")
+    record_admin_audit(
+        session,
+        audit_action="organization.invite.resend",
+        endpoint="/api/v1/organizations/me/invites/{invite_id}/resend",
+        organization_id=ctx.organization.id,
+        actor_id=ctx.member.user_id,
+        target_id=invite.id,
+        details={"invited_email": invite.invited_email},
     )
     await session.commit()
     await session.refresh(invite)

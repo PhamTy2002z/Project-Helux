@@ -4,6 +4,8 @@
 # Required env vars in .env.prod:
 #   GHCR_IMAGE_TAG, POSTGRES_PASSWORD, MINIO_ROOT_PASSWORD,
 #   LOCAL_AUTH_TOKEN, DOMAIN (for CORS/API URL)
+# Optional invite-email vars (required only when EMAIL_PROVIDER=resend):
+#   RESEND_API_KEY, EMAIL_FROM_INVITES, INVITE_ACCEPT_BASE_URL
 
 name: flowgrid-prod
 
@@ -131,6 +133,12 @@ services:
       MANAGED_GATEWAY_TOKEN: ${MANAGED_GATEWAY_TOKEN:-}
       MANAGED_GATEWAY_WORKSPACE_ROOT: /shared/openclaw-managed
       OPENCLAW_GATEWAY_DEVICE_IDENTITY_PATH: /shared/device-identity/device.json
+      EMAIL_PROVIDER: ${EMAIL_PROVIDER:-none}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      RESEND_WEBHOOK_SECRET: ${RESEND_WEBHOOK_SECRET:-}
+      EMAIL_FROM_INVITES: ${EMAIL_FROM_INVITES:-}
+      EMAIL_REPLY_TO: ${EMAIL_REPLY_TO:-}
+      INVITE_ACCEPT_BASE_URL: ${INVITE_ACCEPT_BASE_URL:-https://${DOMAIN}/invite}
       LOG_LEVEL: ${LOG_LEVEL:-WARNING}
       LOG_FORMAT: json
       RATE_LIMIT_ENABLED: "true"
@@ -214,6 +222,12 @@ services:
       OBJECT_STORAGE_USE_SSL: "false"
       WORKER_HEARTBEAT_KEY: ${WORKER_HEARTBEAT_KEY:-mission-control:worker:heartbeat}
       OPENCLAW_GATEWAY_DEVICE_IDENTITY_PATH: /shared/device-identity/device.json
+      EMAIL_PROVIDER: ${EMAIL_PROVIDER:-none}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      RESEND_WEBHOOK_SECRET: ${RESEND_WEBHOOK_SECRET:-}
+      EMAIL_FROM_INVITES: ${EMAIL_FROM_INVITES:-}
+      EMAIL_REPLY_TO: ${EMAIL_REPLY_TO:-}
+      INVITE_ACCEPT_BASE_URL: ${INVITE_ACCEPT_BASE_URL:-https://${DOMAIN}/invite}
     volumes:
       - device_identity:/shared/device-identity
     networks:

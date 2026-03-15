@@ -135,3 +135,83 @@ def test_base_url_is_normalized_without_trailing_slash() -> None:
     )
 
     assert settings.base_url == BASE_URL
+
+
+def test_resend_email_provider_requires_required_fields() -> None:
+    with pytest.raises(
+        ValidationError,
+        match="RESEND_API_KEY required when EMAIL_PROVIDER=resend",
+    ):
+        Settings(
+            _env_file=None,
+            auth_mode=AuthMode.LOCAL,
+            local_auth_token="a" * 50,
+            base_url=BASE_URL,
+            email_provider="resend",
+            resend_api_key="",
+            email_from_invites="FlowGrid <noreply@example.com>",
+            invite_accept_base_url="http://localhost:3000/invite",
+        )
+
+    with pytest.raises(
+        ValidationError,
+        match="EMAIL_FROM_INVITES required when EMAIL_PROVIDER=resend",
+    ):
+        Settings(
+            _env_file=None,
+            auth_mode=AuthMode.LOCAL,
+            local_auth_token="a" * 50,
+            base_url=BASE_URL,
+            email_provider="resend",
+            resend_api_key="re_test",
+            email_from_invites="",
+            invite_accept_base_url="http://localhost:3000/invite",
+        )
+
+    with pytest.raises(
+        ValidationError,
+        match="INVITE_ACCEPT_BASE_URL required when EMAIL_PROVIDER=resend",
+    ):
+        Settings(
+            _env_file=None,
+            auth_mode=AuthMode.LOCAL,
+            local_auth_token="a" * 50,
+            base_url=BASE_URL,
+            email_provider="resend",
+            resend_api_key="re_test",
+            email_from_invites="FlowGrid <noreply@example.com>",
+            invite_accept_base_url="",
+        )
+
+
+def test_invite_accept_base_url_requires_absolute_http_url() -> None:
+    with pytest.raises(
+        ValidationError,
+        match="INVITE_ACCEPT_BASE_URL must be an absolute http\\(s\\) URL",
+    ):
+        Settings(
+            _env_file=None,
+            auth_mode=AuthMode.LOCAL,
+            local_auth_token="a" * 50,
+            base_url=BASE_URL,
+            email_provider="none",
+            invite_accept_base_url="invite-path-only",
+        )
+
+
+def test_resend_email_provider_normalizes_invite_url_and_reply_to() -> None:
+    settings = Settings(
+        _env_file=None,
+        auth_mode=AuthMode.LOCAL,
+        local_auth_token="a" * 50,
+        base_url=BASE_URL,
+        email_provider="resend",
+        resend_api_key="re_test",
+        email_from_invites="FlowGrid <noreply@example.com>",
+        email_reply_to=" support@example.com ",
+        invite_accept_base_url="http://localhost:3000/invite/ ",
+    )
+
+    assert settings.email_provider == "resend"
+    assert settings.email_reply_to == "support@example.com"
+    assert settings.invite_accept_base_url == "http://localhost:3000/invite"

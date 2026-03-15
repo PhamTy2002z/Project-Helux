@@ -139,6 +139,33 @@ REDIS_URL=redis://localhost:6379/0
 REDIS_URL=redis://redis:6379/0
 ```
 
+### Step 6: Organization invite email configuration (optional)
+
+Invite email delivery is disabled by default. Enable it only after you verify
+sender/domain readiness in Resend.
+
+```bash
+# In backend/.env file (or root .env for Docker compose overrides)
+EMAIL_PROVIDER=none
+# EMAIL_PROVIDER=resend
+# RESEND_API_KEY=re_xxx
+# RESEND_WEBHOOK_SECRET=whsec_xxx
+# EMAIL_FROM_INVITES=FlowGrid <noreply@example.com>
+# EMAIL_REPLY_TO=support@example.com
+# INVITE_ACCEPT_BASE_URL=https://app.example.com/invite
+```
+
+Rollout sequence:
+1. Deploy with `EMAIL_PROVIDER=none`.
+2. Confirm invite create/accept still works with copy-link fallback.
+3. Enable `EMAIL_PROVIDER=resend` in staging and run a real inbox smoke test.
+4. Promote the same config to production.
+
+Rollback:
+1. Set `EMAIL_PROVIDER=none`.
+2. Restart backend and worker.
+3. Continue using invite copy-link flow while provider issues are triaged.
+
 ## Docker Deployment
 
 ### Standard Deployment

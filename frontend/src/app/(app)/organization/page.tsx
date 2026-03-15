@@ -30,6 +30,7 @@ import {
   useGetOrgMemberApiV1OrganizationsMeMembersMemberIdGet,
   useListOrgInvitesApiV1OrganizationsMeInvitesGet,
   useListOrgMembersApiV1OrganizationsMeMembersGet,
+  useResendOrgInviteApiV1OrganizationsMeInvitesInviteIdResendPost,
   useRevokeOrgInviteApiV1OrganizationsMeInvitesInviteIdDelete,
   useUpdateMemberAccessApiV1OrganizationsMeMembersMemberIdAccessPut,
   useUpdateOrgMemberApiV1OrganizationsMeMembersMemberIdPatch,
@@ -437,6 +438,18 @@ export default function OrganizationPage() {
         },
       },
     });
+  const resendInviteMutation =
+    useResendOrgInviteApiV1OrganizationsMeInvitesInviteIdResendPost<ApiError>({
+      mutation: {
+        onSuccess: () => {
+          queryClient.invalidateQueries({
+            queryKey: getListOrgInvitesApiV1OrganizationsMeInvitesGetQueryKey({
+              limit: 200,
+            }),
+          });
+        },
+      },
+    });
 
   const updateMemberAccessMutation =
     useUpdateMemberAccessApiV1OrganizationsMeMembersMemberIdAccessPut<ApiError>(
@@ -803,11 +816,17 @@ export default function OrganizationPage() {
                   copiedInviteId={copiedInviteId}
                   onManageAccess={openAccessDialog}
                   onCopyInvite={handleCopyInvite}
+                  onResendInvite={(inviteId) =>
+                    resendInviteMutation.mutate({
+                      inviteId,
+                    })
+                  }
                   onRevokeInvite={(inviteId) =>
                     revokeInviteMutation.mutate({
                       inviteId,
                     })
                   }
+                  isResending={resendInviteMutation.isPending}
                   isRevoking={revokeInviteMutation.isPending}
                 />
               </div>

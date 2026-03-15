@@ -26,6 +26,7 @@ LOCAL_AUTH_TOKEN_PLACEHOLDERS = frozenset(
 )
 BILLING_MODES = frozenset({"simulated", "provider"})
 PAYMENT_PROVIDERS = frozenset({"none", "stripe", "paddle", "polar"})
+EMAIL_PROVIDERS = frozenset({"none", "resend"})
 OPENCLAW_USAGE_ENFORCEMENT_MODES = frozenset({"observe", "enforce"})
 
 
@@ -154,6 +155,14 @@ class Settings(BaseSettings):
     polar_environment: str = "sandbox"
     polar_success_url: str = ""
 
+    # Email provider (organization invite delivery)
+    email_provider: str = "none"
+    resend_api_key: str = ""
+    resend_webhook_secret: str = ""
+    email_from_invites: str = ""
+    email_reply_to: str = ""
+    invite_accept_base_url: str = ""
+
     @model_validator(mode="after")
     def _defaults(self) -> Self:
         if self.auth_profile == AuthProfile.SAAS and self.auth_mode != AuthMode.CLERK:
@@ -215,6 +224,26 @@ class Settings(BaseSettings):
                 raise ValueError("POLAR_PRODUCT_ID_PRO required when PAYMENT_PROVIDER=polar.")
             if self.polar_environment not in ("sandbox", "production"):
                 raise ValueError("POLAR_ENVIRONMENT must be 'sandbox' or 'production'.")
+        self.email_provider = self.email_provider.strip().lower()
+        if self.email_provider not in EMAIL_PROVIDERS:
+            raise ValueError("EMAIL_PROVIDER must be one of: none, resend.")
+        self.email_from_invites = self.email_from_invites.strip()
+        self.email_reply_to = self.email_reply_to.strip()
+        self.invite_accept_base_url = self.invite_accept_base_url.strip()
+        if self.email_provider == "resend":
+            if not self.resend_api_key.strip():
+                raise ValueError("RESEND_API_KEY required when EMAIL_PROVIDER=resend.")
+            if not self.email_from_invites:
+                raise ValueError("EMAIL_FROM_INVITES required when EMAIL_PROVIDER=resend.")
+            if not self.invite_accept_base_url:
+                raise ValueError("INVITE_ACCEPT_BASE_URL required when EMAIL_PROVIDER=resend.")
+        if self.invite_accept_base_url:
+            parsed_invite_url = urlparse(self.invite_accept_base_url)
+            if parsed_invite_url.scheme not in {"http", "https"} or not parsed_invite_url.netloc:
+                raise ValueError(
+                    "INVITE_ACCEPT_BASE_URL must be an absolute http(s) URL.",
+                )
+            self.invite_accept_base_url = self.invite_accept_base_url.rstrip("/")
         self.openclaw_usage_enforcement_mode = self.openclaw_usage_enforcement_mode.strip().lower()
         if self.openclaw_usage_enforcement_mode not in OPENCLAW_USAGE_ENFORCEMENT_MODES:
             raise ValueError("OPENCLAW_USAGE_ENFORCEMENT_MODE must be one of: observe, enforce.")

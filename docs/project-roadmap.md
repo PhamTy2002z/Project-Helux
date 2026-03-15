@@ -4,9 +4,26 @@
 
 **Version**: 0.1.0 (Active Development)
 **Status**: Pre-release, under active development
-**Last Updated**: 2026-03-12
+**Last Updated**: 2026-03-15
 
 ## Recent Updates (March 2026)
+
+- ✅ **Organization invite email rollout complete** (2026-03-15):
+  - Added provider-gated invite delivery config (`EMAIL_PROVIDER`, Resend keys,
+    sender identity, invite accept URL).
+  - Added invite email domain layer + Resend adapter + deterministic
+    idempotency key handling per send attempt.
+  - Added async queue task `organization_invite_email_send` and worker handler
+    integration with existing retry/backoff.
+  - Added non-blocking enqueue in invite creation flow.
+  - Added admin resend endpoint:
+    `POST /api/v1/organizations/me/invites/{invite_id}/resend`.
+  - Added organization UI resend action and frontend API hook integration for
+    pending invites.
+  - Added production compose env pass-through for invite email settings on both
+    backend and webhook-worker services.
+  - Added test coverage for config, sender, queue, worker, and invite API
+    behavior.
 
 - ✅ **Workspace Templates Feature Complete** (2026-03-13):
   - New `WorkspaceTemplate` model with JSONB file_contents (org-scoped, system seeds)

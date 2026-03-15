@@ -31,9 +31,9 @@ sudo chown phamty:phamty /opt/projects
 
 ```bash
 cd /opt/projects
-git clone https://github.com/PhamTy2002z/FlowGrid.git .
+git clone https://github.com/PhamTy2002z/FlowGrid.git Project-Helux
 # Hoặc dùng SSH:
-# git clone git@github.com:PhamTy2002z/FlowGrid.git .
+# git clone git@github.com:PhamTy2002z/FlowGrid.git Project-Helux
 ```
 
 ### Step 1.4 — Update cloudflared config thêm api subdomain
@@ -74,7 +74,7 @@ sudo systemctl status cloudflared  # Verify: active (running)
 ### Step 2.1 — Tạo .env.prod
 
 ```bash
-cd /opt/projects
+cd /opt/projects/Project-Helux
 
 # Generate random passwords
 PG_PASS=$(openssl rand -base64 24 | tr -d '/+=' | head -c 32)
@@ -107,6 +107,16 @@ LOCAL_AUTH_TOKEN=${AUTH_TOKEN}
 LOG_LEVEL=WARNING
 RATE_LIMIT_ENABLED=true
 
+# Invite email delivery (organization invites)
+# Safe default rollout: keep disabled for first deploy
+EMAIL_PROVIDER=none
+# EMAIL_PROVIDER=resend
+# RESEND_API_KEY=re_xxx
+# RESEND_WEBHOOK_SECRET=whsec_xxx
+# EMAIL_FROM_INVITES=FlowGrid <noreply@flowgrid.live>
+# EMAIL_REPLY_TO=support@flowgrid.live
+# INVITE_ACCEPT_BASE_URL=https://flowgrid.live/invite
+
 # Billing (Polar payment provider)
 BILLING_MODE=provider
 PAYMENT_PROVIDER=polar
@@ -136,6 +146,56 @@ grep LOCAL_AUTH_TOKEN .env.prod
 # Copy giá trị này — cần dùng khi login vào FlowGrid UI
 ```
 
+### Step 2.3 — Lấy cấu hình Resend trên dashboard
+
+1. Mở Resend dashboard: `https://resend.com`
+2. Vào **API Keys** -> **Create API Key** -> copy key dạng `re_...`
+3. Vào **Domains** -> chọn `flowgrid.live` (status phải là **Verified**)
+4. Chọn địa chỉ gửi tại domain đã verify:
+   `FlowGrid <noreply@flowgrid.live>` cho `EMAIL_FROM_INVITES`
+5. (Optional) Chọn mailbox nhận phản hồi cho `EMAIL_REPLY_TO`, for example
+   `support@flowgrid.live`
+
+> Note: scope hiện tại chỉ cần gửi outbound invite email. `RESEND_WEBHOOK_SECRET`
+> chưa bắt buộc vì backend chưa dùng inbound Resend webhook.
+
+### Step 2.4 — Bật Resend trong `.env.prod` (khi đã sẵn sàng production)
+
+```bash
+cd /opt/projects/Project-Helux
+nano .env.prod
+```
+
+Set giá trị như sau:
+
+```env
+EMAIL_PROVIDER=resend
+RESEND_API_KEY=re_xxx
+EMAIL_FROM_INVITES=FlowGrid <noreply@flowgrid.live>
+EMAIL_REPLY_TO=support@flowgrid.live
+INVITE_ACCEPT_BASE_URL=https://flowgrid.live/invite
+# Optional (reserved for future inbound webhook support):
+# RESEND_WEBHOOK_SECRET=whsec_xxx
+```
+
+Các biến bắt buộc khi `EMAIL_PROVIDER=resend`:
+- `RESEND_API_KEY`
+- `EMAIL_FROM_INVITES`
+- `INVITE_ACCEPT_BASE_URL`
+
+Restart backend + worker để nhận env mới:
+
+```bash
+cd /opt/projects/Project-Helux
+docker compose -f compose.prod.yml --env-file .env.prod restart backend webhook-worker
+```
+
+### Step 2.5 — Verify nhanh block env của Resend
+
+```bash
+grep -E '^(EMAIL_PROVIDER|RESEND_API_KEY|EMAIL_FROM_INVITES|EMAIL_REPLY_TO|INVITE_ACCEPT_BASE_URL|RESEND_WEBHOOK_SECRET)=' .env.prod
+```
+
 ---
 
 ## Phase 3: Copy compose.prod.yml lên server
@@ -143,15 +203,15 @@ grep LOCAL_AUTH_TOKEN .env.prod
 ### Step 3.1 — Từ Mac (dev machine)
 
 ```bash
-scp compose.prod.yml phamty@192.168.1.5:/opt/projects/
+scp compose.prod.yml phamty@192.168.1.5:/opt/projects/Project-Helux/
 ```
 
 ### Step 3.2 — Verify trên server
 
 ```bash
 ssh phamty@192.168.1.5
-ls -la /opt/projects/
-# Should see: compose.prod.yml  .env.prod
+ls -la /opt/projects/Project-Helux/
+# Should see: compose.prod.yml  .env.prod  backend/  frontend/  ...
 ```
 
 ---
@@ -275,7 +335,7 @@ docker push ghcr.io/phamty2002z/flowgrid-frontend:latest
 
 ```bash
 ssh phamty@192.168.1.5
-cd /opt/projects
+cd /opt/projects/Project-Helux
 
 # Pull images
 docker compose -f compose.prod.yml --env-file .env.prod pull
@@ -319,7 +379,7 @@ OpenClaw chạy trong Docker cùng stack, không cần cài trên host.
 
 ```bash
 ssh phamty@192.168.1.5
-cd /opt/projects
+cd /opt/projects/Project-Helux
 
 # OpenClaw đã start cùng lúc với docker compose up ở Phase 6
 docker compose -f compose.prod.yml --env-file .env.prod ps openclaw
@@ -345,11 +405,11 @@ openclaw onboard
 Nếu OpenClaw onboard generate token:
 
 ```bash
-nano /opt/projects/.env.prod
+nano /opt/projects/Project-Helux/.env.prod
 # Update: MANAGED_GATEWAY_TOKEN=<token_from_onboard>
 
 # Restart backend + openclaw to pick up new token
-cd /opt/projects
+cd /opt/projects/Project-Helux
 docker compose -f compose.prod.yml --env-file .env.prod restart openclaw backend webhook-worker
 ```
 
@@ -410,7 +470,7 @@ git push -u origin test/cicd-verify
 ### Xem logs
 
 ```bash
-cd /opt/projects
+cd /opt/projects/Project-Helux
 
 # All services
 docker compose -f compose.prod.yml --env-file .env.prod logs -f
@@ -425,7 +485,7 @@ docker compose -f compose.prod.yml --env-file .env.prod logs -f openclaw
 ### Restart services
 
 ```bash
-cd /opt/projects
+cd /opt/projects/Project-Helux
 
 # Restart app only (db/redis/minio/openclaw stay up)
 docker compose -f compose.prod.yml --env-file .env.prod restart backend webhook-worker frontend
@@ -437,14 +497,14 @@ docker compose -f compose.prod.yml --env-file .env.prod restart
 ### Stop everything
 
 ```bash
-cd /opt/projects
+cd /opt/projects/Project-Helux
 docker compose -f compose.prod.yml --env-file .env.prod down
 ```
 
 ### Manual deploy (without CI/CD)
 
 ```bash
-cd /opt/projects
+cd /opt/projects/Project-Helux
 docker compose -f compose.prod.yml --env-file .env.prod pull
 docker compose -f compose.prod.yml --env-file .env.prod up -d --no-deps backend webhook-worker frontend
 ```
@@ -452,7 +512,7 @@ docker compose -f compose.prod.yml --env-file .env.prod up -d --no-deps backend 
 ### Database backup
 
 ```bash
-cd /opt/projects
+cd /opt/projects/Project-Helux
 docker compose -f compose.prod.yml --env-file .env.prod exec db \
   pg_dump -U postgres mission_control > backup-$(date +%Y%m%d).sql
 ```
@@ -460,7 +520,7 @@ docker compose -f compose.prod.yml --env-file .env.prod exec db \
 ### Database restore
 
 ```bash
-cd /opt/projects
+cd /opt/projects/Project-Helux
 cat backup-20260314.sql | docker compose -f compose.prod.yml --env-file .env.prod exec -T db \
   psql -U postgres mission_control
 ```
