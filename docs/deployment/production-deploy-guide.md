@@ -910,3 +910,121 @@ df -h
 docker image prune -af  # Remove ALL unused images
 docker builder prune -f  # Clear build cache
 ```
+
+---
+
+## Phase 9: Migrate sang VPS mới
+
+Toàn bộ stack Docker-based → migrate dễ dàng. Downtime ~30 phút.
+
+### Cần migrate
+
+| Item | Nguồn | Mô tả |
+|------|--------|--------|
+| `.env.prod` | File trên server | Secrets, tokens, config |
+| `postgres_data` volume | Docker volume | Database (quan trọng nhất) |
+| `minio_data` volume | Docker volume | Uploaded files |
+| `openclaw_data` + `device_identity` | Docker volume | Gateway state |
+| `openclaw/openclaw.json` | File trên server | Gateway config |
+| Self-hosted runner | GitHub Settings | Setup lại trên VPS mới |
+
+### Step 9.1 — Backup trên server cũ
+
+```bash
+cd /opt/projects/Project-FlowGrid
+
+# 1. Backup database
+docker compose -f compose.prod.yml --env-file .env.prod exec db \
+  pg_dump -U postgres mission_control > backup.sql
+
+# 2. Backup MinIO data (uploaded files)
+docker run --rm \
+  -v flowgrid-prod_minio_data:/data \
+  -v $(pwd):/backup \
+  alpine tar czf /backup/minio-backup.tar.gz /data
+
+# 3. (Optional) Backup OpenClaw state
+docker run --rm \
+  -v flowgrid-prod_openclaw_data:/data \
+  -v $(pwd):/backup \
+  alpine tar czf /backup/openclaw-backup.tar.gz /data
+```
+
+### Step 9.2 — Copy sang VPS mới
+
+```bash
+# Từ server cũ hoặc dev machine
+scp backup.sql minio-backup.tar.gz .env.prod openclaw/openclaw.json \
+  user@new-vps:/opt/projects/Project-FlowGrid/
+# Optional:
+scp openclaw-backup.tar.gz user@new-vps:/opt/projects/Project-FlowGrid/
+```
+
+### Step 9.3 — Setup VPS mới
+
+```bash
+ssh user@new-vps
+
+# Clone repo
+sudo mkdir -p /opt/projects && sudo chown $USER:$USER /opt/projects
+cd /opt/projects
+git clone https://github.com/PhamTy2002z/Project-FlowGrid.git
+cd Project-FlowGrid
+
+# Copy .env.prod và openclaw config đã scp ở bước trên
+# Start stack (database sẽ empty)
+docker compose -f compose.prod.yml --profile managed-gateway --env-file .env.prod up -d
+```
+
+### Step 9.4 — Restore data
+
+```bash
+cd /opt/projects/Project-FlowGrid
+
+# Stop app containers (giữ db running)
+docker compose -f compose.prod.yml --env-file .env.prod stop backend webhook-worker frontend
+
+# Restore database
+cat backup.sql | docker compose -f compose.prod.yml --env-file .env.prod exec -T db \
+  psql -U postgres mission_control
+
+# Restore MinIO
+docker compose -f compose.prod.yml --env-file .env.prod stop minio
+docker run --rm \
+  -v flowgrid-prod_minio_data:/data \
+  -v $(pwd):/backup \
+  alpine tar xzf /backup/minio-backup.tar.gz -C /
+docker compose -f compose.prod.yml --env-file .env.prod start minio
+
+# (Optional) Restore OpenClaw state
+docker compose -f compose.prod.yml --profile managed-gateway --env-file .env.prod stop openclaw
+docker run --rm \
+  -v flowgrid-prod_openclaw_data:/data \
+  -v $(pwd):/backup \
+  alpine tar xzf /backup/openclaw-backup.tar.gz -C /
+docker compose -f compose.prod.yml --profile managed-gateway --env-file .env.prod start openclaw
+
+# Start lại tất cả
+docker compose -f compose.prod.yml --profile managed-gateway --env-file .env.prod up -d
+```
+
+### Step 9.5 — Chuyển DNS và runner
+
+1. **DNS**: Cập nhật Cloudflare tunnel hoặc A record trỏ sang IP VPS mới
+2. **Self-hosted runner**: Setup lại theo Phase 4 trên VPS mới
+3. **Xóa runner cũ** tại GitHub Settings → Actions → Runners
+
+### Step 9.6 — Verify
+
+```bash
+# Health check
+curl http://localhost:8000/health
+curl http://localhost:3000
+
+# Check data intact
+docker compose -f compose.prod.yml --env-file .env.prod exec db \
+  psql -U postgres mission_control -c "SELECT count(*) FROM boards;"
+```
+
+> **Tip:** Không cần sửa code hay config nào trong repo.
+> Chỉ cần `.env.prod`, data volumes, DNS, và runner mới.

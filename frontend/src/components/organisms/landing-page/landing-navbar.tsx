@@ -170,7 +170,7 @@ export default function LandingNavbar() {
       {/* Mobile drawer */}
       {mobileOpen && (
         <div
-          className="fixed inset-x-0 bottom-0 border-t border-white/10 bg-black/98 lg:hidden"
+          className="fixed inset-x-0 bottom-0 border-t border-white/10 bg-black lg:hidden"
           style={{ top: MOBILE_DRAWER_TOP }}
         >
           <div className="flex h-full flex-col gap-4 overflow-y-auto px-4 py-6 sm:px-6">
