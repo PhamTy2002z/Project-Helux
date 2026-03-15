@@ -3,8 +3,6 @@
 
 from __future__ import annotations
 
-import pytest
-
 from app.services.email.welcome_email import (
     WelcomeEmailRenderInput,
     _display_name,
