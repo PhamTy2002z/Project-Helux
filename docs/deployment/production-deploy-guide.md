@@ -73,6 +73,10 @@ sudo systemctl status cloudflared  # Verify: active (running)
 
 ### Step 2.1 — Tạo .env.prod
 
+> **Note:** `compose.prod.yml` hardcodes several values (CORS_ORIGINS, BASE_URL,
+> DB_AUTO_MIGRATE, DATABASE_URL, etc.) from `DOMAIN`. Only set variables that
+> compose passes through via `${VAR}`. See `compose.prod.yml` for the full list.
+
 ```bash
 cd /opt/projects/Project-Helux
 
@@ -83,33 +87,49 @@ AUTH_TOKEN=$(openssl rand -base64 48 | tr -d '/+=' | head -c 64)
 
 cat > .env.prod <<EOF
 # FlowGrid Production — flowgrid.live
+# See compose.prod.yml for which vars are passed to each container.
+# See root .env.example for local dev defaults.
 
+# --- Domain & images ---
 DOMAIN=flowgrid.live
 GHCR_OWNER=phamty2002z
 GHCR_IMAGE_TAG=latest
 
-# Database
+# --- Database (Postgres) ---
 POSTGRES_DB=mission_control
 POSTGRES_USER=postgres
 POSTGRES_PASSWORD=${PG_PASS}
 
-# MinIO
+# --- Object storage (MinIO) ---
+# These map to OBJECT_STORAGE_ACCESS_KEY / OBJECT_STORAGE_SECRET_KEY
+# inside backend/worker containers.
 MINIO_ROOT_USER=minioadmin
 MINIO_ROOT_PASSWORD=${MINIO_PASS}
 OBJECT_STORAGE_BUCKET=board-chat-files
 
-# Auth
+# --- Auth ---
 AUTH_PROFILE=self_hosted
 AUTH_MODE=local
 LOCAL_AUTH_TOKEN=${AUTH_TOKEN}
 
-# Backend
+# --- Logging ---
 LOG_LEVEL=WARNING
-RATE_LIMIT_ENABLED=true
 
-# Invite email delivery (organization invites)
-# Safe default rollout: keep disabled for first deploy
+# --- Billing & payments ---
+# Set to provider + polar when ready to accept payments.
+BILLING_MODE=simulated
+PAYMENT_PROVIDER=none
+# Polar (required when PAYMENT_PROVIDER=polar):
+# POLAR_ACCESS_TOKEN=polar_at_xxx
+# POLAR_WEBHOOK_SECRET=whsec_xxx
+# POLAR_PRODUCT_ID_PRO=1e83f145-db6f-41cb-ad76-00ba9d66a2f7
+# POLAR_ENVIRONMENT=production
+# POLAR_SUCCESS_URL=https://flowgrid.live/checkout/success?checkout_id={CHECKOUT_ID}
+
+# --- Invite email (organization invite delivery only) ---
+# Safe default: keep disabled for first deploy.
 EMAIL_PROVIDER=none
+# Enable when ready (see Step 2.3–2.5):
 # EMAIL_PROVIDER=resend
 # RESEND_API_KEY=re_xxx
 # RESEND_WEBHOOK_SECRET=whsec_xxx
@@ -117,21 +137,11 @@ EMAIL_PROVIDER=none
 # EMAIL_REPLY_TO=support@flowgrid.live
 # INVITE_ACCEPT_BASE_URL=https://flowgrid.live/invite
 
-# Billing (Polar payment provider)
-BILLING_MODE=provider
-PAYMENT_PROVIDER=polar
-POLAR_ACCESS_TOKEN=<your_polar_access_token>
-POLAR_WEBHOOK_SECRET=<your_polar_webhook_secret>
-POLAR_PRODUCT_ID_PRO=1e83f145-db6f-41cb-ad76-00ba9d66a2f7
-POLAR_ENVIRONMENT=production
-POLAR_SUCCESS_URL=https://flowgrid.live/checkout/success?checkout_id={CHECKOUT_ID}
-
-# OpenClaw Gateway
+# --- Managed gateway ---
 MANAGED_GATEWAY_AUTO_PROVISION=true
-MANAGED_GATEWAY_URL=ws://openclaw:18789/ws
 MANAGED_GATEWAY_TOKEN=
 
-# Worker
+# --- Worker & readiness ---
 WORKER_HEARTBEAT_KEY=mission-control:worker:heartbeat
 READINESS_WORKER_HEARTBEAT_KEY=mission-control:worker:heartbeat
 EOF
@@ -190,10 +200,44 @@ cd /opt/projects/Project-Helux
 docker compose -f compose.prod.yml --env-file .env.prod restart backend webhook-worker
 ```
 
-### Step 2.5 — Verify nhanh block env của Resend
+### Step 2.5 — Bật Polar billing trong `.env.prod`
 
 ```bash
-grep -E '^(EMAIL_PROVIDER|RESEND_API_KEY|EMAIL_FROM_INVITES|EMAIL_REPLY_TO|INVITE_ACCEPT_BASE_URL|RESEND_WEBHOOK_SECRET)=' .env.prod
+nano .env.prod
+```
+
+Set giá trị:
+
+```env
+BILLING_MODE=provider
+PAYMENT_PROVIDER=polar
+POLAR_ACCESS_TOKEN=polar_at_xxx
+POLAR_WEBHOOK_SECRET=whsec_xxx
+POLAR_PRODUCT_ID_PRO=1e83f145-db6f-41cb-ad76-00ba9d66a2f7
+POLAR_ENVIRONMENT=production
+POLAR_SUCCESS_URL=https://flowgrid.live/checkout/success?checkout_id={CHECKOUT_ID}
+```
+
+Các biến bắt buộc khi `PAYMENT_PROVIDER=polar`:
+- `POLAR_ACCESS_TOKEN`
+- `POLAR_WEBHOOK_SECRET`
+- `POLAR_PRODUCT_ID_PRO`
+
+Restart backend:
+
+```bash
+cd /opt/projects/Project-Helux
+docker compose -f compose.prod.yml --env-file .env.prod restart backend
+```
+
+### Step 2.6 — Verify env blocks
+
+```bash
+# Check Resend vars
+grep -E '^(EMAIL_PROVIDER|RESEND_API_KEY|EMAIL_FROM_INVITES|EMAIL_REPLY_TO|INVITE_ACCEPT_BASE_URL)=' .env.prod
+
+# Check Polar vars
+grep -E '^(BILLING_MODE|PAYMENT_PROVIDER|POLAR_)' .env.prod
 ```
 
 ---
@@ -567,8 +611,13 @@ docker compose -f compose.prod.yml --env-file .env.prod logs backend
 ### Frontend shows "Failed to fetch"
 
 - Check `NEXT_PUBLIC_API_URL` in frontend build = `https://api.flowgrid.live`
-- Check `CORS_ORIGINS` in backend = `https://flowgrid.live`
+- Check `CORS_ORIGINS` in backend = `https://flowgrid.live` (set via DOMAIN in compose.prod.yml)
 - Check cloudflared config has `api.flowgrid.live` entry
+
+### Billing/payments not working
+
+- Verify vars passed to container: `docker compose -f compose.prod.yml --env-file .env.prod exec backend env | grep POLAR`
+- Must have: `BILLING_MODE=provider`, `PAYMENT_PROVIDER=polar`, and all `POLAR_*` vars set
 
 ### Runner offline
 
