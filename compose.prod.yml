@@ -94,6 +94,7 @@ services:
     <<: *default-restart
     logging: *default-logging
     environment:
+      NODE_OPTIONS: "--max-old-space-size=1536"
       OPENCLAW_HOME: /data
       OPENCLAW_CONFIG_PATH: /data/config/openclaw.json
       OPENCLAW_STATE_DIR: /data/.openclaw
@@ -112,11 +113,11 @@ services:
       interval: 15s
       timeout: 5s
       retries: 5
-      start_period: 30s
+      start_period: 60s
     deploy:
       resources:
         limits:
-          memory: 1G
+          memory: 2G
 
   # ---------- application ----------
   backend:
@@ -129,9 +130,9 @@ services:
       CORS_ORIGINS: https://${DOMAIN:?Set DOMAIN}
       BASE_URL: https://api.${DOMAIN}
       DB_AUTO_MIGRATE: "true"
-      AUTH_PROFILE: self_hosted
-      AUTH_MODE: local
-      LOCAL_AUTH_TOKEN: ${LOCAL_AUTH_TOKEN:?Set LOCAL_AUTH_TOKEN}
+      AUTH_PROFILE: ${AUTH_PROFILE:-self_hosted}
+      AUTH_MODE: ${AUTH_MODE:-local}
+      LOCAL_AUTH_TOKEN: ${LOCAL_AUTH_TOKEN:-}
       RQ_REDIS_URL: redis://redis:6379/0
       WORKER_HEARTBEAT_KEY: ${WORKER_HEARTBEAT_KEY:-mission-control:worker:heartbeat}
       READINESS_WORKER_HEARTBEAT_KEY: ${READINESS_WORKER_HEARTBEAT_KEY:-mission-control:worker:heartbeat}
@@ -151,6 +152,7 @@ services:
       EMAIL_REPLY_TO: ${EMAIL_REPLY_TO:-}
       INVITE_ACCEPT_BASE_URL: ${INVITE_ACCEPT_BASE_URL:-https://${DOMAIN}/invite}
       CLERK_WEBHOOK_SECRET: ${CLERK_WEBHOOK_SECRET:-}
+      CLERK_SECRET_KEY: ${CLERK_SECRET_KEY:-}
       BILLING_MODE: ${BILLING_MODE:-simulated}
       PAYMENT_PROVIDER: ${PAYMENT_PROVIDER:-none}
       POLAR_ACCESS_TOKEN: ${POLAR_ACCESS_TOKEN:-}
@@ -193,7 +195,8 @@ services:
     logging: *default-logging
     environment:
       NEXT_PUBLIC_API_URL: https://api.${DOMAIN}
-      NEXT_PUBLIC_AUTH_MODE: local
+      NEXT_PUBLIC_AUTH_MODE: ${AUTH_MODE:-local}
+      CLERK_SECRET_KEY: ${CLERK_SECRET_KEY:-}
     depends_on:
       backend:
         condition: service_healthy
@@ -229,8 +232,12 @@ services:
     environment:
       ENVIRONMENT: production
       DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-mission_control}
-      AUTH_MODE: local
-      LOCAL_AUTH_TOKEN: ${LOCAL_AUTH_TOKEN}
+      BASE_URL: https://api.${DOMAIN}
+      AUTH_PROFILE: ${AUTH_PROFILE:-self_hosted}
+      AUTH_MODE: ${AUTH_MODE:-local}
+      LOCAL_AUTH_TOKEN: ${LOCAL_AUTH_TOKEN:-}
+      CLERK_SECRET_KEY: ${CLERK_SECRET_KEY:-}
+      CLERK_WEBHOOK_SECRET: ${CLERK_WEBHOOK_SECRET:-}
       RQ_REDIS_URL: redis://redis:6379/0
       RQ_QUEUE_NAME: ${RQ_QUEUE_NAME:-default}
       OBJECT_STORAGE_ENDPOINT: http://minio:9000
@@ -240,6 +247,14 @@ services:
       OBJECT_STORAGE_USE_SSL: "false"
       WORKER_HEARTBEAT_KEY: ${WORKER_HEARTBEAT_KEY:-mission-control:worker:heartbeat}
       OPENCLAW_GATEWAY_DEVICE_IDENTITY_PATH: /shared/device-identity/device.json
+      BILLING_MODE: ${BILLING_MODE:-simulated}
+      PAYMENT_PROVIDER: ${PAYMENT_PROVIDER:-none}
+      POLAR_ACCESS_TOKEN: ${POLAR_ACCESS_TOKEN:-}
+      POLAR_WEBHOOK_SECRET: ${POLAR_WEBHOOK_SECRET:-}
+      POLAR_PRODUCT_ID_PRO: ${POLAR_PRODUCT_ID_PRO:-}
+      POLAR_ENVIRONMENT: ${POLAR_ENVIRONMENT:-sandbox}
+      POLAR_SUCCESS_URL: ${POLAR_SUCCESS_URL:-}
+      LOG_LEVEL: ${LOG_LEVEL:-WARNING}
       EMAIL_PROVIDER: ${EMAIL_PROVIDER:-none}
       RESEND_API_KEY: ${RESEND_API_KEY:-}
       RESEND_WEBHOOK_SECRET: ${RESEND_WEBHOOK_SECRET:-}
@@ -253,9 +268,9 @@ services:
     healthcheck:
       test: ["CMD-SHELL", "python -c 'from app.services.queue_worker import run_worker' || exit 1"]
       interval: 30s
-      timeout: 5s
+      timeout: 15s
       retries: 3
-      start_period: 15s
+      start_period: 30s
     deploy:
       resources:
         limits:

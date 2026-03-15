@@ -17,6 +17,13 @@ const siteOrigin = getSiteOrigin();
 
 export const metadata: Metadata = {
   metadataBase: siteOrigin,
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/images/brand/flowgrid-favicon.svg", type: "image/svg+xml" },
+    ],
+    apple: "/images/brand/flowgrid-favicon.svg",
+  },
   title: {
     default: `${PRODUCT_NAME} | AI Agent Operations Platform`,
     template: `%s | ${PRODUCT_NAME}`,
