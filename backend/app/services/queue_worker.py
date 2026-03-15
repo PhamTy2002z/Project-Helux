@@ -17,7 +17,9 @@ from app.services.board_chat_files.queue import requeue_extraction_task
 from app.services.board_chat_files.report_deadline_queue import (
     TASK_TYPE as REPORT_DEADLINE_TASK_TYPE,
 )
-from app.services.board_chat_files.report_deadline_queue import requeue_deadline_task
+from app.services.board_chat_files.report_deadline_queue import (
+    requeue_deadline_task,
+)
 from app.services.board_chat_files.report_deadline_worker import process_report_deadline_task
 from app.services.board_chat_files.worker import process_extraction_task
 from app.services.email.queue import TASK_TYPE as ORG_INVITE_EMAIL_TASK_TYPE
