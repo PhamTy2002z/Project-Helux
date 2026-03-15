@@ -2,14 +2,14 @@
 
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
+import Image from "next/image";
+import { CheckCircle2, Loader2, Mail } from "lucide-react";
 
 import { SignInButton, SignedIn, SignedOut, useAuth } from "@/auth/clerk";
 
 import { ApiError } from "@/api/mutator";
 import { useAcceptOrgInviteApiV1OrganizationsInvitesAcceptPost } from "@/api/generated/organizations/organizations";
-import { BrandMark } from "@/components/atoms/BrandMark";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 
 function InviteContent() {
   const router = useRouter();
@@ -57,7 +57,7 @@ function InviteContent() {
   const isReady = Boolean(token.trim());
   const helperText = useMemo(() => {
     if (accepted) {
-      return "Invite accepted. Redirecting to your organization…";
+      return "Invite accepted. Redirecting to your organization\u2026";
     }
     if (!token.trim()) {
       return "Paste the invite token or open the invite link you were sent.";
@@ -66,79 +66,147 @@ function InviteContent() {
   }, [accepted, token]);
 
   return (
-    <div className="min-h-screen bg-app text-strong">
-      <header className="border-b border-[color:var(--border)] bg-white">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
-          <BrandMark />
-        </div>
-      </header>
+    <div className="relative min-h-screen overflow-x-hidden bg-black text-white">
+      {/* Background gradient blurs — matches sign-in page */}
+      <div className="pointer-events-none absolute inset-0" aria-hidden="true">
+        <div className="absolute -left-28 top-20 h-72 w-72 rounded-full bg-[rgba(255,91,53,0.2)] blur-3xl" />
+        <div className="absolute -right-24 bottom-20 h-80 w-80 rounded-full bg-[rgba(56,189,248,0.18)] blur-3xl" />
+      </div>
 
-      <main className="mx-auto flex max-w-3xl flex-col gap-6 px-6 py-16">
-        <div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] p-8 shadow-sm">
-          <div className="flex flex-col gap-3">
-            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-quiet">
-              Organization Invite
-            </p>
-            <h1 className="text-2xl font-semibold text-strong">
-              Join your team on FlowGrid
-            </h1>
-            <p className="text-sm text-muted">{helperText}</p>
-          </div>
+      <main className="relative mx-auto flex min-h-screen w-full max-w-6xl items-center px-4 py-12 sm:px-6 lg:px-10">
+        <div className="grid w-full gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(420px,460px)] lg:items-center">
+          {/* Left: context */}
+          <section className="space-y-6">
+            <Link
+              href="/"
+              prefetch={false}
+              className="inline-flex min-h-[44px] items-center rounded-full border border-white/20 px-4 py-2 text-sm font-medium text-white/80 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+            >
+              Back to Home
+            </Link>
+            <div className="space-y-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/55">
+                FlowGrid
+              </p>
+              <h1 className="text-balance font-[var(--font-display)] text-4xl leading-tight text-white sm:text-5xl">
+                You&apos;re Invited to Join a Team.
+              </h1>
+              <p className="max-w-xl text-base leading-relaxed text-white/70 sm:text-lg">
+                Sign in and accept your invite to start collaborating on boards, approvals, and workflows.
+              </p>
+            </div>
+            <ul className="space-y-3">
+              {[
+                "Sign in or create an account to continue.",
+                "Accept the invite to join the organization.",
+                "Start collaborating on shared boards instantly.",
+              ].map((step) => (
+                <li key={step} className="flex items-start gap-3 text-sm text-white/75 sm:text-base">
+                  <CheckCircle2 size={18} className="mt-0.5 shrink-0 text-white/80" aria-hidden="true" />
+                  <span>{step}</span>
+                </li>
+              ))}
+            </ul>
+          </section>
 
-          <div className="mt-6 flex flex-col gap-4">
-            <label className="text-xs font-semibold uppercase tracking-[0.2em] text-quiet">
-              Invite Token
-            </label>
-            <Input
-              value={token}
-              onChange={(event) => setToken(event.target.value)}
-              placeholder="Paste invite token"
-              disabled={accepted || isSubmitting}
-            />
-
-            {error ? (
-              <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-2 text-sm text-rose-600">
-                {error}
+          {/* Right: invite card */}
+          <section className="rounded-3xl border border-white/15 bg-white/[0.04] p-6 backdrop-blur-sm sm:p-8">
+            <div className="mb-6 flex items-center gap-3">
+              <Image
+                src="/images/brand/flowgrid-favicon.svg"
+                alt="FlowGrid logo"
+                width={36}
+                height={36}
+                className="h-9 w-9"
+              />
+              <div>
+                <p className="text-sm font-semibold text-white">Organization Invite</p>
+                <p className="text-xs text-white/50">{helperText}</p>
               </div>
-            ) : null}
+            </div>
 
-            <SignedOut>
-              <div className="flex flex-col gap-3 rounded-xl border border-dashed border-[color:var(--border)] bg-[color:var(--surface-muted)] p-4 text-sm text-muted">
-                <p>Sign in to accept your invite.</p>
-                <SignInButton mode="modal">
-                  <Button size="md">Sign in</Button>
-                </SignInButton>
+            <div className="flex flex-col gap-4">
+              <div>
+                <label
+                  htmlFor="invite-token"
+                  className="mb-2 block text-xs font-semibold uppercase tracking-[0.08em] text-white/55"
+                >
+                  Invite Token
+                </label>
+                <input
+                  id="invite-token"
+                  type="text"
+                  value={token}
+                  onChange={(event) => setToken(event.target.value)}
+                  placeholder="Paste invite token"
+                  disabled={accepted || isSubmitting}
+                  className="h-11 w-full rounded-xl border border-white/15 bg-white/[0.03] px-4 text-sm text-white placeholder:text-white/40 focus:border-white/40 focus:outline-none disabled:opacity-50"
+                />
               </div>
-            </SignedOut>
 
-            <SignedIn>
-              <form
-                className="flex flex-wrap items-center gap-3"
-                onSubmit={handleAccept}
-              >
-                <Button
-                  type="submit"
-                  size="md"
-                  disabled={!isReady || isSubmitting || accepted}
+              {error ? (
+                <div className="rounded-lg border border-rose-400/30 bg-rose-500/10 px-4 py-2.5 text-sm text-rose-300">
+                  {error}
+                </div>
+              ) : null}
+
+              {accepted ? (
+                <div className="flex items-center gap-2 rounded-lg border border-emerald-400/30 bg-emerald-500/10 px-4 py-2.5 text-sm text-emerald-300">
+                  <CheckCircle2 size={16} />
+                  Invite accepted. Redirecting&hellip;
+                </div>
+              ) : null}
+
+              <SignedOut>
+                <div className="flex flex-col gap-3 rounded-xl border border-dashed border-white/15 bg-white/[0.02] p-4">
+                  <div className="flex items-center gap-2 text-sm text-white/60">
+                    <Mail size={16} className="shrink-0" />
+                    <span>Sign in to accept your invite.</span>
+                  </div>
+                  <SignInButton mode="modal" forceRedirectUrl={`/invite${token ? `?token=${encodeURIComponent(token)}` : ""}`}>
+                    <button
+                      type="button"
+                      className="h-11 w-full cursor-pointer rounded-xl border border-white/20 bg-white text-sm font-semibold text-black transition-colors hover:bg-white/90"
+                    >
+                      Sign in
+                    </button>
+                  </SignInButton>
+                </div>
+              </SignedOut>
+
+              <SignedIn>
+                <form
+                  className="flex flex-col gap-3"
+                  onSubmit={handleAccept}
                 >
-                  {accepted
-                    ? "Invite accepted"
-                    : isSubmitting
-                      ? "Accepting…"
-                      : "Accept invite"}
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="md"
-                  onClick={() => router.push("/")}
-                  disabled={isSubmitting}
-                >
-                  Go back
-                </Button>
-              </form>
-            </SignedIn>
-          </div>
+                  <button
+                    type="submit"
+                    disabled={!isReady || isSubmitting || accepted}
+                    className="flex h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-white/20 bg-white text-sm font-semibold text-black transition-colors hover:bg-white/90 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 size={16} className="animate-spin" />
+                        Accepting&hellip;
+                      </>
+                    ) : accepted ? (
+                      "Invite accepted"
+                    ) : (
+                      "Accept invite"
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => router.push("/")}
+                    disabled={isSubmitting}
+                    className="h-11 w-full cursor-pointer rounded-xl bg-transparent text-sm font-medium text-white/70 transition-colors hover:bg-white/[0.06] hover:text-white disabled:opacity-50"
+                  >
+                    Go back
+                  </button>
+                </form>
+              </SignedIn>
+            </div>
+          </section>
         </div>
       </main>
     </div>
@@ -149,15 +217,15 @@ export default function InvitePage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-app text-strong">
-          <header className="border-b border-[color:var(--border)] bg-white">
-            <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
-              <BrandMark />
-            </div>
-          </header>
-          <main className="mx-auto flex max-w-3xl flex-col gap-6 px-6 py-16">
-            <div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] p-8 shadow-sm">
-              <div className="text-sm text-muted">Loading invite…</div>
+        <div className="relative min-h-screen overflow-x-hidden bg-black text-white">
+          <div className="pointer-events-none absolute inset-0" aria-hidden="true">
+            <div className="absolute -left-28 top-20 h-72 w-72 rounded-full bg-[rgba(255,91,53,0.2)] blur-3xl" />
+            <div className="absolute -right-24 bottom-20 h-80 w-80 rounded-full bg-[rgba(56,189,248,0.18)] blur-3xl" />
+          </div>
+          <main className="relative flex min-h-screen items-center justify-center">
+            <div className="flex items-center gap-2 text-sm text-white/60">
+              <Loader2 size={18} className="animate-spin" />
+              Loading invite&hellip;
             </div>
           </main>
         </div>
