@@ -1,0 +1,120 @@
+{
+  "models": {
+    "mode": "merge",
+    "providers": {
+      "custom-provider-ccs": {
+        "baseUrl": "http://host.docker.internal:8317/api/provider/codex",
+        "apiKey": "ccs-internal-managed",
+        "api": "anthropic-messages",
+        "models": [
+          {
+            "id": "gpt-5.1-codex-min",
+            "name": "gpt-5.1-codex-mini (Custom Provider)",
+            "api": "anthropic-messages",
+            "reasoning": true,
+            "input": ["text"],
+            "cost": { "input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0 },
+            "contextWindow": 200000,
+            "maxTokens": 16384
+          }
+        ]
+      },
+      "ccs-custom-2": {
+        "baseUrl": "http://host.docker.internal:8317/api/provider/codex",
+        "apiKey": "ccs-internal-managed",
+        "api": "anthropic-messages",
+        "models": [
+          {
+            "id": "gpt-5.3-codex",
+            "name": "gpt-5.3-codex (Custom Provider)",
+            "api": "anthropic-messages",
+            "reasoning": false,
+            "input": ["text"],
+            "cost": { "input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0 },
+            "contextWindow": 400000,
+            "maxTokens": 16384
+          }
+        ]
+      },
+      "custom-model": {
+        "baseUrl": "http://host.docker.internal:8317/api/provider/codex",
+        "apiKey": "ccs-internal-managed",
+        "api": "anthropic-messages",
+        "models": [
+          {
+            "id": "gpt-5.4",
+            "name": "gpt-5.4 (Custom Provider)",
+            "api": "anthropic-messages",
+            "reasoning": false,
+            "input": ["text"],
+            "cost": { "input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0 },
+            "contextWindow": 1000000,
+            "maxTokens": 24384
+          }
+        ]
+      }
+    }
+  },
+  "agents": {
+    "defaults": {
+      "model": {
+        "primary": "custom-model/gpt-5.4"
+      },
+      "models": {
+        "custom-provider-ccs/gpt-5.1-codex-mini": {},
+        "ccs-custom-2/gpt-5.3-codex": {},
+        "custom-model/gpt-5.4": {}
+      },
+      "contextTokens": 400000,
+      "compaction": {
+        "mode": "safeguard"
+      }
+    }
+  },
+  "tools": {
+    "profile": "full",
+    "web": {
+      "search": {
+        "enabled": true,
+        "provider": "gemini",
+        "gemini": {
+          "apiKey": "your-gemini-api-key"
+        }
+      }
+    },
+    "exec": {
+      "host": "gateway",
+      "security": "full"
+    }
+  },
+  "commands": {
+    "native": "auto",
+    "nativeSkills": "auto",
+    "restart": true,
+    "ownerDisplay": "raw"
+  },
+  "session": {
+    "dmScope": "per-channel-peer"
+  },
+  "channels": {
+    "defaults": {
+      "heartbeat": {
+        "showOk": false,
+        "showAlerts": true,
+        "useIndicator": true
+      }
+    }
+  },
+  "gateway": {
+    "port": 18789,
+    "mode": "local",
+    "bind": "lan",
+    "controlUi": {
+      "dangerouslyAllowHostHeaderOriginFallback": true
+    },
+    "auth": {
+      "mode": "token",
+      "token": "your-gateway-token"
+    }
+  }
+}
