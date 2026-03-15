@@ -97,6 +97,7 @@ services:
     volumes:
       - openclaw_data:/data
       - device_identity:/shared/device-identity
+      - openclaw_managed:/shared/openclaw-managed
       - ./openclaw:/data/config
     ports:
       - "127.0.0.1:18789:18789"
@@ -287,4 +288,5 @@ volumes:
   postgres_data:
   minio_data:
   openclaw_data:
+  openclaw_managed:
   device_identity:
