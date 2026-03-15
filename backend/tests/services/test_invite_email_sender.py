@@ -31,7 +31,7 @@ def test_build_organization_invite_email_renders_accept_url_and_text(org_name: s
 
     assert accept_url == "http://localhost:3000/invite?utm=abc&token=token-123"
     assert "token-123" in content.text
-    assert "Accept invite" in content.html
+    assert "Accept Invite" in content.html
 
 
 @pytest.mark.asyncio
