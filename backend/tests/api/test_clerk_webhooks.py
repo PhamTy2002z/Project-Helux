@@ -245,9 +245,7 @@ class TestClerkWebhookEndpoint:
             "data": {
                 "id": str(uuid4()),
                 "first_name": "Bob",
-                "email_addresses": [
-                    {"email_address": "bob@example.com"}
-                ],
+                "email_addresses": [{"email_address": "bob@example.com"}],
             },
         }
 

@@ -140,7 +140,7 @@ class TestBuildWelcomeEmail:
         content = build_welcome_email(payload)
 
         # URL should be properly escaped in href attributes
-        assert '&quot;' in content.html
+        assert "&quot;" in content.html
         assert 'href="https://example.com/dashboard?param=&quot;bad&quot;"' in content.html
 
     def test_html_contains_flowgrid_branding(self) -> None:
