@@ -28,6 +28,7 @@ export function SidebarCollapseProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       if (stored === "true") setCollapsed(true);
     } catch {
       /* noop */
