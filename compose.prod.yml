@@ -93,13 +93,13 @@ services:
     logging: *default-logging
     environment:
       OPENCLAW_HOME: /data
-      OPENCLAW_CONFIG_PATH: /data/openclaw.json
+      OPENCLAW_CONFIG_PATH: /data/config/openclaw.json
       OPENCLAW_STATE_DIR: /data/.openclaw
       OPENCLAW_GATEWAY_TOKEN: ${MANAGED_GATEWAY_TOKEN:-}
     volumes:
       - openclaw_data:/data
       - device_identity:/shared/device-identity
-      - ./openclaw/openclaw.prod.json:/data/openclaw.json:ro
+      - ./openclaw:/data/config
     ports:
       - "127.0.0.1:18789:18789"
     networks:

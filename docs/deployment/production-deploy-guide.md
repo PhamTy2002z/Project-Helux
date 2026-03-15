@@ -5,7 +5,7 @@ Full step-by-step guide to deploy FlowGrid + OpenClaw on Ubuntu laptop server wi
 ## Prerequisites
 
 - Ubuntu Server 24.04 laptop (hostname: `flowgrid`, user: `phamty`)
-- Docker + cloudflared already installed and tunnel active
+- Docker (with at least **6GB memory** allocated) + cloudflared installed and tunnel active
 - Domain `flowgrid.live` on Cloudflare (tunnel working)
 - GitHub repo: `PhamTy2002z/FlowGrid`
 - Mac (dev machine) can SSH to laptop: `ssh phamty@192.168.1.5`
@@ -84,6 +84,7 @@ cd /opt/projects/Project-Helux
 PG_PASS=$(openssl rand -base64 24 | tr -d '/+=' | head -c 32)
 MINIO_PASS=$(openssl rand -base64 24 | tr -d '/+=' | head -c 32)
 AUTH_TOKEN=$(openssl rand -base64 48 | tr -d '/+=' | head -c 64)
+GW_TOKEN=$(openssl rand -hex 24)
 
 cat > .env.prod <<EOF
 # FlowGrid Production — flowgrid.live
@@ -138,8 +139,9 @@ EMAIL_PROVIDER=none
 # INVITE_ACCEPT_BASE_URL=https://flowgrid.live/invite
 
 # --- Managed gateway ---
+# Must match gateway.auth.token in openclaw/openclaw.json
 MANAGED_GATEWAY_AUTO_PROVISION=true
-MANAGED_GATEWAY_TOKEN=
+MANAGED_GATEWAY_TOKEN=${GW_TOKEN}
 
 # --- Worker & readiness ---
 WORKER_HEARTBEAT_KEY=mission-control:worker:heartbeat
@@ -149,11 +151,12 @@ EOF
 chmod 600 .env.prod
 ```
 
-### Step 2.2 — Ghi lại LOCAL_AUTH_TOKEN
+### Step 2.2 — Ghi lại LOCAL_AUTH_TOKEN và MANAGED_GATEWAY_TOKEN
 
 ```bash
-grep LOCAL_AUTH_TOKEN .env.prod
-# Copy giá trị này — cần dùng khi login vào FlowGrid UI
+grep -E '(LOCAL_AUTH_TOKEN|MANAGED_GATEWAY_TOKEN)' .env.prod
+# Copy LOCAL_AUTH_TOKEN — cần dùng khi login vào FlowGrid UI
+# Copy MANAGED_GATEWAY_TOKEN — cần set vào openclaw config (Phase 7)
 ```
 
 ### Step 2.3 — Lấy cấu hình Resend trên dashboard
@@ -417,10 +420,32 @@ Mở browser:
 
 ## Phase 7: OpenClaw Gateway (Docker)
 
-OpenClaw chạy trong Docker cùng stack. The gateway image must be built from
-source (no public registry image). Config is mounted via bind mount.
+OpenClaw chạy trong Docker cùng stack. No public registry image — phải build
+từ source. Config mount qua directory bind mount (không mount single file vì
+Docker atomic rename issue trên macOS/Linux).
+
+### Architecture
+
+```
+compose.prod.yml
+├── openclaw service
+│   ├── image: openclaw/gateway:latest (built from source)
+│   ├── command: --bind lan --allow-unconfigured
+│   ├── OPENCLAW_CONFIG_PATH=/data/config/openclaw.json
+│   ├── OPENCLAW_STATE_DIR=/data/.openclaw
+│   ├── volumes:
+│   │   ├── openclaw_data:/data          (state, sessions, agents)
+│   │   ├── device_identity:/shared/...  (shared with backend)
+│   │   └── ./openclaw:/data/config      (config directory bind mount)
+│   └── port: 127.0.0.1:18789
+├── backend → ws://openclaw:18789/ws
+└── webhook-worker → ws://openclaw:18789/ws
+```
 
 ### Step 7.1 — Build OpenClaw image (lần đầu)
+
+> **Yêu cầu:** Docker cần ít nhất **6GB RAM** để build (pnpm build rất nặng).
+> Trên Ubuntu server, kiểm tra: `docker system info | grep "Total Memory"`.
 
 ```bash
 ssh phamty@192.168.1.5
@@ -430,7 +455,7 @@ cd /tmp
 git clone https://github.com/openclaw/openclaw.git
 cd openclaw
 
-# Build image (requires ~6GB Docker memory)
+# Build image
 docker build -t openclaw/gateway:latest .
 
 # Cleanup source after build
@@ -438,71 +463,124 @@ cd /opt/projects/Project-Helux
 rm -rf /tmp/openclaw
 ```
 
-### Step 7.2 — Tạo openclaw config cho production
+### Step 7.2 — Tạo openclaw config directory
 
-Gateway bind `0.0.0.0` (lan) trong Docker → cần `controlUi.dangerouslyAllowHostHeaderOriginFallback`.
-Container environment sets `OPENCLAW_CONFIG_PATH=/data/openclaw.json`.
+```bash
+cd /opt/projects/Project-Helux
+mkdir -p openclaw
+```
+
+### Step 7.3 — Tạo openclaw config cho production
+
+`compose.prod.yml` mount `./openclaw` → `/data/config` trong container.
+Config file: `openclaw/openclaw.json` (not `.prod.json` — compose reads this name).
+
+> **IMPORTANT:** `MANAGED_GATEWAY_TOKEN` trong `.env.prod` phải **khớp** với
+> `gateway.auth.token` trong config file.
 
 ```bash
 cd /opt/projects/Project-Helux
 
-# Copy example config
-cp openclaw/openclaw.json.example openclaw/openclaw.prod.json
+# Lấy gateway token đã tạo ở Step 2.1
+GW_TOKEN=$(grep MANAGED_GATEWAY_TOKEN .env.prod | cut -d= -f2)
+echo "Gateway token: ${GW_TOKEN}"
 
-# Edit: set real gateway token + API keys
-nano openclaw/openclaw.prod.json
+cat > openclaw/openclaw.json <<OCEOF
+{
+  "models": {
+    "mode": "merge",
+    "providers": {
+      "custom-model": {
+        "baseUrl": "http://CLIPROXY_HOST_IP:8317/api/provider/codex",
+        "apiKey": "ccs-internal-managed",
+        "api": "anthropic-messages",
+        "models": [
+          {
+            "id": "gpt-5.4",
+            "name": "gpt-5.4 (Custom Provider)",
+            "api": "anthropic-messages",
+            "reasoning": false,
+            "input": ["text"],
+            "cost": {"input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0},
+            "contextWindow": 1000000,
+            "maxTokens": 24384
+          }
+        ]
+      }
+    }
+  },
+  "agents": {
+    "defaults": {
+      "model": {"primary": "custom-model/gpt-5.4"},
+      "contextTokens": 400000,
+      "compaction": {"mode": "safeguard"}
+    }
+  },
+  "tools": {
+    "profile": "full",
+    "exec": {"host": "gateway", "security": "full"}
+  },
+  "gateway": {
+    "port": 18789,
+    "mode": "local",
+    "bind": "lan",
+    "controlUi": {
+      "dangerouslyAllowHostHeaderOriginFallback": true
+    },
+    "auth": {
+      "mode": "token",
+      "token": "${GW_TOKEN}"
+    }
+  }
+}
+OCEOF
+
+chmod 600 openclaw/openclaw.json
 ```
 
-Thay đổi cần thiết trong `openclaw.prod.json`:
-- `gateway.auth.token` → set strong random token (must match `MANAGED_GATEWAY_TOKEN` in `.env.prod`)
-- `tools.web.search.gemini.apiKey` → set real Gemini API key (nếu dùng)
-- `models.providers.*.baseUrl` → đổi `host.docker.internal` thành IP/hostname phù hợp
+> **Note:** Thay `CLIPROXY_HOST_IP` bằng IP thực của host nếu cliproxy chạy
+> trên server. Trên Linux production, **KHÔNG** dùng `host.docker.internal`
+> (chỉ macOS/Windows). Dùng `172.17.0.1` (Docker bridge gateway) hoặc
+> thêm `extra_hosts: ["host.docker.internal:host-gateway"]` vào compose.
 
-> **Note:** Production KHÔNG dùng `host.docker.internal` (chỉ macOS/Windows).
-> Nếu cliproxy chạy trên host, dùng Docker host IP hoặc `extra_hosts` trong compose.
+### Step 7.4 — Fix volume permissions
 
-### Step 7.3 — Mount config vào compose
-
-Config đã được mount qua `compose.prod.yml`:
-```yaml
-volumes:
-  - ./openclaw/openclaw.prod.json:/data/openclaw.json:ro
-```
-
-Nếu chưa có dòng này trong `compose.prod.yml`, thêm vào service `openclaw`:
+Container chạy dưới user `node` (uid 1000). Volume `/data` mặc định owned by
+root → cần fix permissions lần đầu:
 
 ```bash
-nano compose.prod.yml
-# Thêm vào openclaw service volumes:
-#   - ./openclaw/openclaw.prod.json:/data/openclaw.json:ro
+# Chạy 1 lần sau khi tạo volume
+docker compose -f compose.prod.yml --env-file .env.prod up -d openclaw
+docker compose -f compose.prod.yml --env-file .env.prod stop openclaw
+
+# Fix permissions
+docker run --rm \
+  -v flowgrid-prod_openclaw_data:/data \
+  alpine sh -c "mkdir -p /data/.openclaw && chown -R 1000:1000 /data/.openclaw /data"
+
+# Start lại
+docker compose -f compose.prod.yml --env-file .env.prod up -d openclaw
 ```
 
-### Step 7.4 — Update MANAGED_GATEWAY_TOKEN
-
-Token trong `.env.prod` phải khớp với `gateway.auth.token` trong `openclaw.prod.json`:
-
-```bash
-# Generate token
-GW_TOKEN=$(openssl rand -hex 24)
-echo "MANAGED_GATEWAY_TOKEN=${GW_TOKEN}"
-
-# Update .env.prod
-nano .env.prod
-# Set: MANAGED_GATEWAY_TOKEN=<token_above>
-
-# Also update openclaw.prod.json gateway.auth.token to same value
-nano openclaw/openclaw.prod.json
-```
-
-### Step 7.5 — Start và verify
+### Step 7.5 — Onboard gateway + device pairing
 
 ```bash
 cd /opt/projects/Project-Helux
 
-# Start (or restart) all services
-docker compose -f compose.prod.yml --env-file .env.prod up -d
+# Chạy onboard wizard
+docker compose -f compose.prod.yml --env-file .env.prod exec -it openclaw openclaw onboard
+# Lưu ý:
+# - Model provider: chọn Custom Provider
+# - Base URL: dùng IP thực (không dùng host.docker.internal trên Linux)
+# - Channel: Skip for now (hoặc chọn channel nếu cần)
+```
 
-# Check openclaw health
+### Step 7.6 — Verify gateway
+
+```bash
+cd /opt/projects/Project-Helux
+
+# Check container health
 docker compose -f compose.prod.yml --env-file .env.prod ps openclaw
 # Expected: openclaw  running (healthy)
 
@@ -515,11 +593,36 @@ docker compose -f compose.prod.yml --env-file .env.prod logs backend | grep -i g
 # Expected: no connection errors
 ```
 
-### Step 7.6 — Onboard gateway (nếu cần device pairing)
+### Step 7.7 — Approve device pairing (lần đầu truy cập Control UI)
+
+Khi mở Control UI (http://localhost:18789), nhập gateway token, nếu thấy
+"pairing required":
 
 ```bash
-docker compose -f compose.prod.yml --env-file .env.prod exec -it openclaw sh
-openclaw onboard
+# List pending requests
+docker compose -f compose.prod.yml --env-file .env.prod exec openclaw \
+  openclaw devices list
+
+# Approve request
+docker compose -f compose.prod.yml --env-file .env.prod exec openclaw \
+  openclaw devices approve <REQUEST_ID>
+```
+
+Refresh browser sau khi approve → Control UI sẽ connect.
+
+### Step 7.8 — Update OpenClaw image
+
+Khi cần update gateway version:
+
+```bash
+cd /tmp
+git clone https://github.com/openclaw/openclaw.git
+cd openclaw && git checkout v2026.x.x  # specific version
+docker build -t openclaw/gateway:latest .
+rm -rf /tmp/openclaw
+
+cd /opt/projects/Project-Helux
+docker compose -f compose.prod.yml --env-file .env.prod up -d openclaw
 ```
 
 ---
@@ -546,6 +649,9 @@ GitHub Actions (self-hosted runner on laptop) — "deploy" job
     ▼
 Live tại flowgrid.live trong ~30 giây
 ```
+
+> **Note:** CI/CD chỉ deploy backend + frontend + webhook-worker.
+> OpenClaw gateway image phải build thủ công (Step 7.8) vì không có public registry.
 
 ### Step 8.1 — Test CI/CD pipeline
 
@@ -675,6 +781,26 @@ docker compose -f compose.prod.yml --env-file .env.prod logs backend
 
 - Verify vars passed to container: `docker compose -f compose.prod.yml --env-file .env.prod exec backend env | grep POLAR`
 - Must have: `BILLING_MODE=provider`, `PAYMENT_PROVIDER=polar`, and all `POLAR_*` vars set
+
+### OpenClaw gateway won't start
+
+```bash
+# Check logs
+docker compose -f compose.prod.yml --env-file .env.prod logs openclaw
+
+# Common issues:
+# 1. "non-loopback Control UI requires..." → config missing controlUi.dangerouslyAllowHostHeaderOriginFallback
+# 2. "EACCES: permission denied, mkdir '/data/.openclaw'" → run volume permission fix (Step 7.4)
+# 3. "unauthorized: gateway token mismatch" → MANAGED_GATEWAY_TOKEN in .env.prod must match gateway.auth.token in config
+```
+
+### OpenClaw Control UI "pairing required"
+
+```bash
+# Approve device from inside container
+docker compose -f compose.prod.yml --env-file .env.prod exec openclaw openclaw devices list
+docker compose -f compose.prod.yml --env-file .env.prod exec openclaw openclaw devices approve <REQUEST_ID>
+```
 
 ### Runner offline
 
