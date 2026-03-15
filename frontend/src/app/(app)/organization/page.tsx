@@ -826,7 +826,11 @@ export default function OrganizationPage() {
                       inviteId,
                     })
                   }
-                  isResending={resendInviteMutation.isPending}
+                  resendingInviteId={
+                    resendInviteMutation.isPending
+                      ? (resendInviteMutation.variables?.inviteId ?? null)
+                      : null
+                  }
                   isRevoking={revokeInviteMutation.isPending}
                 />
               </div>

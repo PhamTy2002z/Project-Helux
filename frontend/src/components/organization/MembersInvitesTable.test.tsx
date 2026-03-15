@@ -47,7 +47,7 @@ describe("MembersInvitesTable", () => {
         onCopyInvite={vi.fn()}
         onResendInvite={onResendInvite}
         onRevokeInvite={vi.fn()}
-        isResending={false}
+        resendingInviteId={null}
         isRevoking={false}
       />,
     );
