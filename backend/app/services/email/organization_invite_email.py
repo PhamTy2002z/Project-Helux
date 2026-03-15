@@ -50,13 +50,63 @@ def build_organization_invite_email(
         "If the button does not work, copy and paste the URL into your browser."
     )
     html = (
-        '<html><body style="font-family:Arial,sans-serif;line-height:1.5;">'
-        f"<p>You have been invited to join <strong>{escaped_org_name}</strong> on FlowGrid.</p>"
-        f'<p><a href="{escaped_accept_url}" '
-        'style="display:inline-block;padding:10px 16px;background:#0f172a;color:#ffffff;'
-        'text-decoration:none;border-radius:8px;">Accept invite</a></p>'
-        f'<p>If the button does not work, use this URL:<br><a href="{escaped_accept_url}">'
+        "<!DOCTYPE html>"
+        '<html lang="en"><head><meta charset="utf-8">'
+        '<meta name="viewport" content="width=device-width,initial-scale=1">'
+        "</head>"
+        '<body style="margin:0;padding:0;background-color:#f8fafc;'
+        "font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,"
+        "'Helvetica Neue',Arial,sans-serif;\">"
+        # Outer wrapper
+        '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" '
+        'style="background-color:#f8fafc;padding:40px 0;">'
+        "<tr><td align=\"center\">"
+        # Inner card
+        '<table role="presentation" width="520" cellpadding="0" cellspacing="0" '
+        'style="background-color:#ffffff;border-radius:16px;'
+        "border:1px solid #e2e8f0;overflow:hidden;\">"
+        # Header bar
+        "<tr><td style=\"background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%);"
+        'padding:32px 40px;\'>'
+        '<p style="margin:0;font-size:13px;font-weight:600;letter-spacing:0.5px;'
+        'text-transform:uppercase;color:#94a3b8;">FlowGrid</p>'
+        '<p style="margin:8px 0 0;font-size:22px;font-weight:700;color:#ffffff;">'
+        "You're invited to collaborate</p>"
+        "</td></tr>"
+        # Body
+        '<tr><td style="padding:32px 40px;">'
+        f'<p style="margin:0 0 6px;font-size:15px;color:#475569;">Hi there,</p>'
+        f'<p style="margin:0 0 24px;font-size:15px;color:#475569;line-height:1.6;">'
+        f"You've been invited to join <strong style=\"color:#0f172a;\">"
+        f"{escaped_org_name}</strong> on FlowGrid. Click the button below to "
+        "accept and get started.</p>"
+        # CTA button
+        '<table role="presentation" cellpadding="0" cellspacing="0" '
+        'style="margin:0 0 24px;">'
+        "<tr><td style=\"background-color:#0f172a;border-radius:10px;\">"
+        f'<a href="{escaped_accept_url}" target="_blank" '
+        'style="display:inline-block;padding:12px 28px;font-size:14px;'
+        "font-weight:600;color:#ffffff;text-decoration:none;\">"
+        "Accept Invite</a>"
+        "</td></tr></table>"
+        # Divider
+        '<hr style="border:none;border-top:1px solid #e2e8f0;margin:0 0 20px;">'
+        # Fallback URL
+        '<p style="margin:0 0 4px;font-size:12px;color:#94a3b8;">'
+        "If the button doesn't work, copy this link:</p>"
+        f'<p style="margin:0;font-size:12px;word-break:break-all;">'
+        f'<a href="{escaped_accept_url}" style="color:#3b82f6;text-decoration:none;">'
         f"{escaped_accept_url}</a></p>"
+        "</td></tr>"
+        # Footer
+        '<tr><td style="padding:20px 40px;background-color:#f8fafc;'
+        'border-top:1px solid #e2e8f0;">'
+        '<p style="margin:0;font-size:11px;color:#94a3b8;text-align:center;">'
+        "This invite was sent by FlowGrid. If you didn't expect this, "
+        "you can safely ignore it.</p>"
+        "</td></tr>"
+        "</table>"
+        "</td></tr></table>"
         "</body></html>"
     )
     return (
