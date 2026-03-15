@@ -100,7 +100,7 @@ export function DashboardSidebar() {
   return (
     <aside
       className={cn(
-        "flex h-full flex-col border-r border-slate-200 bg-white transition-[width,opacity] duration-200 ease-in-out",
+        "flex h-full flex-col border-r border-slate-200 bg-white transition-[width,opacity] duration-300 ease-in-out",
         collapsed ? "w-0 overflow-hidden opacity-0" : "w-64 opacity-100",
       )}
     >

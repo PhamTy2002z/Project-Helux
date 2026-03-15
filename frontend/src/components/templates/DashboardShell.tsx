@@ -22,7 +22,7 @@ function ShellInner({ children }: { children: ReactNode }) {
     <div className="min-h-screen bg-app text-strong">
       <header className="sticky top-0 z-40 border-b border-slate-200 bg-white shadow-sm">
         <div
-          className="grid items-center gap-0 py-3 transition-[grid-template-columns] duration-200 ease-in-out"
+          className="grid items-center gap-0 py-3 transition-[grid-template-columns] duration-300 ease-in-out"
           style={{
             gridTemplateColumns: collapsed ? "64px 1fr auto" : "260px 1fr auto",
           }}
@@ -43,7 +43,7 @@ function ShellInner({ children }: { children: ReactNode }) {
         </div>
       </header>
       <div
-        className="grid min-h-[calc(100vh-64px)] bg-slate-50 transition-[grid-template-columns] duration-200 ease-in-out"
+        className="grid min-h-[calc(100vh-64px)] bg-slate-50 transition-[grid-template-columns] duration-300 ease-in-out"
         style={{
           gridTemplateColumns: collapsed ? "0px 1fr" : "260px 1fr",
         }}

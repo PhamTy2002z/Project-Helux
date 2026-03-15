@@ -995,7 +995,7 @@ export default function OrganizationPage() {
             </div>
           )}
 
-          <DialogFooter className="pt-2">
+          <DialogFooter>
             {activeMemberCanBeRemoved ? (
               <Button
                 type="button"
