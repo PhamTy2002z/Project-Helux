@@ -129,13 +129,17 @@ PAYMENT_PROVIDER=none
 # POLAR_ENVIRONMENT=production
 # POLAR_SUCCESS_URL=https://flowgrid.live/checkout/success?checkout_id={CHECKOUT_ID}
 
-# --- Invite email (organization invite delivery only) ---
+# --- Email (org invites + welcome email on signup) ---
 EMAIL_PROVIDER=none
 # EMAIL_PROVIDER=resend
 # RESEND_API_KEY=re_xxx
 # EMAIL_FROM_INVITES=FlowGrid <noreply@flowgrid.live>
 # EMAIL_REPLY_TO=support@flowgrid.live
 # INVITE_ACCEPT_BASE_URL=https://flowgrid.live/invite
+
+# --- Clerk webhook (required when AUTH_MODE=clerk for welcome email) ---
+# Obtain from Clerk Dashboard → Webhooks → Signing Secret.
+# CLERK_WEBHOOK_SECRET=whsec_xxx
 
 # --- Managed gateway ---
 # Must match gateway.auth.token in openclaw/openclaw.json
@@ -184,8 +188,8 @@ grep -E '(LOCAL_AUTH_TOKEN|MANAGED_GATEWAY_TOKEN)' .env.prod
 5. (Optional) Chọn mailbox nhận phản hồi cho `EMAIL_REPLY_TO`, for example
    `support@flowgrid.live`
 
-> Note: scope hiện tại chỉ cần gửi outbound invite email. `RESEND_WEBHOOK_SECRET`
-> chưa bắt buộc vì backend chưa dùng inbound Resend webhook.
+> Note: Resend dùng cho invite email và welcome email (khi signup qua Clerk).
+> `RESEND_WEBHOOK_SECRET` chưa bắt buộc vì backend chưa dùng inbound Resend webhook.
 
 ### Step 2.4 — Bật Resend trong `.env.prod` (khi đã sẵn sàng production)
 
@@ -210,6 +214,18 @@ Các biến bắt buộc khi `EMAIL_PROVIDER=resend`:
 - `RESEND_API_KEY`
 - `EMAIL_FROM_INVITES`
 - `INVITE_ACCEPT_BASE_URL`
+
+Nếu `AUTH_MODE=clerk`, cũng cần set webhook secret để nhận welcome email khi signup:
+
+```env
+CLERK_WEBHOOK_SECRET=whsec_xxx
+```
+
+Setup trên Clerk Dashboard:
+1. Mở **Webhooks** → **Create Endpoint**
+2. URL: `https://api.flowgrid.live/api/v1/webhooks/clerk`
+3. Subscribe events: `user.created`
+4. Copy **Signing Secret** → set vào `CLERK_WEBHOOK_SECRET`
 
 Restart backend + worker để nhận env mới:
 
@@ -416,11 +432,11 @@ cd /opt/projects/Project-Helux
 # Pull images
 docker compose -f compose.prod.yml --env-file .env.prod pull
 
-# Start all services (frontend requires --profile docker-frontend)
-docker compose -f compose.prod.yml --env-file .env.prod --profile docker-frontend up -d
+# Start all services
+docker compose -f compose.prod.yml --env-file .env.prod up -d
 
 # Watch logs
-docker compose -f compose.prod.yml --env-file .env.prod --profile docker-frontend logs -f
+docker compose -f compose.prod.yml --env-file .env.prod logs -f
 ```
 
 ### Step 6.4 — Verify
@@ -754,26 +770,26 @@ docker compose -f compose.prod.yml --env-file .env.prod logs -f openclaw
 cd /opt/projects/Project-Helux
 
 # Restart app only (db/redis/minio/openclaw stay up)
-docker compose -f compose.prod.yml --env-file .env.prod --profile docker-frontend \
+docker compose -f compose.prod.yml --env-file .env.prod \
   restart backend webhook-worker frontend
 
 # Restart everything
-docker compose -f compose.prod.yml --env-file .env.prod --profile docker-frontend restart
+docker compose -f compose.prod.yml --env-file .env.prod restart
 ```
 
 ### Stop everything
 
 ```bash
 cd /opt/projects/Project-Helux
-docker compose -f compose.prod.yml --env-file .env.prod --profile docker-frontend down
+docker compose -f compose.prod.yml --env-file .env.prod down
 ```
 
 ### Manual deploy (without CI/CD)
 
 ```bash
 cd /opt/projects/Project-Helux
-docker compose -f compose.prod.yml --env-file .env.prod --profile docker-frontend pull
-docker compose -f compose.prod.yml --env-file .env.prod --profile docker-frontend \
+docker compose -f compose.prod.yml --env-file .env.prod pull
+docker compose -f compose.prod.yml --env-file .env.prod \
   up -d --no-deps backend webhook-worker frontend
 ```
 
@@ -840,15 +856,6 @@ docker compose -f compose.prod.yml --env-file .env.prod logs backend
   use `env $(grep -E '^NEXT_PUBLIC_' frontend/.env | xargs) docker compose --profile docker-frontend build frontend`
 - Check `CORS_ORIGINS` in backend = `https://flowgrid.live` (set via DOMAIN in compose.prod.yml)
 - Check cloudflared config has `api.flowgrid.live` entry
-
-### Frontend container not starting (profile not activated)
-
-The frontend service requires `--profile docker-frontend`. Without it, `docker compose up`
-silently skips the frontend container. Always include the flag:
-
-```bash
-docker compose -f compose.prod.yml --env-file .env.prod --profile docker-frontend up -d
-```
 
 ### Billing/payments not working
 

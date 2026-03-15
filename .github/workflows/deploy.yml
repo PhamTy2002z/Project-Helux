@@ -72,7 +72,14 @@ jobs:
           push: true
           build-args: |
             NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
-            NEXT_PUBLIC_AUTH_MODE=local
+            NEXT_PUBLIC_AUTH_MODE=${{ secrets.NEXT_PUBLIC_AUTH_MODE || 'local' }}
+            NEXT_PUBLIC_AUTH_PROFILE=${{ secrets.NEXT_PUBLIC_AUTH_PROFILE || 'self_hosted' }}
+            NEXT_PUBLIC_SITE_URL=${{ secrets.NEXT_PUBLIC_SITE_URL }}
+            NEXT_PUBLIC_BOARD_PLANNING_OVERLAY_V1=${{ secrets.NEXT_PUBLIC_BOARD_PLANNING_OVERLAY_V1 || 'false' }}
+            NEXT_PUBLIC_BOARD_QUERY_V2=${{ secrets.NEXT_PUBLIC_BOARD_QUERY_V2 || 'false' }}
+            NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
+            NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL=${{ secrets.NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL || '/boards' }}
+            NEXT_PUBLIC_CLERK_AFTER_SIGN_OUT_URL=${{ secrets.NEXT_PUBLIC_CLERK_AFTER_SIGN_OUT_URL || '/' }}
           tags: |
             ${{ env.FRONTEND_IMAGE }}:${{ steps.meta.outputs.version }}
             ${{ env.FRONTEND_IMAGE }}:latest
@@ -88,7 +95,7 @@ jobs:
       - name: Pull and restart containers
         run: |
           set -euo pipefail
-          cd /opt/projects
+          cd /opt/projects/Project-Helux
 
           # Login to GHCR
           echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
@@ -96,8 +103,8 @@ jobs:
           # Update image tag
           export GHCR_IMAGE_TAG="${{ needs.build-and-push.outputs.image_tag }}"
 
-          # Pull new images
-          docker compose -f compose.prod.yml --env-file .env.prod pull backend frontend
+          # Pull new images (webhook-worker shares backend image)
+          docker compose -f compose.prod.yml --env-file .env.prod pull backend frontend webhook-worker
 
           # Rolling restart — db/redis/minio stay up
           docker compose -f compose.prod.yml --env-file .env.prod up -d --no-deps backend webhook-worker frontend
