@@ -85,6 +85,8 @@ services:
 
   # ---------- openclaw gateway ----------
   openclaw:
+    profiles:
+      - managed-gateway
     image: openclaw/gateway:latest
     # Bind to 0.0.0.0 so backend/worker containers can reach the gateway.
     # Config at /data/openclaw.json must set controlUi.dangerouslyAllowHostHeaderOriginFallback=true.
@@ -168,8 +170,6 @@ services:
       redis:
         condition: service_healthy
       minio:
-        condition: service_healthy
-      openclaw:
         condition: service_healthy
     ports:
       - "127.0.0.1:8000:8000"

@@ -83,6 +83,8 @@ services:
 
   # ---------- openclaw gateway ----------
   openclaw:
+    profiles:
+      - managed-gateway
     image: openclaw/gateway:latest
     # Bind to 0.0.0.0 so other containers can reach the gateway via Docker network.
     # Config in openclaw/openclaw.json sets controlUi fallback for non-loopback bind.
@@ -154,8 +156,6 @@ services:
       redis:
         condition: service_healthy
       minio:
-        condition: service_healthy
-      openclaw:
         condition: service_healthy
     ports:
       - "${BACKEND_PORT:-8000}:8000"

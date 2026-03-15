@@ -429,14 +429,14 @@ docker push ghcr.io/phamty2002z/flowgrid-frontend:latest
 ssh phamty@192.168.1.5
 cd /opt/projects/Project-Helux
 
-# Pull images
-docker compose -f compose.prod.yml --env-file .env.prod pull
+# Pull images (add --profile managed-gateway if using OpenClaw)
+docker compose -f compose.prod.yml --profile managed-gateway --env-file .env.prod pull
 
-# Start all services
-docker compose -f compose.prod.yml --env-file .env.prod up -d
+# Start all services (add --profile managed-gateway if using OpenClaw)
+docker compose -f compose.prod.yml --profile managed-gateway --env-file .env.prod up -d
 
 # Watch logs
-docker compose -f compose.prod.yml --env-file .env.prod logs -f
+docker compose -f compose.prod.yml --profile managed-gateway --env-file .env.prod logs -f
 ```
 
 ### Step 6.4 — Verify
@@ -625,8 +625,8 @@ root → cần fix permissions lần đầu:
 
 ```bash
 # Chạy 1 lần sau khi tạo volume
-docker compose -f compose.prod.yml --env-file .env.prod up -d openclaw
-docker compose -f compose.prod.yml --env-file .env.prod stop openclaw
+docker compose -f compose.prod.yml --profile managed-gateway --env-file .env.prod up -d openclaw
+docker compose -f compose.prod.yml --profile managed-gateway --env-file .env.prod stop openclaw
 
 # Fix permissions
 docker run --rm \
@@ -634,7 +634,7 @@ docker run --rm \
   alpine sh -c "mkdir -p /data/.openclaw && chown -R 1000:1000 /data/.openclaw /data"
 
 # Start lại
-docker compose -f compose.prod.yml --env-file .env.prod up -d openclaw
+docker compose -f compose.prod.yml --profile managed-gateway --env-file .env.prod up -d openclaw
 ```
 
 ### Step 7.5 — Onboard gateway + device pairing
@@ -697,7 +697,7 @@ docker build -t openclaw/gateway:latest .
 rm -rf /tmp/openclaw
 
 cd /opt/projects/Project-Helux
-docker compose -f compose.prod.yml --env-file .env.prod up -d openclaw
+docker compose -f compose.prod.yml --profile managed-gateway --env-file .env.prod up -d openclaw
 ```
 
 ---
