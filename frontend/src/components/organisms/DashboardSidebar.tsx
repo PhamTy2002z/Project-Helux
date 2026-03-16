@@ -31,6 +31,7 @@ import { UpgradeModal } from "@/components/billing/upgrade-modal";
 import { SidebarUsageMeter } from "@/components/billing/sidebar-usage-meter";
 import { Button } from "@/components/ui/button";
 import { useBillingSubscription } from "@/lib/billing";
+import { planLabelFromTier } from "@/lib/plan-labels";
 import { useOnboardingProgress } from "@/lib/onboarding";
 import { cn } from "@/lib/utils";
 import { useSidebarCollapse } from "@/hooks/useSidebarCollapse";
@@ -323,6 +324,29 @@ export function DashboardSidebar() {
         </nav>
       </div>
       <div className="border-t border-slate-200 p-4">
+        {subscriptionQuery.data ? (
+          <Link
+            href="/settings"
+            className="mb-3 flex items-center justify-between rounded-lg px-3 py-2 transition hover:bg-slate-50"
+          >
+            <div className="flex items-center gap-2">
+              <Settings className="h-3.5 w-3.5 text-slate-400" />
+              <span className="text-xs font-medium text-slate-600">
+                {planLabelFromTier(subscriptionQuery.data.plan_tier) ?? "Plan"}
+              </span>
+            </div>
+            <span
+              className={cn(
+                "rounded-full px-2 py-0.5 text-[10px] font-semibold",
+                subscriptionQuery.data.plan_tier === "pro"
+                  ? "bg-blue-100 text-blue-700"
+                  : "bg-slate-100 text-slate-600",
+              )}
+            >
+              {subscriptionQuery.data.plan_tier === "pro" ? "Active" : "Free"}
+            </span>
+          </Link>
+        ) : null}
         {isBlockedForPayment ? (
           <div className="mb-3 rounded-lg border border-amber-200 bg-amber-50 p-3">
             <p className="text-xs font-semibold text-amber-900">Trial expired</p>
