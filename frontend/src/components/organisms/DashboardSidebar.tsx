@@ -103,7 +103,7 @@ export function DashboardSidebar() {
         collapsed ? "w-0 overflow-hidden opacity-0" : "w-64 opacity-100",
       )}
     >
-      <div className="flex-1 px-3 py-4">
+      <div className="min-h-0 flex-1 overflow-y-auto px-3 py-4">
         <p className="px-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
           Navigation
         </p>
@@ -349,7 +349,7 @@ export function DashboardSidebar() {
           </div>
         </nav>
       </div>
-      <div className="border-t border-slate-200 p-4">
+      <div className="shrink-0 border-t border-slate-200 p-4">
         {isBlockedForPayment ? (
           <div className="mb-3 rounded-lg border border-amber-200 bg-amber-50 p-3">
             <p className="text-xs font-semibold text-amber-900">Trial expired</p>
