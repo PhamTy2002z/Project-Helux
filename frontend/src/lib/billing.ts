@@ -45,6 +45,38 @@ type UpgradeModalOpenPayload = {
 };
 
 export const BILLING_SUBSCRIPTION_QUERY_KEY = ["/api/v1/billing/me/subscription"] as const;
+export const BILLING_HISTORY_QUERY_KEY = ["/api/v1/billing/me/history"] as const;
+
+export type BillingHistoryRow = {
+  id: string;
+  plan_tier: string;
+  amount: string;
+  status: string;
+  created_at: string;
+};
+
+type BillingHistoryResponse = {
+  data: BillingHistoryRow[];
+  status: number;
+  headers: Headers;
+};
+
+export const getBillingHistory = async (): Promise<BillingHistoryRow[]> => {
+  const response = await customFetch<BillingHistoryResponse>(
+    "/api/v1/billing/me/history",
+    { method: "GET" },
+  );
+  return response.data;
+};
+
+export const useBillingHistory = (enabled: boolean) =>
+  useQuery({
+    ...withQueryPolicy("interactive"),
+    queryKey: BILLING_HISTORY_QUERY_KEY,
+    queryFn: getBillingHistory,
+    enabled,
+    retry: false,
+  });
 
 export const getBillingSubscription = async (): Promise<BillingSubscription> => {
   const response = await customFetch<BillingSubscriptionResponse>(

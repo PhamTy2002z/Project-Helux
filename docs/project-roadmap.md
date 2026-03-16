@@ -4,9 +4,25 @@
 
 **Version**: 0.1.0 (Active Development)
 **Status**: Pre-release, under active development
-**Last Updated**: 2026-03-15
+**Last Updated**: 2026-03-16
 
 ## Recent Updates (March 2026)
+
+- ✅ **Payment Flow UX Rework Complete** (2026-03-16):
+  - Added Polar customer portal access endpoint (`GET /api/v1/billing/portal-session`)
+  - Implemented billing email system with Resend (upgrade, trial warning, payment failure)
+  - Redesigned upgrade modal with Pro-only layout and feature comparison
+  - Added sidebar usage meter with quota visualization
+  - Implemented new billing settings section with plan info and portal access
+  - Added checkout success page with confetti and plan activation polling
+  - Simplified settings page with billing component extraction
+
+- [done] **Onboarding wizard question-first flow update** (2026-03-16):
+  - Removed board-create and board-chat actions from onboarding wizard steps.
+  - Reframed onboarding steps into guided questions and preferences capture.
+  - Added custom use-case entry path (Other (custom)) with inline answer input.
+  - Kept API step key compatibility while updating backend/frontend step titles.
+  - Updated dashboard checklist step links to route users back to /onboarding.
 
 - ✅ **Organization invite email rollout complete** (2026-03-15):
   - Added provider-gated invite delivery config (`EMAIL_PROVIDER`, Resend keys,
@@ -198,6 +214,14 @@
 
 #### Completed Features (Recent)
 
+- ✅ Payment Flow UX Rework (Plan 260316-1405):
+  - Polar customer portal integration (`/api/v1/billing/portal-session`)
+  - Billing email system (upgrade, trial warning, payment failure notifications)
+  - Redesigned upgrade modal with feature comparison and Pro-only layout
+  - Sidebar usage meter with quota visualization
+  - Billing settings section with plan info, trial countdown, and quota displays
+  - Checkout success page with confetti animation and plan polling
+  - Settings page refactored with billing component extraction
 - ✅ Agent templates (workspace templates) with CRUD API
 - ✅ Template picker UI on agent creation
 - ✅ System seed templates library
@@ -646,3 +670,4 @@
 1. What is the target release date for v1.0.0?
 2. Should we prioritize mobile app development?
 3. What is the strategy for backward compatibility during v0.x releases?
+

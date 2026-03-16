@@ -59,10 +59,26 @@ class BillingCheckoutResponse(SQLModel):
     provider: str
 
 
+class BillingPortalSessionResponse(SQLModel):
+    """Polar customer portal session URL."""
+
+    portal_url: str
+
+
 class BillingUpgradeModalOpenEvent(SQLModel):
     """Payload for tracking upgrade modal open events."""
 
     source: BillingMetricEventSource = "unknown"
+
+
+class BillingHistoryRow(SQLModel):
+    """Single billing history entry derived from checkout attempts."""
+
+    id: UUID
+    plan_tier: str
+    amount: str
+    status: str
+    created_at: datetime
 
 
 class BillingSupportTimelineEvent(SQLModel):

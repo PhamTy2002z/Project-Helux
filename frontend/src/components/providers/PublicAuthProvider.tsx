@@ -25,6 +25,7 @@ export function PublicAuthProvider({ children }: { children: ReactNode }) {
   return (
     <ClerkProvider
       publishableKey={publishableKey}
+      signInUrl="/sign-in"
       afterSignOutUrl={
         process.env.NEXT_PUBLIC_CLERK_AFTER_SIGN_OUT_URL ?? "/"
       }

@@ -1,8 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Activity,
   BarChart3,
@@ -13,14 +12,12 @@ import {
   Building2,
   LayoutGrid,
   Lock,
-  Network,
   Settings,
   Store,
   Tags,
 } from "lucide-react";
 
 import { useAuth } from "@/auth/clerk";
-import { isSaasAuthProfile } from "@/auth/profile";
 import { ApiError } from "@/api/mutator";
 import { useOrganizationMembership } from "@/lib/use-organization-membership";
 import { usePageActive } from "@/hooks/usePageActive";
@@ -29,7 +26,6 @@ import {
   type healthzHealthzGetResponse,
   useHealthzHealthzGet,
 } from "@/api/generated/default/default";
-import { UpgradeModal } from "@/components/billing/upgrade-modal";
 import { Button } from "@/components/ui/button";
 import { useBillingSubscription } from "@/lib/billing";
 import { useOnboardingProgress } from "@/lib/onboarding";
@@ -39,11 +35,10 @@ import { useSidebarCollapse } from "@/hooks/useSidebarCollapse";
 export function DashboardSidebar() {
   const { collapsed } = useSidebarCollapse();
   const pathname = usePathname();
+  const router = useRouter();
   const { isSignedIn } = useAuth();
   const isPageActive = usePageActive();
   const { isAdmin } = useOrganizationMembership(isSignedIn);
-  const isSaasMode = isSaasAuthProfile();
-  const [upgradeOpen, setUpgradeOpen] = useState(false);
   const subscriptionQuery = useBillingSubscription(Boolean(isSignedIn));
   const onboardingQuery = useOnboardingProgress(Boolean(isSignedIn));
   const healthQuery = useHealthzHealthzGet<healthzHealthzGetResponse, ApiError>(
@@ -85,8 +80,6 @@ export function DashboardSidebar() {
   const inviteReady =
     onboardingProgress?.steps.find((step) => step.key === "invite_teammate")?.status !== "pending";
 
-  const isUpgradeModalOpen = upgradeOpen || isBlockedForPayment;
-
   const lockedNavItem = (label: string) => (
     <div className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-slate-500">
       <span className="text-sm">{label}</span>
@@ -104,7 +97,7 @@ export function DashboardSidebar() {
         collapsed ? "w-0 overflow-hidden opacity-0" : "w-64 opacity-100",
       )}
     >
-      <div className="flex-1 px-3 py-4">
+      <div className="min-h-0 flex-1 overflow-y-auto px-3 py-4">
         <p className="px-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
           Navigation
         </p>
@@ -301,24 +294,7 @@ export function DashboardSidebar() {
                 <Building2 className="h-4 w-4" />
                 Organization
               </Link>
-              {isAdmin && !isSaasMode ? (
-                !onboardingPending || inviteReady ? (
-                  <Link
-                    href="/gateways"
-                    className={cn(
-                      "flex items-center gap-3 rounded-lg px-3 py-2.5 text-slate-700 transition",
-                      pathname.startsWith("/gateways")
-                        ? "bg-blue-100 text-blue-800 font-medium"
-                        : "hover:bg-slate-100",
-                    )}
-                  >
-                    <Network className="h-4 w-4" />
-                    Gateways
-                  </Link>
-                ) : (
-                  lockedNavItem("Gateways")
-                )
-              ) : null}
+              {/* Gateways tab hidden - auto-provisioned via OpenClaw */}
               {isAdmin ? (
                 !onboardingPending || runChatReady ? (
                   <Link
@@ -337,11 +313,25 @@ export function DashboardSidebar() {
                   lockedNavItem("Agents")
                 )
               ) : null}
+              <Link
+                href="/settings"
+                className={cn(
+                  "flex items-center rounded-lg px-3 py-2.5 text-slate-700 transition",
+                  pathname.startsWith("/settings")
+                    ? "bg-blue-100 text-blue-800 font-medium"
+                    : "hover:bg-slate-100",
+                )}
+              >
+                <span className="flex items-center gap-3">
+                  <Settings className="h-4 w-4" />
+                  Settings
+                </span>
+              </Link>
             </div>
           </div>
         </nav>
       </div>
-      <div className="border-t border-slate-200 p-4">
+      <div className="shrink-0 border-t border-slate-200 p-4">
         {isBlockedForPayment ? (
           <div className="mb-3 rounded-lg border border-amber-200 bg-amber-50 p-3">
             <p className="text-xs font-semibold text-amber-900">Trial expired</p>
@@ -352,7 +342,7 @@ export function DashboardSidebar() {
               type="button"
               className="mt-2 h-8 w-full"
               size="sm"
-              onClick={() => setUpgradeOpen(true)}
+              onClick={() => router.push("/settings")}
             >
               Upgrade now
             </Button>
@@ -370,16 +360,6 @@ export function DashboardSidebar() {
           {statusLabel}
         </div>
       </div>
-      <UpgradeModal
-        open={isUpgradeModalOpen}
-        onOpenChange={(next) => {
-          if (!next && isBlockedForPayment) {
-            return;
-          }
-          setUpgradeOpen(next);
-        }}
-        source="sidebar"
-      />
     </aside>
   );
 }
