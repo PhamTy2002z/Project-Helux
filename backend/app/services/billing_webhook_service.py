@@ -9,6 +9,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.core.logging import get_logger
 from app.core.time import utcnow
+from app.models.billing_checkout_attempts import BillingCheckoutAttempt
 from app.services.entitlements import get_or_create_organization_plan
 
 logger = get_logger(__name__)
@@ -61,6 +62,22 @@ async def _handle_subscription_active(
     }
     plan.updated_at = now
     session.add(plan)
+
+    # Record billing history entry on confirmed payment (idempotent via polar subscription ID)
+    idem_key = f"polar-sub-{_safe_get(event_data, 'id') or now.isoformat()}"
+    existing = await BillingCheckoutAttempt.objects.filter_by(
+        organization_id=organization_id,
+        idempotency_key=idem_key,
+    ).first(session)
+    if existing is None:
+        attempt = BillingCheckoutAttempt(
+            organization_id=organization_id,
+            idempotency_key=idem_key,
+            requested_plan_tier="pro",
+            resolved_plan_tier="pro",
+            status="succeeded",
+        )
+        session.add(attempt)
     await session.commit()
     logger.info("Org %s upgraded to pro via Polar webhook", organization_id)
 

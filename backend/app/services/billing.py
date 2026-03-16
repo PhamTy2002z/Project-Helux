@@ -238,16 +238,7 @@ async def create_checkout_session(
         }
     )
 
-    # Record checkout attempt as pending (webhook will finalize)
-    attempt = BillingCheckoutAttempt(
-        organization_id=organization_id,
-        idempotency_key=payload.idempotency_key,
-        requested_plan_tier=payload.plan_tier,
-        resolved_plan_tier=payload.plan_tier,
-        status="pending",
-    )
-    session.add(attempt)
-    await session.commit()
+    # No DB record here — webhook creates it on confirmed payment only
 
     return BillingCheckoutResponse(
         checkout_url=checkout.url,
