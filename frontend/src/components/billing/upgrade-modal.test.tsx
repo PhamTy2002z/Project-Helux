@@ -70,7 +70,7 @@ describe("UpgradeModal", () => {
     const user = userEvent.setup();
     render(<UpgradeModal open={true} onOpenChange={onOpenChange} source="sidebar" />);
 
-    await user.click(screen.getByRole("button", { name: "Confirm unlock" }));
+    await user.click(screen.getByRole("button", { name: /Upgrade to Pro/ }));
 
     await waitFor(() => expect(simulateCheckoutMock).toHaveBeenCalledTimes(1));
     await waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false));
