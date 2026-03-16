@@ -55,12 +55,26 @@ async def _handle_subscription_active(
             "last_checkout_mode": "polar",
             "last_checkout_at": now.isoformat(),
             "polar_subscription_id": _safe_get(event_data, "id"),
+            "polar_customer_id": _safe_get(event_data, "customer_id")
+            or _safe_get(_safe_get(event_data, "customer"), "id"),
         },
     }
     plan.updated_at = now
     session.add(plan)
     await session.commit()
     logger.info("Org %s upgraded to pro via Polar webhook", organization_id)
+
+    # Enqueue upgrade confirmation email (non-blocking)
+    try:
+        from app.services.email.billing_email_queue import enqueue_billing_email
+
+        enqueue_billing_email(
+            organization_id=organization_id,
+            email_type="upgrade_confirmed",
+            event_id=str(_safe_get(event_data, "id") or ""),
+        )
+    except Exception:
+        logger.warning("Failed to enqueue upgrade email for org %s", organization_id, exc_info=True)
 
 
 async def _handle_subscription_revoked(
@@ -75,6 +89,20 @@ async def _handle_subscription_revoked(
     session.add(plan)
     await session.commit()
     logger.info("Org %s revoked to trial (blocked) via Polar webhook", organization_id)
+
+    # Enqueue payment failed email (non-blocking)
+    try:
+        from app.services.email.billing_email_queue import enqueue_billing_email
+
+        enqueue_billing_email(
+            organization_id=organization_id,
+            email_type="payment_failed",
+            event_id=str(_safe_get(event_data, "id") or ""),
+        )
+    except Exception:
+        logger.warning(
+            "Failed to enqueue payment failed email for org %s", organization_id, exc_info=True
+        )
 
 
 async def _handle_subscription_canceled(

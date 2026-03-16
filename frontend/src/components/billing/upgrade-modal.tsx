@@ -19,7 +19,6 @@ import {
 } from "@/components/ui/dialog";
 import {
   BILLING_SUBSCRIPTION_QUERY_KEY,
-  type BillingPlanTier,
   createIdempotencyKey,
   useBillingSubscription,
   useCreateCheckout,
@@ -27,14 +26,25 @@ import {
   useTrackUpgradeModalOpen,
 } from "@/lib/billing";
 import { withQueryPolicy } from "@/lib/query-policy";
-import { PlanCard } from "./plan-card";
 import { QuotaSummary } from "./quota-summary";
+
+/* Feature comparison row (inline helper) */
+function FeatureRow({ label, free, pro }: { label: string; free: string; pro: string }) {
+  return (
+    <div className="flex items-center justify-between text-sm">
+      <span className="text-slate-600">{label}</span>
+      <div className="flex items-center gap-3">
+        <span className="text-slate-400 line-through">{free}</span>
+        <span className="font-semibold text-slate-900">{pro}</span>
+      </div>
+    </div>
+  );
+}
 
 type UpgradeModalProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   reason?: string;
-  initialTier?: BillingPlanTier;
   source?: "sidebar" | "settings" | "boards_new" | "agents_new" | "unknown";
 };
 
@@ -42,11 +52,9 @@ export function UpgradeModal({
   open,
   onOpenChange,
   reason,
-  initialTier = "pro",
   source = "unknown",
 }: UpgradeModalProps) {
   const queryClient = useQueryClient();
-  const [chosenTier, setChosenTier] = useState<BillingPlanTier | null>(null);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
 
   const subscriptionQuery = useBillingSubscription(open);
@@ -64,8 +72,6 @@ export function UpgradeModal({
   const wasOpenRef = useRef(false);
   const isProviderMode = subscriptionQuery.data?.billing_mode === "provider";
   const isSubmitting = simulateCheckoutMutation.isPending || createCheckoutMutation.isPending;
-  const currentTier = subscriptionQuery.data?.plan_tier ?? null;
-  const selectedTier = chosenTier ?? currentTier ?? initialTier;
   const trialExpired = subscriptionQuery.data?.status === "blocked_for_payment";
 
   useEffect(() => {
@@ -77,7 +83,6 @@ export function UpgradeModal({
 
   const handleOpenChange = (nextOpen: boolean) => {
     if (!nextOpen) {
-      setChosenTier(null);
       setCheckoutError(null);
     }
     onOpenChange(nextOpen);
@@ -87,10 +92,9 @@ export function UpgradeModal({
     setCheckoutError(null);
 
     if (isProviderMode) {
-      // Real checkout: redirect to payment provider
       try {
         const result = await createCheckoutMutation.mutateAsync({
-          plan_tier: selectedTier,
+          plan_tier: "pro",
           idempotency_key: createIdempotencyKey(),
         });
         window.location.href = result.checkout_url;
@@ -102,10 +106,9 @@ export function UpgradeModal({
         setCheckoutError("Unable to start checkout.");
       }
     } else {
-      // Simulated checkout (existing flow)
       try {
         await simulateCheckoutMutation.mutateAsync({
-          plan_tier: selectedTier,
+          plan_tier: "pro",
           idempotency_key: createIdempotencyKey(),
         });
         await Promise.all([
@@ -127,14 +130,11 @@ export function UpgradeModal({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-3xl sm:p-7">
+      <DialogContent className="sm:max-w-lg sm:p-7">
         <DialogHeader>
-          <DialogTitle>Choose plan</DialogTitle>
+          <DialogTitle>Upgrade to Pro</DialogTitle>
           <DialogDescription className="mt-1 text-sm leading-6 text-slate-600">
-            {reason ??
-              (isProviderMode
-                ? "Choose a plan and proceed to secure checkout."
-                : "Unlock subscription in one step. This billing flow is simulated in v1.")}
+            {reason ?? "Unlock higher limits and more boards."}
           </DialogDescription>
         </DialogHeader>
 
@@ -144,19 +144,12 @@ export function UpgradeModal({
           </div>
         ) : null}
 
-        <div className="mt-3 grid gap-3 md:grid-cols-2">
-          <PlanCard
-            tier="trial_7d"
-            selected={selectedTier === "trial_7d"}
-            onSelect={setChosenTier}
-            disabled={isSubmitting}
-          />
-          <PlanCard
-            tier="pro"
-            selected={selectedTier === "pro"}
-            onSelect={setChosenTier}
-            disabled={isSubmitting}
-          />
+        <div className="mt-2 space-y-3">
+          <FeatureRow label="Board groups" free="1" pro="2" />
+          <FeatureRow label="Boards" free="1" pro="3" />
+          <FeatureRow label="Agents" free="3" pro="15" />
+          <FeatureRow label="Monthly tokens" free="20M trial" pro="200M" />
+          <FeatureRow label="Max tokens/run" free="8k" pro="16k" />
         </div>
 
         {quotaQuery.data?.data.quotas ? (
@@ -176,7 +169,7 @@ export function UpgradeModal({
           <Button type="button" onClick={onCheckout} disabled={isSubmitting}>
             {isSubmitting
               ? (isProviderMode ? "Redirecting…" : "Unlocking…")
-              : (isProviderMode ? "Proceed to checkout" : "Confirm unlock")}
+              : "Upgrade to Pro — $25/mo"}
           </Button>
         </DialogFooter>
       </DialogContent>

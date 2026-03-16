@@ -13,9 +13,9 @@ type GettingStartedChecklistProps = {
 
 const STEP_LINKS: Record<OnboardingStepKey, string> = {
   use_case: "/onboarding",
-  create_first_board: "/boards/new",
-  run_onboarding_chat: "/boards",
-  invite_teammate: "/invite",
+  create_first_board: "/onboarding",
+  run_onboarding_chat: "/onboarding",
+  invite_teammate: "/onboarding",
 };
 
 export function GettingStartedChecklist({ progress }: GettingStartedChecklistProps) {

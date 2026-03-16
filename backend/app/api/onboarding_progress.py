@@ -44,9 +44,9 @@ STEP_ORDER: tuple[OnboardingStepKey, ...] = (
 )
 STEP_TITLES: dict[OnboardingStepKey, str] = {
     "use_case": "Define your use case",
-    "create_first_board": "Create your first board",
-    "run_onboarding_chat": "Run onboarding chat",
-    "invite_teammate": "Invite a teammate",
+    "create_first_board": "Choose your workspace mode",
+    "run_onboarding_chat": "Set your first success outcome",
+    "invite_teammate": "Plan your collaboration timing",
 }
 FINISHED_STATES: set[OnboardingStepStatus] = {"completed", "skipped"}
 

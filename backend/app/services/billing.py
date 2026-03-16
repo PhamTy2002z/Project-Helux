@@ -16,6 +16,7 @@ from app.models.organization_plans import OrganizationPlan
 from app.schemas.billing import (
     BillingCheckoutRequest,
     BillingCheckoutResponse,
+    BillingPortalSessionResponse,
     BillingSimulateCheckoutRequest,
     BillingSimulateCheckoutResponse,
     BillingSubscriptionRead,
@@ -252,4 +253,48 @@ async def create_checkout_session(
         checkout_url=checkout.url,
         checkout_id=str(checkout.id),
         provider="polar",
+    )
+
+
+async def create_portal_session(
+    session: AsyncSession,
+    *,
+    organization_id: UUID,
+    billing_mode: str,
+    payment_provider: str,
+) -> BillingPortalSessionResponse:
+    """Create Polar customer portal session for subscription management."""
+    if billing_mode != "provider":
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Portal session only available when BILLING_MODE=provider.",
+        )
+    if payment_provider != "polar":
+        raise HTTPException(
+            status_code=status.HTTP_501_NOT_IMPLEMENTED,
+            detail=f"Payment provider '{payment_provider}' not supported.",
+        )
+
+    plan = await get_or_create_organization_plan(session, organization_id=organization_id)
+    billing_meta: dict[str, object] = {}
+    if isinstance(plan.plan_metadata, dict):
+        raw_billing = plan.plan_metadata.get("billing")
+        billing_meta = raw_billing if isinstance(raw_billing, dict) else {}
+
+    customer_id = billing_meta.get("polar_customer_id")
+    if not customer_id or not isinstance(customer_id, str):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No Polar customer found for this organization. Complete a checkout first.",
+        )
+
+    from app.services.polar_client import get_polar_client
+
+    client = get_polar_client()
+    portal_session = await client.customer_sessions.create_async(
+        request={"customer_id": customer_id}
+    )
+
+    return BillingPortalSessionResponse(
+        portal_url=portal_session.customer_portal_url,
     )

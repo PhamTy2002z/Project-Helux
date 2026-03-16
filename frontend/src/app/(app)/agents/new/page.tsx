@@ -15,7 +15,6 @@ import {
 import { useCreateAgentApiV1AgentsPost } from "@/api/generated/agents/agents";
 import { useOrganizationMembership } from "@/lib/use-organization-membership";
 import type { BoardRead, WorkspaceTemplateRead } from "@/api/generated/model";
-import { UpgradeModal } from "@/components/billing/upgrade-modal";
 import { DashboardPageLayout } from "@/components/templates/DashboardPageLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,7 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { getApiErrorCode, getUpgradeReasonFromError } from "@/lib/billing";
+import { getApiErrorCode } from "@/lib/billing";
 import { AGENT_EMOJI_OPTIONS } from "@/lib/agent-emoji";
 import { DEFAULT_IDENTITY_PROFILE } from "@/lib/agent-templates";
 import { TemplatePickerStep } from "@/components/agents/template-picker-step";
@@ -58,9 +57,6 @@ const normalizeIdentityProfile = (
   return hasValue ? normalized : null;
 };
 
-const AGENT_UPGRADE_REASON =
-  "Agent creation is blocked by your current plan. Upgrade to continue.";
-
 export default function NewAgentPage() {
   const router = useRouter();
   const { isSignedIn } = useAuth();
@@ -76,8 +72,6 @@ export default function NewAgentPage() {
     ...DEFAULT_IDENTITY_PROFILE,
   });
   const [error, setError] = useState<string | null>(null);
-  const [upgradeOpen, setUpgradeOpen] = useState(false);
-  const [upgradeReason, setUpgradeReason] = useState(AGENT_UPGRADE_REASON);
 
   const handleTemplateSelect = (template: WorkspaceTemplateRead) => {
     setSelectedTemplate(template);
@@ -109,8 +103,8 @@ export default function NewAgentPage() {
       onError: (err) => {
         const errorCode = getApiErrorCode(err);
         if (errorCode === "blocked_for_payment" || errorCode === "quota_exceeded") {
-          setUpgradeReason(getUpgradeReasonFromError(err, AGENT_UPGRADE_REASON));
-          setUpgradeOpen(true);
+          router.push("/settings");
+          return;
         }
         setError(err.message || "Something went wrong.");
       },
@@ -367,12 +361,6 @@ export default function NewAgentPage() {
         </div>
         )}
       </DashboardPageLayout>
-      <UpgradeModal
-        open={upgradeOpen}
-        onOpenChange={setUpgradeOpen}
-        reason={upgradeReason}
-        source="agents_new"
-      />
     </>
   );
 }

@@ -34,7 +34,7 @@ const INDIVIDUAL_PLANS = [
       "20M agent tokens / day",
       "200M org tokens / month, 16k max tokens / run",
     ],
-    cta: { label: "Get Pro", href: "/onboarding" },
+    cta: { label: "Get Pro", href: "/checkout/pro" },
     highlighted: true,
     disabled: false,
   },

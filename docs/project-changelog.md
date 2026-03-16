@@ -1,5 +1,50 @@
 # Project Changelog
 
+## 2026-03-16
+
+### Payment Flow UX Rework (Plan 260316-1405)
+
+**Backend improvements:**
+- New `GET /api/v1/billing/portal-session` endpoint for Polar customer portal access
+- Polar customer ID stored in webhook metadata on subscription activation
+- Billing email system with Resend provider:
+  - Upgrade confirmation email on plan activation
+  - Trial expiring warning email
+  - Payment failed notification email
+- Email queue worker registration in `backend/app/services/queue_worker.py`
+
+**Frontend improvements:**
+- Pricing page "Get Pro" CTA now routes to auth-gated `/checkout/pro` (Polar redirect)
+- Upgrade modal redesigned with Pro-only layout and feature comparison
+- Removed trial_7d option from upgrade card UI (Trial is entry tier, Pro is upgrade)
+- New sidebar usage meter: shows highest-% quota with color-coded progress bar
+- New billing settings section with:
+  - Current plan badge and tier display
+  - Trial countdown timer
+  - Usage meters for each quota type
+  - Direct link to Polar customer portal
+- New checkout success page with confetti celebration animation
+- Plan activation polling on checkout success for real-time updates
+- Billing settings extracted into reusable `BillingSettingsSection` component
+- Settings page simplified with billing component extraction
+
+---
+
+### Onboarding wizard flow refresh (question-first, no board/chat requirement)
+
+- Refactored onboarding wizard UI to remove board creation/chat actions from step flow.
+- Replaced action-driven steps with guided questions:
+  - Workspace mode selection
+  - First success outcome input
+  - Collaboration timing selection
+- Kept existing step keys for API compatibility while changing copy and captured details.
+- Added custom use-case path with `Other (custom)` toggle and inline text input.
+- Updated checklist links so all onboarding steps route to `/onboarding` instead of board/chat pages.
+- Updated backend onboarding step titles to match the new question-first flow.
+- Added frontend wizard tests for custom use case and non-board question submission.
+
+---
+
 ## 2026-03-15
 
 ### OpenClaw Docker gateway migration + managed workspace volume

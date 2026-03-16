@@ -43,7 +43,7 @@ function ShellInner({ children }: { children: ReactNode }) {
         </div>
       </header>
       <div
-        className="grid min-h-[calc(100vh-64px)] bg-slate-50 transition-[grid-template-columns] duration-300 ease-in-out"
+        className="grid h-[calc(100vh-64px)] bg-slate-50 transition-[grid-template-columns] duration-300 ease-in-out"
         style={{
           gridTemplateColumns: collapsed ? "0px 1fr" : "260px 1fr",
         }}

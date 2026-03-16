@@ -1,8 +1,8 @@
 "use client";
 
-import { type KeyboardEvent, type MouseEvent, useMemo } from "react";
+import { type KeyboardEvent, type MouseEvent, useMemo, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 
 import { SignedIn, SignedOut, useAuth } from "@/auth/clerk";
@@ -15,6 +15,7 @@ import {
   Timer,
 } from "lucide-react";
 
+import { ProWelcomeModal } from "@/components/billing/pro-welcome-modal";
 import { DashboardSidebar } from "@/components/organisms/DashboardSidebar";
 import { DashboardShell } from "@/components/templates/DashboardShell";
 import { LazyMarkdown } from "@/components/atoms/LazyMarkdown";
@@ -114,9 +115,18 @@ const buildActivityEventHref = (event: ActivityEventRead): string => {
 
 export default function DashboardPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { isSignedIn } = useAuth();
   const isPageActive = usePageActive();
   const _subscriptionQuery = useBillingSubscription(Boolean(isSignedIn));
+
+  /* Show welcome modal after Pro upgrade redirect */
+  const [welcomeOpen, setWelcomeOpen] = useState(searchParams.get("welcome") === "pro");
+  const handleWelcomeClose = () => {
+    setWelcomeOpen(false);
+    /* Clean up query param without full reload */
+    router.replace("/dashboard", { scroll: false });
+  };
 
   const boardsQuery = useListBoardsApiV1BoardsGet<listBoardsApiV1BoardsGetResponse, ApiError>(
     { limit: 200 },
@@ -422,6 +432,7 @@ export default function DashboardPage() {
   };
 
   return (
+    <>
     <DashboardShell>
       <SignedOut>
         <SignedOutPanel
@@ -672,5 +683,7 @@ export default function DashboardPage() {
         </main>
       </SignedIn>
     </DashboardShell>
+    <ProWelcomeModal open={welcomeOpen} onClose={handleWelcomeClose} />
+  </>
   );
 }
