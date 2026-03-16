@@ -16,18 +16,13 @@ import {
   useGetMeApiV1UsersMeGet,
   useUpdateMeApiV1UsersMePatch,
 } from "@/api/generated/users/users";
-import { useQuotaUsageApiV1MetricsQuotasGet } from "@/api/generated/metrics/metrics";
 import { ApiError } from "@/api/mutator";
-import { QuotaSummary } from "@/components/billing/quota-summary";
-import { UpgradeModal } from "@/components/billing/upgrade-modal";
+import { BillingSettingsSection } from "@/components/billing/billing-settings-section";
 import { DashboardPageLayout } from "@/components/templates/DashboardPageLayout";
 import { Button } from "@/components/ui/button";
 import { ConfirmActionDialog } from "@/components/ui/confirm-action-dialog";
 import { Input } from "@/components/ui/input";
 import SearchableSelect from "@/components/ui/searchable-select";
-import { useBillingSubscription } from "@/lib/billing";
-import { planLabelFromTier } from "@/lib/plan-labels";
-import { withQueryPolicy } from "@/lib/query-policy";
 import { getSupportedTimezones } from "@/lib/timezones";
 
 type ClerkGlobal = {
@@ -48,7 +43,6 @@ export default function SettingsPage() {
   const [saveSuccess, setSaveSuccess] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [upgradeOpen, setUpgradeOpen] = useState(false);
 
   const meQuery = useGetMeApiV1UsersMeGet<
     getMeApiV1UsersMeGetResponse,
@@ -61,14 +55,6 @@ export default function SettingsPage() {
     },
   });
   const meQueryKey = getGetMeApiV1UsersMeGetQueryKey();
-  const subscriptionQuery = useBillingSubscription(Boolean(isSignedIn));
-  const quotaQuery = useQuotaUsageApiV1MetricsQuotasGet({
-    query: {
-      ...withQueryPolicy("interactive"),
-      enabled: Boolean(isSignedIn),
-      retry: false,
-    },
-  });
 
   const profile = meQuery.data?.status === 200 ? meQuery.data.data : null;
   const displayEmail =
@@ -151,11 +137,6 @@ export default function SettingsPage() {
   };
 
   const isSaving = updateMeMutation.isPending;
-  const isBlockedForPayment =
-    subscriptionQuery.data?.status === "blocked_for_payment";
-  const currentPlanLabel =
-    planLabelFromTier(subscriptionQuery.data?.plan_tier) ?? "—";
-  const isUpgradeModalOpen = upgradeOpen || isBlockedForPayment;
 
   return (
     <>
@@ -259,32 +240,7 @@ export default function SettingsPage() {
             </form>
           </section>
 
-          <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-            <div className="flex flex-wrap items-start justify-between gap-4">
-              <div>
-                <h2 className="text-base font-semibold text-slate-900">
-                  Billing & usage
-                </h2>
-                <p className="mt-1 text-sm text-slate-500">
-                  Current plan:{" "}
-                  <span className="font-medium text-slate-800">
-                    {currentPlanLabel}
-                  </span>
-                  {isBlockedForPayment ? " (runtime blocked)" : ""}
-                </p>
-              </div>
-              <Button type="button" onClick={() => setUpgradeOpen(true)}>
-                Choose plan
-              </Button>
-            </div>
-
-            {quotaQuery.data?.data.quotas ? (
-              <QuotaSummary
-                className="mt-4"
-                quotas={quotaQuery.data.data.quotas}
-              />
-            ) : null}
-          </section>
+          <BillingSettingsSection isSignedIn={Boolean(isSignedIn)} />
 
           <section className="rounded-xl border border-rose-200 bg-rose-50/70 p-6 shadow-sm">
             <h2 className="text-base font-semibold text-rose-900">
@@ -323,17 +279,6 @@ export default function SettingsPage() {
         confirmLabel="Delete account"
         confirmingLabel="Deleting account…"
         ariaLabel="Delete account confirmation"
-      />
-      <UpgradeModal
-        open={isUpgradeModalOpen}
-        onOpenChange={(next) => {
-          if (!next && isBlockedForPayment) {
-            return;
-          }
-          setUpgradeOpen(next);
-        }}
-        reason="Upgrade is required when trial expires or hard limits are reached."
-        source="settings"
       />
     </>
   );

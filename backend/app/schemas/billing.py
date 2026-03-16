@@ -59,6 +59,12 @@ class BillingCheckoutResponse(SQLModel):
     provider: str
 
 
+class BillingPortalSessionResponse(SQLModel):
+    """Polar customer portal session URL."""
+
+    portal_url: str
+
+
 class BillingUpgradeModalOpenEvent(SQLModel):
     """Payload for tracking upgrade modal open events."""
 

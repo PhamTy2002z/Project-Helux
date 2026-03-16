@@ -12,6 +12,11 @@ from app.services.email.email_sender import (
     InviteEmailSender,
     OrganizationInviteEmailSendRequest,
 )
+from app.services.email.billing_email_sender import (
+    BillingEmailDeliveryError,
+    BillingEmailSender,
+    BillingEmailSendRequest,
+)
 from app.services.email.welcome_email_sender import (
     WelcomeEmailDeliveryError,
     WelcomeEmailSender,
@@ -124,6 +129,35 @@ class ResendWelcomeEmailSender(_ResendBase, WelcomeEmailSender):
                 },
             )
             raise WelcomeEmailDeliveryError(str(exc), retryable=retryable) from exc
+
+
+class ResendBillingEmailSender(_ResendBase, BillingEmailSender):
+    """Resend-backed billing email sender."""
+
+    async def send_billing_email(
+        self,
+        request: BillingEmailSendRequest,
+    ) -> None:
+        try:
+            await self._send_via_resend(
+                to=request.recipient_email,
+                subject=request.content.subject,
+                html=request.content.html,
+                text=request.content.text,
+                idempotency_key=request.idempotency_key,
+            )
+        except Exception as exc:  # pragma: no cover - defensive provider boundary
+            retryable = _is_retryable_resend_error(exc)
+            logger.warning(
+                "email.billing.send_failed",
+                extra={
+                    "organization_id": str(request.organization_id),
+                    "email_type": request.email_type,
+                    "retryable": retryable,
+                    "error_type": type(exc).__name__,
+                },
+            )
+            raise BillingEmailDeliveryError(str(exc), retryable=retryable) from exc
 
 
 def _is_retryable_resend_error(exc: Exception) -> bool:

@@ -17,6 +17,7 @@ from app.models.activity_events import ActivityEvent
 from app.schemas.billing import (
     BillingCheckoutRequest,
     BillingCheckoutResponse,
+    BillingPortalSessionResponse,
     BillingSimulateCheckoutRequest,
     BillingSimulateCheckoutResponse,
     BillingSubscriptionRead,
@@ -25,7 +26,7 @@ from app.schemas.billing import (
 )
 from app.schemas.common import OkResponse
 from app.services.activity_log import record_activity, record_admin_audit
-from app.services.billing import create_checkout_session, get_subscription, simulate_checkout
+from app.services.billing import create_checkout_session, create_portal_session, get_subscription, simulate_checkout
 from app.services.organizations import OrganizationContext
 
 if TYPE_CHECKING:
@@ -72,6 +73,28 @@ async def get_my_subscription(
         billing_mode=settings.billing_mode,
         payment_provider=settings.payment_provider,
     )
+
+
+@router.get("/portal-session", response_model=BillingPortalSessionResponse)
+async def get_portal_session(
+    session: AsyncSession = SESSION_DEP,
+    ctx: OrganizationContext = ORG_ADMIN_DEP,
+) -> BillingPortalSessionResponse:
+    """Create Polar customer portal session for subscription management."""
+    try:
+        return await create_portal_session(
+            session,
+            organization_id=ctx.organization.id,
+            billing_mode=settings.billing_mode,
+            payment_provider=settings.payment_provider,
+        )
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Failed to create portal session.",
+        ) from exc
 
 
 @router.post("/simulate/checkout", response_model=BillingSimulateCheckoutResponse)

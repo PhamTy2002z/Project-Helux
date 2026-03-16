@@ -24,6 +24,9 @@ from app.services.board_chat_files.report_deadline_worker import process_report_
 from app.services.board_chat_files.worker import process_extraction_task
 from app.services.email.queue import TASK_TYPE as ORG_INVITE_EMAIL_TASK_TYPE
 from app.services.email.queue import requeue_invite_email_task
+from app.services.email.billing_email_queue import TASK_TYPE as BILLING_EMAIL_TASK_TYPE
+from app.services.email.billing_email_queue import requeue_billing_email_task
+from app.services.email.billing_email_worker import process_billing_email_task
 from app.services.email.welcome_email_queue import TASK_TYPE as WELCOME_EMAIL_TASK_TYPE
 from app.services.email.welcome_email_queue import requeue_welcome_email_task
 from app.services.email.welcome_email_worker import process_welcome_email_task
@@ -65,6 +68,14 @@ _TASK_HANDLERS: dict[str, _TaskHandler] = {
             settings.rq_dispatch_retry_max_seconds,
         ),
         requeue=lambda task, delay: requeue_welcome_email_task(task, delay_seconds=delay),
+    ),
+    BILLING_EMAIL_TASK_TYPE: _TaskHandler(
+        handler=process_billing_email_task,
+        attempts_to_delay=lambda attempts: min(
+            settings.rq_dispatch_retry_base_seconds * (2 ** max(0, attempts)),
+            settings.rq_dispatch_retry_max_seconds,
+        ),
+        requeue=lambda task, delay: requeue_billing_email_task(task, delay_seconds=delay),
     ),
     FILE_EXTRACT_TASK_TYPE: _TaskHandler(
         handler=process_extraction_task,
