@@ -22,11 +22,11 @@ from app.services.board_chat_files.report_deadline_queue import (
 )
 from app.services.board_chat_files.report_deadline_worker import process_report_deadline_task
 from app.services.board_chat_files.worker import process_extraction_task
-from app.services.email.queue import TASK_TYPE as ORG_INVITE_EMAIL_TASK_TYPE
-from app.services.email.queue import requeue_invite_email_task
 from app.services.email.billing_email_queue import TASK_TYPE as BILLING_EMAIL_TASK_TYPE
 from app.services.email.billing_email_queue import requeue_billing_email_task
 from app.services.email.billing_email_worker import process_billing_email_task
+from app.services.email.queue import TASK_TYPE as ORG_INVITE_EMAIL_TASK_TYPE
+from app.services.email.queue import requeue_invite_email_task
 from app.services.email.welcome_email_queue import TASK_TYPE as WELCOME_EMAIL_TASK_TYPE
 from app.services.email.welcome_email_queue import requeue_welcome_email_task
 from app.services.email.welcome_email_worker import process_welcome_email_task

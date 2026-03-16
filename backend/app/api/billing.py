@@ -28,7 +28,12 @@ from app.schemas.billing import (
 )
 from app.schemas.common import OkResponse
 from app.services.activity_log import record_activity, record_admin_audit
-from app.services.billing import create_checkout_session, create_portal_session, get_subscription, simulate_checkout
+from app.services.billing import (
+    create_checkout_session,
+    create_portal_session,
+    get_subscription,
+    simulate_checkout,
+)
 from app.services.organizations import OrganizationContext
 
 if TYPE_CHECKING:

@@ -74,9 +74,7 @@ async def _handle_subscription_active(
             event_id=str(_safe_get(event_data, "id") or ""),
         )
     except Exception:
-        logger.warning(
-            "Failed to enqueue upgrade email for org %s", organization_id, exc_info=True
-        )
+        logger.warning("Failed to enqueue upgrade email for org %s", organization_id, exc_info=True)
 
 
 async def _handle_subscription_revoked(

@@ -7,15 +7,15 @@ from collections.abc import Callable
 from typing import Any
 
 from app.core.logging import get_logger
-from app.services.email.email_sender import (
-    InviteEmailDeliveryError,
-    InviteEmailSender,
-    OrganizationInviteEmailSendRequest,
-)
 from app.services.email.billing_email_sender import (
     BillingEmailDeliveryError,
     BillingEmailSender,
     BillingEmailSendRequest,
+)
+from app.services.email.email_sender import (
+    InviteEmailDeliveryError,
+    InviteEmailSender,
+    OrganizationInviteEmailSendRequest,
 )
 from app.services.email.welcome_email_sender import (
     WelcomeEmailDeliveryError,

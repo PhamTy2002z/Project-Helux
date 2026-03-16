@@ -7,9 +7,7 @@ from html import escape
 from app.services.email.billing_email_sender import BillingEmailContent
 
 
-def build_upgrade_confirmed_email(
-    *, org_name: str, dashboard_url: str
-) -> BillingEmailContent:
+def build_upgrade_confirmed_email(*, org_name: str, dashboard_url: str) -> BillingEmailContent:
     """Build upgrade confirmation email content."""
     escaped_name = escape(org_name)
     escaped_url = escape(dashboard_url, quote=True)
@@ -135,9 +133,7 @@ def build_trial_expiring_email(
     return BillingEmailContent(subject=subject, text=text, html=html)
 
 
-def build_payment_failed_email(
-    *, org_name: str, portal_url: str
-) -> BillingEmailContent:
+def build_payment_failed_email(*, org_name: str, portal_url: str) -> BillingEmailContent:
     """Build payment failed notification email content."""
     escaped_name = escape(org_name)
     escaped_url = escape(portal_url, quote=True)
