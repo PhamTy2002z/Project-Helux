@@ -670,4 +670,3 @@
 1. What is the target release date for v1.0.0?
 2. Should we prioritize mobile app development?
 3. What is the strategy for backward compatibility during v0.x releases?
-
