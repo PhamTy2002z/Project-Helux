@@ -1,21 +1,33 @@
 "use client";
 
-import { useState } from "react";
-import { ExternalLink } from "lucide-react";
-import { useMutation } from "@tanstack/react-query";
+import { useState, useMemo } from "react";
+import {
+  CheckCircle2,
+  Download,
+  ExternalLink,
+  Filter,
+  Search,
+} from "lucide-react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { useQuotaUsageApiV1MetricsQuotasGet } from "@/api/generated/metrics/metrics";
+import { getQuotaUsageApiV1MetricsQuotasGetQueryKey } from "@/api/generated/metrics/metrics";
 import { Button } from "@/components/ui/button";
-import { useBillingSubscription } from "@/lib/billing";
+import {
+  BILLING_SUBSCRIPTION_QUERY_KEY,
+  BILLING_HISTORY_QUERY_KEY,
+  createIdempotencyKey,
+  useBillingHistory,
+  useBillingSubscription,
+  useCreateCheckout,
+  useSimulateCheckout,
+} from "@/lib/billing";
+import type { BillingHistoryRow as ApiBillingHistoryRow, BillingPlanTier } from "@/lib/billing";
 import { planLabelFromTier } from "@/lib/plan-labels";
-import { withQueryPolicy } from "@/lib/query-policy";
 import { cn } from "@/lib/utils";
-import { QUOTA_RESOURCE_LABELS, formatCompact, usageBarColor } from "./billing-display-helpers";
-import { UpgradeModal } from "./upgrade-modal";
-
-/* --- Portal session hook --- */
 
 type PortalSessionResponse = { portal_url: string };
+
+type HistoryStatus = "all" | "succeeded" | "pending" | "failed";
 
 const getPortalSession = async (): Promise<PortalSessionResponse> => {
   const response = await (await import("@/api/mutator")).customFetch<{
@@ -28,7 +40,15 @@ const getPortalSession = async (): Promise<PortalSessionResponse> => {
 
 const usePortalSession = () => useMutation({ mutationFn: getPortalSession });
 
-/* --- Helpers --- */
+const formatIsoDate = (value: string | null | undefined): string => {
+  if (!value) return "-";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "-";
+  const year = date.getUTCFullYear();
+  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(date.getUTCDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
 
 function trialDaysRemaining(expiresAt: string | null | undefined): number | null {
   if (!expiresAt) return null;
@@ -42,130 +62,417 @@ function countdownColor(days: number): string {
   return "text-emerald-600";
 }
 
-/* --- Component --- */
+type PlanCardProps = {
+  title: string;
+  badge: string;
+  price: string;
+  unit: string;
+  features: string[];
+  onAction: () => void;
+  actionLabel: string;
+  actionDisabled?: boolean;
+  cardVariant?: "default" | "featured";
+};
+
+function PlanCard({
+  title,
+  badge,
+  price,
+  unit,
+  features,
+  onAction,
+  actionLabel,
+  actionDisabled = false,
+  cardVariant = "default",
+}: PlanCardProps) {
+  const featured = cardVariant === "featured";
+
+  return (
+    <article
+      className={cn(
+        "flex flex-col rounded-2xl border p-6 transition-shadow",
+        featured
+          ? "border-slate-800 bg-gradient-to-b from-slate-900 to-slate-800 text-slate-100 shadow-lg shadow-slate-900/20 ring-1 ring-slate-700"
+          : "border-slate-200 bg-white text-slate-900 hover:shadow-md",
+      )}
+    >
+      <div className="flex items-center justify-between gap-3">
+        <h3 className="text-sm font-semibold tracking-wide uppercase">{title}</h3>
+        <span
+          className={cn(
+            "rounded-full px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide",
+            featured
+              ? "bg-orange-500/90 text-white"
+              : "bg-slate-100 text-slate-600",
+          )}
+        >
+          {badge}
+        </span>
+      </div>
+
+      <div className="mt-5">
+        <span className="text-4xl font-bold tracking-tight">{price}</span>
+        <span
+          className={cn(
+            "ml-1 text-sm font-normal",
+            featured ? "text-slate-400" : "text-slate-500",
+          )}
+        >
+          {unit !== "per month" ? unit : "/mo"}
+        </span>
+      </div>
+
+      <div className={cn("my-5 h-px", featured ? "bg-slate-700" : "bg-slate-100")} />
+
+      <ul className="flex-1 space-y-3">
+        {features.map((feature) => (
+          <li
+            key={feature}
+            className={cn(
+              "flex items-start gap-2.5 text-sm leading-snug",
+              featured ? "text-slate-300" : "text-slate-600",
+            )}
+          >
+            <CheckCircle2
+              className={cn(
+                "mt-0.5 h-4 w-4 shrink-0",
+                featured ? "text-emerald-400" : "text-slate-400",
+              )}
+            />
+            {feature}
+          </li>
+        ))}
+      </ul>
+
+      <Button
+        type="button"
+        variant={featured ? "secondary" : "outline"}
+        className={cn(
+          "mt-6 w-full",
+          featured
+            ? "bg-white text-slate-900 hover:bg-slate-100"
+            : "border-slate-200 hover:border-slate-300",
+        )}
+        onClick={onAction}
+        disabled={actionDisabled}
+      >
+        {actionLabel}
+      </Button>
+    </article>
+  );
+}
+
+const STATUS_LABELS: Record<string, string> = {
+  succeeded: "Success",
+  pending: "Pending",
+  failed: "Failed",
+};
+
+const STATUS_STYLES: Record<string, string> = {
+  succeeded: "bg-emerald-100 text-emerald-700",
+  pending: "bg-amber-100 text-amber-700",
+  failed: "bg-rose-100 text-rose-700",
+};
 
 export function BillingSettingsSection({ isSignedIn }: { isSignedIn: boolean }) {
-  const [upgradeOpen, setUpgradeOpen] = useState(false);
+  const queryClient = useQueryClient();
   const [portalError, setPortalError] = useState<string | null>(null);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
+  const [historySearch, setHistorySearch] = useState("");
+  const [historyStatus, setHistoryStatus] = useState<HistoryStatus>("all");
 
   const subscriptionQuery = useBillingSubscription(isSignedIn);
-  const quotaQuery = useQuotaUsageApiV1MetricsQuotasGet({
-    query: { ...withQueryPolicy("interactive"), enabled: isSignedIn, retry: false },
-  });
+  const historyQuery = useBillingHistory(isSignedIn);
   const portalMutation = usePortalSession();
+  const simulateCheckout = useSimulateCheckout();
+  const createCheckout = useCreateCheckout();
 
   const sub = subscriptionQuery.data;
   const tier = sub?.plan_tier ?? null;
   const isTrial = tier === "trial_7d";
   const isPro = tier === "pro";
   const isBlocked = sub?.status === "blocked_for_payment";
-  const planLabel = planLabelFromTier(tier) ?? "—";
+  const canOpenPortal = sub?.billing_mode === "provider";
+  const isProviderMode = sub?.billing_mode === "provider";
   const daysLeft = trialDaysRemaining(sub?.trial_expires_at);
-  const quotas = quotaQuery.data?.data?.quotas;
+  const isCheckingOut = simulateCheckout.isPending || createCheckout.isPending;
+
+  const historyRows = historyQuery.data ?? [];
+
+  const filteredHistory = useMemo(() => {
+    const keyword = historySearch.trim().toLowerCase();
+    return historyRows.filter((row: ApiBillingHistoryRow) => {
+      const statusMatch = historyStatus === "all" || row.status === historyStatus;
+      if (!statusMatch) return false;
+      if (!keyword) return true;
+      const rowContent =
+        `${row.plan_tier} ${row.amount} ${row.created_at}`.toLowerCase();
+      return rowContent.includes(keyword);
+    });
+  }, [historyRows, historySearch, historyStatus]);
 
   const handleManageSubscription = async () => {
     setPortalError(null);
+    if (!canOpenPortal) {
+      return;
+    }
     try {
       const result = await portalMutation.mutateAsync();
-      window.open(result.portal_url, "_blank");
+      window.open(result.portal_url, "_blank", "noopener,noreferrer");
     } catch {
       setPortalError("Unable to open subscription portal. Try again.");
     }
   };
 
+  const handleUpgrade = async () => {
+    setCheckoutError(null);
+    const key = createIdempotencyKey();
+    if (isProviderMode) {
+      try {
+        const result = await createCheckout.mutateAsync({ plan_tier: "pro", idempotency_key: key });
+        window.location.href = result.checkout_url;
+      } catch {
+        setCheckoutError("Unable to start checkout. Try again.");
+      }
+    } else {
+      try {
+        await simulateCheckout.mutateAsync({ plan_tier: "pro", idempotency_key: key });
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: BILLING_SUBSCRIPTION_QUERY_KEY }),
+          queryClient.invalidateQueries({ queryKey: BILLING_HISTORY_QUERY_KEY }),
+          queryClient.invalidateQueries({ queryKey: getQuotaUsageApiV1MetricsQuotasGetQueryKey() }),
+        ]);
+      } catch {
+        setCheckoutError("Unable to unlock plan. Try again.");
+      }
+    }
+  };
+
+  const handleExportHistory = () => {
+    if (filteredHistory.length === 0) return;
+    const csvRows = [
+      ["Plan", "Amount", "Date", "Status"],
+      ...filteredHistory.map((row: ApiBillingHistoryRow) => [
+        planLabelFromTier(row.plan_tier as BillingPlanTier) ?? row.plan_tier,
+        row.amount,
+        formatIsoDate(row.created_at),
+        STATUS_LABELS[row.status] ?? row.status,
+      ]),
+    ];
+    const csv = csvRows
+      .map((columns) => columns.map((value) => `"${String(value).replace(/"/g, '""')}"`).join(","))
+      .join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = "flowgrid-billing-history.csv";
+    anchor.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <>
-      <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        {/* Plan info row */}
-        <div className="flex flex-wrap items-start justify-between gap-4">
+      <section className="space-y-6">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
-            <h2 className="text-base font-semibold text-slate-900">Billing & usage</h2>
-            <div className="mt-1 flex flex-wrap items-center gap-2">
-              <span
-                className={cn(
-                  "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold",
-                  isPro
-                    ? "bg-blue-100 text-blue-800"
-                    : "bg-slate-100 text-slate-700",
-                )}
-              >
-                {planLabel}
-              </span>
-              {isBlocked ? (
-                <span className="text-xs font-medium text-rose-600">Runtime blocked</span>
-              ) : isTrial && daysLeft !== null ? (
-                <span className={cn("text-xs font-medium", countdownColor(daysLeft))}>
-                  Trial expires in {daysLeft} day{daysLeft !== 1 ? "s" : ""}
-                </span>
-              ) : isPro ? (
-                <span className="text-xs text-emerald-600">Active</span>
-              ) : null}
-            </div>
+            <h2 className="text-lg font-semibold text-slate-900">
+              Plans
+            </h2>
+            <p className="mt-1 text-sm text-slate-500">
+              Choose the plan that fits your team.
+            </p>
+            {isBlocked || (isTrial && daysLeft !== null) ? (
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                {isBlocked ? (
+                  <span className="text-xs font-medium text-rose-600">
+                    Runtime blocked until upgrade
+                  </span>
+                ) : null}
+                {isTrial && daysLeft !== null ? (
+                  <span className={cn("text-xs font-medium", countdownColor(daysLeft))}>
+                    Trial expires in {daysLeft} day{daysLeft === 1 ? "" : "s"}
+                  </span>
+                ) : null}
+              </div>
+            ) : null}
           </div>
-          <div className="flex gap-2">
-            {isPro ? (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={handleManageSubscription}
-                disabled={portalMutation.isPending}
-              >
-                <ExternalLink className="mr-1.5 h-3.5 w-3.5" />
-                {portalMutation.isPending ? "Opening…" : "Manage subscription"}
-              </Button>
-            ) : (
-              <Button type="button" size="sm" onClick={() => setUpgradeOpen(true)}>
-                Upgrade to Pro
-              </Button>
-            )}
+
+          <div className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 p-1">
+            <button
+              type="button"
+              className="rounded-full bg-white px-4 py-1.5 text-sm font-medium text-slate-900 shadow-sm"
+            >
+              Monthly
+            </button>
+            <button
+              type="button"
+              disabled
+              title="Coming soon"
+              className="cursor-not-allowed rounded-full px-4 py-1.5 text-sm font-medium text-slate-400"
+            >
+              Yearly
+            </button>
           </div>
         </div>
 
-        {portalError ? (
-          <div className="mt-3 rounded-lg border border-rose-200 bg-rose-50 px-4 py-2 text-sm text-rose-700">
-            {portalError}
+        <div className="grid gap-5 xl:grid-cols-3">
+          <PlanCard
+            title="Starter Plan"
+            badge="Free"
+            price="$0.00"
+            unit="per month"
+            features={[
+              "No credit card required",
+              "1 board group, 1 board",
+              "3 agents total, 3 agents / board",
+              "20M trial tokens, 5M agent tokens / day",
+              "8k max tokens / run",
+            ]}
+            onAction={() => undefined}
+            actionLabel={isPro ? "Starter plan" : "Current plan"}
+            actionDisabled={true}
+          />
+
+          <PlanCard
+            title="Growth Plan"
+            badge="Pro"
+            price="$25.00"
+            unit="per month"
+            features={[
+              "2 board groups, 3 boards",
+              "15 agents total, 5 agents / board",
+              "20M agent tokens / day",
+              "200M org tokens / month, 16k max tokens / run",
+            ]}
+            onAction={isPro ? () => undefined : handleUpgrade}
+            actionLabel={isPro ? "Current plan" : isCheckingOut ? "Processing..." : "Upgrade plan"}
+            actionDisabled={isPro || isCheckingOut}
+            cardVariant="featured"
+          />
+
+          <PlanCard
+            title="Enterprise Plan"
+            badge="Advanced"
+            price="Custom"
+            unit="per month"
+            features={[
+              "Higher model and token limits",
+              "Priority access to new platform features",
+              "Dedicated onboarding assistance",
+            ]}
+            onAction={() => {
+              window.location.href =
+                "mailto:sales@flowgrid.dev?subject=FlowGrid%20Enterprise%20Plan";
+            }}
+            actionLabel="Contact us"
+          />
+        </div>
+
+        {checkoutError ? (
+          <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-2.5 text-sm text-rose-700">
+            {checkoutError}
           </div>
         ) : null}
 
-        {/* Usage meters */}
-        {quotas && quotas.length > 0 ? (
-          <div className="mt-5 space-y-3">
-            {(quotas as Array<{ resource: string; used: number; limit: number | null }>)
-              .filter((q) => q.limit != null && q.limit > 0)
-              .map((q) => {
-                const pct = Math.min((q.used / q.limit!) * 100, 100);
-                const label = QUOTA_RESOURCE_LABELS[q.resource] ?? q.resource;
-                return (
-                  <div key={q.resource}>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-slate-600">{label}</span>
-                      <span className="text-slate-500">
-                        {formatCompact(q.used)}/{formatCompact(q.limit!)}
-                      </span>
-                    </div>
-                    <div className="mt-1 h-2 rounded-full bg-slate-100">
-                      <div
-                        className={cn("h-full rounded-full transition-all", usageBarColor(pct))}
-                        style={{ width: `${pct}%` }}
-                      />
-                    </div>
-                  </div>
-                );
-              })}
+        {portalError ? (
+          <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-2.5 text-sm text-rose-700">
+            {portalError}
           </div>
         ) : null}
       </section>
 
-      <UpgradeModal
-        open={upgradeOpen || isBlocked}
-        onOpenChange={(next) => {
-          if (!next && isBlocked) return;
-          setUpgradeOpen(next);
-        }}
-        reason={isBlocked ? "Trial expired. Upgrade to continue." : undefined}
-        source="settings"
-      />
+      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <h3 className="text-lg font-semibold text-slate-900">Billing History</h3>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <label className="relative min-w-[220px]">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <input
+                value={historySearch}
+                onChange={(event) => setHistorySearch(event.target.value)}
+                placeholder="Search..."
+                className="h-9 w-full rounded-lg border border-slate-300 bg-white pl-9 pr-3 text-sm text-slate-700 placeholder:text-slate-400 focus:border-slate-400 focus:outline-none"
+              />
+            </label>
+            <label className="relative">
+              <Filter className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <select
+                value={historyStatus}
+                onChange={(event) => setHistoryStatus(event.target.value as HistoryStatus)}
+                className="h-9 min-w-[140px] rounded-lg border border-slate-300 bg-white pl-9 pr-8 text-sm text-slate-700 focus:border-slate-400 focus:outline-none"
+              >
+                <option value="all">All status</option>
+                <option value="succeeded">Success</option>
+                <option value="pending">Pending</option>
+                <option value="failed">Failed</option>
+              </select>
+            </label>
+            <Button
+              type="button"
+              variant="outline"
+              className="h-9"
+              onClick={handleExportHistory}
+              disabled={filteredHistory.length === 0}
+            >
+              <Download className="h-4 w-4" />
+              Export
+            </Button>
+          </div>
+        </div>
+
+        <div className="mt-4 overflow-x-auto">
+          <table className="min-w-full divide-y divide-slate-200 text-sm">
+            <thead>
+              <tr className="text-left text-xs uppercase tracking-wide text-slate-500">
+                <th className="px-3 py-3 font-medium">Plan</th>
+                <th className="px-3 py-3 font-medium">Amount</th>
+                <th className="px-3 py-3 font-medium">Date</th>
+                <th className="px-3 py-3 font-medium">Status</th>
+                <th className="px-3 py-3 text-right font-medium">Action</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {filteredHistory.map((row: ApiBillingHistoryRow) => (
+                <tr key={row.id} className="text-slate-700">
+                  <td className="px-3 py-3.5 font-medium text-slate-800">
+                    {planLabelFromTier(row.plan_tier as BillingPlanTier) ?? row.plan_tier}
+                  </td>
+                  <td className="px-3 py-3.5">{row.amount}</td>
+                  <td className="px-3 py-3.5">{formatIsoDate(row.created_at)}</td>
+                  <td className="px-3 py-3.5">
+                    <span
+                      className={cn(
+                        "inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium",
+                        STATUS_STYLES[row.status] ?? "bg-slate-100 text-slate-700",
+                      )}
+                    >
+                      {STATUS_LABELS[row.status] ?? row.status}
+                    </span>
+                  </td>
+                  <td className="px-3 py-3.5">
+                    <button
+                      type="button"
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-slate-200 text-slate-500 transition hover:bg-slate-50 hover:text-slate-700"
+                      aria-label={`Manage subscription for ${row.plan_tier}`}
+                      onClick={canOpenPortal ? handleManageSubscription : () => undefined}
+                      disabled={!canOpenPortal}
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {filteredHistory.length === 0 ? (
+            <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">
+              No billing records match your current filters.
+            </div>
+          ) : null}
+        </div>
+      </section>
+
     </>
   );
 }

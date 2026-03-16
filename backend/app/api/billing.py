@@ -14,9 +14,11 @@ from app.core.config import settings
 from app.core.logging import get_request_endpoint, get_request_id
 from app.db.session import get_session
 from app.models.activity_events import ActivityEvent
+from app.models.billing_checkout_attempts import BillingCheckoutAttempt
 from app.schemas.billing import (
     BillingCheckoutRequest,
     BillingCheckoutResponse,
+    BillingHistoryRow,
     BillingPortalSessionResponse,
     BillingSimulateCheckoutRequest,
     BillingSimulateCheckoutResponse,
@@ -73,6 +75,36 @@ async def get_my_subscription(
         billing_mode=settings.billing_mode,
         payment_provider=settings.payment_provider,
     )
+
+
+PLAN_TIER_PRICES: dict[str, str] = {"pro": "$25.00", "trial_7d": "$0.00"}
+
+
+@router.get("/me/history", response_model=list[BillingHistoryRow])
+async def list_billing_history(
+    limit: int = LIMIT_QUERY,
+    session: AsyncSession = SESSION_DEP,
+    ctx: OrganizationContext = ORG_MEMBER_DEP,
+) -> list[BillingHistoryRow]:
+    """Return billing checkout history for the active organization."""
+    rows = list(
+        await session.exec(
+            select(BillingCheckoutAttempt)
+            .where(col(BillingCheckoutAttempt.organization_id) == ctx.organization.id)
+            .order_by(col(BillingCheckoutAttempt.created_at).desc())
+            .limit(limit)
+        )
+    )
+    return [
+        BillingHistoryRow(
+            id=row.id,
+            plan_tier=row.resolved_plan_tier,
+            amount=PLAN_TIER_PRICES.get(row.resolved_plan_tier, "$0.00"),
+            status=row.status,
+            created_at=row.created_at,
+        )
+        for row in rows
+    ]
 
 
 @router.get("/portal-session", response_model=BillingPortalSessionResponse)

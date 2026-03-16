@@ -21,13 +21,12 @@ import {
 } from "@/api/generated/gateways/gateways";
 import { useOrganizationMembership } from "@/lib/use-organization-membership";
 import type { BoardGroupRead } from "@/api/generated/model";
-import { UpgradeModal } from "@/components/billing/upgrade-modal";
 import { DashboardPageLayout } from "@/components/templates/DashboardPageLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import SearchableSelect from "@/components/ui/searchable-select";
 import { Textarea } from "@/components/ui/textarea";
-import { getApiErrorCode, getUpgradeReasonFromError } from "@/lib/billing";
+import { getApiErrorCode } from "@/lib/billing";
 
 const slugify = (value: string) =>
   value
@@ -35,9 +34,6 @@ const slugify = (value: string) =>
     .trim()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/(^-|-$)/g, "") || "board";
-
-const BOARD_UPGRADE_REASON =
-  "Board creation is blocked by your current plan. Upgrade to continue.";
 
 export default function NewBoardPage() {
   const router = useRouter();
@@ -52,8 +48,6 @@ export default function NewBoardPage() {
   const [boardGroupId, setBoardGroupId] = useState<string>("none");
 
   const [error, setError] = useState<string | null>(null);
-  const [upgradeOpen, setUpgradeOpen] = useState(false);
-  const [upgradeReason, setUpgradeReason] = useState(BOARD_UPGRADE_REASON);
 
   const gatewaysQuery = useListGatewaysApiV1GatewaysGet<
     listGatewaysApiV1GatewaysGetResponse,
@@ -87,8 +81,8 @@ export default function NewBoardPage() {
       onError: (err) => {
         const errorCode = getApiErrorCode(err);
         if (errorCode === "blocked_for_payment" || errorCode === "quota_exceeded") {
-          setUpgradeReason(getUpgradeReasonFromError(err, BOARD_UPGRADE_REASON));
-          setUpgradeOpen(true);
+          router.push("/settings");
+          return;
         }
         setError(err.message || "Something went wrong.");
       },
@@ -287,12 +281,6 @@ export default function NewBoardPage() {
         </div>
         </form>
       </DashboardPageLayout>
-      <UpgradeModal
-        open={upgradeOpen}
-        onOpenChange={setUpgradeOpen}
-        reason={upgradeReason}
-        source="boards_new"
-      />
     </>
   );
 }

@@ -62,17 +62,21 @@ export default function SignInPage() {
   const localMode = isLocalAuthMode();
   const clerkEnabled = isClerkEnabled();
 
+  const redirectTarget = resolveSignInRedirectUrl(
+    searchParams.get("redirect_url"),
+  );
+
   useEffect(() => {
     if (!localMode) return;
     if (!getLocalAuthToken()) return;
-    router.replace("/dashboard");
-  }, [localMode, router]);
+    router.replace(redirectTarget);
+  }, [localMode, router, redirectTarget]);
 
   if (localMode) {
     return (
       <LocalAuthLogin
         onAuthenticated={() => {
-          router.replace("/dashboard");
+          router.replace(redirectTarget);
         }}
       />
     );

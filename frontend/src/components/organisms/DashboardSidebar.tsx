@@ -1,8 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Activity,
   BarChart3,
@@ -27,11 +26,8 @@ import {
   type healthzHealthzGetResponse,
   useHealthzHealthzGet,
 } from "@/api/generated/default/default";
-import { UpgradeModal } from "@/components/billing/upgrade-modal";
-import { SidebarUsageMeter } from "@/components/billing/sidebar-usage-meter";
 import { Button } from "@/components/ui/button";
 import { useBillingSubscription } from "@/lib/billing";
-import { planLabelFromTier } from "@/lib/plan-labels";
 import { useOnboardingProgress } from "@/lib/onboarding";
 import { cn } from "@/lib/utils";
 import { useSidebarCollapse } from "@/hooks/useSidebarCollapse";
@@ -39,10 +35,10 @@ import { useSidebarCollapse } from "@/hooks/useSidebarCollapse";
 export function DashboardSidebar() {
   const { collapsed } = useSidebarCollapse();
   const pathname = usePathname();
+  const router = useRouter();
   const { isSignedIn } = useAuth();
   const isPageActive = usePageActive();
   const { isAdmin } = useOrganizationMembership(isSignedIn);
-  const [upgradeOpen, setUpgradeOpen] = useState(false);
   const subscriptionQuery = useBillingSubscription(Boolean(isSignedIn));
   const onboardingQuery = useOnboardingProgress(Boolean(isSignedIn));
   const healthQuery = useHealthzHealthzGet<healthzHealthzGetResponse, ApiError>(
@@ -83,8 +79,6 @@ export function DashboardSidebar() {
     "pending";
   const inviteReady =
     onboardingProgress?.steps.find((step) => step.key === "invite_teammate")?.status !== "pending";
-
-  const isUpgradeModalOpen = upgradeOpen || isBlockedForPayment;
 
   const lockedNavItem = (label: string) => (
     <div className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-slate-500">
@@ -322,7 +316,7 @@ export function DashboardSidebar() {
               <Link
                 href="/settings"
                 className={cn(
-                  "flex items-center justify-between rounded-lg px-3 py-2.5 text-slate-700 transition",
+                  "flex items-center rounded-lg px-3 py-2.5 text-slate-700 transition",
                   pathname.startsWith("/settings")
                     ? "bg-blue-100 text-blue-800 font-medium"
                     : "hover:bg-slate-100",
@@ -332,18 +326,6 @@ export function DashboardSidebar() {
                   <Settings className="h-4 w-4" />
                   Settings
                 </span>
-                {subscriptionQuery.data ? (
-                  <span
-                    className={cn(
-                      "rounded-full px-1.5 py-0.5 text-[10px] font-semibold leading-none",
-                      subscriptionQuery.data.plan_tier === "pro"
-                        ? "bg-blue-100 text-blue-700"
-                        : "bg-slate-100 text-slate-500",
-                    )}
-                  >
-                    {planLabelFromTier(subscriptionQuery.data.plan_tier) ?? "Plan"}
-                  </span>
-                ) : null}
               </Link>
             </div>
           </div>
@@ -360,13 +342,12 @@ export function DashboardSidebar() {
               type="button"
               className="mt-2 h-8 w-full"
               size="sm"
-              onClick={() => setUpgradeOpen(true)}
+              onClick={() => router.push("/settings")}
             >
               Upgrade now
             </Button>
           </div>
         ) : null}
-        <SidebarUsageMeter enabled={Boolean(isSignedIn)} />
         <div className="flex items-center gap-2 text-xs text-slate-500">
           <span
             className={cn(
@@ -379,16 +360,6 @@ export function DashboardSidebar() {
           {statusLabel}
         </div>
       </div>
-      <UpgradeModal
-        open={isUpgradeModalOpen}
-        onOpenChange={(next) => {
-          if (!next && isBlockedForPayment) {
-            return;
-          }
-          setUpgradeOpen(next);
-        }}
-        source="sidebar"
-      />
     </aside>
   );
 }

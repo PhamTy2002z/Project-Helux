@@ -77,6 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return (
     <ClerkProvider
       publishableKey={publishableKey}
+      signInUrl="/sign-in"
       afterSignOutUrl={afterSignOutUrl}
     >
       {children}

@@ -71,6 +71,16 @@ class BillingUpgradeModalOpenEvent(SQLModel):
     source: BillingMetricEventSource = "unknown"
 
 
+class BillingHistoryRow(SQLModel):
+    """Single billing history entry derived from checkout attempts."""
+
+    id: UUID
+    plan_tier: str
+    amount: str
+    status: str
+    created_at: datetime
+
+
 class BillingSupportTimelineEvent(SQLModel):
     """Minimal support timeline event payload for request-id correlation."""
 
