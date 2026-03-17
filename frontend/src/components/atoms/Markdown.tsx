@@ -146,14 +146,14 @@ const summaryStatusTone = (status: string): string => {
     return "border-emerald-200 bg-emerald-50 text-emerald-700";
   }
   if (normalized === "offline") {
-    return "border-slate-200 bg-slate-100 text-slate-600";
+    return "border-[color:var(--border)] bg-[color:var(--surface-muted)] text-[color:var(--text-muted)]";
   }
   return "border-sky-200 bg-sky-50 text-sky-700";
 };
 
 const renderStructuredSummary = (summary: StructuredSummary): ReactNode => (
-  <div className="mb-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700 last:mb-0">
-    <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+  <div className="mb-2 rounded-lg border border-[color:var(--border)] bg-[color:var(--surface-muted)] px-3 py-2 text-xs text-[color:var(--text)] last:mb-0">
+    <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted">
       {summary.heading}
     </p>
     <ul className="space-y-1">
@@ -162,7 +162,7 @@ const renderStructuredSummary = (summary: StructuredSummary): ReactNode => (
           key={`${entry.label}-${entry.status ?? "na"}-${entry.meta.join("|")}`}
           className="flex flex-wrap items-center gap-1.5"
         >
-          <span className="font-semibold text-slate-800">{entry.label}</span>
+          <span className="font-semibold text-strong">{entry.label}</span>
           {entry.status ? (
             <span
               className={cn(
@@ -177,8 +177,8 @@ const renderStructuredSummary = (summary: StructuredSummary): ReactNode => (
             <span
               key={`${entry.label}-${meta}`}
               className={cn(
-                "text-slate-600",
-                meta.toLowerCase().startsWith("last seen ") && "text-slate-500",
+                "text-[color:var(--text-muted)]",
+                meta.toLowerCase().startsWith("last seen ") && "text-muted",
               )}
             >
               {meta}
@@ -300,7 +300,7 @@ const MARKDOWN_CODE_COMPONENTS: Components = {
       return (
         <code
           className={cn(
-            "rounded bg-slate-100 px-1 py-0.5 font-mono text-[0.85em] text-slate-900",
+            "rounded bg-[color:var(--surface-muted)] px-1 py-0.5 font-mono text-[0.85em] text-strong",
             className,
           )}
           {...props}
@@ -326,10 +326,10 @@ const MARKDOWN_TABLE_COMPONENTS: Components = {
     </div>
   ),
   thead: ({ node: _node, className, ...props }) => (
-    <thead className={cn("bg-slate-50", className)} {...props} />
+    <thead className={cn("bg-[color:var(--surface-muted)]", className)} {...props} />
   ),
   tbody: ({ node: _node, className, ...props }) => (
-    <tbody className={cn("divide-y divide-slate-100", className)} {...props} />
+    <tbody className={cn("divide-y divide-[color:var(--border)]", className)} {...props} />
   ),
   tr: ({ node: _node, className, ...props }) => (
     <tr className={cn("align-top", className)} {...props} />
@@ -337,7 +337,7 @@ const MARKDOWN_TABLE_COMPONENTS: Components = {
   th: ({ node: _node, className, children, ...props }) => (
     <th
       className={cn(
-        "border border-slate-200 px-3 py-2 text-left text-xs font-semibold",
+        "border border-[color:var(--border)] px-3 py-2 text-left text-xs font-semibold",
         className,
       )}
       {...props}
@@ -347,7 +347,7 @@ const MARKDOWN_TABLE_COMPONENTS: Components = {
   ),
   td: ({ node: _node, className, children, ...props }) => (
     <td
-      className={cn("border border-slate-200 px-3 py-2 align-top", className)}
+      className={cn("border border-[color:var(--border)] px-3 py-2 align-top", className)}
       {...props}
     >
       {renderMentions(children)}
@@ -451,7 +451,7 @@ const MARKDOWN_COMPONENTS_CHAT: Components = {
   blockquote: ({ node: _node, className, children, ...props }) => (
     <blockquote
       className={cn(
-        "mb-2 border-l-2 border-slate-300 bg-slate-50/70 py-1 pl-3 text-slate-700 last:mb-0",
+        "mb-2 border-l-2 border-[color:var(--border-strong)] bg-[color:var(--surface-muted)]/70 py-1 pl-3 text-[color:var(--text)] last:mb-0",
         className,
       )}
       {...props}
@@ -460,12 +460,12 @@ const MARKDOWN_COMPONENTS_CHAT: Components = {
     </blockquote>
   ),
   hr: ({ node: _node, className, ...props }) => (
-    <hr className={cn("my-3 border-slate-200", className)} {...props} />
+    <hr className={cn("my-3 border-[color:var(--border)]", className)} {...props} />
   ),
   input: ({ node: _node, className, ...props }) => (
     <input
       className={cn(
-        "mr-2 mt-0.5 h-3.5 w-3.5 rounded border-slate-300 accent-slate-700",
+        "mr-2 mt-0.5 h-3.5 w-3.5 rounded border-[color:var(--border-strong)] accent-[color:var(--text)]",
         className,
       )}
       {...props}

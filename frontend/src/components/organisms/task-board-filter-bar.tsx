@@ -74,7 +74,7 @@ export function TaskBoardFilterBar({
   const activeToggleCount = countActiveToggles(state);
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
+    <div className="rounded-xl border border-[color:var(--border)] bg-[color:var(--surface)] px-4 py-3 shadow-sm">
       {/* Row 1: search + filters + primary toggles */}
       <div className="flex flex-wrap items-center gap-2">
         <input
@@ -83,14 +83,14 @@ export function TaskBoardFilterBar({
           placeholder="Search title, assignee, tags"
           value={state.query}
           onChange={(event) => patch({ query: event.target.value })}
-          className="min-w-[180px] flex-1 rounded-lg border border-slate-200 px-3 py-1.5 text-sm outline-none transition focus:border-slate-400"
+          className="min-w-[180px] flex-1 rounded-lg border border-[color:var(--border)] bg-[color:var(--surface)] px-3 py-1.5 text-sm outline-none transition focus:border-[color:var(--border-strong)]"
         />
 
         <select
           aria-label="Saved view"
           value={state.savedView}
           onChange={(event) => patch({ savedView: event.target.value as BoardQueryState["savedView"] })}
-          className="rounded-lg border border-slate-200 px-2.5 py-1.5 text-sm"
+          className="rounded-lg border border-[color:var(--border)] bg-[color:var(--surface)] px-2.5 py-1.5 text-sm"
         >
           {BOARD_SAVED_VIEW_OPTIONS.map((option) => (
             <option key={option.value} value={option.value}>
@@ -103,7 +103,7 @@ export function TaskBoardFilterBar({
           aria-label="Status filter"
           value={state.status}
           onChange={(event) => patch({ status: event.target.value as BoardStatusFilter })}
-          className="rounded-lg border border-slate-200 px-2.5 py-1.5 text-sm"
+          className="rounded-lg border border-[color:var(--border)] bg-[color:var(--surface)] px-2.5 py-1.5 text-sm"
         >
           {STATUS_OPTIONS.map((option) => (
             <option key={option.value} value={option.value}>
@@ -116,7 +116,7 @@ export function TaskBoardFilterBar({
           aria-label="Priority filter"
           value={state.priority}
           onChange={(event) => patch({ priority: event.target.value as BoardPriorityFilter })}
-          className="rounded-lg border border-slate-200 px-2.5 py-1.5 text-sm"
+          className="rounded-lg border border-[color:var(--border)] bg-[color:var(--surface)] px-2.5 py-1.5 text-sm"
         >
           {PRIORITY_OPTIONS.map((option) => (
             <option key={option.value} value={option.value}>
@@ -126,7 +126,7 @@ export function TaskBoardFilterBar({
         </select>
 
         {/* Divider */}
-        <div className="mx-0.5 h-6 w-px bg-slate-200" />
+        <div className="mx-0.5 h-6 w-px bg-[color:var(--border)]" />
 
         {/* Primary toggles — most used, always visible */}
         <button
@@ -135,8 +135,8 @@ export function TaskBoardFilterBar({
           className={cn(
             "rounded-full border px-2.5 py-1 text-xs font-semibold transition",
             state.hideDone
-              ? "border-slate-900 bg-slate-900 text-white"
-              : "border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50",
+              ? "border-[color:var(--text)] bg-[color:var(--text)] text-[color:var(--surface)]"
+              : "border-[color:var(--border)] text-[color:var(--text-muted)] hover:border-[color:var(--border-strong)] hover:bg-[color:var(--surface-muted)]",
           )}
         >
           Hide Done
@@ -147,8 +147,8 @@ export function TaskBoardFilterBar({
           className={cn(
             "rounded-full border px-2.5 py-1 text-xs font-semibold transition",
             state.groupByTaskGroup
-              ? "border-slate-900 bg-slate-900 text-white"
-              : "border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50",
+              ? "border-[color:var(--text)] bg-[color:var(--text)] text-[color:var(--surface)]"
+              : "border-[color:var(--border)] text-[color:var(--text-muted)] hover:border-[color:var(--border-strong)] hover:bg-[color:var(--surface-muted)]",
           )}
         >
           Group by Task Group
@@ -159,7 +159,7 @@ export function TaskBoardFilterBar({
           <button
             type="button"
             onClick={onCollapseAll}
-            className="rounded-full border border-slate-200 px-2.5 py-1 text-xs font-semibold text-slate-600 transition hover:border-slate-300 hover:bg-slate-50"
+            className="rounded-full border border-[color:var(--border)] px-2.5 py-1 text-xs font-semibold text-[color:var(--text-muted)] transition hover:border-[color:var(--border-strong)] hover:bg-[color:var(--surface-muted)]"
           >
             Collapse All Groups
           </button>
@@ -168,7 +168,7 @@ export function TaskBoardFilterBar({
           <button
             type="button"
             onClick={onExpandAll}
-            className="rounded-full border border-slate-200 px-2.5 py-1 text-xs font-semibold text-slate-600 transition hover:border-slate-300 hover:bg-slate-50"
+            className="rounded-full border border-[color:var(--border)] px-2.5 py-1 text-xs font-semibold text-[color:var(--text-muted)] transition hover:border-[color:var(--border-strong)] hover:bg-[color:var(--surface-muted)]"
           >
             Expand All Groups
           </button>
@@ -182,14 +182,14 @@ export function TaskBoardFilterBar({
             className={cn(
               "flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-semibold transition",
               isMoreOpen || activeToggleCount > 0
-                ? "border-slate-400 bg-slate-100 text-slate-700"
-                : "border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50",
+                ? "border-[color:var(--border-strong)] bg-[color:var(--surface-muted)] text-[color:var(--text)]"
+                : "border-[color:var(--border)] text-[color:var(--text-muted)] hover:border-[color:var(--border-strong)] hover:bg-[color:var(--surface-muted)]",
             )}
           >
             <SlidersHorizontal className="h-3 w-3" />
             More
             {activeToggleCount > 0 && (
-              <span className="flex h-4 w-4 items-center justify-center rounded-full bg-slate-900 text-[10px] text-white">
+              <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[color:var(--text)] text-[10px] text-[color:var(--surface)]">
                 {activeToggleCount}
               </span>
             )}
@@ -197,7 +197,7 @@ export function TaskBoardFilterBar({
           </button>
 
           {isMoreOpen && (
-            <div className="absolute right-0 top-full z-20 mt-1.5 w-52 rounded-lg border border-slate-200 bg-white p-2 shadow-lg">
+            <div className="absolute right-0 top-full z-20 mt-1.5 w-52 rounded-lg border border-[color:var(--border)] bg-[color:var(--surface)] p-2 shadow-lg">
               <ToggleOption
                 label="Compact Density"
                 active={state.density === "compact"}
@@ -219,10 +219,10 @@ export function TaskBoardFilterBar({
       </div>
 
       {/* Row 2: counter */}
-      <p className="mt-2 text-xs text-slate-500">
-        Showing <span className="font-semibold text-slate-700">{visibleCount}</span> of{" "}
-        <span className="font-semibold text-slate-700">{totalCount}</span> tasks across{" "}
-        <span className="font-semibold text-slate-700">{groupCount}</span> groups.
+      <p className="mt-2 text-xs text-muted">
+        Showing <span className="font-semibold text-[color:var(--text)]">{visibleCount}</span> of{" "}
+        <span className="font-semibold text-[color:var(--text)]">{totalCount}</span> tasks across{" "}
+        <span className="font-semibold text-[color:var(--text)]">{groupCount}</span> groups.
       </p>
     </div>
   );
@@ -242,13 +242,13 @@ function ToggleOption({
     <button
       type="button"
       onClick={onClick}
-      className="flex w-full items-center justify-between rounded-md px-2.5 py-2 text-xs text-slate-700 transition hover:bg-slate-50"
+      className="flex w-full items-center justify-between rounded-md px-2.5 py-2 text-xs text-[color:var(--text)] transition hover:bg-[color:var(--surface-muted)]"
     >
       {label}
       <span
         className={cn(
           "flex h-4 w-8 items-center rounded-full transition-colors",
-          active ? "justify-end bg-slate-900" : "justify-start bg-slate-200",
+          active ? "justify-end bg-[color:var(--text)]" : "justify-start bg-[color:var(--surface-strong)]",
         )}
       >
         <span className={cn(

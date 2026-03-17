@@ -68,7 +68,7 @@ export const TaskCard = memo(function TaskCard({
     if (normalized === "low") {
       return "bg-emerald-100 text-emerald-700";
     }
-    return "bg-slate-100 text-slate-600";
+    return "bg-[color:var(--surface-muted)] text-[color:var(--text-muted)]";
   };
 
   const priorityLabel = priority ? priority.toUpperCase() : "MEDIUM";
@@ -77,7 +77,7 @@ export const TaskCard = memo(function TaskCard({
   return (
     <div
       className={cn(
-        "group relative cursor-pointer rounded-lg border border-slate-200 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md",
+        "group relative cursor-pointer rounded-lg border border-[color:var(--border)] bg-[color:var(--surface)] shadow-sm transition-all hover:-translate-y-0.5 hover:border-[color:var(--border-strong)] hover:shadow-md",
         density === "compact" ? "p-2.5" : "p-4",
         isDragging && "opacity-60 shadow-none",
         hasPendingApproval && "border-amber-200 bg-amber-50/40",
@@ -110,7 +110,7 @@ export const TaskCard = memo(function TaskCard({
       ) : null}
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 space-y-2">
-          <p className="text-sm font-medium text-slate-900 line-clamp-2 break-words">
+          <p className="text-sm font-medium text-strong line-clamp-2 break-words">
             {title}
           </p>
           {isBlocked ? (
@@ -136,7 +136,7 @@ export const TaskCard = memo(function TaskCard({
               {visibleTags.map((tag) => (
                 <span
                   key={tag.id}
-                  className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-semibold text-slate-700"
+                  className="inline-flex items-center gap-1 rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] px-2 py-0.5 text-[10px] font-semibold text-[color:var(--text)]"
                 >
                   <span
                     className="h-1.5 w-1.5 rounded-full"
@@ -146,7 +146,7 @@ export const TaskCard = memo(function TaskCard({
                 </span>
               ))}
               {tags.length > visibleTags.length ? (
-                <span className="text-[10px] font-semibold text-slate-500">
+                <span className="text-[10px] font-semibold text-muted">
                   +{tags.length - visibleTags.length}
                 </span>
               ) : null}
@@ -157,7 +157,7 @@ export const TaskCard = memo(function TaskCard({
           <span
             className={cn(
               "inline-flex items-center rounded-full px-2 py-1 text-[10px] font-semibold uppercase tracking-wide",
-              priorityBadge(priority) ?? "bg-slate-100 text-slate-600",
+              priorityBadge(priority) ?? "bg-[color:var(--surface-muted)] text-[color:var(--text-muted)]",
             )}
           >
             {priorityLabel}
@@ -165,9 +165,9 @@ export const TaskCard = memo(function TaskCard({
         </div>
       </div>
       {isDetailsHydrated ? (
-        <div className="mt-3 flex items-center justify-between text-xs text-slate-500">
+        <div className="mt-3 flex items-center justify-between text-xs text-muted">
           <div className="flex items-center gap-2">
-            <UserCircle className="h-4 w-4 text-slate-400" />
+            <UserCircle className="h-4 w-4 text-quiet" />
             <span>{assignee ?? "Unassigned"}</span>
           </div>
           {due ? (
@@ -180,7 +180,7 @@ export const TaskCard = memo(function TaskCard({
               <CalendarClock
                 className={cn(
                   "h-4 w-4",
-                  isOverdue ? "text-rose-500" : "text-slate-400",
+                  isOverdue ? "text-rose-500" : "text-quiet",
                 )}
               />
               <span>{due}</span>
@@ -188,7 +188,7 @@ export const TaskCard = memo(function TaskCard({
           ) : null}
         </div>
       ) : (
-        <div className="mt-3 h-4 w-32 rounded bg-slate-100" />
+        <div className="mt-3 h-4 w-32 rounded bg-[color:var(--surface-muted)]" />
       )}
     </div>
   );
