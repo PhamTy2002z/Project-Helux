@@ -33,11 +33,11 @@ export const LiveFeedCard = memo(function LiveFeedCard({
         "rounded-xl border p-3 transition-colors duration-300",
         isNew
           ? "border-blue-200 bg-blue-50/70 shadow-sm hover:border-blue-300 motion-safe:animate-in motion-safe:fade-in motion-safe:zoom-in-95 motion-safe:slide-in-from-right-2 motion-safe:duration-300"
-          : "border-slate-200 bg-white hover:border-slate-300",
+          : "border-[color:var(--border)] bg-[color:var(--surface)] hover:border-[color:var(--border-strong)]",
       )}
     >
       <div className="flex items-start gap-3">
-        <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-700">
+        <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-[color:var(--surface-muted)] text-xs font-semibold text-[color:var(--text)]">
           {authorAvatar}
         </div>
         <div className="min-w-0 flex-1">
@@ -47,9 +47,9 @@ export const LiveFeedCard = memo(function LiveFeedCard({
               onClick={onViewTask}
               disabled={!onViewTask}
               className={cn(
-                "text-left text-sm font-semibold leading-snug text-slate-900",
+                "text-left text-sm font-semibold leading-snug text-strong",
                 onViewTask
-                  ? "cursor-pointer transition hover:text-slate-950 hover:underline"
+                  ? "cursor-pointer transition hover:opacity-80 hover:underline"
                   : "cursor-default",
               )}
               title={taskTitle}
@@ -63,7 +63,7 @@ export const LiveFeedCard = memo(function LiveFeedCard({
               {taskTitle}
             </button>
           </div>
-          <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-slate-500">
+          <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-muted">
             <span
               className={cn(
                 "rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
@@ -72,26 +72,26 @@ export const LiveFeedCard = memo(function LiveFeedCard({
             >
               {eventLabel}
             </span>
-            <span className="font-medium text-slate-700">{authorName}</span>
+            <span className="font-medium text-[color:var(--text)]">{authorName}</span>
             {authorRole ? (
               <>
-                <span className="text-slate-300">·</span>
-                <span className="text-slate-500">{authorRole}</span>
+                <span className="text-quiet">·</span>
+                <span className="text-muted">{authorRole}</span>
               </>
             ) : null}
-            <span className="text-slate-300">·</span>
-            <span className="text-slate-400">
+            <span className="text-quiet">·</span>
+            <span className="text-quiet">
               {formatShortTimestamp(item.created_at)}
             </span>
           </div>
         </div>
       </div>
       {message ? (
-        <div className="mt-3 select-text cursor-text text-sm leading-relaxed text-slate-900 break-words">
+        <div className="mt-3 select-text cursor-text text-sm leading-relaxed text-strong break-words">
           <LazyMarkdown content={message} variant="basic" />
         </div>
       ) : (
-        <p className="mt-3 text-sm text-slate-500">—</p>
+        <p className="mt-3 text-sm text-muted">—</p>
       )}
     </div>
   );

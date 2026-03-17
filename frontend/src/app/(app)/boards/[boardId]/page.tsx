@@ -1554,7 +1554,7 @@ export default function BoardDetailPage() {
       case "done":
         return "bg-emerald-100 text-emerald-700";
       default:
-        return "bg-slate-100 text-slate-600";
+        return "status-badge-neutral";
     }
   };
 
@@ -1567,7 +1567,7 @@ export default function BoardDetailPage() {
       case "low":
         return "bg-emerald-100 text-emerald-700";
       default:
-        return "bg-slate-100 text-slate-600";
+        return "status-badge-neutral";
     }
   };
 
@@ -1625,18 +1625,18 @@ export default function BoardDetailPage() {
         <DashboardSidebar />
         <main
           className={cn(
-            "flex-1 bg-gradient-to-br from-slate-50 to-slate-100",
+            "flex-1 bg-app",
             isSidePanelOpen ? "overflow-hidden" : "overflow-y-auto",
           )}
         >
-          <div className="sticky top-0 z-30 border-b border-slate-200 bg-white shadow-sm">
+          <div className="sticky top-0 z-30 border-b border-[color:var(--border)] bg-[color:var(--surface)] shadow-sm">
             <div className="px-8 py-6">
               <div className="flex flex-wrap items-center justify-between gap-4">
                 <div>
-                  <h1 className="mt-2 text-2xl font-semibold text-slate-900 tracking-tight">
+                  <h1 className="mt-2 text-2xl font-semibold text-strong tracking-tight">
                     {board?.name ?? "Board"}
                   </h1>
-                  <p className="mt-1 text-sm text-slate-500">
+                  <p className="mt-1 text-sm text-muted">
                     Keep tasks moving through your workflow.
                   </p>
                   {isBoardLeadProvisioning ? (
@@ -1647,13 +1647,13 @@ export default function BoardDetailPage() {
                   ) : null}
                 </div>
                 <div className="flex flex-wrap items-center gap-3">
-                  <div className="flex items-center gap-1 rounded-lg bg-slate-100 p-1">
+                  <div className="flex items-center gap-1 rounded-lg bg-[color:var(--surface-muted)] p-1">
                     <button
                       className={cn(
                         "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
                         viewMode === "board"
-                          ? "bg-slate-900 text-white"
-                          : "text-slate-600 hover:bg-slate-200 hover:text-slate-900",
+                          ? "bg-[color:var(--surface-strong)] text-strong"
+                          : "text-[color:var(--text-muted)] hover:bg-[color:var(--surface-strong)] hover:text-strong",
                       )}
                       onClick={() => setViewMode("board")}
                     >
@@ -1663,8 +1663,8 @@ export default function BoardDetailPage() {
                       className={cn(
                         "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
                         viewMode === "list"
-                          ? "bg-slate-900 text-white"
-                          : "text-slate-600 hover:bg-slate-200 hover:text-slate-900",
+                          ? "bg-[color:var(--surface-strong)] text-strong"
+                          : "text-[color:var(--text-muted)] hover:bg-[color:var(--surface-strong)] hover:text-strong",
                       )}
                       onClick={() => setViewMode("list")}
                     >
@@ -1689,7 +1689,7 @@ export default function BoardDetailPage() {
                   >
                     <ShieldCheck className="h-4 w-4" />
                     {pendingApprovals.length > 0 ? (
-                      <span className="absolute -right-1 -top-1 inline-flex min-w-[18px] items-center justify-center rounded-full bg-slate-900 px-1.5 py-0.5 text-[10px] font-semibold text-white">
+                      <span className="absolute -right-1 -top-1 inline-flex min-w-[18px] items-center justify-center rounded-full bg-[color:var(--text)] px-1.5 py-0.5 text-[10px] font-semibold text-[color:var(--surface)]">
                         {pendingApprovals.length}
                       </span>
                     ) : null}
@@ -1753,7 +1753,7 @@ export default function BoardDetailPage() {
                     <button
                       type="button"
                       onClick={() => router.push(`/boards/${boardId}/edit`)}
-                      className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-600 transition hover:border-slate-300 hover:bg-slate-50"
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-[color:var(--border)] text-[color:var(--text-muted)] transition hover:border-[color:var(--border-strong)] hover:bg-[color:var(--surface-muted)]"
                       aria-label="Board settings"
                       title="Board settings"
                     >
@@ -1769,18 +1769,18 @@ export default function BoardDetailPage() {
             {isOrgAdmin ? (
               <aside
                 style={{ width: isAgentsPanelCollapsed ? 56 : 240 }}
-                className="flex h-full flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition-[width] duration-200 ease-in-out"
+                className="flex h-full flex-col overflow-hidden rounded-xl border border-[color:var(--border)] bg-[color:var(--surface)] shadow-sm transition-[width] duration-200 ease-in-out"
               >
                 {/* Header — always rendered, clipped by overflow-hidden */}
-                <div className="flex shrink-0 items-center justify-between border-b border-slate-200 px-3 py-3">
+                <div className="flex shrink-0 items-center justify-between border-b border-[color:var(--border)] px-3 py-3">
                   <div className={cn(
                     "min-w-0 overflow-hidden transition-opacity duration-200",
                     isAgentsPanelCollapsed ? "w-0 opacity-0" : "flex-1 opacity-100",
                   )}>
-                    <p className="whitespace-nowrap text-xs font-semibold uppercase tracking-wider text-slate-500">
+                    <p className="whitespace-nowrap text-xs font-semibold uppercase tracking-wider text-muted">
                       Agents
                     </p>
-                    <p className="whitespace-nowrap text-xs text-slate-400">
+                    <p className="whitespace-nowrap text-xs text-quiet">
                       {sortedAgents.length} total
                     </p>
                   </div>
@@ -1788,7 +1788,7 @@ export default function BoardDetailPage() {
                     type="button"
                     aria-label={isAgentsPanelCollapsed ? "Expand agents panel" : "Collapse agents panel"}
                     onClick={() => setIsAgentsPanelCollapsed((prev) => !prev)}
-                    className="shrink-0 rounded-md border border-slate-200 p-1.5 text-slate-500 transition hover:border-slate-300 hover:bg-slate-50"
+                    className="shrink-0 rounded-md border border-[color:var(--border)] p-1.5 text-muted transition hover:border-[color:var(--border-strong)] hover:bg-[color:var(--surface-muted)]"
                   >
                     {isAgentsPanelCollapsed ? (
                       <ChevronsRight className="h-3.5 w-3.5" />
@@ -1816,10 +1816,10 @@ export default function BoardDetailPage() {
                           key={agent.id}
                           type="button"
                           title={`${agent.name} — ${agentRoleLabel(agent)}`}
-                          className="flex w-full items-center justify-center rounded-lg border border-transparent py-1.5 transition hover:border-slate-200 hover:bg-slate-50"
+                          className="flex w-full items-center justify-center rounded-lg border border-transparent py-1.5 transition hover:border-[color:var(--border)] hover:bg-[color:var(--surface-muted)]"
                           onClick={() => router.push(`/agents/${agent.id}`)}
                         >
-                          <div className="relative flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-700">
+                          <div className="relative flex h-8 w-8 items-center justify-center rounded-full bg-[color:var(--surface-muted)] text-xs font-semibold text-[color:var(--text)]">
                             {agentAvatarLabel(agent)}
                             <StatusDot
                               status={agent.status}
@@ -1837,7 +1837,7 @@ export default function BoardDetailPage() {
                       type="button"
                       title="Add agent"
                       onClick={() => router.push("/agents/new")}
-                      className="flex w-full items-center justify-center rounded-lg border border-dashed border-slate-200 py-1.5 text-slate-400 transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-600"
+                      className="flex w-full items-center justify-center rounded-lg border border-dashed border-[color:var(--border)] py-1.5 text-quiet transition hover:border-[color:var(--border-strong)] hover:bg-[color:var(--surface-muted)] hover:text-[color:var(--text-muted)]"
                     >
                       <Plus className="h-4 w-4" />
                     </button>
@@ -1853,7 +1853,7 @@ export default function BoardDetailPage() {
                     )}
                   >
                     {sortedAgents.length === 0 ? (
-                      <div className="rounded-lg border border-dashed border-slate-200 p-3 text-xs text-slate-500">
+                      <div className="rounded-lg border border-dashed border-[color:var(--border)] p-3 text-xs text-muted">
                         No agents assigned yet.
                       </div>
                     ) : (
@@ -1863,10 +1863,10 @@ export default function BoardDetailPage() {
                           <button
                             key={agent.id}
                             type="button"
-                            className="flex w-full items-center gap-3 rounded-lg border border-transparent px-2 py-2 text-left transition hover:border-slate-200 hover:bg-slate-50"
+                            className="flex w-full items-center gap-3 rounded-lg border border-transparent px-2 py-2 text-left transition hover:border-[color:var(--border)] hover:bg-[color:var(--surface-muted)]"
                             onClick={() => router.push(`/agents/${agent.id}`)}
                           >
-                            <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-700">
+                            <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[color:var(--surface-muted)] text-xs font-semibold text-[color:var(--text)]">
                               {agentAvatarLabel(agent)}
                               <StatusDot
                                 status={agent.status}
@@ -1878,10 +1878,10 @@ export default function BoardDetailPage() {
                               />
                             </div>
                             <div className="min-w-0 flex-1">
-                              <p className="truncate text-sm font-medium text-slate-900">
+                              <p className="truncate text-sm font-medium text-strong">
                                 {agent.name}
                               </p>
-                              <p className="whitespace-nowrap text-[11px] text-slate-500">
+                              <p className="whitespace-nowrap text-[11px] text-muted">
                                 {agentRoleLabel(agent)}
                               </p>
                             </div>
@@ -1892,7 +1892,7 @@ export default function BoardDetailPage() {
                     <button
                       type="button"
                       onClick={() => router.push("/agents/new")}
-                      className="flex w-full items-center justify-center rounded-lg border border-dashed border-slate-200 py-2 text-xs font-semibold text-slate-500 transition hover:border-slate-300 hover:bg-slate-50"
+                      className="flex w-full items-center justify-center rounded-lg border border-dashed border-[color:var(--border)] py-2 text-xs font-semibold text-muted transition hover:border-[color:var(--border-strong)] hover:bg-[color:var(--surface-muted)]"
                     >
                       <Plus className="mr-1.5 h-3.5 w-3.5" />
                       Add Agent
@@ -1904,13 +1904,13 @@ export default function BoardDetailPage() {
 
             <div className="min-w-0 flex-1 space-y-4">
               {error && (
-                <div className="rounded-lg border border-slate-200 bg-white p-3 text-sm text-slate-600 shadow-sm">
+                <div className="rounded-lg border border-[color:var(--border)] bg-[color:var(--surface)] p-3 text-sm text-[color:var(--text-muted)] shadow-sm">
                   {error}
                 </div>
               )}
 
               {isLoading ? (
-                <div className="flex min-h-[50vh] items-center justify-center text-sm text-slate-500">
+                <div className="flex min-h-[50vh] items-center justify-center text-sm text-muted">
                   Loading {titleLabel}…
                 </div>
               ) : (
@@ -1924,18 +1924,18 @@ export default function BoardDetailPage() {
                       ) : null}
 
                       {groupSnapshot?.group ? (
-                        <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
-                          <div className="border-b border-slate-200 px-5 py-4">
+                        <div className="rounded-xl border border-[color:var(--border)] bg-[color:var(--surface)] shadow-sm">
+                          <div className="border-b border-[color:var(--border)] px-5 py-4">
                             <div className="flex flex-wrap items-center justify-between gap-3">
                               <div className="min-w-0">
-                                <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                                <p className="text-xs font-semibold uppercase tracking-wider text-muted">
                                   Related boards
                                 </p>
-                                <p className="mt-1 truncate text-sm font-semibold text-slate-900">
+                                <p className="mt-1 truncate text-sm font-semibold text-strong">
                                   {groupSnapshot.group.name}
                                 </p>
                                 {groupSnapshot.group.description ? (
-                                  <p className="mt-1 max-w-3xl text-xs text-slate-500 line-clamp-2">
+                                  <p className="mt-1 max-w-3xl text-xs text-muted line-clamp-2">
                                     {groupSnapshot.group.description}
                                   </p>
                                 ) : null}
@@ -1975,7 +1975,7 @@ export default function BoardDetailPage() {
                                 {groupSnapshot.boards.map((item) => (
                                   <div
                                     key={item.board.id}
-                                    className="rounded-xl border border-slate-200 bg-slate-50/40 p-4"
+                                    className="rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-muted)] p-4"
                                   >
                                     <button
                                       type="button"
@@ -1985,28 +1985,28 @@ export default function BoardDetailPage() {
                                       }
                                     >
                                       <div className="min-w-0">
-                                        <p className="truncate text-sm font-semibold text-slate-900 group-hover:text-blue-600">
+                                        <p className="truncate text-sm font-semibold text-strong group-hover:text-blue-600">
                                           {item.board.name}
                                         </p>
-                                        <p className="mt-1 text-xs text-slate-500">
+                                        <p className="mt-1 text-xs text-muted">
                                           Updated{" "}
                                           {formatTaskTimestamp(
                                             item.board.updated_at,
                                           )}
                                         </p>
                                       </div>
-                                      <ArrowUpRight className="mt-0.5 h-4 w-4 flex-shrink-0 text-slate-400 group-hover:text-blue-600" />
+                                      <ArrowUpRight className="mt-0.5 h-4 w-4 flex-shrink-0 text-quiet group-hover:text-blue-600" />
                                     </button>
 
                                     <div className="mt-3 flex flex-wrap gap-2 text-xs">
-                                      <span className="rounded-full border border-slate-200 bg-white px-2 py-0.5 text-slate-700">
+                                      <span className="rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] px-2 py-0.5 text-[color:var(--text)]">
                                         Inbox {item.task_counts?.inbox ?? 0}
                                       </span>
-                                      <span className="rounded-full border border-slate-200 bg-white px-2 py-0.5 text-slate-700">
+                                      <span className="rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] px-2 py-0.5 text-[color:var(--text)]">
                                         In progress{" "}
                                         {item.task_counts?.in_progress ?? 0}
                                       </span>
-                                      <span className="rounded-full border border-slate-200 bg-white px-2 py-0.5 text-slate-700">
+                                      <span className="rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] px-2 py-0.5 text-[color:var(--text)]">
                                         Review {item.task_counts?.review ?? 0}
                                       </span>
                                     </div>
@@ -2016,7 +2016,7 @@ export default function BoardDetailPage() {
                                         {item.tasks.slice(0, 3).map((task) => (
                                           <li
                                             key={task.id}
-                                            className="rounded-lg border border-slate-200 bg-white p-3"
+                                            className="rounded-lg border border-[color:var(--border)] bg-[color:var(--surface)] p-3"
                                           >
                                             <div className="flex flex-wrap items-center justify-between gap-2">
                                               <div className="flex min-w-0 items-center gap-2">
@@ -2043,19 +2043,19 @@ export default function BoardDetailPage() {
                                                 >
                                                   {task.priority}
                                                 </span>
-                                                <p className="truncate text-sm font-medium text-slate-900">
+                                                <p className="truncate text-sm font-medium text-strong">
                                                   {task.title}
                                                 </p>
                                               </div>
-                                              <p className="text-xs text-slate-500">
+                                              <p className="text-xs text-muted">
                                                 {formatTaskTimestamp(
                                                   task.updated_at,
                                                 )}
                                               </p>
                                             </div>
-                                            <p className="mt-2 truncate text-xs text-slate-600">
+                                            <p className="mt-2 truncate text-xs text-[color:var(--text-muted)]">
                                               Assignee:{" "}
-                                              <span className="font-medium text-slate-900">
+                                              <span className="font-medium text-strong">
                                                 {task.assignee ?? "Unassigned"}
                                               </span>
                                             </p>
@@ -2066,7 +2066,7 @@ export default function BoardDetailPage() {
                                                   .map((tag) => (
                                                     <span
                                                       key={tag.id}
-                                                      className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-semibold text-slate-700"
+                                                      className="inline-flex items-center gap-1 rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] px-2 py-0.5 text-[10px] font-semibold text-[color:var(--text)]"
                                                     >
                                                       <span
                                                         className="h-1.5 w-1.5 rounded-full"
@@ -2084,13 +2084,13 @@ export default function BoardDetailPage() {
                                           </li>
                                         ))}
                                         {item.tasks.length > 3 ? (
-                                          <li className="text-xs text-slate-500">
+                                          <li className="text-xs text-muted">
                                             +{item.tasks.length - 3} more…
                                           </li>
                                         ) : null}
                                       </ul>
                                     ) : (
-                                      <p className="mt-3 text-sm text-slate-500">
+                                      <p className="mt-3 text-sm text-muted">
                                         No tasks in this snapshot.
                                       </p>
                                     )}
@@ -2098,18 +2098,18 @@ export default function BoardDetailPage() {
                                 ))}
                               </div>
                             ) : (
-                              <p className="text-sm text-slate-500">
+                              <p className="text-sm text-muted">
                                 No other boards in this group yet.
                               </p>
                             )}
                           </div>
                         </div>
                       ) : groupSnapshot ? (
-                        <div className="rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-600 shadow-sm">
-                          <p className="font-semibold text-slate-900">
+                        <div className="rounded-xl border border-[color:var(--border)] bg-[color:var(--surface)] p-4 text-sm text-[color:var(--text-muted)] shadow-sm">
+                          <p className="font-semibold text-strong">
                             No board group configured
                           </p>
-                          <p className="mt-1 text-sm text-slate-600">
+                          <p className="mt-1 text-sm text-[color:var(--text-muted)]">
                             Assign this board to a group to give agents
                             visibility into related work.
                           </p>
@@ -2148,14 +2148,14 @@ export default function BoardDetailPage() {
                       onQueryStateChange={setBoardQueryState}
                     />
                   ) : (
-                    <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
-                      <div className="border-b border-slate-200 px-5 py-4">
+                    <div className="rounded-xl border border-[color:var(--border)] bg-[color:var(--surface)] shadow-sm">
+                      <div className="border-b border-[color:var(--border)] px-5 py-4">
                         <div className="flex items-center justify-between">
                           <div>
-                            <p className="text-sm font-semibold text-slate-900">
+                            <p className="text-sm font-semibold text-strong">
                               All tasks
                             </p>
-                            <p className="text-xs text-slate-500">
+                            <p className="text-xs text-muted">
                               {tasks.length} tasks in this board
                             </p>
                           </div>
@@ -2170,9 +2170,9 @@ export default function BoardDetailPage() {
                           </Button>
                         </div>
                       </div>
-                      <div className="divide-y divide-slate-100">
+                      <div className="divide-y divide-[color:var(--border)]">
                         {tasks.length === 0 ? (
-                          <div className="px-5 py-8 text-sm text-slate-500">
+                          <div className="px-5 py-8 text-sm text-muted">
                             No tasks yet. Create your first task to get started.
                           </div>
                         ) : (
@@ -2180,15 +2180,15 @@ export default function BoardDetailPage() {
                             <button
                               key={task.id}
                               type="button"
-                              className="w-full px-5 py-4 text-left transition hover:bg-slate-50"
+                              className="w-full px-5 py-4 text-left transition hover:bg-[color:var(--surface-muted)]"
                               onClick={() => openComments(task)}
                             >
                               <div className="flex flex-wrap items-center justify-between gap-3">
                                 <div className="min-w-0">
-                                  <p className="truncate text-sm font-semibold text-slate-900">
+                                  <p className="truncate text-sm font-semibold text-strong">
                                     {task.title}
                                   </p>
-                                  <p className="mt-1 text-xs text-slate-500">
+                                  <p className="mt-1 text-xs text-muted">
                                     {task.description
                                       ? task.description
                                           .toString()
@@ -2197,7 +2197,7 @@ export default function BoardDetailPage() {
                                       : "No description"}
                                   </p>
                                 </div>
-                                <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500">
+                                <div className="flex flex-wrap items-center gap-3 text-xs text-muted">
                                   {task.approvals_pending_count ? (
                                     <span className="inline-flex items-center gap-2 text-[10px] font-semibold uppercase tracking-wide text-amber-700">
                                       <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
@@ -2226,7 +2226,7 @@ export default function BoardDetailPage() {
                                       {task.tags.slice(0, 2).map((tag) => (
                                         <span
                                           key={tag.id}
-                                          className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-semibold text-slate-700"
+                                          className="inline-flex items-center gap-1 rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] px-2 py-0.5 text-[10px] font-semibold text-[color:var(--text)]"
                                         >
                                           <span
                                             className="h-1.5 w-1.5 rounded-full"
@@ -2240,16 +2240,16 @@ export default function BoardDetailPage() {
                                         </span>
                                       ))}
                                       {task.tags.length > 2 ? (
-                                        <span className="text-[10px] font-semibold text-slate-500">
+                                        <span className="text-[10px] font-semibold text-muted">
                                           +{task.tags.length - 2}
                                         </span>
                                       ) : null}
                                     </div>
                                   ) : null}
-                                  <span className="text-xs text-slate-500">
+                                  <span className="text-xs text-muted">
                                     {task.assignee ?? "Unassigned"}
                                   </span>
-                                  <span className="text-xs text-slate-500">
+                                  <span className="text-xs text-muted">
                                     {formatTaskTimestamp(
                                       task.updated_at ?? task.created_at,
                                     )}
@@ -2270,7 +2270,7 @@ export default function BoardDetailPage() {
       </SignedIn>
       <div
         className={cn(
-          "fixed inset-0 z-40 bg-slate-900/20 transition-opacity duration-200 ease-out",
+          "fixed inset-0 z-40 bg-[color:var(--text)]/20 transition-opacity duration-200 ease-out",
           isSidePanelOpen
             ? "pointer-events-auto opacity-100"
             : "pointer-events-none opacity-0",

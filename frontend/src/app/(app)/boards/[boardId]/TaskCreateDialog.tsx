@@ -252,7 +252,7 @@ export function TaskCreateDialog({
               <button
                 type="button"
                 onClick={() => onNavigate("/tags")}
-                className="text-xs font-medium text-slate-500 underline underline-offset-2 transition hover:text-slate-700"
+                className="text-xs font-medium text-muted underline underline-offset-2 transition hover:text-[color:var(--text)]"
               >
                 Manage tags
               </button>
@@ -273,7 +273,7 @@ export function TaskCreateDialog({
                   return (
                     <span
                       key={tagId}
-                      className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs text-slate-700"
+                      className="inline-flex items-center gap-1.5 rounded-full border border-[color:var(--border)] bg-[color:var(--surface-muted)] px-3 py-1 text-xs text-[color:var(--text)]"
                     >
                       <span
                         className="h-1.5 w-1.5 rounded-full"
@@ -283,7 +283,7 @@ export function TaskCreateDialog({
                       <button
                         type="button"
                         onClick={() => removeCreateTag(tagId)}
-                        className="rounded-full p-0.5 text-slate-500 transition hover:bg-white hover:text-slate-700"
+                        className="rounded-full p-0.5 text-muted transition hover:bg-[color:var(--surface)] hover:text-[color:var(--text)]"
                         aria-label="Remove tag"
                         disabled={!canWrite || isCreating}
                       >
@@ -294,7 +294,7 @@ export function TaskCreateDialog({
                 })}
               </div>
             ) : (
-              <p className="text-xs text-slate-500">No tags assigned.</p>
+              <p className="text-xs text-muted">No tags assigned.</p>
             )}
           </div>
           {createError ? (

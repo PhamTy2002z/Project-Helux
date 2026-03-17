@@ -68,8 +68,8 @@ export function AgentsControlDialog({
           </div>
         ) : null}
 
-        <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">
-          <p className="font-semibold text-slate-900">What happens</p>
+        <div className="rounded-lg border border-[color:var(--border)] bg-[color:var(--surface-muted)] p-3 text-sm text-[color:var(--text)]">
+          <p className="font-semibold text-strong">What happens</p>
           <ul className="mt-2 list-disc space-y-1 pl-5">
             <li>
               This posts{" "}

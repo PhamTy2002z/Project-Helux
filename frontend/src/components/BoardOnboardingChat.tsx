@@ -155,25 +155,25 @@ function WaitingStateCard({
   submittedAnswer: string | null;
 }) {
   return (
-    <div className="rounded-2xl border border-slate-200/90 bg-gradient-to-br from-slate-50 via-white to-sky-50/70 px-4 py-4 text-sm text-slate-700 shadow-sm">
+    <div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-muted)] px-4 py-4 text-sm text-[color:var(--text)] shadow-sm">
       <div className="flex items-start gap-3">
         <span className="mt-0.5 inline-flex h-8 w-8 items-center justify-center rounded-full bg-sky-100 text-sky-700">
           <RefreshCcw className="h-4 w-4 animate-spin motion-reduce:animate-none" />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="font-semibold text-slate-900">{title}</p>
+          <p className="font-semibold text-strong">{title}</p>
           {submittedAnswer ? (
-            <p className="mt-1 text-xs text-slate-600">
+            <p className="mt-1 text-xs text-[color:var(--text-muted)]">
               Sent:{" "}
-              <span className="font-medium text-slate-900">
+              <span className="font-medium text-strong">
                 {submittedAnswer}
               </span>
             </p>
           ) : null}
-          <p className="mt-1 text-xs text-slate-500">
+          <p className="mt-1 text-xs text-muted">
             This usually takes a few seconds.
           </p>
-          <div className="relative mt-3 h-1.5 overflow-hidden rounded-full bg-slate-200/80">
+          <div className="relative mt-3 h-1.5 overflow-hidden rounded-full bg-[color:var(--surface-strong)]/80">
             <span className="absolute inset-y-0 left-0 w-1/3 rounded-full bg-[color:var(--accent)] animate-progress-shimmer motion-reduce:animate-none" />
           </div>
         </div>
@@ -475,18 +475,18 @@ export function BoardOnboardingChat({
       : "Initializing";
 
   return (
-    <div className="relative overflow-hidden rounded-[1.6rem] border border-slate-200/90 bg-gradient-to-br from-white via-white to-slate-50/80 shadow-lush">
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-r from-sky-100/50 via-white to-blue-100/30" />
+    <div className="relative overflow-hidden rounded-[1.6rem] border border-[color:var(--border)] bg-[color:var(--surface)] shadow-lush">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-r from-sky-100/50 via-transparent to-blue-100/30" />
       <div className="relative space-y-4 p-4 sm:p-6">
-        <DialogHeader className="space-y-2.5 border-b border-slate-200/80 pb-4">
-          <div className="inline-flex w-fit items-center gap-2 rounded-full border border-slate-200 bg-white/80 px-3 py-1 text-xs font-medium text-slate-600 backdrop-blur">
+        <DialogHeader className="space-y-2.5 border-b border-[color:var(--border)] pb-4">
+          <div className="inline-flex w-fit items-center gap-2 rounded-full border border-[color:var(--border)] bg-[color:var(--surface)]/80 px-3 py-1 text-xs font-medium text-[color:var(--text-muted)] backdrop-blur">
             <Sparkles className="h-3.5 w-3.5 text-sky-700" />
             {phaseLabel}
           </div>
-          <DialogTitle className="font-[var(--font-heading)] text-3xl leading-tight text-slate-900 sm:text-[2.1rem]">
+          <DialogTitle className="font-[var(--font-heading)] text-3xl leading-tight text-strong sm:text-[2.1rem]">
             Board onboarding
           </DialogTitle>
-          <p className="max-w-2xl text-sm leading-6 text-slate-600">
+          <p className="max-w-2xl text-sm leading-6 text-[color:var(--text-muted)]">
             {headerHint}
           </p>
         </DialogHeader>
@@ -509,88 +509,88 @@ export function BoardOnboardingChat({
                 submittedAnswer={lastSubmittedAnswer}
               />
             ) : null}
-            <div className="rounded-2xl border border-slate-200 bg-white/80 p-4 text-sm backdrop-blur-sm">
+            <div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)]/80 p-4 text-sm backdrop-blur-sm">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-1">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted">
                     Objective
                   </p>
-                  <p className="text-sm text-slate-800">{draft.objective || "—"}</p>
+                  <p className="text-sm text-strong">{draft.objective || "—"}</p>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted">
                     Target date
                   </p>
-                  <p className="text-sm text-slate-800">{draft.target_date || "—"}</p>
+                  <p className="text-sm text-strong">{draft.target_date || "—"}</p>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted">
                     Board type
                   </p>
-                  <p className="text-sm capitalize text-slate-800">
+                  <p className="text-sm capitalize text-strong">
                     {draft.board_type || "goal"}
                   </p>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted">
                     Success metrics
                   </p>
-                  <pre className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
+                  <pre className="rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-muted)] px-3 py-2 text-xs text-[color:var(--text-muted)]">
                     {JSON.stringify(draft.success_metrics ?? {}, null, 2)}
                   </pre>
                 </div>
               </div>
               {draft.user_profile ? (
-                <div className="mt-4 space-y-2 rounded-xl border border-slate-200/90 bg-slate-50/80 p-3">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                <div className="mt-4 space-y-2 rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-muted)]/80 p-3">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted">
                     User profile
                   </p>
-                  <p className="text-slate-700">
-                    <span className="font-medium text-slate-900">
+                  <p className="text-[color:var(--text)]">
+                    <span className="font-medium text-strong">
                       Preferred name:
                     </span>{" "}
                     {draft.user_profile.preferred_name || "—"}
                   </p>
-                  <p className="text-slate-700">
-                    <span className="font-medium text-slate-900">Pronouns:</span>{" "}
+                  <p className="text-[color:var(--text)]">
+                    <span className="font-medium text-strong">Pronouns:</span>{" "}
                     {draft.user_profile.pronouns || "—"}
                   </p>
-                  <p className="text-slate-700">
-                    <span className="font-medium text-slate-900">Timezone:</span>{" "}
+                  <p className="text-[color:var(--text)]">
+                    <span className="font-medium text-strong">Timezone:</span>{" "}
                     {draft.user_profile.timezone || "—"}
                   </p>
                 </div>
               ) : null}
               {draft.lead_agent ? (
-                <div className="mt-4 space-y-2 rounded-xl border border-slate-200/90 bg-slate-50/80 p-3">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                <div className="mt-4 space-y-2 rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-muted)]/80 p-3">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted">
                     Lead agent preferences
                   </p>
-                  <p className="text-slate-700">
-                    <span className="font-medium text-slate-900">Name:</span>{" "}
+                  <p className="text-[color:var(--text)]">
+                    <span className="font-medium text-strong">Name:</span>{" "}
                     {draft.lead_agent.name || "—"}
                   </p>
-                  <p className="text-slate-700">
-                    <span className="font-medium text-slate-900">Role:</span>{" "}
+                  <p className="text-[color:var(--text)]">
+                    <span className="font-medium text-strong">Role:</span>{" "}
                     {draft.lead_agent.identity_profile?.role || "—"}
                   </p>
-                  <p className="text-slate-700">
-                    <span className="font-medium text-slate-900">
+                  <p className="text-[color:var(--text)]">
+                    <span className="font-medium text-strong">
                       Communication:
                     </span>{" "}
                     {draft.lead_agent.identity_profile?.communication_style ||
                       "—"}
                   </p>
-                  <p className="text-slate-700">
-                    <span className="font-medium text-slate-900">Emoji:</span>{" "}
+                  <p className="text-[color:var(--text)]">
+                    <span className="font-medium text-strong">Emoji:</span>{" "}
                     {draft.lead_agent.identity_profile?.emoji || "—"}
                   </p>
                 </div>
               ) : null}
             </div>
-            <div className="rounded-2xl border border-slate-200 bg-white/80 p-4 backdrop-blur-sm">
+            <div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)]/80 p-4 backdrop-blur-sm">
               <div className="flex items-center justify-between gap-2">
-                <p className="text-sm font-semibold text-slate-900">
+                <p className="text-sm font-semibold text-strong">
                   Extra context (optional)
                 </p>
                 <Button
@@ -638,12 +638,12 @@ export function BoardOnboardingChat({
                           : "Send context"}
                     </Button>
                   </div>
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-muted">
                     Tip: press Enter to send. Shift+Enter for a newline.
                   </p>
                 </div>
               ) : (
-                <p className="mt-2 text-xs text-slate-600">
+                <p className="mt-2 text-xs text-[color:var(--text-muted)]">
                   Add anything that wasn&apos;t covered in the agent&apos;s
                   questions.
                 </p>
@@ -667,11 +667,11 @@ export function BoardOnboardingChat({
           />
         ) : question ? (
           <div className="space-y-4">
-            <div className="rounded-2xl border border-slate-200 bg-white/80 p-4 backdrop-blur-sm">
-              <p className="text-base font-semibold text-slate-900">
+            <div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] p-4 backdrop-blur-sm">
+              <p className="text-base font-semibold text-strong">
                 {question.question}
               </p>
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-xs text-muted">
                 Select one or more options.
               </p>
             </div>
@@ -685,7 +685,7 @@ export function BoardOnboardingChat({
                       "flex min-h-12 w-full cursor-pointer items-center justify-between rounded-2xl border px-4 py-3 text-left text-sm font-medium transition duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--accent)]",
                       isSelected
                         ? "border-[color:var(--accent)] bg-[color:var(--accent-soft)] text-[color:var(--accent)]"
-                        : "border-slate-200 bg-white/90 text-slate-800 hover:border-slate-300 hover:bg-slate-50",
+                        : "border-[color:var(--border)] bg-[color:var(--surface)] text-strong hover:border-[color:var(--border-strong)] hover:bg-[color:var(--surface-muted)]",
                       loading && "cursor-not-allowed opacity-70",
                     )}
                     onClick={() => toggleOption(option.label)}
@@ -696,7 +696,7 @@ export function BoardOnboardingChat({
                     {isSelected ? (
                       <CheckCircle2 className="h-4 w-4 shrink-0" />
                     ) : (
-                      <Circle className="h-4 w-4 shrink-0 text-slate-400" />
+                      <Circle className="h-4 w-4 shrink-0 text-quiet" />
                     )}
                   </button>
                 );
@@ -720,13 +720,13 @@ export function BoardOnboardingChat({
                   }}
                   disabled={loading}
                 />
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-muted">
                   Tip: press Enter to send. Shift+Enter for a newline.
                 </p>
               </div>
             ) : null}
             <div className="flex items-center justify-between gap-3">
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-muted">
                 {loading ? "Sending your answer..." : "Press Next to continue."}
               </p>
               <Button
@@ -744,7 +744,7 @@ export function BoardOnboardingChat({
             </div>
           </div>
         ) : (
-          <div className="rounded-2xl border border-slate-200 bg-white/80 p-4 text-sm text-slate-600 backdrop-blur-sm">
+          <div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] p-4 text-sm text-[color:var(--text-muted)] backdrop-blur-sm">
             {loading
               ? "Waiting for the lead agent..."
               : "Preparing onboarding..."}
