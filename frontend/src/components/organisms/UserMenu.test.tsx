@@ -45,6 +45,10 @@ vi.mock("@/auth/localAuth", () => ({
   isLocalAuthMode: isLocalAuthModeMock,
 }));
 
+vi.mock("@/components/providers/theme-provider", () => ({
+  useTheme: () => ({ theme: "dark", toggleTheme: vi.fn(), setTheme: vi.fn() }),
+}));
+
 vi.mock("@/lib/billing", () => ({
   useBillingSubscription: () => ({
     data: { plan_tier: "trial_7d" },
