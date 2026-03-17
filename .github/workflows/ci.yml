@@ -39,7 +39,7 @@ jobs:
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: mission_control
         ports:
-          - 5432:5432
+          - 54320:5432
         options: >-
           --health-cmd "pg_isready -U postgres"
           --health-interval 10s
@@ -64,6 +64,7 @@ jobs:
           AUTH_MODE: "local"
           LOCAL_AUTH_TOKEN: "ci-local-auth-token-0123456789-0123456789-0123456789x"
           BASE_URL: "http://localhost:8000"
+          DATABASE_URL: "postgresql+psycopg://postgres:postgres@localhost:54320/mission_control"
         run: make backend-saas-gates
 
       - name: Run backend lint + typecheck
@@ -71,6 +72,7 @@ jobs:
           AUTH_MODE: "local"
           LOCAL_AUTH_TOKEN: "ci-local-auth-token-0123456789-0123456789-0123456789x"
           CORS_ORIGINS: "http://localhost:3000"
+          DATABASE_URL: "postgresql+psycopg://postgres:postgres@localhost:54320/mission_control"
         run: make backend-lint
 
       - name: Run backend tests with coverage
@@ -78,6 +80,7 @@ jobs:
           AUTH_MODE: "local"
           LOCAL_AUTH_TOKEN: "ci-local-auth-token-0123456789-0123456789-0123456789x"
           CORS_ORIGINS: "http://localhost:3000"
+          DATABASE_URL: "postgresql+psycopg://postgres:postgres@localhost:54320/mission_control"
         run: make backend-coverage
 
       - name: Upload backend coverage
