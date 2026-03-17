@@ -95,4 +95,4 @@ def _is_current_subscription(plan: OrganizationPlan, event_data: Any) -> bool:
     if not stored_sub_id:
         return True
 
-    return event_sub_id == stored_sub_id
+    return bool(event_sub_id == stored_sub_id)

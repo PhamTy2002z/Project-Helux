@@ -146,10 +146,10 @@ async def simulate_checkout(
             subscription=subscription,
         )
 
-    await get_or_create_organization_plan(session, organization_id=organization_id)
-    plan = await get_organization_plan_for_update(session, organization_id=organization_id)
-    if plan is None:
-        plan = await get_or_create_organization_plan(session, organization_id=organization_id)
+    plan = await get_or_create_organization_plan(session, organization_id=organization_id)
+    locked_plan = await get_organization_plan_for_update(session, organization_id=organization_id)
+    if locked_plan is not None:
+        plan = locked_plan
     _apply_plan_checkout(plan=plan, payload=payload)
     attempt = BillingCheckoutAttempt(
         organization_id=organization_id,
@@ -256,7 +256,7 @@ async def create_checkout_session(
         # First checkout: use external_customer_id for stable binding
         checkout_request["external_customer_id"] = str(organization_id)
 
-    checkout = await client.checkouts.create_async(request=checkout_request)
+    checkout = await client.checkouts.create_async(request=checkout_request)  # type: ignore[arg-type]
 
     # No DB record here — webhook creates it on confirmed payment only
 

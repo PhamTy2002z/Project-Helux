@@ -57,7 +57,7 @@ async def reconcile_organization(
 
     # Find active subscription (already filtered by customer_id)
     polar_sub = None
-    for sub in subscriptions.result or []:
+    for sub in (subscriptions.result if subscriptions else []) or []:
         if getattr(sub, "status", None) == "active":
             polar_sub = sub
             break
@@ -113,7 +113,9 @@ async def reconcile_organization(
 
 async def reconcile_all(session: AsyncSession) -> list[ReconciliationResult]:
     """Reconcile all orgs with Polar billing data."""
-    stmt = select(OrganizationPlan).where(OrganizationPlan.plan_metadata.isnot(None))
+    from sqlmodel import col
+
+    stmt = select(OrganizationPlan).where(col(OrganizationPlan.plan_metadata).isnot(None))
     result = await session.exec(stmt)
     plans = result.all()
 

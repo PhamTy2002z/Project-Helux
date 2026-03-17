@@ -30,7 +30,10 @@ async def handle_polar_webhook(
 
     # Verify webhook signature
     try:
-        from polar_sdk.webhooks import WebhookVerificationError, validate_event
+        from polar_sdk.webhooks import (  # type: ignore[attr-defined]
+            WebhookVerificationError,
+            validate_event,
+        )
 
         event = validate_event(
             body=body,
@@ -71,14 +74,14 @@ async def handle_polar_webhook(
         polar_event_id = f"hash-{hashlib.sha256(body).hexdigest()}"
 
     # Serialize event to JSON-safe dict
-    raw_payload: dict = {}
+    raw_payload: dict[str, object] = {}
     try:
         raw_payload = {
             "type": event_type,
             "data": event_data if isinstance(event_data, dict) else {},
         }
         if hasattr(event_data, "model_dump"):
-            raw_payload["data"] = event_data.model_dump(mode="json")
+            raw_payload["data"] = event_data.model_dump(mode="json")  # type: ignore[union-attr]
         elif hasattr(event_data, "__dict__"):
             import json as _json
 
