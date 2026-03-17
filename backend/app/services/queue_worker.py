@@ -38,6 +38,9 @@ from app.services.openclaw.lifecycle_queue import TASK_TYPE as LIFECYCLE_RECONCI
 from app.services.openclaw.lifecycle_queue import requeue_lifecycle_queue_task
 from app.services.openclaw.lifecycle_reconcile import process_lifecycle_queue_task
 from app.services.queue import QueuedTask, dequeue_task
+from app.services.billing_webhook_queue import TASK_TYPE as BILLING_WEBHOOK_TASK_TYPE
+from app.services.billing_webhook_queue import requeue_billing_webhook_task
+from app.services.billing_webhook_worker import process_billing_webhook_task
 from app.services.webhooks.dispatch import process_webhook_queue_task, requeue_webhook_queue_task
 from app.services.webhooks.queue import TASK_TYPE as WEBHOOK_TASK_TYPE
 
@@ -116,6 +119,14 @@ _TASK_HANDLERS: dict[str, _TaskHandler] = {
             settings.rq_dispatch_retry_max_seconds,
         ),
         requeue=lambda task, delay: requeue_webhook_queue_task(task, delay_seconds=delay),
+    ),
+    BILLING_WEBHOOK_TASK_TYPE: _TaskHandler(
+        handler=process_billing_webhook_task,
+        attempts_to_delay=lambda attempts: min(
+            settings.rq_dispatch_retry_base_seconds * (2 ** max(0, attempts)),
+            settings.rq_dispatch_retry_max_seconds,
+        ),
+        requeue=lambda task, delay: requeue_billing_webhook_task(task, delay_seconds=delay),
     ),
 }
 

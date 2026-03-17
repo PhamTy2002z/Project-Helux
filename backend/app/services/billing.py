@@ -26,12 +26,13 @@ from app.services.entitlements import (
     TRIAL_DURATION_DAYS,
     coerce_plan_tier,
     get_or_create_organization_plan,
+    get_organization_plan_for_update,
 )
 
 
 def _subscription_status(*, tier: str, effective_until: datetime | None) -> SubscriptionStatus:
     now = utcnow()
-    if tier == "trial_7d" and effective_until is not None and effective_until <= now:
+    if effective_until is not None and effective_until <= now:
         return "blocked_for_payment"
     return "active"
 
@@ -145,7 +146,10 @@ async def simulate_checkout(
             subscription=subscription,
         )
 
-    plan = await get_or_create_organization_plan(session, organization_id=organization_id)
+    await get_or_create_organization_plan(session, organization_id=organization_id)
+    plan = await get_organization_plan_for_update(session, organization_id=organization_id)
+    if plan is None:
+        plan = await get_or_create_organization_plan(session, organization_id=organization_id)
     _apply_plan_checkout(plan=plan, payload=payload)
     attempt = BillingCheckoutAttempt(
         organization_id=organization_id,
@@ -225,18 +229,34 @@ async def create_checkout_session(
         or f"{app_settings.base_url}/checkout/success?checkout_id={{CHECKOUT_ID}}"
     )
 
-    checkout = await client.checkouts.create_async(
-        request={
-            "products": [product_id],
-            "success_url": success_url,
-            "customer_email": user_email or None,
-            "metadata": {
-                "organization_id": str(organization_id),
-                "plan_tier": payload.plan_tier,
-                "idempotency_key": payload.idempotency_key,
-            },
-        }
-    )
+    # Check for existing Polar customer to avoid duplicates (BUG-7)
+    plan = await get_or_create_organization_plan(session, organization_id=organization_id)
+    billing_meta: dict[str, object] = {}
+    if isinstance(plan.plan_metadata, dict):
+        raw_billing = plan.plan_metadata.get("billing")
+        billing_meta = raw_billing if isinstance(raw_billing, dict) else {}
+
+    existing_customer_id = billing_meta.get("polar_customer_id")
+
+    checkout_request: dict[str, Any] = {
+        "products": [product_id],
+        "success_url": success_url,
+        "customer_email": user_email or None,
+        "metadata": {
+            "organization_id": str(organization_id),
+            "plan_tier": payload.plan_tier,
+            "idempotency_key": payload.idempotency_key,
+        },
+    }
+
+    # Link to existing Polar customer if available
+    if existing_customer_id and isinstance(existing_customer_id, str):
+        checkout_request["customer_id"] = existing_customer_id
+    else:
+        # First checkout: use external_customer_id for stable binding
+        checkout_request["external_customer_id"] = str(organization_id)
+
+    checkout = await client.checkouts.create_async(request=checkout_request)
 
     # No DB record here — webhook creates it on confirmed payment only
 
@@ -279,11 +299,13 @@ async def create_portal_session(
             detail="No Polar customer found for this organization. Complete a checkout first.",
         )
 
+    from app.core.config import settings as portal_settings
     from app.services.polar_client import get_polar_client
 
     client = get_polar_client()
+    return_url = f"{portal_settings.base_url}/settings"
     portal_session = await client.customer_sessions.create_async(
-        request={"customer_id": customer_id}
+        request={"customer_id": customer_id, "return_url": return_url}
     )
 
     return BillingPortalSessionResponse(

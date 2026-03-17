@@ -50,7 +50,7 @@ ERROR_EVENT_PATTERN = "%failed"
 UPGRADE_MODAL_EVENT_TYPE = "saas.billing.simulated.upgrade_modal_open"
 CHECKOUT_SUCCESS_EVENT_TYPE = "saas.billing.simulated.checkout_succeeded"
 CHECKOUT_FAILURE_EVENT_TYPE = "saas.billing.simulated.checkout_failed"
-TRIAL_BLOCKED_EVENT_TYPE = "saas.trial.expired.blocked"
+TRIAL_BLOCKED_EVENT_TYPE = "saas.plan.expired.blocked"
 _RUNTIME_TYPE_REFERENCES = (UUID, AsyncSession)
 RANGE_QUERY = Query(default="24h")
 BOARD_ID_QUERY = Query(default=None)

@@ -160,31 +160,18 @@ FlowGrid follows a three-tier architecture with clear separation between present
 
 ## Billing V1 & Token Quota Runtime Flow
 
+See detailed documentation: [Billing & Polar Integration](./billing-polar-integration.md)
+
+**Key points**:
+- Polar webhooks use store-then-process pattern (event stored in `polar_webhook_events`, processed async)
+- Plan expiry check applies to ALL tiers (pro + trial) via `effective_until` field
+- Row-level `SELECT FOR UPDATE` lock prevents concurrent modification race conditions
+- Billing history created ONLY on confirmed payment (idempotent by `polar_subscription_id`)
+- Metric renamed: `saas.trial.expired.blocked` → `saas.plan.expired.blocked`
+
+Token Quota Enforcement:
 ```
-Frontend UpgradeModal
-    │
-    ├─→ POST /api/v1/billing/simulate/checkout (org admin, idempotent)
-    └─→ GET  /api/v1/billing/me/subscription
-             │
-             ▼
-        Billing service
-             │
-             ├─ updates organization_plans
-             ├─ writes billing_checkout_attempts (idempotency key)
-             └─ emits admin billing audit event
-
-Runtime write paths (boards/board-groups/agents/tasks)
-    │
-    └─→ entitlements service
-          - resolves tier (`trial_7d`/`pro`)
-          - enforces hard quotas (board-groups, agents-per-board)
-          - returns 402 `blocked_for_payment` when trial expired
-
-Token Quota Enforcement
-    │
-    ├─→ Agent daily ledger: agent_token_daily_usage
-    │     - incremented per agent on execution
-    │     - aggregated by day for quota checks
+Agent daily ledger: agent_token_daily_usage
     │
     ├─→ Quota surfaces: GET /api/v1/metrics/quotas
     │     - derives from ledger with metadata fallback

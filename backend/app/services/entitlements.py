@@ -99,9 +99,8 @@ def policy_for_tier(tier: PlanTier) -> EntitlementPolicy:
     return PLAN_POLICIES[tier]
 
 
-def _trial_expired(*, tier: PlanTier, plan: OrganizationPlan, now: datetime) -> bool:
-    if tier != "trial_7d":
-        return False
+def _plan_expired(*, tier: PlanTier, plan: OrganizationPlan, now: datetime) -> bool:
+    """Check if plan has expired based on effective_until, regardless of tier."""
     return plan.effective_until is not None and plan.effective_until <= now
 
 
@@ -110,7 +109,7 @@ def _payment_blocked_error(*, tier: PlanTier, effective_until: datetime | None) 
         status_code=status.HTTP_402_PAYMENT_REQUIRED,
         detail={
             "code": "blocked_for_payment",
-            "message": "Trial period has ended. Upgrade required to continue runtime actions.",
+            "message": "Subscription has expired. Upgrade or renew to continue.",
             "plan": tier,
             "effective_until": effective_until.isoformat() if effective_until else None,
         },
@@ -119,6 +118,25 @@ def _payment_blocked_error(*, tier: PlanTier, effective_until: datetime | None) 
 
 def _default_trial_until(now: datetime) -> datetime:
     return now + timedelta(days=TRIAL_DURATION_DAYS)
+
+
+async def get_organization_plan_for_update(
+    session: AsyncSession,
+    *,
+    organization_id: UUID,
+) -> OrganizationPlan | None:
+    """Fetch plan with row-level lock (SELECT ... FOR UPDATE).
+
+    Use when modifying plan state to prevent concurrent writes.
+    Must be called within a transaction.
+    """
+    stmt = (
+        select(OrganizationPlan)
+        .where(OrganizationPlan.organization_id == organization_id)
+        .with_for_update()
+    )
+    result = await session.exec(stmt)
+    return result.first()
 
 
 async def get_or_create_organization_plan(
@@ -531,7 +549,7 @@ async def _resolve_policy_for_runtime(
     now = utcnow()
     plan = await get_or_create_organization_plan(session, organization_id=organization_id)
     tier = coerce_plan_tier(plan.tier)
-    if _trial_expired(tier=tier, plan=plan, now=now):
+    if _plan_expired(tier=tier, plan=plan, now=now):
         payload = {
             "request_id": get_request_id(),
             "endpoint": get_request_endpoint(),
@@ -540,7 +558,7 @@ async def _resolve_policy_for_runtime(
         }
         record_activity(
             session,
-            event_type="saas.trial.expired.blocked",
+            event_type="saas.plan.expired.blocked",
             organization_id=organization_id,
             message=json.dumps(payload, separators=(",", ":"), sort_keys=True),
         )

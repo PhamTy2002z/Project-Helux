@@ -24,6 +24,7 @@ from app.models.organization_invite_board_access import OrganizationInviteBoardA
 from app.models.organization_invites import OrganizationInvite
 from app.models.organization_members import OrganizationMember
 from app.models.organization_plans import OrganizationPlan
+from app.models.polar_webhook_events import PolarWebhookEvent
 from app.models.organizations import Organization
 from app.models.skills import GatewayInstalledSkill, MarketplaceSkill, SkillPack
 from app.models.tag_assignments import TagAssignment
@@ -70,6 +71,7 @@ __all__ = [
     "TaskCustomFieldValue",
     "OrganizationMember",
     "OrganizationPlan",
+    "PolarWebhookEvent",
     "OrganizationBoardAccess",
     "OrganizationInvite",
     "OrganizationInviteBoardAccess",

@@ -30,6 +30,11 @@ def get_polar_client() -> Polar:
 
     from polar_sdk import Polar
 
-    _client = Polar(access_token=settings.polar_access_token)
+    _server = "sandbox" if settings.polar_environment == "sandbox" else None
+    _client = Polar(
+        access_token=settings.polar_access_token,
+        server=_server,
+        timeout_ms=10_000,
+    )
     logger.info("Polar client initialized (env=%s)", settings.polar_environment)
     return _client
