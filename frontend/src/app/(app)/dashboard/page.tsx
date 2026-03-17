@@ -647,7 +647,7 @@ export default function DashboardPage() {
                           onKeyDown={(interactionEvent) =>
                             handleLogRowKeyDown(interactionEvent, eventHref)
                           }
-                          className="cursor-pointer overflow-hidden rounded-lg border border-[color:var(--border)] bg-[color:var(--surface)] px-3 py-2 transition hover:border-[color:var(--border-strong)] hover:bg-[color:var(--surface-muted)] focus-visible:border-[color:var(--border-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--accent)]"
+                          className="cursor-pointer overflow-hidden rounded-lg border border-[color:var(--border)] bg-[color:var(--surface)] px-3 py-2 transition hover:border-[color:var(--border-strong)] hover:bg-[color:var(--surface-muted)] focus-visible:outline-none"
                         >
                           <div className="flex items-start justify-between gap-3">
                             <div className="min-w-0 flex-1 overflow-hidden">

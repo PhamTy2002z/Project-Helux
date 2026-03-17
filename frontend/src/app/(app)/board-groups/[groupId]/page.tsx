@@ -882,7 +882,7 @@ export default function BoardGroupDetailPage() {
                       "h-8 w-20 rounded-md border bg-[color:var(--surface)] px-2 text-xs text-strong shadow-sm",
                       heartbeatEvery
                         ? "border-[color:var(--border)]"
-                        : "border-rose-300 focus:border-rose-400 focus:ring-2 focus:ring-rose-100",
+                        : "border-rose-300",
                       !canManageHeartbeat && "opacity-60 cursor-not-allowed",
                     )}
                     placeholder="10"

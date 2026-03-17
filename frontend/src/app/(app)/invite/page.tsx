@@ -140,7 +140,7 @@ function InviteContent() {
                   onChange={(event) => setToken(event.target.value)}
                   placeholder="Paste invite token"
                   disabled={accepted || isSubmitting}
-                  className="h-11 w-full rounded-xl border border-white/15 bg-white/[0.03] px-4 text-sm text-white placeholder:text-white/40 focus:border-white/40 focus:outline-none disabled:opacity-50"
+                  className="h-11 w-full rounded-xl border border-white/15 bg-white/[0.03] px-4 text-sm text-white placeholder:text-white/40 focus:outline-none disabled:opacity-50"
                 />
               </div>
 

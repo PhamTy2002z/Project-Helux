@@ -18,7 +18,7 @@ const SelectTrigger = React.forwardRef<
     ref={ref}
     type="button"
     className={cn(
-      "flex h-11 w-full cursor-pointer items-center justify-between rounded-xl border border-[color:var(--border)] bg-[color:var(--surface)] px-4 text-sm text-strong shadow-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--accent)] focus:ring-offset-2",
+      "flex h-11 w-full cursor-pointer items-center justify-between rounded-xl border border-[color:var(--border)] bg-[color:var(--surface)] px-4 text-sm text-strong shadow-sm focus:outline-none",
       className,
     )}
     {...props}

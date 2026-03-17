@@ -104,6 +104,23 @@ html.transitioning * {
   border-color: var(--border);
 }
 
+/* Remove focus ring/outline on all form elements globally */
+input:focus,
+input:focus-visible,
+textarea:focus,
+textarea:focus-visible,
+select:focus,
+select:focus-visible,
+[role="combobox"]:focus,
+[role="combobox"]:focus-visible,
+[role="listbox"]:focus,
+[role="listbox"]:focus-visible,
+button:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+  ring: none !important;
+}
+
 @keyframes fade-in-up {
   from {
     opacity: 0;

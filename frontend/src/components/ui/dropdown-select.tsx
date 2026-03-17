@@ -137,7 +137,7 @@ export default function DropdownSelect({
           aria-haspopup="listbox"
           disabled={disabled}
           className={cn(
-            "inline-flex h-10 w-auto cursor-pointer items-center justify-between gap-2 rounded-md border border-[color:var(--border-strong)] bg-[color:var(--surface)] px-3 py-2 text-sm font-medium text-strong shadow-sm transition-colors hover:bg-[color:var(--surface-muted)] focus:outline-none focus:ring-2 focus:ring-[color:var(--accent)] focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50",
+            "inline-flex h-10 w-auto cursor-pointer items-center justify-between gap-2 rounded-md border border-[color:var(--border-strong)] bg-[color:var(--surface)] px-3 py-2 text-sm font-medium text-strong shadow-sm transition-colors hover:bg-[color:var(--surface-muted)] focus:outline-none focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50",
             open && "bg-[color:var(--surface-muted)]",
             triggerClassName,
           )}

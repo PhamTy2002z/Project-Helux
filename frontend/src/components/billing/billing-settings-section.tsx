@@ -392,7 +392,7 @@ export function BillingSettingsSection({ isSignedIn }: { isSignedIn: boolean }) 
                 value={historySearch}
                 onChange={(event) => setHistorySearch(event.target.value)}
                 placeholder="Search..."
-                className="h-9 w-full rounded-lg border border-[color:var(--border-strong)] bg-[color:var(--surface)] pl-9 pr-3 text-sm text-[color:var(--text)] placeholder:text-quiet focus:border-[color:var(--border-strong)] focus:outline-none"
+                className="h-9 w-full rounded-lg border border-[color:var(--border-strong)] bg-[color:var(--surface)] pl-9 pr-3 text-sm text-[color:var(--text)] placeholder:text-quiet focus:outline-none"
               />
             </label>
             <label className="relative">
@@ -400,7 +400,7 @@ export function BillingSettingsSection({ isSignedIn }: { isSignedIn: boolean }) 
               <select
                 value={historyStatus}
                 onChange={(event) => setHistoryStatus(event.target.value as HistoryStatus)}
-                className="h-9 min-w-[140px] rounded-lg border border-[color:var(--border-strong)] bg-[color:var(--surface)] pl-9 pr-8 text-sm text-[color:var(--text)] focus:border-[color:var(--border-strong)] focus:outline-none"
+                className="h-9 min-w-[140px] rounded-lg border border-[color:var(--border-strong)] bg-[color:var(--surface)] pl-9 pr-8 text-sm text-[color:var(--text)] focus:outline-none"
               >
                 <option value="all">All status</option>
                 <option value="succeeded">Success</option>
