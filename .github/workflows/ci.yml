@@ -14,8 +14,22 @@ permissions:
   contents: read
 
 jobs:
-  check:
+  # Block direct pushes to main — only allow merges via PR (GitHub web-flow bot)
+  enforce-pr:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Reject direct push to main
+        run: |
+          if [ "${{ github.event.head_commit.committer.username }}" != "web-flow" ]; then
+            echo "::error::Direct push to main detected. Use a pull request instead."
+            exit 1
+          fi
+
+  check-backend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     services:
       postgres:
@@ -53,6 +67,49 @@ jobs:
             backend/.venv
           key: uv-${{ runner.os }}-py${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('backend/uv.lock') }}
 
+      - name: Install backend dependencies
+        run: make backend-sync
+
+      - name: Validate ops scripts
+        run: ./scripts/ci/validate_ops_scripts.sh
+
+      - name: Run SaaS hardening gates
+        env:
+          AUTH_MODE: "local"
+          LOCAL_AUTH_TOKEN: "ci-local-auth-token-0123456789-0123456789-0123456789x"
+          BASE_URL: "http://localhost:8000"
+        run: make backend-saas-gates
+
+      - name: Run backend lint + typecheck
+        env:
+          AUTH_MODE: "local"
+          LOCAL_AUTH_TOKEN: "ci-local-auth-token-0123456789-0123456789-0123456789x"
+          CORS_ORIGINS: "http://localhost:3000"
+        run: make backend-lint
+
+      - name: Run backend tests with coverage
+        env:
+          AUTH_MODE: "local"
+          LOCAL_AUTH_TOKEN: "ci-local-auth-token-0123456789-0123456789-0123456789x"
+          CORS_ORIGINS: "http://localhost:3000"
+        run: make backend-coverage
+
+      - name: Upload backend coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-backend
+          if-no-files-found: ignore
+          path: backend/coverage.xml
+
+  check-frontend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Set up Node
         id: setup-node
         uses: actions/setup-node@v4
@@ -61,32 +118,72 @@ jobs:
           cache: npm
           cache-dependency-path: frontend/package-lock.json
 
-      - name: Install backend dependencies
-        run: make backend-sync
-
       - name: Install frontend dependencies
         run: make frontend-sync
 
       - name: Cache Next.js build cache
         uses: actions/cache@v4
         with:
-          path: |
-            frontend/.next/cache
+          path: frontend/.next/cache
           key: nextjs-${{ runner.os }}-node-${{ steps.setup-node.outputs.node-version }}-${{ hashFiles('frontend/package-lock.json') }}
           restore-keys: |
             nextjs-${{ runner.os }}-node-${{ steps.setup-node.outputs.node-version }}-
 
+      - name: Run frontend checks
+        env:
+          NEXT_TELEMETRY_DISABLED: "1"
+          NEXT_PUBLIC_API_URL: "http://localhost:8000"
+          NEXT_PUBLIC_AUTH_MODE: "local"
+        run: |
+          make frontend-format-check
+          make frontend-lint
+          make frontend-typecheck
+          make frontend-test
+          make frontend-build
 
+      - name: Upload frontend coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-frontend
+          if-no-files-found: ignore
+          path: frontend/coverage/**
+
+  check-migration:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        id: setup-python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install uv
+        run: python -m pip install --upgrade pip uv
+
+      - name: Cache uv
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/uv
+            backend/.venv
+          key: uv-${{ runner.os }}-py${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('backend/uv.lock') }}
+
+      - name: Install backend dependencies
+        run: make backend-sync
 
       - name: Enforce one migration per PR
-        if: ${{ github.event_name == 'pull_request' }}
         env:
           GITHUB_BASE_SHA: ${{ github.event.pull_request.base.sha }}
-        run: |
-          ./scripts/ci/one_migration_per_pr.sh
+        run: ./scripts/ci/one_migration_per_pr.sh
 
       - name: Run migration integrity gate
-        if: ${{ github.event_name == 'pull_request' }}
         env:
           BASE_URL: "http://localhost:8000"
           AUTH_MODE: "local"
@@ -94,14 +191,9 @@ jobs:
         run: |
           set -euo pipefail
 
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            BASE_SHA="${{ github.event.pull_request.base.sha }}"
-            HEAD_SHA="${{ github.sha }}"
-            git fetch --no-tags --depth=1 origin "$BASE_SHA"
-          else
-            BASE_SHA="${{ github.event.before }}"
-            HEAD_SHA="${{ github.sha }}"
-          fi
+          BASE_SHA="${{ github.event.pull_request.base.sha }}"
+          HEAD_SHA="${{ github.sha }}"
+          git fetch --no-tags --depth=1 origin "$BASE_SHA"
 
           CHANGED_FILES=$(git diff --name-only "$BASE_SHA" "$HEAD_SHA")
           echo "Changed files:"
@@ -119,59 +211,59 @@ jobs:
 
           make backend-migration-check
 
-      - name: Validate ops scripts
-        run: |
-          ./scripts/ci/validate_ops_scripts.sh
+  check-docs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
 
-      - name: Run SaaS hardening gates
-        env:
-          AUTH_MODE: "local"
-          LOCAL_AUTH_TOKEN: "ci-local-auth-token-0123456789-0123456789-0123456789x"
-          BASE_URL: "http://localhost:8000"
-        run: |
-          make backend-saas-gates
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: Run backend checks
-        env:
-          # Keep CI builds deterministic.
-          AUTH_MODE: "local"
-          LOCAL_AUTH_TOKEN: "ci-local-auth-token-0123456789-0123456789-0123456789x"
-          CORS_ORIGINS: "http://localhost:3000"
-        run: |
-          make backend-lint
-          make backend-coverage
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
 
-      - name: Run frontend checks
-        env:
-          # Keep CI builds deterministic.
-          NEXT_TELEMETRY_DISABLED: "1"
-          NEXT_PUBLIC_API_URL: "http://localhost:8000"
-          NEXT_PUBLIC_AUTH_MODE: "local"
-        run: |
-          make frontend-lint
-          make frontend-typecheck
-          make frontend-test
-          make frontend-build
-
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
 
       - name: Docs quality gates
-        run: |
-          make docs-check
+        run: make docs-check
 
-      - name: Upload coverage artifacts
-        if: always()
-        uses: actions/upload-artifact@v4
+  security:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Trivy vulnerability scan
+        uses: aquasecurity/trivy-action@master
         with:
-          name: coverage
-          if-no-files-found: ignore
-          path: |
-            backend/coverage.xml
-            frontend/coverage/**
+          scan-type: "fs"
+          severity: "CRITICAL,HIGH"
+          # Report only — tighten to exit-code: '1' once baseline is clean
+          exit-code: "0"
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: npm audit
+        continue-on-error: true
+        run: cd frontend && npm audit --audit-level=high
 
   installer:
     name: Installer (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
-    needs: [check]
+    needs: [check-backend, check-frontend]
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
@@ -351,7 +443,8 @@ jobs:
 
   e2e:
     runs-on: ubuntu-latest
-    needs: [check]
+    needs: [check-frontend]
+    timeout-minutes: 15
 
     steps:
       - name: Checkout
@@ -371,12 +464,10 @@ jobs:
       - name: Cache Next.js build cache
         uses: actions/cache@v4
         with:
-          path: |
-            frontend/.next/cache
+          path: frontend/.next/cache
           key: nextjs-${{ runner.os }}-node-${{ steps.setup-node.outputs.node-version }}-${{ hashFiles('frontend/package-lock.json') }}
           restore-keys: |
             nextjs-${{ runner.os }}-node-${{ steps.setup-node.outputs.node-version }}-
-
 
       - name: Start frontend (dev server)
         env:
