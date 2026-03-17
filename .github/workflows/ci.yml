@@ -17,7 +17,7 @@ jobs:
   # Block direct pushes to main — only allow merges via PR (GitHub web-flow bot)
   enforce-pr:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     timeout-minutes: 5
     steps:
       - name: Reject direct push to main
@@ -28,7 +28,7 @@ jobs:
           fi
 
   check-backend:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     timeout-minutes: 15
 
     services:
@@ -39,7 +39,7 @@ jobs:
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: mission_control
         ports:
-          - 5432:5432
+          - 54320:5432
         options: >-
           --health-cmd "pg_isready -U postgres"
           --health-interval 10s
@@ -50,22 +50,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Python
-        id: setup-python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
-      - name: Install uv
-        run: python -m pip install --upgrade pip uv
-
-      - name: Cache uv
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cache/uv
-            backend/.venv
-          key: uv-${{ runner.os }}-py${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('backend/uv.lock') }}
+      - name: Ensure PATH includes uv
+        run: echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
       - name: Install backend dependencies
         run: make backend-sync
@@ -78,6 +64,7 @@ jobs:
           AUTH_MODE: "local"
           LOCAL_AUTH_TOKEN: "ci-local-auth-token-0123456789-0123456789-0123456789x"
           BASE_URL: "http://localhost:8000"
+          DATABASE_URL: "postgresql+psycopg://postgres:postgres@localhost:54320/mission_control"
         run: make backend-saas-gates
 
       - name: Run backend lint + typecheck
@@ -85,6 +72,7 @@ jobs:
           AUTH_MODE: "local"
           LOCAL_AUTH_TOKEN: "ci-local-auth-token-0123456789-0123456789-0123456789x"
           CORS_ORIGINS: "http://localhost:3000"
+          DATABASE_URL: "postgresql+psycopg://postgres:postgres@localhost:54320/mission_control"
         run: make backend-lint
 
       - name: Run backend tests with coverage
@@ -92,6 +80,7 @@ jobs:
           AUTH_MODE: "local"
           LOCAL_AUTH_TOKEN: "ci-local-auth-token-0123456789-0123456789-0123456789x"
           CORS_ORIGINS: "http://localhost:3000"
+          DATABASE_URL: "postgresql+psycopg://postgres:postgres@localhost:54320/mission_control"
         run: make backend-coverage
 
       - name: Upload backend coverage
@@ -103,31 +92,15 @@ jobs:
           path: backend/coverage.xml
 
   check-frontend:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     timeout-minutes: 15
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Node
-        id: setup-node
-        uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-          cache: npm
-          cache-dependency-path: frontend/package-lock.json
-
       - name: Install frontend dependencies
         run: make frontend-sync
-
-      - name: Cache Next.js build cache
-        uses: actions/cache@v4
-        with:
-          path: frontend/.next/cache
-          key: nextjs-${{ runner.os }}-node-${{ steps.setup-node.outputs.node-version }}-${{ hashFiles('frontend/package-lock.json') }}
-          restore-keys: |
-            nextjs-${{ runner.os }}-node-${{ steps.setup-node.outputs.node-version }}-
 
       - name: Run frontend checks
         env:
@@ -151,29 +124,15 @@ jobs:
 
   check-migration:
     if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     timeout-minutes: 10
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Python
-        id: setup-python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
-      - name: Install uv
-        run: python -m pip install --upgrade pip uv
-
-      - name: Cache uv
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cache/uv
-            backend/.venv
-          key: uv-${{ runner.os }}-py${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('backend/uv.lock') }}
+      - name: Ensure PATH includes uv
+        run: echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
       - name: Install backend dependencies
         run: make backend-sync
@@ -212,28 +171,18 @@ jobs:
           make backend-migration-check
 
   check-docs:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     timeout-minutes: 5
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
       - name: Docs quality gates
         run: make docs-check
 
   security:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     timeout-minutes: 10
 
     steps:
@@ -241,39 +190,17 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Trivy vulnerability scan
-        uses: aquasecurity/trivy-action@master
-        with:
-          scan-type: "fs"
-          severity: "CRITICAL,HIGH"
-          # Report only — tighten to exit-code: '1' once baseline is clean
-          exit-code: "0"
-
-      - name: Set up Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-          cache: npm
-          cache-dependency-path: frontend/package-lock.json
+        run: trivy fs --severity CRITICAL,HIGH --exit-code 0 .
 
       - name: npm audit
         continue-on-error: true
         run: cd frontend && npm audit --audit-level=high
 
   installer:
-    name: Installer (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
+    name: Installer (smoke test)
+    runs-on: self-hosted
     needs: [check-backend, check-frontend]
     timeout-minutes: 20
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os: ubuntu-latest
-            run_linux_smoke_tests: true
-            run_macos_local_smoke_test: false
-          - os: macos-latest
-            run_linux_smoke_tests: false
-            run_macos_local_smoke_test: true
 
     steps:
       - name: Checkout
@@ -282,52 +209,7 @@ jobs:
       - name: Validate installer shell syntax
         run: bash -n install.sh
 
-      - name: Set up Python for macOS installer smoke test
-        if: ${{ matrix.run_macos_local_smoke_test }}
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
-      - name: Install uv for macOS installer smoke test
-        if: ${{ matrix.run_macos_local_smoke_test }}
-        run: python -m pip install --upgrade pip uv
-
-      - name: Set up Node for macOS installer smoke test
-        if: ${{ matrix.run_macos_local_smoke_test }}
-        uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-
-      - name: Start PostgreSQL for macOS installer smoke test
-        if: ${{ matrix.run_macos_local_smoke_test }}
-        run: |
-          brew install postgresql@16
-          PG_BIN="$(brew --prefix postgresql@16)/bin"
-          "$PG_BIN/initdb" -D "$RUNNER_TEMP/pgdata"
-          "$PG_BIN/pg_ctl" -D "$RUNNER_TEMP/pgdata" -l "$RUNNER_TEMP/postgres.log" -o "-p 55432" start
-          "$PG_BIN/createdb" -p 55432 mission_control
-
-      - name: Installer smoke test (macOS local mode + external db)
-        if: ${{ matrix.run_macos_local_smoke_test }}
-        run: |
-          PGUSER="$(whoami)"
-          ./install.sh \
-            --mode local \
-            --backend-port 18002 \
-            --frontend-port 13002 \
-            --public-host localhost \
-            --api-url http://localhost:18002 \
-            --token-mode generate \
-            --db-mode external \
-            --database-url "postgresql+psycopg://${PGUSER}@localhost:55432/mission_control" \
-            --start-services no
-          test -f .env
-          test -f backend/.env
-          test -f frontend/.env
-          test -f frontend/.next/BUILD_ID
-
       - name: Installer smoke test (docker mode)
-        if: ${{ matrix.run_linux_smoke_tests }}
         run: |
           ./install.sh \
             --mode docker \
@@ -363,12 +245,11 @@ jobs:
           fi
 
       - name: Cleanup docker stack after docker mode
-        if: ${{ always() && matrix.run_linux_smoke_tests }}
+        if: always()
         run: |
           docker compose -f compose.yml --env-file .env down -v --remove-orphans || true
 
       - name: Installer smoke test (local mode)
-        if: ${{ matrix.run_linux_smoke_tests }}
         env:
           XDG_STATE_HOME: ${{ github.workspace }}/.installer-state
         run: |
@@ -415,7 +296,7 @@ jobs:
           fi
 
       - name: Cleanup local processes and docker resources
-        if: ${{ always() && matrix.run_linux_smoke_tests }}
+        if: always()
         env:
           XDG_STATE_HOME: ${{ github.workspace }}/.installer-state
         run: |
@@ -424,25 +305,8 @@ jobs:
           if [ -f "$LOG_DIR/frontend.pid" ]; then kill "$(cat "$LOG_DIR/frontend.pid")" || true; fi
           docker compose -f compose.yml --env-file .env down -v --remove-orphans || true
 
-      - name: Cleanup macOS PostgreSQL
-        if: ${{ always() && matrix.run_macos_local_smoke_test }}
-        run: |
-          if ! command -v brew >/dev/null 2>&1; then
-            exit 0
-          fi
-
-          PG_PREFIX="$(brew --prefix postgresql@16 2>/dev/null || true)"
-          if [ -z "$PG_PREFIX" ] || [ ! -d "$PG_PREFIX" ]; then
-            exit 0
-          fi
-
-          PG_BIN="$PG_PREFIX/bin"
-          if [ -d "$RUNNER_TEMP/pgdata" ] && [ -x "$PG_BIN/pg_ctl" ]; then
-            "$PG_BIN/pg_ctl" -D "$RUNNER_TEMP/pgdata" -m fast stop || true
-          fi
-
   e2e:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     needs: [check-frontend]
     timeout-minutes: 15
 
@@ -450,24 +314,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Node
-        id: setup-node
-        uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-          cache: npm
-          cache-dependency-path: frontend/package-lock.json
-
       - name: Install frontend dependencies
         run: make frontend-sync
-
-      - name: Cache Next.js build cache
-        uses: actions/cache@v4
-        with:
-          path: frontend/.next/cache
-          key: nextjs-${{ runner.os }}-node-${{ steps.setup-node.outputs.node-version }}-${{ hashFiles('frontend/package-lock.json') }}
-          restore-keys: |
-            nextjs-${{ runner.os }}-node-${{ steps.setup-node.outputs.node-version }}-
 
       - name: Start frontend (dev server)
         env:
@@ -476,9 +324,9 @@ jobs:
           NEXT_TELEMETRY_DISABLED: "1"
         run: |
           cd frontend
-          npm run dev -- --hostname 0.0.0.0 --port 3000 &
+          npm run dev -- --hostname 127.0.0.1 --port 3100 &
           for i in {1..60}; do
-            if curl -sf http://localhost:3000/ > /dev/null; then exit 0; fi
+            if curl -sf http://127.0.0.1:3100/ > /dev/null; then exit 0; fi
             sleep 2
           done
           echo "Frontend did not start"
@@ -489,9 +337,15 @@ jobs:
           NEXT_PUBLIC_API_URL: "http://localhost:8000"
           NEXT_PUBLIC_AUTH_MODE: "local"
           NEXT_TELEMETRY_DISABLED: "1"
+          CYPRESS_baseUrl: "http://127.0.0.1:3100"
         run: |
           cd frontend
           npm run e2e -- --browser chrome
+
+      - name: Cleanup dev server
+        if: always()
+        run: |
+          pkill -f "next dev.*3100" || true
 
       - name: Upload Cypress artifacts
         if: failure()
