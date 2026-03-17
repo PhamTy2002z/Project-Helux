@@ -12,6 +12,9 @@ from redis.asyncio import Redis
 
 from app.core.config import settings
 from app.core.logging import get_logger
+from app.services.billing_webhook_queue import TASK_TYPE as BILLING_WEBHOOK_TASK_TYPE
+from app.services.billing_webhook_queue import requeue_billing_webhook_task
+from app.services.billing_webhook_worker import process_billing_webhook_task
 from app.services.board_chat_files.queue import TASK_TYPE as FILE_EXTRACT_TASK_TYPE
 from app.services.board_chat_files.queue import requeue_extraction_task
 from app.services.board_chat_files.report_deadline_queue import (
@@ -38,9 +41,6 @@ from app.services.openclaw.lifecycle_queue import TASK_TYPE as LIFECYCLE_RECONCI
 from app.services.openclaw.lifecycle_queue import requeue_lifecycle_queue_task
 from app.services.openclaw.lifecycle_reconcile import process_lifecycle_queue_task
 from app.services.queue import QueuedTask, dequeue_task
-from app.services.billing_webhook_queue import TASK_TYPE as BILLING_WEBHOOK_TASK_TYPE
-from app.services.billing_webhook_queue import requeue_billing_webhook_task
-from app.services.billing_webhook_worker import process_billing_webhook_task
 from app.services.webhooks.dispatch import process_webhook_queue_task, requeue_webhook_queue_task
 from app.services.webhooks.queue import TASK_TYPE as WEBHOOK_TASK_TYPE
 

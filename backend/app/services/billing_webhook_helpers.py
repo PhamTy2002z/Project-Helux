@@ -9,7 +9,10 @@ from uuid import UUID
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.models.organization_plans import OrganizationPlan
-from app.services.entitlements import get_or_create_organization_plan, get_organization_plan_for_update
+from app.services.entitlements import (
+    get_or_create_organization_plan,
+    get_organization_plan_for_update,
+)
 
 
 def _safe_get(obj: Any, key: str) -> Any:
