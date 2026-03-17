@@ -26,6 +26,8 @@ permissions:
 
 env:
   REGISTRY: ghcr.io
+  BACKEND_IMAGE: ghcr.io/phamty2002z/flowgrid-backend
+  FRONTEND_IMAGE: ghcr.io/phamty2002z/flowgrid-frontend
 
 jobs:
   build-and-push:
@@ -71,8 +73,8 @@ jobs:
           file: backend/Dockerfile
           push: true
           tags: |
-            ${{ steps.meta.outputs.backend_image }}:${{ steps.meta.outputs.version }}
-            ${{ steps.meta.outputs.backend_image }}:latest
+            ${{ env.BACKEND_IMAGE }}:${{ steps.meta.outputs.version }}
+            ${{ env.BACKEND_IMAGE }}:latest
           cache-from: type=gha,scope=backend
           cache-to: type=gha,mode=max,scope=backend
 
@@ -93,8 +95,8 @@ jobs:
             NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL=${{ secrets.NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL || '/boards' }}
             NEXT_PUBLIC_CLERK_AFTER_SIGN_OUT_URL=${{ secrets.NEXT_PUBLIC_CLERK_AFTER_SIGN_OUT_URL || '/' }}
           tags: |
-            ${{ steps.meta.outputs.frontend_image }}:${{ steps.meta.outputs.version }}
-            ${{ steps.meta.outputs.frontend_image }}:latest
+            ${{ env.FRONTEND_IMAGE }}:${{ steps.meta.outputs.version }}
+            ${{ env.FRONTEND_IMAGE }}:latest
           cache-from: type=gha,scope=frontend
           cache-to: type=gha,mode=max,scope=frontend
 
