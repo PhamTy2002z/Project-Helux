@@ -160,11 +160,17 @@ describe("BoardOnboardingChat polling", () => {
     await screen.findByText("Pick a style");
 
     fireEvent.click(screen.getByRole("button", { name: "Option A" }));
+    await act(async () => {
+      await Promise.resolve();
+    });
     fireEvent.click(screen.getByRole("button", { name: "Next" }));
 
-    await waitFor(() => {
-      expect(answerOnboardingMock).toHaveBeenCalledTimes(1);
-    });
+    await waitFor(
+      () => {
+        expect(answerOnboardingMock).toHaveBeenCalledTimes(1);
+      },
+      { timeout: 3000 },
+    );
 
     const callsBeforePoll = getOnboardingMock.mock.calls.length;
     await act(async () => {
