@@ -38,10 +38,10 @@ export function DashboardHeaderUserInfo({ isOnboardingPath }: { isOnboardingPath
   return (
     <div className="flex items-center gap-3 px-6">
       <div className="hidden text-right lg:block">
-        <p className="text-sm font-semibold text-slate-900">{displayName}</p>
-        <p className="text-xs text-slate-500">
+        <p className="text-sm font-semibold text-strong">{displayName}</p>
+        <p className="text-xs text-muted">
           Current plan:{" "}
-          <span className="font-medium text-slate-700">{currentPlanLabel ?? "—"}</span>
+          <span className="font-medium text-[color:var(--text)]">{currentPlanLabel ?? "—"}</span>
         </p>
       </div>
       <UserMenu displayName={displayName} displayEmail={displayEmail} />

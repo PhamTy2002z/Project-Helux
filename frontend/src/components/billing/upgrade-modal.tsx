@@ -32,10 +32,10 @@ import { QuotaSummary } from "./quota-summary";
 function FeatureRow({ label, free, pro }: { label: string; free: string; pro: string }) {
   return (
     <div className="flex items-center justify-between text-sm">
-      <span className="text-slate-600">{label}</span>
+      <span className="text-[color:var(--text-muted)]">{label}</span>
       <div className="flex items-center gap-3">
-        <span className="text-slate-400 line-through">{free}</span>
-        <span className="font-semibold text-slate-900">{pro}</span>
+        <span className="text-quiet line-through">{free}</span>
+        <span className="font-semibold text-strong">{pro}</span>
       </div>
     </div>
   );
@@ -133,13 +133,13 @@ export function UpgradeModal({
       <DialogContent className="sm:max-w-lg sm:p-7">
         <DialogHeader>
           <DialogTitle>Upgrade to Pro</DialogTitle>
-          <DialogDescription className="mt-1 text-sm leading-6 text-slate-600">
+          <DialogDescription className="mt-1 text-sm leading-6 text-[color:var(--text-muted)]">
             {reason ?? "Unlock higher limits and more boards."}
           </DialogDescription>
         </DialogHeader>
 
         {trialExpired ? (
-          <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm text-amber-800">
+          <div className="status-warning rounded-lg px-4 py-2.5 text-sm">
             Trial has expired. Runtime actions are blocked until upgrade.
           </div>
         ) : null}
@@ -157,7 +157,7 @@ export function UpgradeModal({
         ) : null}
 
         {checkoutError ? (
-          <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-2.5 text-sm text-rose-700">
+          <div className="status-danger rounded-lg px-4 py-2.5 text-sm">
             {checkoutError}
           </div>
         ) : null}

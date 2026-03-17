@@ -32,12 +32,12 @@ export function ProWelcomeModal({ open, onClose }: ProWelcomeModalProps) {
             <Sparkles className="h-7 w-7 text-emerald-600" />
           </div>
           <DialogTitle className="text-xl">Welcome to Pro!</DialogTitle>
-          <p className="mt-1 text-sm text-slate-500">Your plan is now active. Here&apos;s what&apos;s unlocked:</p>
+          <p className="mt-1 text-sm text-muted">Your plan is now active. Here&apos;s what&apos;s unlocked:</p>
         </DialogHeader>
 
         <ul className="mx-auto mt-4 w-full max-w-xs space-y-2.5 text-left">
           {UNLOCKED_FEATURES.map((f) => (
-            <li key={f} className="flex items-center gap-2.5 text-sm text-slate-700">
+            <li key={f} className="flex items-center gap-2.5 text-sm text-[color:var(--text)]">
               <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-500" />
               {f}
             </li>
