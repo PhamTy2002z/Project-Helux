@@ -4,6 +4,8 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import dynamic from "next/dynamic";
 
+import { ThemeProvider } from "@/components/providers/theme-provider";
+
 import { DM_Serif_Display, IBM_Plex_Sans, Sora } from "next/font/google";
 
 import {
@@ -96,7 +98,7 @@ const DevAgentation =
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://stream.mux.com" crossOrigin="" />
         <link
@@ -104,11 +106,18 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           href="https://d8j0ntlcm91z4.cloudfront.net"
           crossOrigin=""
         />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var s=localStorage.getItem('theme');var d=window.matchMedia('(prefers-color-scheme: dark)').matches;var t=s||(d?'dark':'light');if(t==='light')document.documentElement.classList.add('light');else document.documentElement.classList.remove('light')}catch(e){}})();`,
+          }}
+        />
       </head>
       <body
         className={`${bodyFont.variable} ${headingFont.variable} ${displayFont.variable} min-h-screen bg-app text-strong antialiased`}
       >
-        {children}
+        <ThemeProvider>
+          {children}
+        </ThemeProvider>
         {DevAgentation ? <DevAgentation /> : null}
       </body>
     </html>
