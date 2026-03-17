@@ -52,11 +52,11 @@ export default function OnboardingPage() {
     <DashboardShell>
       <SignedOut>
         <div className="lg:col-span-2 flex min-h-[70vh] items-center justify-center">
-          <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
+          <div className="w-full max-w-md rounded-xl border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm">
+            <h1 className="text-2xl font-semibold tracking-tight text-strong">
               Onboarding
             </h1>
-            <p className="mt-2 text-sm text-slate-600">
+            <p className="mt-2 text-sm text-[color:var(--text-muted)]">
               Sign in to start the first-value onboarding flow.
             </p>
             <div className="mt-5">
@@ -72,13 +72,13 @@ export default function OnboardingPage() {
         </div>
       </SignedOut>
       <SignedIn>
-        <div className="lg:col-span-2 bg-slate-50 px-4 py-8 sm:px-6 lg:px-10">
+        <div className="lg:col-span-2 bg-app px-4 py-8 sm:px-6 lg:px-10">
           <div className="mx-auto flex w-full max-w-[58rem] origin-top flex-col items-center xl:scale-90">
             <div className="mb-6 w-full max-w-4xl">
-              <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
+              <h1 className="text-2xl font-semibold tracking-tight text-strong">
                 First-value onboarding
               </h1>
-              <p className="mt-2 text-sm text-slate-600">
+              <p className="mt-2 text-sm text-[color:var(--text-muted)]">
                 Complete these steps to unlock your full workspace setup.
               </p>
             </div>

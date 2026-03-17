@@ -56,17 +56,17 @@ export function GettingStartedChecklist({ progress }: GettingStartedChecklistPro
           <Link
             key={step.key}
             href={STEP_LINKS[step.key]}
-            className="flex items-center justify-between rounded-lg border border-blue-100 bg-white px-3 py-2 text-sm transition hover:border-blue-200"
+            className="flex items-center justify-between rounded-lg border border-[color:var(--border)] bg-[color:var(--surface)] px-3 py-2 text-sm transition hover:border-[color:var(--border-strong)]"
           >
-            <span className="inline-flex items-center gap-2 text-slate-800">
+            <span className="inline-flex items-center gap-2 text-strong">
               {step.status === "pending" ? (
-                <Circle className="h-4 w-4 text-slate-400" />
+                <Circle className="h-4 w-4 text-quiet" />
               ) : (
                 <CheckCircle2 className="h-4 w-4 text-emerald-600" />
               )}
               {step.title}
             </span>
-            <span className="text-xs text-slate-500">
+            <span className="text-xs text-muted">
               {step.status === "pending" ? "Pending" : step.status}
             </span>
           </Link>
