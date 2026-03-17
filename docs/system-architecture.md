@@ -160,7 +160,7 @@ FlowGrid follows a three-tier architecture with clear separation between present
 
 ## Billing V1 & Token Quota Runtime Flow
 
-See detailed documentation: [Billing & Polar Integration](./billing-polar-integration.md)
+See detailed documentation: [Billing & Polar Integration](./architecture/billing-polar-integration.md)
 
 **Key points**:
 - Polar webhooks use store-then-process pattern (event stored in `polar_webhook_events`, processed async)
