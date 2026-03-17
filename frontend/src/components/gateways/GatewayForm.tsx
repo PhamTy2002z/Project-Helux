@@ -60,10 +60,10 @@ export function GatewayForm({
   return (
     <form
       onSubmit={onSubmit}
-      className="space-y-6 rounded-xl border border-slate-200 bg-white p-6 shadow-sm"
+      className="space-y-6 rounded-xl border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm"
     >
       <div className="space-y-2">
-        <label className="text-sm font-medium text-slate-900">
+        <label className="text-sm font-medium text-strong">
           Gateway name <span className="text-red-500">*</span>
         </label>
         <Input
@@ -76,7 +76,7 @@ export function GatewayForm({
 
       <div className="grid gap-6 md:grid-cols-2">
         <div className="space-y-2">
-          <label className="text-sm font-medium text-slate-900">
+          <label className="text-sm font-medium text-strong">
             Gateway URL <span className="text-red-500">*</span>
           </label>
           <div className="relative">
@@ -95,7 +95,7 @@ export function GatewayForm({
           ) : null}
         </div>
         <div className="space-y-2">
-          <label className="text-sm font-medium text-slate-900">
+          <label className="text-sm font-medium text-strong">
             Gateway token
           </label>
           <Input
@@ -109,7 +109,7 @@ export function GatewayForm({
 
       <div className="grid gap-6 md:grid-cols-2">
         <div className="space-y-2">
-          <label className="text-sm font-medium text-slate-900">
+          <label className="text-sm font-medium text-strong">
             Workspace root <span className="text-red-500">*</span>
           </label>
           <Input
@@ -121,10 +121,10 @@ export function GatewayForm({
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium text-slate-900">
+          <label className="text-sm font-medium text-strong">
             Disable device pairing
           </label>
-          <label className="flex h-10 items-center gap-3 px-1 text-sm text-slate-900">
+          <label className="flex h-10 items-center gap-3 px-1 text-sm text-strong">
             <button
               type="button"
               role="switch"
@@ -137,7 +137,7 @@ export function GatewayForm({
               className={`inline-flex h-6 w-11 shrink-0 items-center rounded-full border transition ${
                 disableDevicePairing
                   ? "border-emerald-600 bg-emerald-600"
-                  : "border-slate-300 bg-slate-200"
+                  : "border-[color:var(--border-strong)] bg-[color:var(--surface-strong)]"
               } ${isLoading ? "cursor-not-allowed opacity-60" : "cursor-pointer"}`}
             >
               <span
@@ -151,10 +151,10 @@ export function GatewayForm({
       </div>
 
       <div className="space-y-2">
-        <label className="text-sm font-medium text-slate-900">
+        <label className="text-sm font-medium text-strong">
           Allow self-signed TLS certificates
         </label>
-        <label className="flex h-10 items-center gap-3 px-1 text-sm text-slate-900">
+        <label className="flex h-10 items-center gap-3 px-1 text-sm text-strong">
           <button
             type="button"
             role="switch"
@@ -165,7 +165,7 @@ export function GatewayForm({
             className={`inline-flex h-6 w-11 shrink-0 items-center rounded-full border transition ${
               allowInsecureTls
                 ? "border-emerald-600 bg-emerald-600"
-                : "border-slate-300 bg-slate-200"
+                : "border-[color:var(--border-strong)] bg-[color:var(--surface-strong)]"
             } ${isLoading ? "cursor-not-allowed opacity-60" : "cursor-pointer"}`}
           >
             <span

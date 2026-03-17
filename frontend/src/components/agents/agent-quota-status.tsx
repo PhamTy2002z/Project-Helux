@@ -153,7 +153,7 @@ export function AgentQuotaCell({ agent }: AgentQuotaCellProps) {
   const quota = useMemo(() => resolveQuota(agent), [agent]);
 
   if (!quota) {
-    return <span className="text-sm text-slate-400">--</span>;
+    return <span className="text-sm text-quiet">--</span>;
   }
 
   const style = LEVEL_STYLES[quota.level];
@@ -161,7 +161,7 @@ export function AgentQuotaCell({ agent }: AgentQuotaCellProps) {
   return (
     <div className="flex min-w-[140px] flex-col gap-1.5" title={quota.resetHint}>
       {/* Progress bar */}
-      <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
+      <div className="h-1.5 w-full overflow-hidden rounded-full bg-[color:var(--surface-muted)]">
         <div
           className={cn("h-full rounded-full transition-all duration-500", style.bar)}
           style={{ width: `${quota.percentage}%` }}
@@ -170,9 +170,9 @@ export function AgentQuotaCell({ agent }: AgentQuotaCellProps) {
 
       {/* Labels */}
       <div className="flex items-center justify-between gap-2">
-        <span className="text-xs font-medium text-slate-700">
+        <span className="text-xs font-medium text-[color:var(--text)]">
           {quota.remainingLabel}
-          <span className="text-slate-400"> / {quota.limitLabel}</span>
+          <span className="text-quiet"> / {quota.limitLabel}</span>
         </span>
         {quota.level === "blocked" ? (
           <span className="inline-flex shrink-0 rounded-full border border-red-200 bg-red-50 px-1.5 py-0.5 text-[10px] font-semibold leading-none text-red-700">
@@ -252,7 +252,7 @@ export function AgentQuotaCard({ agent, className }: AgentQuotaCardProps) {
           </p>
         </div>
 
-        <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-slate-100">
+        <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-[color:var(--surface-muted)]">
           <div
             className={cn(
               "h-full rounded-full transition-all duration-700 ease-out",
@@ -265,27 +265,27 @@ export function AgentQuotaCard({ agent, className }: AgentQuotaCardProps) {
 
       {/* Detail grid */}
       <div className="mt-4 grid grid-cols-3 gap-3">
-        <div className="rounded-lg bg-slate-50 px-3 py-2">
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+        <div className="rounded-lg bg-[color:var(--surface-muted)] px-3 py-2">
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-quiet">
             Used
           </p>
-          <p className="mt-0.5 text-sm font-semibold text-slate-700 tabular-nums">
+          <p className="mt-0.5 text-sm font-semibold text-[color:var(--text)] tabular-nums">
             {quota.usedLabel}
           </p>
         </div>
-        <div className="rounded-lg bg-slate-50 px-3 py-2">
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+        <div className="rounded-lg bg-[color:var(--surface-muted)] px-3 py-2">
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-quiet">
             Remaining
           </p>
-          <p className="mt-0.5 text-sm font-semibold text-slate-700 tabular-nums">
+          <p className="mt-0.5 text-sm font-semibold text-[color:var(--text)] tabular-nums">
             {quota.remainingLabel}
           </p>
         </div>
-        <div className="rounded-lg bg-slate-50 px-3 py-2">
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+        <div className="rounded-lg bg-[color:var(--surface-muted)] px-3 py-2">
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-quiet">
             Limit
           </p>
-          <p className="mt-0.5 text-sm font-semibold text-slate-700 tabular-nums">
+          <p className="mt-0.5 text-sm font-semibold text-[color:var(--text)] tabular-nums">
             {quota.limitLabel}
           </p>
         </div>

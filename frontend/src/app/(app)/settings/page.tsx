@@ -74,15 +74,15 @@ function UsageSection({ isSignedIn }: { isSignedIn: boolean }) {
   const quotas = quotaQuery.data?.data?.quotas;
 
   return (
-    <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-      <h2 className="text-base font-semibold text-slate-900">Quota Usage</h2>
-      <p className="mt-1 text-sm text-slate-500">
+    <section className="rounded-xl border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm">
+      <h2 className="text-base font-semibold text-strong">Quota Usage</h2>
+      <p className="mt-1 text-sm text-muted">
         Current resource consumption across your workspace.
       </p>
       {quotas?.length ? (
         <QuotaSummary quotas={quotas} className="mt-4 border-0 p-0" />
       ) : (
-        <p className="mt-4 text-sm text-slate-400">No quota data available.</p>
+        <p className="mt-4 text-sm text-quiet">No quota data available.</p>
       )}
     </section>
   );
@@ -211,7 +211,7 @@ export default function SettingsPage() {
       >
         <div className="space-y-6">
           {/* Tab switcher */}
-          <nav className="flex gap-1 border-b border-slate-200">
+          <nav className="flex gap-1 border-b border-[color:var(--border)]">
             {SETTINGS_SECTIONS.map((section) => (
               <button
                 key={section.id}
@@ -220,8 +220,8 @@ export default function SettingsPage() {
                 className={cn(
                   "relative px-4 py-2.5 text-sm font-medium transition-colors",
                   activeSection === section.id
-                    ? "text-slate-900 after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:bg-slate-900"
-                    : "text-slate-500 hover:text-slate-700",
+                    ? "text-strong after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:bg-[color:var(--text-strong)]"
+                    : "text-muted hover:text-[color:var(--text)]",
                 )}
               >
                 {section.label}
@@ -232,17 +232,17 @@ export default function SettingsPage() {
           {/* Account section: profile + danger zone */}
           {activeSection === "account" ? (
             <>
-              <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-                <h2 className="text-base font-semibold text-slate-900">Profile</h2>
-                <p className="mt-1 text-sm text-slate-500">
+              <section className="rounded-xl border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm">
+                <h2 className="text-base font-semibold text-strong">Profile</h2>
+                <p className="mt-1 text-sm text-muted">
                   Keep your identity and preferences up to date.
                 </p>
 
                 <form onSubmit={handleSave} className="mt-6 space-y-5">
                   <div className="grid gap-5 md:grid-cols-2">
                     <div className="space-y-2">
-                      <label className="flex items-center gap-2 text-sm font-medium text-slate-700">
-                        <User className="h-4 w-4 text-slate-500" />
+                      <label className="flex items-center gap-2 text-sm font-medium text-[color:var(--text)]">
+                        <User className="h-4 w-4 text-muted" />
                         Name
                       </label>
                       <Input
@@ -253,12 +253,12 @@ export default function SettingsPage() {
                         }}
                         placeholder="Your name"
                         disabled={isSaving}
-                        className="border-slate-300 text-slate-900 focus-visible:ring-blue-500"
+                        className="border-[color:var(--border-strong)] text-strong focus-visible:ring-[color:var(--accent)]"
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="flex items-center gap-2 text-sm font-medium text-slate-700">
-                        <Globe className="h-4 w-4 text-slate-500" />
+                      <label className="flex items-center gap-2 text-sm font-medium text-[color:var(--text)]">
+                        <Globe className="h-4 w-4 text-muted" />
                         Timezone
                       </label>
                       <SearchableSelect
@@ -273,33 +273,33 @@ export default function SettingsPage() {
                         searchPlaceholder="Search timezones..."
                         emptyMessage="No matching timezones."
                         disabled={isSaving}
-                        triggerClassName="h-11 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                        contentClassName="rounded-xl border border-slate-200 shadow-lg"
-                        itemClassName="px-4 py-3 text-sm text-slate-700 data-[selected=true]:bg-slate-50 data-[selected=true]:text-slate-900"
+                        triggerClassName="h-11 w-full rounded-xl border border-[color:var(--border-strong)] bg-[color:var(--surface)] px-3 py-2 text-sm font-medium text-strong shadow-sm focus:border-[color:var(--accent)] focus:ring-2 focus:ring-[color:var(--accent)]/20"
+                        contentClassName="rounded-xl border border-[color:var(--border)] shadow-lg"
+                        itemClassName="px-4 py-3 text-sm text-[color:var(--text)] data-[selected=true]:bg-[color:var(--surface-muted)] data-[selected=true]:text-strong"
                       />
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <label className="flex items-center gap-2 text-sm font-medium text-slate-700">
-                      <Mail className="h-4 w-4 text-slate-500" />
+                    <label className="flex items-center gap-2 text-sm font-medium text-[color:var(--text)]">
+                      <Mail className="h-4 w-4 text-muted" />
                       Email
                     </label>
                     <Input
                       value={displayEmail}
                       readOnly
                       disabled
-                      className="border-slate-200 bg-slate-50 text-slate-600"
+                      className="border-[color:var(--border)] bg-[color:var(--surface-muted)] text-[color:var(--text-muted)]"
                     />
                   </div>
 
                   {saveError ? (
-                    <div className="rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">
+                    <div className="status-danger rounded-lg p-3 text-sm">
                       {saveError}
                     </div>
                   ) : null}
                   {saveSuccess ? (
-                    <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700">
+                    <div className="status-success rounded-lg p-3 text-sm">
                       {saveSuccess}
                     </div>
                   ) : null}
@@ -323,12 +323,12 @@ export default function SettingsPage() {
               </section>
 
               {/* Danger zone */}
-              <section className="rounded-xl border border-rose-200 bg-rose-50/70 p-6 shadow-sm">
-                <h2 className="flex items-center gap-2 text-base font-semibold text-rose-900">
+              <section className="status-danger rounded-xl p-6 shadow-sm">
+                <h2 className="flex items-center gap-2 text-base font-semibold">
                   <Shield className="h-4 w-4" />
                   Delete account
                 </h2>
-                <p className="mt-1 text-sm text-rose-800">
+                <p className="mt-1 text-sm">
                   This permanently removes your FlowGrid account and related
                   personal data. This action cannot be undone.
                 </p>

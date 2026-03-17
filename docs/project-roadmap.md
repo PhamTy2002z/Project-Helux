@@ -8,6 +8,18 @@
 
 ## Recent Updates (March 2026)
 
+- ✅ **Billing & Polar Integration Hardening Complete** (2026-03-16):
+  - Implemented store-then-process webhook pattern with `polar_webhook_events` table
+  - Added async worker processing for Polar subscription lifecycle events
+  - Hardened plan expiry check to block ALL tiers (pro + trial) when `effective_until` set
+  - Added row-level locking via `SELECT FOR UPDATE` on concurrent plan modifications
+  - Polar client now configurable with `server` param (sandbox/production) and 10s timeout
+  - Polar customer_id reused for repeat checkouts with portal return_url support
+  - Webhook payload stored before processing for audit/replay capability
+  - Billing history records created ONLY on confirmed payment (idempotent by polar_subscription_id)
+  - Subscription lifecycle handlers: active, canceled, uncanceled, updated, past_due, revoked
+  - Metric renamed: `saas.trial.expired.blocked` → `saas.plan.expired.blocked`
+
 - ✅ **Payment Flow UX Rework Complete** (2026-03-16):
   - Added Polar customer portal access endpoint (`GET /api/v1/billing/portal-session`)
   - Implemented billing email system with Resend (upgrade, trial warning, payment failure)

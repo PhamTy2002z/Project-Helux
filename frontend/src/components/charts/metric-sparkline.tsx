@@ -1,9 +1,11 @@
 "use client";
 
 import { Area, AreaChart, ResponsiveContainer, Tooltip, YAxis } from "recharts";
-import { useId } from "react";
+import { useId, useMemo } from "react";
 
 import { cn } from "@/lib/utils";
+import { useTheme } from "@/components/providers/theme-provider";
+import { getChartColors } from "./chart-theme";
 
 type MetricSparklineProps = {
   values: number[];
@@ -65,7 +67,14 @@ const SparklineTooltip = ({
           : "Day";
   const prefix = resolvedLabel ?? (dayIndex ? `${label} ${dayIndex}` : "");
   return (
-    <div className="rounded-md border border-gray-200 bg-white px-2 py-1 text-xs font-medium text-gray-700 shadow-sm">
+    <div
+      className="rounded-md px-2 py-1 text-xs font-medium shadow-sm"
+      style={{
+        backgroundColor: "var(--surface)",
+        border: "1px solid var(--border)",
+        color: "var(--text)",
+      }}
+    >
       {prefix ? `${prefix}: ` : ""}
       {formatSparkValue(rawValue)}
     </div>
@@ -79,14 +88,17 @@ export default function MetricSparkline({
   className,
 }: MetricSparklineProps) {
   const gradientId = useId();
+  const { theme } = useTheme();
+  const colors = useMemo(() => getChartColors(), [theme]);
 
   if (!values.length) {
     return null;
   }
 
   const data = buildSparkData(values);
-  const strokeColor = "#60a5fa";
-  const fillColor = "#bfdbfe";
+  // Use accent-strong for stroke (bright in both modes); accent for fill gradient base
+  const strokeColor = colors.accentStrong;
+  const fillColor = colors.accent;
 
   return (
     <div className={cn("h-8 w-full", className)}>

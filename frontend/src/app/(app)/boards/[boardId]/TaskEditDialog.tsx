@@ -396,7 +396,7 @@ export function TaskEditDialog({
         </DialogHeader>
         <div className="space-y-4">
           <div className="space-y-2">
-            <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+            <label className="text-xs font-semibold uppercase tracking-wider text-muted">
               Title
             </label>
             <Input
@@ -407,7 +407,7 @@ export function TaskEditDialog({
             />
           </div>
           <div className="space-y-2">
-            <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+            <label className="text-xs font-semibold uppercase tracking-wider text-muted">
               Description
             </label>
             <Textarea
@@ -419,7 +419,7 @@ export function TaskEditDialog({
             />
           </div>
           <div className="space-y-2">
-            <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+            <label className="text-xs font-semibold uppercase tracking-wider text-muted">
               Custom fields
             </label>
             <TaskCustomFieldsEditor
@@ -432,7 +432,7 @@ export function TaskEditDialog({
           </div>
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+              <label className="text-xs font-semibold uppercase tracking-wider text-muted">
                 Status
               </label>
               <Select
@@ -453,7 +453,7 @@ export function TaskEditDialog({
               </Select>
             </div>
             <div className="space-y-2">
-              <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+              <label className="text-xs font-semibold uppercase tracking-wider text-muted">
                 Priority
               </label>
               <Select
@@ -474,7 +474,7 @@ export function TaskEditDialog({
               </Select>
             </div>
             <div className="space-y-2">
-              <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+              <label className="text-xs font-semibold uppercase tracking-wider text-muted">
                 Due date
               </label>
               <Input
@@ -486,7 +486,7 @@ export function TaskEditDialog({
             </div>
           </div>
           <div className="space-y-2">
-            <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+            <label className="text-xs font-semibold uppercase tracking-wider text-muted">
               Assignee
             </label>
             <Select
@@ -509,20 +509,20 @@ export function TaskEditDialog({
               </SelectContent>
             </Select>
             {assignableAgents.length === 0 ? (
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-muted">
                 Add agents to assign tasks.
               </p>
             ) : null}
           </div>
           <div className="space-y-2">
             <div className="flex items-center justify-between gap-2">
-              <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+              <label className="text-xs font-semibold uppercase tracking-wider text-muted">
                 Tags
               </label>
               <button
                 type="button"
                 onClick={() => onNavigate("/tags")}
-                className="text-xs font-medium text-slate-500 underline underline-offset-2 transition hover:text-slate-700"
+                className="text-xs font-medium text-muted underline underline-offset-2 transition hover:text-[color:var(--text)]"
               >
                 Manage tags
               </button>
@@ -536,7 +536,7 @@ export function TaskEditDialog({
               emptyMessage="No tags configured."
             />
             {editTagIds.length === 0 ? (
-              <p className="text-xs text-slate-500">No tags assigned.</p>
+              <p className="text-xs text-muted">No tags assigned.</p>
             ) : (
               <div className="flex flex-wrap gap-2">
                 {editTagIds.map((tagId) => {
@@ -546,7 +546,7 @@ export function TaskEditDialog({
                   return (
                     <span
                       key={tagId}
-                      className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs text-slate-700"
+                      className="inline-flex items-center gap-1.5 rounded-full border border-[color:var(--border)] bg-[color:var(--surface-muted)] px-3 py-1 text-xs text-[color:var(--text)]"
                     >
                       <span
                         className="h-1.5 w-1.5 rounded-full"
@@ -557,9 +557,9 @@ export function TaskEditDialog({
                         type="button"
                         onClick={() => removeEditTag(tagId)}
                         className={cn(
-                          "rounded-full p-0.5 text-slate-500 transition",
+                          "rounded-full p-0.5 text-muted transition",
                           canWrite
-                            ? "hover:bg-white hover:text-slate-700"
+                            ? "hover:bg-[color:var(--surface)] hover:text-[color:var(--text)]"
                             : "opacity-50 cursor-not-allowed",
                         )}
                         aria-label="Remove tag"
@@ -574,10 +574,10 @@ export function TaskEditDialog({
             )}
           </div>
           <div className="space-y-2">
-            <label className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+            <label className="text-xs font-semibold uppercase tracking-wider text-muted">
               Dependencies
             </label>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-muted">
               Tasks stay blocked until every dependency is marked done.
             </p>
             <DropdownSelect
@@ -594,12 +594,12 @@ export function TaskEditDialog({
               emptyMessage="No other tasks found."
             />
             {selectedTask?.status === "done" ? (
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-muted">
                 Dependencies can only be edited until the task is done.
               </p>
             ) : null}
             {editDependsOnTaskIds.length === 0 ? (
-              <p className="text-xs text-slate-500">No dependencies.</p>
+              <p className="text-xs text-muted">No dependencies.</p>
             ) : (
               <div className="flex flex-wrap gap-2">
                 {editDependsOnTaskIds.map((depId) => {
@@ -616,12 +616,12 @@ export function TaskEditDialog({
                         "inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs",
                         isDone
                           ? "border-emerald-200 bg-emerald-50 text-emerald-800"
-                          : "border-slate-200 bg-slate-50 text-slate-700",
+                          : "border-[color:var(--border)] bg-[color:var(--surface-muted)] text-[color:var(--text)]",
                       )}
                     >
                       <span className="max-w-[18rem] truncate">{label}</span>
                       {statusLabel ? (
-                        <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+                        <span className="text-[10px] font-semibold uppercase tracking-wide text-quiet">
                           {statusLabel}
                         </span>
                       ) : null}
@@ -630,9 +630,9 @@ export function TaskEditDialog({
                           type="button"
                           onClick={() => removeTaskDependency(depId)}
                           className={cn(
-                            "rounded-full p-0.5 text-slate-500 transition",
+                            "rounded-full p-0.5 text-muted transition",
                             canWrite
-                              ? "hover:bg-white hover:text-slate-700"
+                              ? "hover:bg-[color:var(--surface)] hover:text-[color:var(--text)]"
                               : "opacity-50 cursor-not-allowed",
                           )}
                           aria-label="Remove dependency"
@@ -648,7 +648,7 @@ export function TaskEditDialog({
             )}
           </div>
           {saveTaskError ? (
-            <div className="rounded-lg border border-slate-200 bg-white p-3 text-xs text-slate-600">
+            <div className="rounded-lg border border-[color:var(--border)] bg-[color:var(--surface)] p-3 text-xs text-[color:var(--text-muted)]">
               {saveTaskError}
             </div>
           ) : null}

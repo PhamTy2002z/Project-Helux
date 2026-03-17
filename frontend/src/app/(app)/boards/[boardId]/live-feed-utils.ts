@@ -255,7 +255,7 @@ export const liveFeedEventPillClass = (eventType: LiveFeedEventType): string => 
     return "border-lime-200 bg-lime-50 text-lime-700";
   }
   if (eventType === "agent.offline") {
-    return "border-slate-300 bg-slate-100 text-slate-700";
+    return "border-[color:var(--border-strong)] bg-[color:var(--surface-strong)] text-[color:var(--text)]";
   }
   if (eventType === "agent.updated") {
     return "border-indigo-200 bg-indigo-50 text-indigo-700";
@@ -272,5 +272,5 @@ export const liveFeedEventPillClass = (eventType: LiveFeedEventType): string => 
   if (eventType === "approval.rejected") {
     return "border-rose-200 bg-rose-50 text-rose-700";
   }
-  return "border-slate-200 bg-slate-100 text-slate-700";
+  return "border-[color:var(--border)] bg-[color:var(--surface-muted)] text-[color:var(--text)]";
 };

@@ -2,20 +2,31 @@
 
 ## Goals
 - Ship a SaaS subscription model with trial and paid tiers, with deterministic quota enforcement.
-- Use simulated billing in v1 to validate user flows and quota mechanics before integrating real payment providers in v2.
+- Integrate with Polar for real payment processing with webhook-driven subscription lifecycle.
+- Store webhook events before processing for audit trail and replay capability.
 
 ## In Scope
 - Plans: `trial_7d`, `pro`.
 - Trial default on org creation (`7 days`), then runtime is blocked when expired.
-- Simulated checkout API:
-  - `POST /api/v1/billing/simulate/checkout`
+- Real Polar checkout API:
+  - `POST /api/v1/billing/checkout` (Polar-hosted checkout or portal)
   - `GET /api/v1/billing/me/subscription`
+- Polar webhook receiver with store-then-process pattern:
+  - `POST /webhooks/polar` (signature validated, event stored, processed async)
+  - Supported events: subscription.active|canceled|uncanceled|updated|past_due|revoked
+  - Async worker processes events and updates organization_plans
+- Plan expiry blocks ALL tiers (pro + trial) when `effective_until` set
+- Row-level concurrency control via `SELECT FOR UPDATE` on plan modifications
 - Hard quotas (resource + token caps) exposed in `GET /api/v1/metrics/quotas`.
 - Frontend upgrade modal and quota summary surfaces.
+- Polar integration: customer_id reuse, portal return_url, 10s timeout, server config
 
-## Feature Flags
-- `BILLING_MODE=simulated|provider`
-- `PAYMENT_PROVIDER=none|stripe|paddle`
+## Configuration
+- `POLAR_API_KEY`: Polar API key for checkout/customer operations
+- `POLAR_WEBHOOK_SECRET`: Webhook signature validation
+- `POLAR_SERVER`: `sandbox` | `production`
+- `BILLING_MODE`: Currently `provider` (Polar)
+- `PAYMENT_PROVIDER`: `polar`
 
 ## Locked Pricing Policy (V1)
 - Trial (`trial_7d`)

@@ -42,11 +42,11 @@ export const BoardChatSessionList = memo(function BoardChatSessionList({
         "flex min-h-0 w-full flex-col",
         isDropdownLayout
           ? "max-h-[70vh]"
-          : "h-full border-b border-slate-200 md:w-72 md:border-b-0 md:border-r",
+          : "h-full border-b border-[color:var(--border)] md:w-72 md:border-b-0 md:border-r",
       )}
     >
-      <div className="flex items-center justify-between gap-2 border-b border-slate-200 px-3 py-3">
-        <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+      <div className="flex items-center justify-between gap-2 border-b border-[color:var(--border)] px-3 py-3">
+        <p className="text-xs font-semibold uppercase tracking-wider text-muted">
           Chats
         </p>
         <Button
@@ -64,7 +64,7 @@ export const BoardChatSessionList = memo(function BoardChatSessionList({
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto p-2">
         {sessions.length === 0 ? (
-          <p className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-500">
+          <p className="rounded-lg border border-[color:var(--border)] bg-[color:var(--surface-muted)] px-3 py-2 text-xs text-muted">
             No chat sessions yet.
           </p>
         ) : null}
@@ -77,7 +77,7 @@ export const BoardChatSessionList = memo(function BoardChatSessionList({
               return (
                 <div
                   key={session.id}
-                  className="rounded-lg border border-slate-300 bg-white px-2 py-2 shadow-sm"
+                  className="rounded-lg border border-[color:var(--border-strong)] bg-[color:var(--surface)] px-2 py-2 shadow-sm"
                 >
                   <Input
                     value={titleDraft}
@@ -140,7 +140,7 @@ export const BoardChatSessionList = memo(function BoardChatSessionList({
                   "group flex w-full items-center justify-between gap-2 rounded-lg border px-2 py-2 transition",
                   isActive
                     ? "border-blue-200 bg-blue-50 text-blue-900"
-                    : "border-transparent bg-white text-slate-700 hover:border-slate-200 hover:bg-slate-50",
+                    : "border-transparent bg-[color:var(--surface)] text-[color:var(--text)] hover:border-[color:var(--border)] hover:bg-[color:var(--surface-muted)]",
                 )}
               >
                 <button
@@ -155,7 +155,7 @@ export const BoardChatSessionList = memo(function BoardChatSessionList({
                     type="button"
                     size="sm"
                     variant="ghost"
-                    className="h-7 w-7 shrink-0 p-0 text-slate-500 hover:text-slate-700"
+                    className="h-7 w-7 shrink-0 p-0 text-muted hover:text-[color:var(--text)]"
                     disabled={!canWrite || isMutating}
                     onClick={(event) => {
                       event.preventDefault();
@@ -191,7 +191,7 @@ export const BoardChatSessionList = memo(function BoardChatSessionList({
         </div>
       </div>
       {!canWrite ? (
-        <div className="border-t border-slate-200 px-3 py-2 text-xs text-slate-500">
+        <div className="border-t border-[color:var(--border)] px-3 py-2 text-xs text-muted">
           Read-only access. Session changes are disabled.
         </div>
       ) : null}

@@ -76,7 +76,7 @@ async def test_saas_billing_health_metrics_aggregates_event_counts(
             return 6
         if event_type == "saas.billing.simulated.checkout_failed":
             return 3
-        if event_type == "saas.trial.expired.blocked":
+        if event_type == "saas.plan.expired.blocked":
             return 4
         return 0
 

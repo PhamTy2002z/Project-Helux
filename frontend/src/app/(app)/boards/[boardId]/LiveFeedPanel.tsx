@@ -47,24 +47,24 @@ export function LiveFeedPanel({
   return (
     <aside
       className={cn(
-        "fixed right-0 top-0 z-50 h-full w-[520px] max-w-[96vw] transform border-l border-slate-200 bg-white shadow-2xl transition-transform",
+        "fixed right-0 top-0 z-50 h-full w-[520px] max-w-[96vw] transform border-l border-[color:var(--border)] bg-[color:var(--surface)] shadow-2xl transition-transform",
         isOpen ? "transform-none" : "translate-x-full",
       )}
     >
       <div className="flex h-full flex-col">
-        <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
+        <div className="flex items-center justify-between border-b border-[color:var(--border)] px-6 py-4">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted">
               Live feed
             </p>
-            <p className="mt-1 text-sm font-medium text-slate-900">
+            <p className="mt-1 text-sm font-medium text-strong">
               Realtime task, approval, agent, and board-chat activity.
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg border border-slate-200 p-2 text-slate-500 transition hover:bg-slate-50"
+            className="rounded-lg border border-[color:var(--border)] p-2 text-muted transition hover:bg-[color:var(--surface-muted)]"
             aria-label="Close live feed"
           >
             <X className="h-4 w-4" />
@@ -72,13 +72,13 @@ export function LiveFeedPanel({
         </div>
         <div className="flex-1 overflow-y-auto px-6 py-4">
           {isLiveFeedHistoryLoading && orderedLiveFeed.length === 0 ? (
-            <p className="text-sm text-slate-500">Loading feed…</p>
+            <p className="text-sm text-muted">Loading feed…</p>
           ) : liveFeedHistoryError ? (
-            <div className="rounded-lg border border-slate-200 bg-white p-4 text-sm text-slate-700 shadow-sm">
+            <div className="rounded-lg border border-[color:var(--border)] bg-[color:var(--surface)] p-4 text-sm text-[color:var(--text)] shadow-sm">
               {liveFeedHistoryError}
             </div>
           ) : orderedLiveFeed.length === 0 ? (
-            <p className="text-sm text-slate-500">
+            <p className="text-sm text-muted">
               Waiting for new activity…
             </p>
           ) : (

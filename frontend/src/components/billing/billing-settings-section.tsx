@@ -93,7 +93,7 @@ function PlanCard({
         "flex flex-col rounded-2xl border p-6 transition-shadow",
         featured
           ? "border-slate-800 bg-gradient-to-b from-slate-900 to-slate-800 text-slate-100 shadow-lg shadow-slate-900/20 ring-1 ring-slate-700"
-          : "border-slate-200 bg-white text-slate-900 hover:shadow-md",
+          : "border-[color:var(--border)] bg-[color:var(--surface)] text-strong hover:shadow-md",
       )}
     >
       <div className="flex items-center justify-between gap-3">
@@ -103,7 +103,7 @@ function PlanCard({
             "rounded-full px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide",
             featured
               ? "bg-orange-500/90 text-white"
-              : "bg-slate-100 text-slate-600",
+              : "bg-[color:var(--surface-muted)] text-[color:var(--text-muted)]",
           )}
         >
           {badge}
@@ -115,14 +115,14 @@ function PlanCard({
         <span
           className={cn(
             "ml-1 text-sm font-normal",
-            featured ? "text-slate-400" : "text-slate-500",
+            featured ? "text-slate-400" : "text-muted",
           )}
         >
           {unit !== "per month" ? unit : "/mo"}
         </span>
       </div>
 
-      <div className={cn("my-5 h-px", featured ? "bg-slate-700" : "bg-slate-100")} />
+      <div className={cn("my-5 h-px", featured ? "bg-slate-700" : "bg-[color:var(--border)]")} />
 
       <ul className="flex-1 space-y-3">
         {features.map((feature) => (
@@ -130,13 +130,13 @@ function PlanCard({
             key={feature}
             className={cn(
               "flex items-start gap-2.5 text-sm leading-snug",
-              featured ? "text-slate-300" : "text-slate-600",
+              featured ? "text-slate-300" : "text-[color:var(--text-muted)]",
             )}
           >
             <CheckCircle2
               className={cn(
                 "mt-0.5 h-4 w-4 shrink-0",
-                featured ? "text-emerald-400" : "text-slate-400",
+                featured ? "text-emerald-400" : "text-quiet",
               )}
             />
             {feature}
@@ -151,7 +151,7 @@ function PlanCard({
           "mt-6 w-full",
           featured
             ? "bg-white text-slate-900 hover:bg-slate-100"
-            : "border-slate-200 hover:border-slate-300",
+            : "border-[color:var(--border)] hover:border-[color:var(--border-strong)]",
         )}
         onClick={onAction}
         disabled={actionDisabled}
@@ -169,9 +169,9 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 const STATUS_STYLES: Record<string, string> = {
-  succeeded: "bg-emerald-100 text-emerald-700",
-  pending: "bg-amber-100 text-amber-700",
-  failed: "bg-rose-100 text-rose-700",
+  succeeded: "status-badge-success",
+  pending: "status-badge-warning",
+  failed: "status-badge-danger",
 };
 
 export function BillingSettingsSection({ isSignedIn }: { isSignedIn: boolean }) {
@@ -276,10 +276,10 @@ export function BillingSettingsSection({ isSignedIn }: { isSignedIn: boolean }) 
       <section className="space-y-6">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
-            <h2 className="text-lg font-semibold text-slate-900">
+            <h2 className="text-lg font-semibold text-strong">
               Plans
             </h2>
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="mt-1 text-sm text-muted">
               Choose the plan that fits your team.
             </p>
             {isBlocked || (isTrial && daysLeft !== null) ? (
@@ -298,10 +298,10 @@ export function BillingSettingsSection({ isSignedIn }: { isSignedIn: boolean }) 
             ) : null}
           </div>
 
-          <div className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 p-1">
+          <div className="inline-flex items-center rounded-full border border-[color:var(--border)] bg-[color:var(--surface-muted)] p-1">
             <button
               type="button"
-              className="rounded-full bg-white px-4 py-1.5 text-sm font-medium text-slate-900 shadow-sm"
+              className="rounded-full bg-[color:var(--surface)] px-4 py-1.5 text-sm font-medium text-strong shadow-sm"
             >
               Monthly
             </button>
@@ -309,7 +309,7 @@ export function BillingSettingsSection({ isSignedIn }: { isSignedIn: boolean }) 
               type="button"
               disabled
               title="Coming soon"
-              className="cursor-not-allowed rounded-full px-4 py-1.5 text-sm font-medium text-slate-400"
+              className="cursor-not-allowed rounded-full px-4 py-1.5 text-sm font-medium text-quiet"
             >
               Yearly
             </button>
@@ -370,37 +370,37 @@ export function BillingSettingsSection({ isSignedIn }: { isSignedIn: boolean }) 
         </div>
 
         {checkoutError ? (
-          <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-2.5 text-sm text-rose-700">
+          <div className="status-danger rounded-lg px-4 py-2.5 text-sm">
             {checkoutError}
           </div>
         ) : null}
 
         {portalError ? (
-          <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-2.5 text-sm text-rose-700">
+          <div className="status-danger rounded-lg px-4 py-2.5 text-sm">
             {portalError}
           </div>
         ) : null}
       </section>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <section className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <h3 className="text-lg font-semibold text-slate-900">Billing History</h3>
+          <h3 className="text-lg font-semibold text-strong">Billing History</h3>
           <div className="flex flex-col gap-2 sm:flex-row">
             <label className="relative min-w-[220px]">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-quiet" />
               <input
                 value={historySearch}
                 onChange={(event) => setHistorySearch(event.target.value)}
                 placeholder="Search..."
-                className="h-9 w-full rounded-lg border border-slate-300 bg-white pl-9 pr-3 text-sm text-slate-700 placeholder:text-slate-400 focus:border-slate-400 focus:outline-none"
+                className="h-9 w-full rounded-lg border border-[color:var(--border-strong)] bg-[color:var(--surface)] pl-9 pr-3 text-sm text-[color:var(--text)] placeholder:text-quiet focus:border-[color:var(--border-strong)] focus:outline-none"
               />
             </label>
             <label className="relative">
-              <Filter className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <Filter className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-quiet" />
               <select
                 value={historyStatus}
                 onChange={(event) => setHistoryStatus(event.target.value as HistoryStatus)}
-                className="h-9 min-w-[140px] rounded-lg border border-slate-300 bg-white pl-9 pr-8 text-sm text-slate-700 focus:border-slate-400 focus:outline-none"
+                className="h-9 min-w-[140px] rounded-lg border border-[color:var(--border-strong)] bg-[color:var(--surface)] pl-9 pr-8 text-sm text-[color:var(--text)] focus:border-[color:var(--border-strong)] focus:outline-none"
               >
                 <option value="all">All status</option>
                 <option value="succeeded">Success</option>
@@ -422,9 +422,9 @@ export function BillingSettingsSection({ isSignedIn }: { isSignedIn: boolean }) 
         </div>
 
         <div className="mt-4 overflow-x-auto">
-          <table className="min-w-full divide-y divide-slate-200 text-sm">
+          <table className="min-w-full divide-y divide-[color:var(--border)] text-sm">
             <thead>
-              <tr className="text-left text-xs uppercase tracking-wide text-slate-500">
+              <tr className="text-left text-xs uppercase tracking-wide text-muted">
                 <th className="px-3 py-3 font-medium">Plan</th>
                 <th className="px-3 py-3 font-medium">Amount</th>
                 <th className="px-3 py-3 font-medium">Date</th>
@@ -432,10 +432,10 @@ export function BillingSettingsSection({ isSignedIn }: { isSignedIn: boolean }) 
                 <th className="px-3 py-3 text-right font-medium">Action</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-[color:var(--border)]">
               {filteredHistory.map((row: ApiBillingHistoryRow) => (
-                <tr key={row.id} className="text-slate-700">
-                  <td className="px-3 py-3.5 font-medium text-slate-800">
+                <tr key={row.id} className="text-[color:var(--text)]">
+                  <td className="px-3 py-3.5 font-medium text-strong">
                     {planLabelFromTier(row.plan_tier as BillingPlanTier) ?? row.plan_tier}
                   </td>
                   <td className="px-3 py-3.5">{row.amount}</td>
@@ -444,7 +444,7 @@ export function BillingSettingsSection({ isSignedIn }: { isSignedIn: boolean }) 
                     <span
                       className={cn(
                         "inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium",
-                        STATUS_STYLES[row.status] ?? "bg-slate-100 text-slate-700",
+                        STATUS_STYLES[row.status] ?? "status-badge-neutral",
                       )}
                     >
                       {STATUS_LABELS[row.status] ?? row.status}
@@ -453,7 +453,7 @@ export function BillingSettingsSection({ isSignedIn }: { isSignedIn: boolean }) 
                   <td className="px-3 py-3.5">
                     <button
                       type="button"
-                      className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-slate-200 text-slate-500 transition hover:bg-slate-50 hover:text-slate-700"
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-[color:var(--border)] text-muted transition hover:bg-[color:var(--surface-muted)] hover:text-[color:var(--text)]"
                       aria-label={`Manage subscription for ${row.plan_tier}`}
                       onClick={canOpenPortal ? handleManageSubscription : () => undefined}
                       disabled={!canOpenPortal}
@@ -466,7 +466,7 @@ export function BillingSettingsSection({ isSignedIn }: { isSignedIn: boolean }) 
             </tbody>
           </table>
           {filteredHistory.length === 0 ? (
-            <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">
+            <div className="rounded-lg border border-dashed border-[color:var(--border-strong)] bg-[color:var(--surface-muted)] px-4 py-8 text-center text-sm text-muted">
               No billing records match your current filters.
             </div>
           ) : null}

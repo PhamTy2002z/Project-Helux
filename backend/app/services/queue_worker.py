@@ -12,6 +12,9 @@ from redis.asyncio import Redis
 
 from app.core.config import settings
 from app.core.logging import get_logger
+from app.services.billing_webhook_queue import TASK_TYPE as BILLING_WEBHOOK_TASK_TYPE
+from app.services.billing_webhook_queue import requeue_billing_webhook_task
+from app.services.billing_webhook_worker import process_billing_webhook_task
 from app.services.board_chat_files.queue import TASK_TYPE as FILE_EXTRACT_TASK_TYPE
 from app.services.board_chat_files.queue import requeue_extraction_task
 from app.services.board_chat_files.report_deadline_queue import (
@@ -116,6 +119,14 @@ _TASK_HANDLERS: dict[str, _TaskHandler] = {
             settings.rq_dispatch_retry_max_seconds,
         ),
         requeue=lambda task, delay: requeue_webhook_queue_task(task, delay_seconds=delay),
+    ),
+    BILLING_WEBHOOK_TASK_TYPE: _TaskHandler(
+        handler=process_billing_webhook_task,
+        attempts_to_delay=lambda attempts: min(
+            settings.rq_dispatch_retry_base_seconds * (2 ** max(0, attempts)),
+            settings.rq_dispatch_retry_max_seconds,
+        ),
+        requeue=lambda task, delay: requeue_billing_webhook_task(task, delay_seconds=delay),
     ),
 }
 

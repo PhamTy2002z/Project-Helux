@@ -20,7 +20,7 @@ function ShellInner({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen bg-app text-strong">
-      <header className="sticky top-0 z-40 border-b border-slate-200 bg-white shadow-sm">
+      <header className="sticky top-0 z-40 border-b border-[color:var(--border)] bg-[color:var(--surface)] shadow-sm">
         <div
           className="grid items-center gap-0 py-3 transition-[grid-template-columns] duration-300 ease-in-out"
           style={{
@@ -38,12 +38,14 @@ function ShellInner({ children }: { children: ReactNode }) {
             </div>
           </SignedIn>
           <SignedIn>
-            <DashboardHeaderUserInfo isOnboardingPath={false} />
+            <div className="flex items-center gap-2 pr-4">
+              <DashboardHeaderUserInfo isOnboardingPath={false} />
+            </div>
           </SignedIn>
         </div>
       </header>
       <div
-        className="grid h-[calc(100vh-64px)] bg-slate-50 transition-[grid-template-columns] duration-300 ease-in-out"
+        className="grid h-[calc(100vh-64px)] bg-app transition-[grid-template-columns] duration-300 ease-in-out"
         style={{
           gridTemplateColumns: collapsed ? "0px 1fr" : "260px 1fr",
         }}

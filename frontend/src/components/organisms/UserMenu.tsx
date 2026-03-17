@@ -16,9 +16,11 @@ import {
   ChevronDown,
   LayoutDashboard,
   LogOut,
+  Moon,
   Plus,
   Settings,
   Store,
+  Sun,
   Trello,
 } from "lucide-react";
 
@@ -27,6 +29,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { useTheme } from "@/components/providers/theme-provider";
 import { useBillingSubscription } from "@/lib/billing";
 import { planLabelFromTier } from "@/lib/plan-labels";
 import { cn } from "@/lib/utils";
@@ -44,6 +47,7 @@ export function UserMenu({
 }: UserMenuProps) {
   const [open, setOpen] = useState(false);
   const { user } = useUser();
+  const { theme, toggleTheme } = useTheme();
   const subscriptionQuery = useBillingSubscription(open);
   const localMode = isLocalAuthMode();
   if (!user && !localMode) return null;
@@ -65,11 +69,11 @@ export function UserMenu({
           type="button"
           className={cn(
             "group inline-flex h-9 items-center gap-2 rounded-[10px] bg-transparent px-1 py-1 transition",
-            "hover:bg-white/70",
+            "hover:bg-[color:var(--surface-muted)]",
             // Avoid the default browser focus outline (often bright blue) on click.
             // Keep a subtle, enterprise-looking focus ring for keyboard navigation.
-            "focus:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--neutral-300,var(--border-strong))] focus-visible:ring-offset-2 focus-visible:ring-offset-white",
-            "data-[state=open]:bg-white",
+            "focus:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--neutral-300,var(--border-strong))] focus-visible:ring-offset-2 focus-visible:ring-offset-[color:var(--surface)]",
+            "data-[state=open]:bg-[color:var(--surface-muted)]",
             className,
           )}
           aria-label="Open user menu"
@@ -100,7 +104,7 @@ export function UserMenu({
       <PopoverContent
         align="end"
         sideOffset={12}
-        className="w-80 overflow-hidden rounded-2xl border border-[color:var(--neutral-200,var(--border))] bg-white/95 p-0 shadow-[0_8px_32px_rgba(10,22,40,0.08)] backdrop-blur"
+        className="w-80 overflow-hidden rounded-2xl border border-[color:var(--neutral-200,var(--border))] bg-[color:var(--surface)]/95 p-0 shadow-[0_8px_32px_rgba(10,22,40,0.08)] backdrop-blur"
       >
         <div className="border-b border-[color:var(--neutral-200,var(--border))] px-4 py-3">
           <div className="flex items-center gap-3">
@@ -134,7 +138,7 @@ export function UserMenu({
                 </div>
               ) : null}
               {currentPlanLabel ? (
-                <div className="mt-1 inline-flex rounded-full border border-blue-100 bg-blue-50/80 px-2.5 py-0.5 text-[11px] font-semibold text-blue-700">
+                <div className="mt-1 inline-flex rounded-full border border-[color:var(--accent-soft)] bg-[color:var(--accent-soft)] px-2.5 py-0.5 text-[11px] font-semibold text-[color:var(--accent)]">
                   Plan: {currentPlanLabel}
                 </div>
               ) : null}
@@ -145,7 +149,7 @@ export function UserMenu({
           <div className="grid grid-cols-2 gap-2">
             <Link
               href="/boards"
-              className="flex w-full items-center justify-center gap-2 rounded-xl border border-[color:var(--neutral-300,var(--border-strong))] bg-white px-3 py-2 text-sm font-semibold text-[color:var(--neutral-800,var(--text))] transition hover:border-[color:var(--primary-navy,var(--accent-strong))] hover:bg-[color:var(--neutral-100,var(--surface-muted))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--accent-teal,var(--accent))] focus-visible:ring-offset-2"
+              className="flex w-full items-center justify-center gap-2 rounded-xl border border-[color:var(--neutral-300,var(--border-strong))] bg-[color:var(--surface)] px-3 py-2 text-sm font-semibold text-[color:var(--neutral-800,var(--text))] transition hover:border-[color:var(--primary-navy,var(--accent-strong))] hover:bg-[color:var(--neutral-100,var(--surface-muted))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--accent-teal,var(--accent))] focus-visible:ring-offset-2"
               onClick={() => setOpen(false)}
             >
               <Trello className="h-4 w-4 text-[color:var(--neutral-700,var(--text-quiet))]" />
@@ -185,6 +189,21 @@ export function UserMenu({
               {item.label}
             </Link>
           ))}
+
+          <div className="my-2 h-px bg-[color:var(--neutral-200,var(--border))]" />
+
+          <button
+            type="button"
+            className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-[color:var(--neutral-800,var(--text))] transition hover:bg-[color:var(--neutral-100,var(--surface-muted))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--accent-teal,var(--accent))] focus-visible:ring-offset-2"
+            onClick={toggleTheme}
+          >
+            {theme === "dark" ? (
+              <Sun className="h-4 w-4 text-[color:var(--neutral-700,var(--text-quiet))]" />
+            ) : (
+              <Moon className="h-4 w-4 text-[color:var(--neutral-700,var(--text-quiet))]" />
+            )}
+            {theme === "dark" ? "Light mode" : "Dark mode"}
+          </button>
 
           <div className="my-2 h-px bg-[color:var(--neutral-200,var(--border))]" />
 

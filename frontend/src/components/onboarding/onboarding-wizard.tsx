@@ -121,7 +121,7 @@ function StepProgressBar({
               ? "bg-blue-500"
               : i === currentIndex
                 ? "bg-blue-600"
-                : "bg-slate-200/90",
+                : "bg-[color:var(--surface-strong)]/90",
           )}
         />
       ))}
@@ -137,10 +137,10 @@ function OnboardingComplete({ onGoToDashboard }: { onGoToDashboard?: () => void 
       <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-blue-100 bg-blue-50">
         <Check className="h-7 w-7 text-blue-600" />
       </div>
-      <h2 className="mt-5 text-xl font-semibold tracking-tight text-slate-900">
+      <h2 className="mt-5 text-xl font-semibold tracking-tight text-strong">
         You&apos;re all set!
       </h2>
-      <p className="mt-2 max-w-sm text-sm leading-6 text-slate-600">
+      <p className="mt-2 max-w-sm text-sm leading-6 text-[color:var(--text-muted)]">
         Your workspace is fully unlocked. Start building.
       </p>
       {onGoToDashboard ? (
@@ -216,7 +216,7 @@ function UseCaseStepContent({
                 "flex min-h-[148px] cursor-pointer flex-col items-center justify-center gap-4 rounded-2xl border px-5 py-6 text-center transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2",
                 selected
                   ? "border-blue-300 bg-blue-50/70"
-                  : "border-slate-200 bg-slate-50/70 hover:border-slate-300 hover:bg-white",
+                  : "border-[color:var(--border)] bg-[color:var(--surface-muted)] hover:border-[color:var(--border-strong)] hover:bg-[color:var(--surface)]",
                 disabled && "cursor-not-allowed opacity-60",
               )}
             >
@@ -224,8 +224,8 @@ function UseCaseStepContent({
                 className={cn(
                   "flex h-12 w-12 items-center justify-center rounded-xl border",
                   selected
-                    ? "border-blue-100 bg-white text-blue-600"
-                    : "border-slate-200 bg-white text-slate-500",
+                    ? "border-[color:var(--accent-soft)] bg-[color:var(--accent-soft)] text-[color:var(--accent)]"
+                    : "border-[color:var(--border)] bg-[color:var(--surface)] text-muted",
                 )}
               >
                 <Icon className="h-6 w-6" />
@@ -233,7 +233,7 @@ function UseCaseStepContent({
               <span
                 className={cn(
                   "text-base font-medium",
-                  selected ? "text-slate-900" : "text-slate-700",
+                  selected ? "text-strong" : "text-[color:var(--text)]",
                 )}
               >
                 {option.label}
@@ -247,7 +247,7 @@ function UseCaseStepContent({
         <div className="mt-4">
           <label
             htmlFor="custom-use-case"
-            className="mb-2 block text-sm font-medium text-slate-700"
+            className="mb-2 block text-sm font-medium text-[color:var(--text)]"
           >
             Your use case
           </label>
@@ -258,9 +258,9 @@ function UseCaseStepContent({
             onChange={(event) => onCustomValueChange(event.target.value)}
             disabled={disabled}
             placeholder="Example: Compliance tracking for healthcare operations"
-            className="h-11 border-slate-300 bg-white text-slate-800"
+            className="h-11 border-[color:var(--border-strong)] bg-[color:var(--surface)] text-strong"
           />
-          <p className="mt-2 text-xs text-slate-500">
+          <p className="mt-2 text-xs text-muted">
             Keep it short so we can personalize your workspace setup.
           </p>
         </div>
@@ -300,7 +300,7 @@ function QuestionStepContent({
                   "min-h-[68px] cursor-pointer rounded-xl border px-4 py-3 text-left text-sm font-medium transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2",
                   selected
                     ? "border-blue-300 bg-blue-50 text-blue-800"
-                    : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50",
+                    : "border-[color:var(--border)] bg-[color:var(--surface)] text-[color:var(--text)] hover:border-[color:var(--border-strong)] hover:bg-[color:var(--surface-muted)]",
                   disabled && "cursor-not-allowed opacity-60",
                 )}
               >
@@ -314,10 +314,10 @@ function QuestionStepContent({
   }
 
   return (
-    <div className="mt-7 rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+    <div className="mt-7 rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-muted)]/70 p-4">
       <label
         htmlFor={`onboarding-${step.key}`}
-        className="mb-2 block text-sm font-medium text-slate-700"
+        className="mb-2 block text-sm font-medium text-[color:var(--text)]"
       >
         Your answer
       </label>
@@ -328,7 +328,7 @@ function QuestionStepContent({
         onChange={(event) => onAnswerChange(event.target.value)}
         disabled={disabled}
         placeholder={step.placeholder ?? "Type your answer"}
-        className="h-11 border-slate-300 bg-white text-slate-800"
+        className="h-11 border-[color:var(--border-strong)] bg-[color:var(--surface)] text-strong"
       />
     </div>
   );
@@ -484,7 +484,7 @@ export function OnboardingWizard({
   // Completed state
   if (progress?.completed || currentStepIndex >= STEPS.length) {
     return (
-      <section className="rounded-3xl border border-slate-200 bg-white shadow-[0_20px_45px_-32px_rgba(15,23,42,0.45)]">
+      <section className="rounded-3xl border border-[color:var(--border)] bg-[color:var(--surface)] shadow-[0_20px_45px_-32px_rgba(15,23,42,0.45)]">
         <OnboardingComplete />
       </section>
     );
@@ -495,14 +495,14 @@ export function OnboardingWizard({
   const StepIcon = currentStep.icon;
 
   return (
-    <section className="rounded-3xl border border-slate-200 bg-white shadow-[0_20px_45px_-32px_rgba(15,23,42,0.45)]">
+    <section className="rounded-3xl border border-[color:var(--border)] bg-[color:var(--surface)] shadow-[0_20px_45px_-32px_rgba(15,23,42,0.45)]">
       {/* Header with progress */}
-      <div className="border-b border-slate-100 px-8 pt-8 pb-7">
+      <div className="border-b border-[color:var(--border)] px-8 pt-8 pb-7">
         <div className="flex items-center justify-between">
-          <p className="text-sm font-medium text-slate-600">
+          <p className="text-sm font-medium text-[color:var(--text-muted)]">
             Step {currentStepIndex + 1} of {STEPS.length}
           </p>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-muted">
             {completedCount}/{STEPS.length} done
           </p>
         </div>
@@ -520,10 +520,10 @@ export function OnboardingWizard({
           <div className="flex-1">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <h2 className="text-2xl font-semibold tracking-tight text-slate-900">
+                <h2 className="text-2xl font-semibold tracking-tight text-strong">
                   {currentStep.title}
                 </h2>
-                <p className="mt-2 text-sm leading-6 text-slate-600">
+                <p className="mt-2 text-sm leading-6 text-[color:var(--text-muted)]">
                   {currentStep.description}
                 </p>
               </div>
@@ -541,7 +541,7 @@ export function OnboardingWizard({
                     "min-h-[44px] shrink-0 cursor-pointer rounded-full border px-3 text-sm font-medium transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500",
                     selectedUseCase === CUSTOM_USE_CASE_VALUE
                       ? "border-blue-300 bg-blue-50 text-blue-700"
-                      : "border-slate-300 bg-white text-slate-600 hover:border-slate-400 hover:text-slate-800",
+                      : "border-[color:var(--border-strong)] bg-[color:var(--surface)] text-[color:var(--text-muted)] hover:border-[color:var(--border-strong)] hover:text-strong",
                     isBusy && "cursor-not-allowed opacity-60",
                   )}
                 >
@@ -587,14 +587,14 @@ export function OnboardingWizard({
 
         {/* Error message */}
         {displayError ? (
-          <div className="mt-4 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
+          <div className="mt-4 status-danger rounded-lg px-3 py-2 text-sm">
             {displayError}
           </div>
         ) : null}
       </div>
 
       {/* Footer actions */}
-      <div className="flex items-center justify-between gap-4 border-t border-slate-100 bg-slate-50/70 px-8 py-5">
+      <div className="flex items-center justify-between gap-4 border-t border-[color:var(--border)] bg-[color:var(--surface-muted)]/70 px-8 py-5">
         <Button
           onClick={handleContinue}
           disabled={isBusy}
@@ -607,7 +607,7 @@ export function OnboardingWizard({
         <div className="flex items-center gap-4">
           <button
             type="button"
-            className="min-h-[44px] cursor-pointer rounded-full px-1 text-sm text-slate-500 transition-colors duration-200 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+            className="min-h-[44px] cursor-pointer rounded-full px-1 text-sm text-muted transition-colors duration-200 hover:text-[color:var(--text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
             onClick={() => applyAction(currentStep.key, "skip")}
             disabled={isBusy}
           >
@@ -615,10 +615,10 @@ export function OnboardingWizard({
           </button>
           {onSkipAll ? (
             <>
-              <span className="text-slate-200">|</span>
+              <span className="text-quiet">|</span>
               <button
                 type="button"
-                className="min-h-[44px] cursor-pointer rounded-full px-1 text-sm text-slate-500 transition-colors duration-200 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                className="min-h-[44px] cursor-pointer rounded-full px-1 text-sm text-muted transition-colors duration-200 hover:text-[color:var(--text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                 onClick={onSkipAll}
                 disabled={isBusy}
               >

@@ -584,6 +584,38 @@ Clarify environment variable requirements.
 
 ## Service Integration Patterns
 
+### Polar Billing Integration
+
+**Webhook Pattern (Store-Then-Process)**:
+- Webhook receiver validates Polar signature and stores raw event in `polar_webhook_events` table immediately (idempotent by `event_id`)
+- Returns 200 to Polar without processing
+- Worker (RQ job) loads stored event and routes to type-specific handler
+- Handlers update `organization_plans` with Polar state (tier, effective_until, metadata)
+- Concurrency safety via `SELECT FOR UPDATE` row-level lock on plan row
+
+**Event Handlers**:
+- `subscription.active` → tier=pro, effective_until=None, create billing history (idempotent by polar_subscription_id)
+- `subscription.canceled` → effective_until=current_period_end
+- `subscription.uncanceled` → tier=pro, effective_until=None
+- `subscription.updated` → sync status and period end
+- `subscription.past_due` → warn user, keep pro (payment failed)
+- `subscription.revoked` → tier=trial_7d (immediate block)
+
+**Plan Expiry Check (Critical Fix)**:
+- `_plan_expired()` checks `plan.effective_until != null` for ALL tiers (pro/trial)
+- Returns 402 `blocked_for_payment` when expired (metric: `saas.plan.expired.blocked`)
+- Prevents pro tier orgs with expired period from using system
+
+**Polar Client Config**:
+- Pass `server="production"` for prod, `server="sandbox"` for dev
+- Timeout: 10 seconds for API calls
+- Idempotency: Polar customer_id reused for repeat checkouts (portal return_url support)
+
+**Email Notifications**:
+- Enqueue `billing_email_send` job on webhook confirmation (non-blocking)
+- Types: upgrade_confirmed, payment_failed, trial_warning
+- Use Resend provider with deterministic idempotency key per send attempt
+
 ### Email Service (Resend Provider)
 - Use `email_sender.py` abstract interface with provider adapters
 - `ResendSender` adapter: builds `resend.emails.send(...)` with deterministic idempotency key
@@ -596,6 +628,7 @@ Clarify environment variable requirements.
 - Worker handler in `queue_worker.py` processes jobs with retry/backoff
 - Use deterministic keys for idempotency (example: `f"{org_id}:{invite_id}:{attempt}"`)
 - Return job ID immediately to API caller; job execution is eventual
+- Use `SELECT FOR UPDATE` on rows being modified concurrently to prevent race conditions
 
 ## Compatibility Standards (OpenClaw Board Workflows)
 

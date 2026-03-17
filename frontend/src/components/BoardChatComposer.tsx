@@ -205,7 +205,7 @@ function BoardChatComposerImpl({
           {pendingFiles.map((f) => (
             <span
               key={f.id}
-              className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-100 px-2.5 py-1 text-xs text-slate-700"
+              className="inline-flex items-center gap-1 rounded-full border border-[color:var(--border)] bg-[color:var(--surface-muted)] px-2.5 py-1 text-xs text-[color:var(--text)]"
             >
               <span className="max-w-[180px] truncate">{f.fileName}</span>
               <span
@@ -223,7 +223,7 @@ function BoardChatComposerImpl({
                 <button
                   type="button"
                   onClick={() => onRemovePendingFile(f.id)}
-                  className="ml-0.5 text-slate-500 transition hover:text-slate-700"
+                  className="ml-0.5 text-muted transition hover:text-[color:var(--text)]"
                   aria-label={`Remove ${f.fileName}`}
                 >
                   <X className="h-3 w-3" />
@@ -233,15 +233,15 @@ function BoardChatComposerImpl({
           ))}
         </div>
       )}
-      <div className="relative rounded-[28px] border border-slate-300/80 bg-slate-100/80 px-3.5 py-2.5 shadow-[0_14px_32px_-22px_rgba(15,23,42,0.42)]">
+      <div className="relative rounded-[28px] border border-[color:var(--border-strong)]/80 bg-[color:var(--surface-muted)]/80 px-3.5 py-2.5 shadow-[0_14px_32px_-22px_rgba(15,23,42,0.42)]">
         <div className="flex items-center gap-2">
           {onFilesSelected && (
             <>
               <label
-                className={`relative inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-slate-500 transition ${
+                className={`relative inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-muted transition ${
                   isComposerDisabled
-                    ? "cursor-not-allowed bg-slate-100 text-slate-400"
-                    : "cursor-pointer hover:bg-slate-200 hover:text-slate-700"
+                    ? "cursor-not-allowed bg-[color:var(--surface-muted)] text-quiet"
+                    : "cursor-pointer hover:bg-[color:var(--surface-strong)] hover:text-[color:var(--text)]"
                 }`}
                 title={isComposerDisabled ? "Chat unavailable" : "Attach files"}
               >
@@ -338,7 +338,7 @@ function BoardChatComposerImpl({
           }}
           placeholder={placeholder}
           rows={1}
-          className="min-h-[24px] min-w-0 !w-auto max-h-40 flex-1 resize-none border-0 bg-transparent px-0 py-0.5 text-[15px] leading-6 text-slate-700 shadow-none placeholder:text-slate-400 focus-visible:ring-0"
+          className="min-h-[24px] min-w-0 !w-auto max-h-40 flex-1 resize-none border-0 bg-transparent px-0 py-0.5 text-[15px] leading-6 text-[color:var(--text)] shadow-none placeholder:text-quiet focus-visible:ring-0"
           disabled={isComposerDisabled}
         />
           <div className="flex flex-shrink-0 items-center">
@@ -350,7 +350,7 @@ function BoardChatComposerImpl({
               className={`inline-flex h-10 w-10 items-center justify-center rounded-full transition ${
                 canSend
                   ? "bg-sky-500 text-white hover:bg-sky-600"
-                  : "bg-slate-100 text-slate-400"
+                  : "bg-[color:var(--surface-muted)] text-quiet"
               } disabled:cursor-not-allowed`}
             >
               <AudioLines className="h-4 w-4" />
@@ -358,7 +358,7 @@ function BoardChatComposerImpl({
           </div>
         </div>
         {mentionTarget && filteredMentionOptions.length > 0 ? (
-          <div className="absolute bottom-full left-0 z-20 mb-2 w-full max-w-sm overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl shadow-slate-200/60">
+          <div className="absolute bottom-full left-0 z-20 mb-2 w-full max-w-sm overflow-hidden rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] shadow-xl shadow-slate-200/60">
             <div className="max-h-52 overflow-y-auto py-1">
               {filteredMentionOptions.map((option, index) => (
                 <button
@@ -370,12 +370,12 @@ function BoardChatComposerImpl({
                   }}
                   className={`flex w-full items-center justify-between px-3 py-2 text-left text-sm transition ${
                     index === activeIndex
-                      ? "bg-slate-100 text-slate-900"
-                      : "text-slate-700 hover:bg-slate-50"
+                      ? "bg-[color:var(--surface-muted)] text-strong"
+                      : "text-[color:var(--text)] hover:bg-[color:var(--surface-muted)]"
                   }`}
                 >
                   <span className="font-mono">@{option}</span>
-                  <span className="text-xs text-slate-400">mention</span>
+                  <span className="text-xs text-quiet">mention</span>
                 </button>
               ))}
             </div>

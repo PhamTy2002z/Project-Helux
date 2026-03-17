@@ -45,12 +45,12 @@ export function SidebarUsageMeter({ enabled }: { enabled: boolean }) {
   const barColor = usageBarColor(pct);
 
   return (
-    <Link href="/settings" className="block cursor-pointer rounded-lg px-3 py-2 hover:bg-slate-50 transition">
-      <div className="flex justify-between text-[11px] text-slate-500">
+    <Link href="/settings" className="block cursor-pointer rounded-lg px-3 py-2 hover:bg-[color:var(--surface-muted)] transition">
+      <div className="flex justify-between text-[11px] text-muted">
         <span>{label}</span>
         <span>{formatCompact(primary.used)}/{formatCompact(primary.limit)}</span>
       </div>
-      <div className="mt-1 h-1.5 rounded-full bg-slate-100">
+      <div className="mt-1 h-1.5 rounded-full bg-[color:var(--surface-strong)]">
         <div className={cn("h-full rounded-full transition-all", barColor)} style={{ width: `${pct}%` }} />
       </div>
     </Link>

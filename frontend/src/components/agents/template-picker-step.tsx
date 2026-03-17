@@ -87,7 +87,7 @@ export function TemplatePickerStep({ onSelect, onSkip }: TemplatePickerStepProps
           {isLoading ? (
             <SkeletonGrid />
           ) : filtered.length === 0 ? (
-            <p className="py-8 text-center text-sm text-slate-500">No templates found.</p>
+            <p className="py-8 text-center text-sm text-muted">No templates found.</p>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
               {filtered.map((template) => (

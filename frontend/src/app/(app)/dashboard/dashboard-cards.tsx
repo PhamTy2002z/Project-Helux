@@ -22,24 +22,24 @@ export function TopMetricCard({
 }) {
   const iconTone =
     accent === "blue"
-      ? "bg-blue-50 text-blue-600"
+      ? "icon-bg-info"
       : accent === "green"
-        ? "bg-emerald-50 text-emerald-600"
+        ? "icon-bg-success"
         : accent === "violet"
-          ? "bg-violet-50 text-violet-600"
-          : "bg-green-50 text-green-600";
+          ? "icon-bg-info"
+          : "icon-bg-success";
 
   return (
-    <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+    <section className="rounded-xl border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
       <div className="flex items-start justify-between gap-3">
         <div>
           <div className="flex items-center gap-1.5">
-            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted">
               {title}
             </p>
             {infoText ? (
               <span
-                className="inline-flex text-slate-400"
+                className="inline-flex text-quiet"
                 title={infoText}
                 aria-label={infoText}
               >
@@ -48,9 +48,9 @@ export function TopMetricCard({
             ) : null}
           </div>
           <div className="mt-2 flex items-end gap-2">
-            <p className="font-heading text-4xl font-bold text-slate-900">{value}</p>
+            <p className="font-heading text-4xl font-bold text-strong">{value}</p>
             {secondary ? (
-              <p className="pb-1 text-xs text-slate-500">{secondary}</p>
+              <p className="pb-1 text-xs text-muted">{secondary}</p>
             ) : null}
           </div>
         </div>
@@ -74,13 +74,13 @@ export function InfoBlock({
   rows: SummaryRow[];
 }) {
   return (
-    <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+    <section className="rounded-xl border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm">
       <div className="mb-4 flex items-center justify-between gap-3">
         <div className="flex items-center gap-1.5">
-          <h3 className="text-lg font-semibold text-slate-900">{title}</h3>
+          <h3 className="text-lg font-semibold text-strong">{title}</h3>
           {infoText ? (
             <span
-              className="inline-flex text-slate-400"
+              className="inline-flex text-quiet"
               title={infoText}
               aria-label={infoText}
             >
@@ -92,29 +92,29 @@ export function InfoBlock({
           <span
             className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${
               badge.tone === "online"
-                ? "bg-emerald-100 text-emerald-700"
+                ? "status-badge-success"
                 : badge.tone === "offline"
-                  ? "bg-rose-100 text-rose-700"
-                  : "bg-slate-200 text-slate-700"
+                  ? "status-badge-danger"
+                  : "status-badge-neutral"
             }`}
           >
             {badge.text}
           </span>
         ) : null}
       </div>
-      <div className="divide-y divide-slate-100 rounded-lg border border-slate-200 bg-white">
+      <div className="divide-y divide-[color:var(--border)] rounded-lg border border-[color:var(--border)] bg-[color:var(--surface)]">
         {rows.map((row) => (
           <div key={`${row.label}-${row.value}`} className="flex items-start justify-between gap-3 px-3 py-2">
-            <span className="min-w-0 text-sm text-slate-500">{row.label}</span>
+            <span className="min-w-0 text-sm text-muted">{row.label}</span>
             <span
               className={`max-w-[65%] break-words text-right text-sm font-medium leading-5 ${
                 row.tone === "success"
-                  ? "text-emerald-700"
+                  ? "text-status-success"
                   : row.tone === "warning"
-                    ? "text-amber-700"
+                    ? "text-status-warning"
                     : row.tone === "danger"
-                      ? "text-rose-700"
-                      : "text-slate-800"
+                      ? "text-status-danger"
+                      : "text-strong"
               }`}
             >
               {row.value}

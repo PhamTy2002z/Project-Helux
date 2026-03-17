@@ -5,6 +5,8 @@ import * as RechartsPrimitive from "recharts";
 import type { DefaultLegendContentProps, TooltipContentProps } from "recharts";
 
 import { cn } from "@/lib/utils";
+import { useTheme } from "@/components/providers/theme-provider";
+import { getChartColors } from "./chart-theme";
 
 const THEMES = { light: "", dark: ".dark" } as const;
 
@@ -321,14 +323,20 @@ function ChartTooltipCard({
   labelClassName,
   ...props
 }: ChartTooltipContentProps) {
+  const { theme } = useTheme();
+  const colors = React.useMemo(() => getChartColors(), [theme]);
+
   return (
     <ChartTooltipContent
       {...props}
-      className={cn(
-        "border border-gray-200 bg-white px-3 py-2 text-sm shadow-lg",
-        className,
-      )}
-      labelClassName={cn("text-sm font-semibold text-gray-900", labelClassName)}
+      className={cn("px-3 py-2 text-sm shadow-lg", className)}
+      labelClassName={cn("text-sm font-semibold", labelClassName)}
+      style={{
+        backgroundColor: colors.surface,
+        border: `1px solid ${colors.border}`,
+        borderRadius: 8,
+        color: colors.textStrong,
+      }}
     />
   );
 }
@@ -450,10 +458,11 @@ function ChartLegendItem({
       aria-pressed={!isHidden}
       onClick={handleClick}
       className={cn(
-        "flex items-center gap-2 text-gray-600 transition-opacity [&>svg]:h-3 [&>svg]:w-3 cursor-pointer disabled:cursor-not-allowed disabled:opacity-60",
+        "flex items-center gap-2 transition-opacity [&>svg]:h-3 [&>svg]:w-3 cursor-pointer disabled:cursor-not-allowed disabled:opacity-60",
         isHidden && "opacity-50",
         className,
       )}
+      style={{ color: "var(--text-muted)" }}
       {...props}
     >
       {Icon && !hideIcon ? (
@@ -464,7 +473,7 @@ function ChartLegendItem({
           style={{ backgroundColor: resolvedColor }}
         />
       )}
-      <span className={cn(isHidden && "line-through text-gray-400")}>
+      <span className={cn(isHidden && "line-through opacity-50")}>
         {resolvedLabel}
       </span>
     </button>

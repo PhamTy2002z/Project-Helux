@@ -33,21 +33,21 @@ export function QuotaSummary({ quotas, className }: QuotaSummaryProps) {
     return null;
   }
   return (
-    <div className={cn("rounded-xl border border-slate-200 bg-white p-4", className)}>
-      <p className="text-sm font-semibold text-slate-900">Quota summary</p>
+    <div className={cn("rounded-xl border border-[color:var(--border)] bg-[color:var(--surface)] p-4", className)}>
+      <p className="text-sm font-semibold text-strong">Quota summary</p>
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
         {quotas.map((quota) => (
           <div
             key={quota.resource}
             className={cn(
               "rounded-lg border px-3.5 py-2.5",
-              quota.exceeded ? "border-rose-200 bg-rose-50" : "border-slate-200 bg-slate-50/70",
+              quota.exceeded ? "status-danger" : "border-[color:var(--border)] bg-[color:var(--surface-muted)]",
             )}
           >
-            <p className="text-xs text-slate-600">
+            <p className="text-xs text-[color:var(--text-muted)]">
               {RESOURCE_LABELS[quota.resource] ?? quota.resource}
             </p>
-            <p className="mt-1 text-sm font-semibold text-slate-900">
+            <p className="mt-1 text-sm font-semibold text-strong">
               {formatValue(quota.used, quota.resource)} / {formatValue(quota.limit, quota.resource)}
             </p>
           </div>

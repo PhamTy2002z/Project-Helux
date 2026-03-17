@@ -30,22 +30,90 @@ async def handle_polar_webhook(
 
     # Verify webhook signature
     try:
-        from polar_sdk.webhooks import validate_event  # type: ignore[attr-defined]
+        from polar_sdk.webhooks import (  # type: ignore[attr-defined]
+            WebhookVerificationError,
+            validate_event,
+        )
 
         event = validate_event(
             body=body,
             headers=headers,
             secret=settings.polar_webhook_secret,
         )
-    except Exception as exc:
-        logger.warning("Polar webhook signature verification failed: %s", exc)
+    except WebhookVerificationError as exc:
+        logger.warning("Polar webhook signature failed: %s", exc)
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid webhook signature.",
         ) from exc
 
-    # Process event
-    from app.services.billing_webhook_service import process_polar_event
+    # Store-then-enqueue: persist raw payload first, process async
+    from sqlalchemy.exc import IntegrityError
 
-    await process_polar_event(session, event=event)
-    return {"status": "ok"}
+    from app.models.polar_webhook_events import PolarWebhookEvent
+    from app.services.billing_webhook_helpers import _extract_org_id, _safe_get
+
+    event_type = getattr(event, "type", "") or ""
+    event_data = getattr(event, "data", None)
+    metadata = _safe_get(event_data, "metadata") if event_data else None
+    if isinstance(metadata, str):
+        import json
+
+        try:
+            metadata = json.loads(metadata)
+        except (json.JSONDecodeError, TypeError):
+            metadata = None
+    org_id = _extract_org_id(metadata if isinstance(metadata, dict) else None)
+    # Use event data ID if available, else hash raw body for dedup (C-1 fix)
+    raw_event_id = str(_safe_get(event_data, "id") or "").strip()
+    if raw_event_id:
+        polar_event_id: str | None = raw_event_id
+    else:
+        import hashlib
+
+        polar_event_id = f"hash-{hashlib.sha256(body).hexdigest()}"
+
+    # Serialize event to JSON-safe dict
+    raw_payload: dict[str, object] = {}
+    try:
+        raw_payload = {
+            "type": event_type,
+            "data": event_data if isinstance(event_data, dict) else {},
+        }
+        if hasattr(event_data, "model_dump"):
+            raw_payload["data"] = event_data.model_dump(mode="json")  # type: ignore[union-attr]
+        elif hasattr(event_data, "__dict__"):
+            import json as _json
+
+            raw_payload["data"] = _json.loads(_json.dumps(event_data.__dict__, default=str))
+    except Exception:
+        logger.warning("Failed to serialize webhook event data", exc_info=True)
+
+    webhook_event = PolarWebhookEvent(
+        event_type=event_type,
+        polar_event_id=polar_event_id,
+        raw_payload=raw_payload,
+        organization_id=org_id,
+        status="pending",
+    )
+    session.add(webhook_event)
+    try:
+        await session.commit()
+    except IntegrityError:
+        await session.rollback()
+        logger.info("Duplicate Polar webhook %s, skipping", polar_event_id)
+        return {"status": "duplicate"}
+
+    await session.refresh(webhook_event)
+
+    # Enqueue async processing
+    from app.services.billing_webhook_queue import enqueue_billing_webhook_task
+
+    enqueued = enqueue_billing_webhook_task(webhook_event_id=webhook_event.id)
+    if not enqueued:
+        logger.error(
+            "Failed to enqueue billing webhook task for event %s (stored but unprocessed)",
+            webhook_event.id,
+        )
+
+    return {"status": "accepted"}
