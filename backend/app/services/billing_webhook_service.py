@@ -58,20 +58,21 @@ async def _handle_subscription_active(
     plan.effective_from = now
     plan.effective_until = None
 
-    _update_billing_metadata(plan, {
-        "last_checkout_mode": "polar",
-        "last_checkout_at": now.isoformat(),
-        "polar_subscription_id": _safe_get(event_data, "id"),
-        "polar_customer_id": _safe_get(event_data, "customer_id")
-        or _safe_get(_safe_get(event_data, "customer"), "id"),
-        "polar_subscription_status": "active",
-        "polar_started_at": _safe_get(event_data, "started_at"),
-        "polar_current_period_end": _safe_get(event_data, "current_period_end"),
-        "polar_canceled_at": None,
-        "polar_event_timestamp": str(
-            _safe_get(event_data, "modified_at") or now.isoformat()
-        ),
-    })
+    _update_billing_metadata(
+        plan,
+        {
+            "last_checkout_mode": "polar",
+            "last_checkout_at": now.isoformat(),
+            "polar_subscription_id": _safe_get(event_data, "id"),
+            "polar_customer_id": _safe_get(event_data, "customer_id")
+            or _safe_get(_safe_get(event_data, "customer"), "id"),
+            "polar_subscription_status": "active",
+            "polar_started_at": _safe_get(event_data, "started_at"),
+            "polar_current_period_end": _safe_get(event_data, "current_period_end"),
+            "polar_canceled_at": None,
+            "polar_event_timestamp": str(_safe_get(event_data, "modified_at") or now.isoformat()),
+        },
+    )
     plan.updated_at = now
     session.add(plan)
 
@@ -123,13 +124,14 @@ async def _handle_subscription_revoked(
     plan.tier = "trial_7d"
     plan.effective_until = now
 
-    _update_billing_metadata(plan, {
-        "polar_subscription_status": "revoked",
-        "polar_canceled_at": _safe_get(event_data, "canceled_at"),
-        "polar_event_timestamp": str(
-            _safe_get(event_data, "modified_at") or now.isoformat()
-        ),
-    })
+    _update_billing_metadata(
+        plan,
+        {
+            "polar_subscription_status": "revoked",
+            "polar_canceled_at": _safe_get(event_data, "canceled_at"),
+            "polar_event_timestamp": str(_safe_get(event_data, "modified_at") or now.isoformat()),
+        },
+    )
     plan.updated_at = now
     session.add(plan)
     await session.commit()
@@ -177,12 +179,15 @@ async def _handle_subscription_canceled(
     else:
         plan.effective_until = now
 
-    _update_billing_metadata(plan, {
-        "polar_subscription_status": "canceled",
-        "polar_canceled_at": canceled_at_raw,
-        "polar_current_period_end": current_period_end_raw,
-        "polar_event_timestamp": str(event_timestamp),
-    })
+    _update_billing_metadata(
+        plan,
+        {
+            "polar_subscription_status": "canceled",
+            "polar_canceled_at": canceled_at_raw,
+            "polar_current_period_end": current_period_end_raw,
+            "polar_event_timestamp": str(event_timestamp),
+        },
+    )
     plan.updated_at = now
     session.add(plan)
     await session.commit()
@@ -207,13 +212,14 @@ async def _handle_subscription_uncanceled(
     plan.tier = "pro"
     plan.effective_until = None
 
-    _update_billing_metadata(plan, {
-        "polar_subscription_status": "active",
-        "polar_canceled_at": None,
-        "polar_event_timestamp": str(
-            _safe_get(event_data, "modified_at") or now.isoformat()
-        ),
-    })
+    _update_billing_metadata(
+        plan,
+        {
+            "polar_subscription_status": "active",
+            "polar_canceled_at": None,
+            "polar_event_timestamp": str(_safe_get(event_data, "modified_at") or now.isoformat()),
+        },
+    )
     plan.updated_at = now
     session.add(plan)
     await session.commit()
@@ -246,11 +252,14 @@ async def _handle_subscription_updated(
         if current_period_end:
             plan.effective_until = current_period_end.replace(tzinfo=None)
 
-    _update_billing_metadata(plan, {
-        "polar_subscription_status": polar_status,
-        "polar_current_period_end": current_period_end_raw,
-        "polar_event_timestamp": str(event_timestamp),
-    })
+    _update_billing_metadata(
+        plan,
+        {
+            "polar_subscription_status": polar_status,
+            "polar_current_period_end": current_period_end_raw,
+            "polar_event_timestamp": str(event_timestamp),
+        },
+    )
     plan.updated_at = now
     session.add(plan)
     await session.commit()
@@ -266,12 +275,15 @@ async def _handle_subscription_past_due(
         logger.error("Plan not found after create for org %s", organization_id)
         return
 
-    _update_billing_metadata(plan, {
-        "polar_subscription_status": "past_due",
-        "polar_event_timestamp": str(
-            _safe_get(event_data, "modified_at") or utcnow().isoformat()
-        ),
-    })
+    _update_billing_metadata(
+        plan,
+        {
+            "polar_subscription_status": "past_due",
+            "polar_event_timestamp": str(
+                _safe_get(event_data, "modified_at") or utcnow().isoformat()
+            ),
+        },
+    )
     plan.updated_at = utcnow()
     session.add(plan)
     await session.commit()
@@ -331,9 +343,7 @@ _HANDLERS: dict[str, Any] = {
 # ---------------------------------------------------------------------------
 
 
-async def process_stored_event(
-    session: AsyncSession, *, event_record: Any
-) -> None:
+async def process_stored_event(session: AsyncSession, *, event_record: Any) -> None:
     """Process a stored PolarWebhookEvent record (called from worker)."""
     raw = event_record.raw_payload
     if not raw or not isinstance(raw, dict):
