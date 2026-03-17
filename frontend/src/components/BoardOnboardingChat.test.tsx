@@ -121,6 +121,14 @@ describe("BoardOnboardingChat polling", () => {
       expect(answerOnboardingMock).toHaveBeenCalledTimes(1);
     });
 
+    // Wait for component to enter the "waiting for next question" state
+    // so the polling interval is established before we advance timers.
+    await waitFor(() => {
+      expect(
+        screen.getByText("Waiting for the next question..."),
+      ).toBeDefined();
+    });
+
     const callsBeforePoll = getOnboardingMock.mock.calls.length;
     await act(async () => {
       vi.advanceTimersByTime(2500);
