@@ -42,10 +42,10 @@ export default function CheckoutSuccessPage() {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 text-center">
         <Loader2 className="h-10 w-10 text-amber-500" />
-        <h1 className="text-xl font-semibold text-slate-900">
+        <h1 className="text-xl font-semibold text-strong">
           Activation is taking longer than expected
         </h1>
-        <p className="max-w-md text-sm text-slate-500">
+        <p className="max-w-md text-sm text-muted">
           Your payment was successful. Plan activation may take a moment.
         </p>
         <div className="flex gap-3">
@@ -64,8 +64,8 @@ export default function CheckoutSuccessPage() {
   return (
     <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4">
       <Loader2 className="h-10 w-10 animate-spin text-blue-500" />
-      <h1 className="text-xl font-semibold text-slate-900">Activating your Pro plan…</h1>
-      <p className="text-sm text-slate-500">This usually takes a few seconds.</p>
+      <h1 className="text-xl font-semibold text-strong">Activating your Pro plan…</h1>
+      <p className="text-sm text-muted">This usually takes a few seconds.</p>
     </div>
   );
 }

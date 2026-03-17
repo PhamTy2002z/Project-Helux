@@ -54,17 +54,17 @@ export function PlanCard({
         "rounded-xl border p-4",
         selected
           ? "border-blue-500 bg-blue-50/70"
-          : "border-slate-200 bg-white",
+          : "border-[color:var(--border)] bg-[color:var(--surface)]",
       )}
     >
       <div className="flex items-start justify-between gap-2">
         <div>
-          <p className="text-base font-semibold text-slate-900">
+          <p className="text-base font-semibold text-strong">
             {content.title}
           </p>
-          <p className="mt-1 text-xs text-slate-500">{content.subtitle}</p>
+          <p className="mt-1 text-xs text-muted">{content.subtitle}</p>
         </div>
-        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-700">
+        <span className="rounded-full bg-[color:var(--surface-muted)] px-2 py-0.5 text-[11px] font-medium text-[color:var(--text)]">
           {content.badge}
         </span>
       </div>
@@ -72,7 +72,7 @@ export function PlanCard({
         {content.bullets.map((bullet) => (
           <li
             key={bullet}
-            className="flex items-start gap-2 text-sm text-slate-700"
+            className="flex items-start gap-2 text-sm text-[color:var(--text)]"
           >
             <CheckCircle2 className="mt-0.5 h-4 w-4 text-emerald-500" />
             {bullet}

@@ -47,7 +47,7 @@ type AgentsTableProps = {
 
 const DEFAULT_EMPTY_ICON = (
   <svg
-    className="h-16 w-16 text-slate-300"
+    className="h-16 w-16 text-quiet"
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
@@ -127,7 +127,7 @@ export function AgentsTable({
         accessorKey: "openclaw_session_id",
         header: "Session",
         cell: ({ row }) => (
-          <span className="text-sm text-slate-700">
+          <span className="text-sm text-[color:var(--text)]">
             {truncate(row.original.openclaw_session_id)}
           </span>
         ),
@@ -138,7 +138,7 @@ export function AgentsTable({
         cell: ({ row }) => {
           const boardId = row.original.board_id;
           if (!boardId) {
-            return <span className="text-sm text-slate-700">—</span>;
+            return <span className="text-sm text-[color:var(--text)]">—</span>;
           }
           const boardName = boardNameById.get(boardId) ?? boardId;
           return linkifyCell({
@@ -210,7 +210,7 @@ export function AgentsTable({
             }
           : undefined
       }
-      rowClassName="hover:bg-slate-50"
+      rowClassName="hover:bg-[color:var(--surface-muted)]"
       cellClassName="px-6 py-4"
       emptyState={
         emptyState

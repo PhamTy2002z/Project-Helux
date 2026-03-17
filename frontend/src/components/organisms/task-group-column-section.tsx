@@ -31,7 +31,7 @@ const columns: Array<{
   dot: string;
   badge: string;
 }> = [
-  { title: "Inbox", status: "inbox", dot: "bg-slate-400", badge: "bg-slate-100 text-slate-600" },
+  { title: "Inbox", status: "inbox", dot: "bg-[color:var(--text-quiet)]", badge: "bg-[color:var(--surface-muted)] text-[color:var(--text-muted)]" },
   {
     title: "In Progress",
     status: "in_progress",
@@ -107,19 +107,19 @@ export function TaskGroupColumnSection({
 
   if (collapsed) {
     return (
-      <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="rounded-xl border border-[color:var(--border)] bg-[color:var(--surface)] p-4 shadow-sm">
         <button
           type="button"
           className="flex w-full items-center justify-between text-left"
           onClick={onToggleCollapsed}
         >
           <div>
-            <p className="text-sm font-semibold text-slate-900">{group.title}</p>
-            <p className="text-xs text-slate-500">
+            <p className="text-sm font-semibold text-strong">{group.title}</p>
+            <p className="text-xs text-muted">
               {group.totalCount} tasks · {group.progressPct}% done
             </p>
           </div>
-          <span className="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-600">
+          <span className="rounded-full border border-[color:var(--border)] px-3 py-1 text-xs font-semibold text-[color:var(--text-muted)]">
             Expand
           </span>
         </button>
@@ -128,17 +128,17 @@ export function TaskGroupColumnSection({
   }
 
   return (
-    <section className="rounded-xl border border-slate-200 bg-slate-50/60 p-3 shadow-sm">
+    <section className="rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-muted)]/60 p-3 shadow-sm">
       <div className="mb-3 flex items-center justify-between gap-3">
         <div>
-          <p className="text-sm font-semibold text-slate-900">{group.title}</p>
-          <p className="text-xs text-slate-500">
+          <p className="text-sm font-semibold text-strong">{group.title}</p>
+          <p className="text-xs text-muted">
             {group.totalCount} tasks · {group.progressPct}% done
           </p>
         </div>
         <button
           type="button"
-          className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600 transition hover:border-slate-300 hover:bg-slate-50"
+          className="rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] px-3 py-1 text-xs font-semibold text-[color:var(--text-muted)] transition hover:border-[color:var(--border-strong)] hover:bg-[color:var(--surface-muted)]"
           onClick={onToggleCollapsed}
         >
           Collapse
@@ -156,8 +156,8 @@ export function TaskGroupColumnSection({
             <div
               key={`${group.id}-${column.status}`}
               className={cn(
-                "rounded-xl border border-slate-200 bg-white",
-                activeColumn === column.status && !readOnly && "ring-2 ring-slate-200",
+                "rounded-xl border border-[color:var(--border)] bg-[color:var(--surface)]",
+                activeColumn === column.status && !readOnly && "ring-2 ring-[color:var(--border)]",
               )}
               onDrop={readOnly ? undefined : handleDrop(column.status)}
               onDragOver={(event) => {
@@ -167,10 +167,10 @@ export function TaskGroupColumnSection({
               }}
               onDragLeave={() => onColumnLeave(column.status)}
             >
-              <div className="flex items-center justify-between border-b border-slate-100 px-3 py-2">
+              <div className="flex items-center justify-between border-b border-[color:var(--border)] px-3 py-2">
                 <div className="flex items-center gap-2">
                   <span className={cn("h-2 w-2 rounded-full", column.dot)} />
-                  <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-700">
+                  <h4 className="text-xs font-semibold uppercase tracking-wide text-[color:var(--text)]">
                     {column.title}
                   </h4>
                 </div>
@@ -213,7 +213,7 @@ export function TaskGroupColumnSection({
                 {hiddenCount > 0 ? (
                   <button
                     type="button"
-                    className="w-full rounded-lg border border-dashed border-slate-200 px-3 py-2 text-xs font-semibold text-slate-500 transition hover:border-slate-300 hover:bg-slate-50"
+                    className="w-full rounded-lg border border-dashed border-[color:var(--border)] px-3 py-2 text-xs font-semibold text-muted transition hover:border-[color:var(--border-strong)] hover:bg-[color:var(--surface-muted)]"
                     onClick={() =>
                       setVisibleLimitByStatus((prev) => ({
                         ...prev,
@@ -231,7 +231,7 @@ export function TaskGroupColumnSection({
       </div>
 
       {canShowMore ? (
-        <p className="mt-3 text-xs text-slate-500">
+        <p className="mt-3 text-xs text-muted">
           Large-list mode active. Render is batched to keep board interactions responsive at scale.
         </p>
       ) : null}

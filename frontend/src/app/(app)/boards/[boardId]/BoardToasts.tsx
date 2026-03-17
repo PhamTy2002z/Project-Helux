@@ -17,7 +17,7 @@ export function BoardToasts({ toasts, onDismiss }: BoardToastsProps) {
         <div
           key={toast.id}
           className={cn(
-            "rounded-xl border bg-white px-4 py-3 text-sm shadow-lush",
+            "rounded-xl border bg-[color:var(--surface)] px-4 py-3 text-sm shadow-lush",
             toast.tone === "error"
               ? "border-rose-200 text-rose-700"
               : "border-emerald-200 text-emerald-700",
@@ -30,10 +30,10 @@ export function BoardToasts({ toasts, onDismiss }: BoardToastsProps) {
                 toast.tone === "error" ? "bg-rose-500" : "bg-emerald-500",
               )}
             />
-            <p className="flex-1 text-sm text-slate-700">{toast.message}</p>
+            <p className="flex-1 text-sm text-[color:var(--text)]">{toast.message}</p>
             <button
               type="button"
-              className="text-xs text-slate-400 hover:text-slate-600"
+              className="text-xs text-quiet hover:text-[color:var(--text-muted)]"
               onClick={() => onDismiss(toast.id)}
             >
               Dismiss

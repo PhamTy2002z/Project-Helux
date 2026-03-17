@@ -337,17 +337,17 @@ export function TaskDetailPanel({
   return (
     <aside
       className={cn(
-        "fixed right-0 top-0 z-50 h-full w-[max(760px,45vw)] max-w-[99vw] transform bg-white shadow-2xl transition-transform",
+        "fixed right-0 top-0 z-50 h-full w-[max(760px,45vw)] max-w-[99vw] transform bg-[color:var(--surface)] shadow-2xl transition-transform",
         isDetailOpen ? "transform-none" : "translate-x-full",
       )}
     >
       <div className="flex h-full flex-col">
-        <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
+        <div className="flex items-center justify-between border-b border-[color:var(--border)] px-6 py-4">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted">
               Task detail
             </p>
-            <p className="mt-1 text-sm font-medium text-slate-900">
+            <p className="mt-1 text-sm font-medium text-strong">
               {selectedTask?.title ?? "Task"}
             </p>
           </div>
@@ -355,7 +355,7 @@ export function TaskDetailPanel({
             <button
               type="button"
               onClick={onEditOpen}
-              className="rounded-lg border border-slate-200 p-2 text-slate-500 transition hover:bg-slate-50"
+              className="rounded-lg border border-[color:var(--border)] p-2 text-muted transition hover:bg-[color:var(--surface-muted)]"
               disabled={!selectedTask || !canWrite}
               title={canWrite ? "Edit task" : "Read-only access"}
             >
@@ -364,7 +364,7 @@ export function TaskDetailPanel({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg border border-slate-200 p-2 text-slate-500 transition hover:bg-slate-50"
+              className="rounded-lg border border-[color:var(--border)] p-2 text-muted transition hover:bg-[color:var(--surface-muted)]"
             >
               <X className="h-4 w-4" />
             </button>
@@ -372,30 +372,30 @@ export function TaskDetailPanel({
         </div>
         <div className="flex-1 space-y-6 overflow-y-auto px-6 py-5">
           <div className="space-y-2">
-            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted">
               Description
             </p>
             {selectedTask?.description ? (
-              <div className="prose prose-sm max-w-none text-slate-700">
+              <div className="prose prose-sm max-w-none text-[color:var(--text)]">
                 <LazyMarkdown
                   content={selectedTask.description}
                   variant="description"
                 />
               </div>
             ) : (
-              <p className="text-sm text-slate-500">
+              <p className="text-sm text-muted">
                 No description provided.
               </p>
             )}
           </div>
           <div className="space-y-2">
-            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted">
               Custom fields
             </p>
             {customFieldDefinitionsLoading ? (
-              <p className="text-sm text-slate-500">Loading custom fields…</p>
+              <p className="text-sm text-muted">Loading custom fields…</p>
             ) : boardCustomFieldDefinitions.length > 0 ? (
-              <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+              <div className="rounded-lg border border-[color:var(--border)] bg-[color:var(--surface-muted)] p-3">
                 <dl className="space-y-2">
                   {boardCustomFieldDefinitions.map((definition) => {
                     const value =
@@ -408,13 +408,13 @@ export function TaskDetailPanel({
                         key={definition.id}
                         className="grid grid-cols-[160px_1fr] gap-3"
                       >
-                        <dt className="text-xs font-semibold text-slate-600">
+                        <dt className="text-xs font-semibold text-[color:var(--text-muted)]">
                           {definition.label || definition.field_key}
                           {definition.required === true ? (
                             <span className="ml-1 text-rose-600">*</span>
                           ) : null}
                         </dt>
-                        <dd className="text-xs text-slate-800">
+                        <dd className="text-xs text-strong">
                           {formatCustomFieldDetailValue(definition, value)}
                         </dd>
                       </div>
@@ -423,11 +423,11 @@ export function TaskDetailPanel({
                 </dl>
               </div>
             ) : (
-              <p className="text-sm text-slate-500">No custom fields.</p>
+              <p className="text-sm text-muted">No custom fields.</p>
             )}
           </div>
           <div className="space-y-2">
-            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted">
               Tags
             </p>
             {selectedTask?.tags?.length ? (
@@ -435,7 +435,7 @@ export function TaskDetailPanel({
                 {selectedTask.tags.map((tag) => (
                   <span
                     key={tag.id}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-[color:var(--border)] bg-[color:var(--surface)] px-2.5 py-1 text-xs font-semibold text-[color:var(--text)]"
                   >
                     <span
                       className="h-2 w-2 rounded-full"
@@ -448,11 +448,11 @@ export function TaskDetailPanel({
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-slate-500">No tags assigned.</p>
+              <p className="text-sm text-muted">No tags assigned.</p>
             )}
           </div>
           <div className="space-y-2">
-            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted">
               Dependencies
             </p>
             {(() => {
@@ -495,7 +495,7 @@ export function TaskDetailPanel({
           </div>
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted">
                 Approvals
               </p>
               <Button
@@ -507,13 +507,13 @@ export function TaskDetailPanel({
               </Button>
             </div>
             {approvalsError ? (
-              <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs text-slate-500">
+              <div className="rounded-lg border border-[color:var(--border)] bg-[color:var(--surface-muted)] p-3 text-xs text-muted">
                 {approvalsError}
               </div>
             ) : isApprovalsLoading ? (
-              <p className="text-sm text-slate-500">Loading approvals…</p>
+              <p className="text-sm text-muted">Loading approvals…</p>
             ) : taskApprovals.length === 0 ? (
-              <p className="text-sm text-slate-500">
+              <p className="text-sm text-muted">
                 No approvals tied to this task.{" "}
                 {pendingApprovals.length > 0
                   ? `${pendingApprovals.length} pending on this board.`
@@ -524,30 +524,30 @@ export function TaskDetailPanel({
                 {taskApprovals.map((approval) => (
                   <div
                     key={approval.id}
-                    className="rounded-xl border border-slate-200 bg-white p-3"
+                    className="rounded-xl border border-[color:var(--border)] bg-[color:var(--surface)] p-3"
                   >
-                    <div className="flex flex-wrap items-start justify-between gap-2 text-xs text-slate-500">
+                    <div className="flex flex-wrap items-start justify-between gap-2 text-xs text-muted">
                       <div>
-                        <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                        <p className="text-xs font-semibold uppercase tracking-wider text-muted">
                           {humanizeApprovalAction(approval.action_type)}
                         </p>
-                        <p className="mt-1 text-xs text-slate-500">
+                        <p className="mt-1 text-xs text-muted">
                           Requested{" "}
                           {formatApprovalTimestamp(approval.created_at)}
                         </p>
                       </div>
-                      <span className="text-xs font-semibold text-slate-700">
+                      <span className="text-xs font-semibold text-[color:var(--text)]">
                         {approval.confidence}% confidence · {approval.status}
                       </span>
                     </div>
                     {getApprovalRows(approval).length > 0 ? (
-                      <div className="mt-2 grid gap-2 text-xs text-slate-600 sm:grid-cols-2">
+                      <div className="mt-2 grid gap-2 text-xs text-[color:var(--text-muted)] sm:grid-cols-2">
                         {getApprovalRows(approval).map((row) => (
                           <div key={`${approval.id}-${row.label}`}>
-                            <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+                            <p className="text-[11px] font-semibold uppercase tracking-wider text-quiet">
                               {row.label}
                             </p>
-                            <p className="mt-1 text-xs text-slate-700">
+                            <p className="mt-1 text-xs text-[color:var(--text)]">
                               {row.value}
                             </p>
                           </div>
@@ -555,7 +555,7 @@ export function TaskDetailPanel({
                       </div>
                     ) : null}
                     {getApprovalReason(approval) ? (
-                      <p className="mt-2 text-xs text-slate-600">
+                      <p className="mt-2 text-xs text-[color:var(--text-muted)]">
                         {getApprovalReason(approval)}
                       </p>
                     ) : null}
@@ -583,7 +583,7 @@ export function TaskDetailPanel({
                             approvalsUpdatingId === approval.id || !canWrite
                           }
                           title={canWrite ? "Reject" : "Read-only access"}
-                          className="border-slate-300 text-slate-700"
+                          className="border-[color:var(--border-strong)] text-[color:var(--text)]"
                         >
                           Reject
                         </Button>
@@ -595,11 +595,11 @@ export function TaskDetailPanel({
             )}
           </div>
           <div className="space-y-3">
-            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted">
               Comments
             </p>
             <div className="space-y-2">
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3 shadow-sm">
+              <div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-muted)] p-3 shadow-sm">
                 <div className="relative">
                   <Textarea
                     ref={commentTextareaRef}
@@ -687,10 +687,10 @@ export function TaskDetailPanel({
                     }
                     disabled={!canWrite || isPostingComment}
                     rows={4}
-                    className="min-h-[96px] max-h-60 resize-none border-slate-200 bg-white text-sm text-slate-900 shadow-none focus-visible:ring-slate-300"
+                    className="min-h-[96px] max-h-60 resize-none border-[color:var(--border)] bg-[color:var(--surface)] text-sm text-strong shadow-none focus-visible:ring-[color:var(--border-strong)]"
                   />
                   {mentionTarget && filteredMentionOptions.length > 0 ? (
-                    <div className="absolute bottom-2 left-2 z-20 w-full max-w-sm overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg shadow-slate-200/70">
+                    <div className="absolute bottom-2 left-2 z-20 w-full max-w-sm overflow-hidden rounded-xl border border-[color:var(--border)] bg-[color:var(--surface)] shadow-lg">
                       <div className="max-h-52 overflow-y-auto py-1">
                         {filteredMentionOptions.map((option, index) => (
                           <button
@@ -702,12 +702,12 @@ export function TaskDetailPanel({
                             }}
                             className={`flex w-full items-center justify-between px-3 py-2 text-left text-sm transition ${
                               index === activeMentionOptionIndex
-                                ? "bg-slate-100 text-slate-900"
-                                : "text-slate-700 hover:bg-slate-50"
+                                ? "bg-[color:var(--surface-muted)] text-strong"
+                                : "text-[color:var(--text)] hover:bg-[color:var(--surface-muted)]"
                             }`}
                           >
                             <span className="font-mono">@{option}</span>
-                            <span className="text-xs text-slate-400">mention</span>
+                            <span className="text-xs text-quiet">mention</span>
                           </button>
                         ))}
                       </div>
@@ -715,7 +715,7 @@ export function TaskDetailPanel({
                   ) : null}
                 </div>
                 <div className="mt-2 flex items-center justify-between gap-3">
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-muted">
                     {canWrite
                       ? "Enter to post, Shift+Enter for newline."
                       : "Read-only mode."}
@@ -730,7 +730,7 @@ export function TaskDetailPanel({
                   </Button>
                 </div>
                 {canWrite ? (
-                  <p className="mt-2 text-xs text-slate-500">
+                  <p className="mt-2 text-xs text-muted">
                     Quick mentions:{" "}
                     {mentionHints.map((handle) => `@${handle}`).join(" · ")}
                   </p>
@@ -740,19 +740,19 @@ export function TaskDetailPanel({
                 <p className="text-xs text-rose-600">{postCommentError}</p>
               ) : null}
               {!canWrite ? (
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-muted">
                   Read-only access. You cannot post comments on this board.
                 </p>
               ) : null}
             </div>
             {isCommentsLoading ? (
-              <p className="text-sm text-slate-500">Loading comments…</p>
+              <p className="text-sm text-muted">Loading comments…</p>
             ) : commentsError ? (
-              <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs text-slate-500">
+              <div className="rounded-lg border border-[color:var(--border)] bg-[color:var(--surface-muted)] p-3 text-xs text-muted">
                 {commentsError}
               </div>
             ) : comments.length === 0 ? (
-              <p className="text-sm text-slate-500">No comments yet.</p>
+              <p className="text-sm text-muted">No comments yet.</p>
             ) : (
               <div className="space-y-3">
                 {comments.map((comment) => (

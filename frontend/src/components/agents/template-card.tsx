@@ -66,7 +66,7 @@ function resolveIcon(iconStr: string | null | undefined): LucideIcon {
 function TemplateIcon({ iconStr }: { iconStr: string | null | undefined }) {
   const Icon = resolveIcon(iconStr);
   // eslint-disable-next-line -- dynamic icon from map lookup requires component variable
-  return <Icon className="h-5 w-5 text-slate-600" />;
+  return <Icon className="h-5 w-5 text-[color:var(--text-muted)]" />;
 }
 
 interface TemplateCardProps {
@@ -87,15 +87,15 @@ export function TemplateCard({ template, selected, onSelect }: TemplateCardProps
       type="button"
       onClick={onSelect}
       className={cn(
-        "relative flex flex-col gap-2 rounded-xl border bg-white p-4 text-left shadow-sm transition-all cursor-pointer",
-        "hover:shadow-md hover:border-slate-300",
+        "relative flex flex-col gap-2 rounded-xl border bg-[color:var(--surface)] p-4 text-left shadow-sm transition-all cursor-pointer",
+        "hover:shadow-md hover:border-[color:var(--border-strong)]",
         selected
           ? "border-blue-500 ring-2 ring-blue-500 ring-offset-1"
-          : "border-slate-200",
+          : "border-[color:var(--border)]",
       )}
     >
       <div className="flex items-start justify-between gap-2">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-100">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[color:var(--surface-muted)]">
           <TemplateIcon iconStr={template.icon} />
         </div>
         {template.category ? (
@@ -105,9 +105,9 @@ export function TemplateCard({ template, selected, onSelect }: TemplateCardProps
         ) : null}
       </div>
       <div>
-        <p className="text-sm font-semibold text-slate-900 leading-snug">{template.name}</p>
+        <p className="text-sm font-semibold text-strong leading-snug">{template.name}</p>
         {description ? (
-          <p className="mt-1 text-xs text-slate-500 leading-relaxed">{description}</p>
+          <p className="mt-1 text-xs text-muted leading-relaxed">{description}</p>
         ) : null}
       </div>
     </button>
