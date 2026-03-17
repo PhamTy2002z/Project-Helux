@@ -215,7 +215,8 @@ export default function AgentDetailPage() {
             ) : null}
             {isProtectedGatewayMain ? (
               <div className="rounded-lg border border-[color:var(--border)] bg-[color:var(--surface-muted)] p-3 text-xs text-muted">
-                This gateway main agent is system-managed. Edit and delete are disabled.
+                This gateway main agent is system-managed. Edit and delete are
+                disabled.
               </div>
             ) : null}
 

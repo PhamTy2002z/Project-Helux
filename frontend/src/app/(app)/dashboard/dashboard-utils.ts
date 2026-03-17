@@ -139,9 +139,13 @@ const readTimestampFromRecords = (
   return null;
 };
 
-const sessionIdentifiers = (record: Record<string, unknown> | null): string[] => {
+const sessionIdentifiers = (
+  record: Record<string, unknown> | null,
+): string[] => {
   if (!record) return [];
-  const ids = SESSION_ID_KEYS.map((key) => readString(record, [key])).filter(Boolean) as string[];
+  const ids = SESSION_ID_KEYS.map((key) => readString(record, [key])).filter(
+    Boolean,
+  ) as string[];
   return [...new Set(ids)];
 };
 
@@ -160,13 +164,16 @@ export const compactNumber = (value: number): string => {
 };
 
 export const formatCount = (value: number): string =>
-  Number.isFinite(value) ? numberFormatter.format(Math.max(0, Math.round(value))) : "0";
+  Number.isFinite(value)
+    ? numberFormatter.format(Math.max(0, Math.round(value)))
+    : "0";
 
 export const formatPercent = (value: number): string =>
   Number.isFinite(value) ? `${value.toFixed(1)}%` : DASH;
 
 export const formatPerDay = (total: number, days: number): string => {
-  if (!Number.isFinite(total) || !Number.isFinite(days) || days <= 0) return DASH;
+  if (!Number.isFinite(total) || !Number.isFinite(days) || days <= 0)
+    return DASH;
   return `${(total / days).toFixed(1)}/day`;
 };
 
@@ -174,15 +181,15 @@ export const toSessionSummaries = (
   sessions: unknown[] | null | undefined,
   mainSession: unknown,
 ): SessionSummary[] => {
-  const sessionRecords = (sessions ?? []).map(toRecord).filter(Boolean) as Array<
-    Record<string, unknown>
-  >;
+  const sessionRecords = (sessions ?? [])
+    .map(toRecord)
+    .filter(Boolean) as Array<Record<string, unknown>>;
   const mainRecord = toRecord(mainSession);
   const mainIdentifiers = sessionIdentifiers(mainRecord);
 
   if (mainRecord && mainIdentifiers.length > 0) {
-    const exists = sessionRecords.some(
-      (entry) => sharesSessionIdentity(sessionIdentifiers(entry), mainIdentifiers),
+    const exists = sessionRecords.some((entry) =>
+      sharesSessionIdentity(sessionIdentifiers(entry), mainIdentifiers),
     );
     if (!exists) sessionRecords.unshift(mainRecord);
   }
@@ -192,7 +199,10 @@ export const toSessionSummaries = (
 
   for (const entry of sessionRecords) {
     const identifiers = sessionIdentifiers(entry);
-    if (identifiers.length > 0 && identifiers.some((value) => seenIdentifiers.has(value))) {
+    if (
+      identifiers.length > 0 &&
+      identifiers.some((value) => seenIdentifiers.has(value))
+    ) {
       continue;
     }
     uniqueRecords.push(entry);
@@ -208,17 +218,29 @@ export const toSessionSummaries = (
 
     const identifiers = sessionIdentifiers(entry);
     const key =
-      readString(entry, ["key", "session_key", "sessionKey", "id", "sessionId"]) ??
-      `session-${index}`;
+      readString(entry, [
+        "key",
+        "session_key",
+        "sessionKey",
+        "id",
+        "sessionId",
+      ]) ?? `session-${index}`;
     const label = readString(entry, ["label", "name", "title"]) ?? key;
-    const channel = readStringFromRecords([entry, originRecord], [
-      "channel",
-      "source",
-      "kind",
-      "chatType",
+    const channel = readStringFromRecords(
+      [entry, originRecord],
+      ["channel", "source", "kind", "chatType"],
+    );
+    const model = readString(entry, [
+      "model",
+      "model_name",
+      "provider",
+      "engine",
     ]);
-    const model = readString(entry, ["model", "model_name", "provider", "engine"]);
-    const _modelProvider = readString(entry, ["modelProvider", "model_provider", "provider"]);
+    const _modelProvider = readString(entry, [
+      "modelProvider",
+      "model_provider",
+      "provider",
+    ]);
     const lastSeenAt = readTimestampFromRecords(candidateRecords, [
       "updated_at",
       "updatedAt",
@@ -287,7 +309,8 @@ export const toSessionSummaries = (
 
     const maskedModel = model ? "custom-model" : null;
     const subtitleBits = [channel, maskedModel].filter(Boolean) as string[];
-    const subtitle = subtitleBits.length > 0 ? subtitleBits.join(" · ") : "Session";
+    const subtitle =
+      subtitleBits.length > 0 ? subtitleBits.join(" · ") : "Session";
     const subtitleWithProvider = subtitle;
 
     return {

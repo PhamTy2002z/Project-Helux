@@ -737,21 +737,15 @@ export default function OrganizationPage() {
                   </p>
                   <div className="mt-3 flex flex-wrap items-center gap-4 text-xs text-muted">
                     <span>
-                      <strong className="text-strong">
-                        {members.length}
-                      </strong>{" "}
+                      <strong className="text-strong">{members.length}</strong>{" "}
                       members
                     </span>
                     <span>
-                      <strong className="text-strong">
-                        {boards.length}
-                      </strong>{" "}
+                      <strong className="text-strong">{boards.length}</strong>{" "}
                       boards
                     </span>
                     <span>
-                      <strong className="text-strong">
-                        {invites.length}
-                      </strong>{" "}
+                      <strong className="text-strong">{invites.length}</strong>{" "}
                       pending
                     </span>
                   </div>

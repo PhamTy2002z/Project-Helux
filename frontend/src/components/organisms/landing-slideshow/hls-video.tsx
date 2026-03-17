@@ -10,7 +10,12 @@ type HlsVideoProps = {
   style?: React.CSSProperties;
 };
 
-export default function HlsVideo({ src, poster, className, style }: HlsVideoProps) {
+export default function HlsVideo({
+  src,
+  poster,
+  className,
+  style,
+}: HlsVideoProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const mergedStyle: React.CSSProperties = {
     ...style,
@@ -35,7 +40,8 @@ export default function HlsVideo({ src, poster, className, style }: HlsVideoProp
       if (video.canPlayType("application/vnd.apple.mpegurl")) {
         video.src = src;
         video.addEventListener("loadedmetadata", playVideo);
-        nativeCleanup = () => video.removeEventListener("loadedmetadata", playVideo);
+        nativeCleanup = () =>
+          video.removeEventListener("loadedmetadata", playVideo);
         return;
       }
 

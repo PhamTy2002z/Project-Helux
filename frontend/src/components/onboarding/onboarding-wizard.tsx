@@ -58,7 +58,8 @@ const STEPS: StepConfig[] = [
   {
     key: "create_first_board",
     title: "Choose your workspace mode",
-    description: "How do you plan to operate in FlowGrid during the first week?",
+    description:
+      "How do you plan to operate in FlowGrid during the first week?",
     icon: Compass,
     mode: "choice",
     detailKey: "workspace_mode",
@@ -76,7 +77,8 @@ const STEPS: StepConfig[] = [
     icon: Target,
     mode: "text",
     detailKey: "first_outcome",
-    placeholder: "Example: Launch a stable weekly planning workflow for my team",
+    placeholder:
+      "Example: Launch a stable weekly planning workflow for my team",
   },
   {
     key: "invite_teammate",
@@ -131,7 +133,11 @@ function StepProgressBar({
 
 /* ---------- completion view ---------- */
 
-function OnboardingComplete({ onGoToDashboard }: { onGoToDashboard?: () => void }) {
+function OnboardingComplete({
+  onGoToDashboard,
+}: {
+  onGoToDashboard?: () => void;
+}) {
   return (
     <div className="flex flex-col items-center px-8 py-12 text-center">
       <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-blue-100 bg-blue-50">
@@ -144,7 +150,10 @@ function OnboardingComplete({ onGoToDashboard }: { onGoToDashboard?: () => void 
         Your workspace is fully unlocked. Start building.
       </p>
       {onGoToDashboard ? (
-        <Button className="mt-7 h-11 rounded-full px-6" onClick={onGoToDashboard}>
+        <Button
+          className="mt-7 h-11 rounded-full px-6"
+          onClick={onGoToDashboard}
+        >
           Go to dashboard
           <ArrowRight className="ml-2 h-4 w-4" />
         </Button>
@@ -172,7 +181,11 @@ const CUSTOM_USE_CASE_VALUE = "custom";
 
 const USE_CASE_OPTIONS: UseCaseOption[] = [
   { value: "customer_support", label: "Customer Support", icon: Headphones },
-  { value: "workflow_automation", label: "Workflow Automation", icon: Workflow },
+  {
+    value: "workflow_automation",
+    label: "Workflow Automation",
+    icon: Workflow,
+  },
   { value: "ops_management", label: "Ops Management", icon: Settings },
   { value: "rapid_prototyping", label: "Rapid Prototyping", icon: Rocket },
 ];
@@ -377,19 +390,30 @@ export function OnboardingWizard({
 
   // Sync use_case from server
   useEffect(() => {
-    const fromMetadata = progress?.steps.find((s) => s.key === "use_case")?.details;
+    const fromMetadata = progress?.steps.find(
+      (s) => s.key === "use_case",
+    )?.details;
     const modeDetails =
-      progress?.steps.find((s) => s.key === "create_first_board")?.details ?? null;
+      progress?.steps.find((s) => s.key === "create_first_board")?.details ??
+      null;
     const outcomeDetails =
-      progress?.steps.find((s) => s.key === "run_onboarding_chat")?.details ?? null;
+      progress?.steps.find((s) => s.key === "run_onboarding_chat")?.details ??
+      null;
     const timingDetails =
       progress?.steps.find((s) => s.key === "invite_teammate")?.details ?? null;
-    const existing = typeof fromMetadata?.use_case === "string" ? fromMetadata.use_case : "";
-    const hasPresetMatch = USE_CASE_OPTIONS.some((option) => option.value === existing);
+    const existing =
+      typeof fromMetadata?.use_case === "string" ? fromMetadata.use_case : "";
+    const hasPresetMatch = USE_CASE_OPTIONS.some(
+      (option) => option.value === existing,
+    );
     const workspaceMode =
-      typeof modeDetails?.workspace_mode === "string" ? modeDetails.workspace_mode : "";
+      typeof modeDetails?.workspace_mode === "string"
+        ? modeDetails.workspace_mode
+        : "";
     const firstOutcome =
-      typeof outcomeDetails?.first_outcome === "string" ? outcomeDetails.first_outcome : "";
+      typeof outcomeDetails?.first_outcome === "string"
+        ? outcomeDetails.first_outcome
+        : "";
     const collaborationTiming =
       typeof timingDetails?.collaboration_timing === "string"
         ? timingDetails.collaboration_timing
@@ -436,7 +460,9 @@ export function OnboardingWizard({
           : selectedUseCase;
       const stepConfig = STEPS.find((s) => s.key === step);
       const detailValue =
-        step !== "use_case" ? stepAnswers[step as Exclude<OnboardingStepKey, "use_case">].trim() : "";
+        step !== "use_case"
+          ? stepAnswers[step as Exclude<OnboardingStepKey, "use_case">].trim()
+          : "";
       const details =
         step === "use_case"
           ? { use_case: serializedUseCase }

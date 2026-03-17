@@ -67,7 +67,9 @@ function toBlogPost(article: BlogArticle): BlogPost {
 
 export const BLOG_POSTS: BlogPost[] = BLOG_ARTICLES.map(toBlogPost);
 
-export function resolveBlogCategory(rawCategory: string | string[] | undefined): BlogCategorySlug {
+export function resolveBlogCategory(
+  rawCategory: string | string[] | undefined,
+): BlogCategorySlug {
   const selected = Array.isArray(rawCategory) ? rawCategory[0] : rawCategory;
   const category = (selected ?? "all").trim().toLowerCase();
   return BLOG_CATEGORIES.some((entry) => entry.slug === category)

@@ -7,7 +7,12 @@ import LandingHeroSection from "./landing-hero-section";
 const authState = vi.hoisted(() => ({ isSignedIn: false }));
 
 vi.mock("next/link", () => ({
-  default: ({ children, href, prefetch: _prefetch, ...props }: ComponentPropsWithoutRef<"a"> & {
+  default: ({
+    children,
+    href,
+    prefetch: _prefetch,
+    ...props
+  }: ComponentPropsWithoutRef<"a"> & {
     prefetch?: boolean;
   }) => (
     <a href={href} {...props}>
@@ -76,10 +81,12 @@ describe("LandingHeroSection", () => {
       configurable: true,
       value: 6,
     });
-    vi.spyOn(HTMLMediaElement.prototype, "pause").mockImplementation(() => undefined);
-    vi
-      .spyOn(HTMLMediaElement.prototype, "play")
-      .mockImplementation(() => Promise.resolve());
+    vi.spyOn(HTMLMediaElement.prototype, "pause").mockImplementation(
+      () => undefined,
+    );
+    vi.spyOn(HTMLMediaElement.prototype, "play").mockImplementation(() =>
+      Promise.resolve(),
+    );
   });
   afterEach(() => {
     vi.restoreAllMocks();
@@ -125,7 +132,10 @@ describe("LandingHeroSection", () => {
 
     await waitFor(() => {
       expect(container.querySelectorAll("video")).toHaveLength(2);
-      expect(container.querySelectorAll("video")[1]).toHaveAttribute("preload", "metadata");
+      expect(container.querySelectorAll("video")[1]).toHaveAttribute(
+        "preload",
+        "metadata",
+      );
     });
   });
 
@@ -134,7 +144,11 @@ describe("LandingHeroSection", () => {
 
     render(<LandingHeroSection />);
 
-    expect(screen.getByRole("link", { name: /open board/i })).toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: /request a demo/i })).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /open board/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: /request a demo/i }),
+    ).not.toBeInTheDocument();
   });
 });

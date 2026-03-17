@@ -92,7 +92,9 @@ describe("LocalAuthLogin", () => {
     await user.click(screen.getByRole("button", { name: "Continue" }));
 
     await waitFor(() =>
-      expect(establishLocalAuthSessionMock).toHaveBeenCalledWith("g".repeat(50)),
+      expect(establishLocalAuthSessionMock).toHaveBeenCalledWith(
+        "g".repeat(50),
+      ),
     );
     expect(onAuthenticatedMock).toHaveBeenCalledTimes(1);
   });

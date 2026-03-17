@@ -34,7 +34,12 @@ function GradientDot({ size = MID_MARKER_SIZE }: GradientDotProps) {
 
   return (
     <div style={{ width: size, height: size }}>
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="block">
+      <svg
+        width={size}
+        height={size}
+        viewBox={`0 0 ${size} ${size}`}
+        className="block"
+      >
         <defs>
           <radialGradient id={gradientId}>
             <stop offset="0%" stopColor="var(--slide-blue-light)" />
@@ -70,7 +75,9 @@ export default function Slide3() {
         <BlurReveal delay={0.05} className="px-[5%] pt-[3.5%]">
           <div className="flex items-center justify-between">
             <Logo />
-            <span className="text-[20px] leading-[1.4] text-[var(--slide-muted)]">03</span>
+            <span className="text-[20px] leading-[1.4] text-[var(--slide-muted)]">
+              03
+            </span>
           </div>
         </BlurReveal>
 
@@ -80,7 +87,10 @@ export default function Slide3() {
 
         <div className="max-w-[55%] px-[5%] pt-[3%]">
           <BlurReveal delay={0.15}>
-            <p className="text-[var(--slide-muted)]" style={{ fontSize: "clamp(12px, 1.2vw, 18px)" }}>
+            <p
+              className="text-[var(--slide-muted)]"
+              style={{ fontSize: "clamp(12px, 1.2vw, 18px)" }}
+            >
               Realtime Visibility
             </p>
           </BlurReveal>
@@ -93,9 +103,12 @@ export default function Slide3() {
             duration={0.55}
           />
           <BlurReveal delay={0.8} className="mt-4">
-            <p className="max-w-[90%] text-[var(--slide-muted)]" style={{ fontSize: "clamp(12px, 1.1vw, 18px)" }}>
-              Bring task progress, pending approvals, and agent health updates into
-              one place so operators can act fast without losing context.
+            <p
+              className="max-w-[90%] text-[var(--slide-muted)]"
+              style={{ fontSize: "clamp(12px, 1.1vw, 18px)" }}
+            >
+              Bring task progress, pending approvals, and agent health updates
+              into one place so operators can act fast without losing context.
             </p>
           </BlurReveal>
         </div>
@@ -111,74 +124,136 @@ export default function Slide3() {
           }}
         >
           <div className="absolute bottom-0 right-0 h-[70%] w-[55%]">
-            <svg width="100%" height="100%" viewBox="0 0 540 300" preserveAspectRatio="none">
+            <svg
+              width="100%"
+              height="100%"
+              viewBox="0 0 540 300"
+              preserveAspectRatio="none"
+            >
               <defs>
-                <linearGradient id="line-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <linearGradient
+                  id="line-grad"
+                  x1="0%"
+                  y1="0%"
+                  x2="100%"
+                  y2="0%"
+                >
                   <stop offset="0%" stopColor="var(--slide-purple)" />
                   <stop offset="100%" stopColor="var(--slide-pink)" />
                 </linearGradient>
                 <linearGradient id="area-grad" x1="0.5" y1="0" x2="0.5" y2="1">
-                  <stop offset="0%" stopColor="var(--slide-purple)" stopOpacity="0.4" />
-                  <stop offset="100%" stopColor="var(--slide-purple)" stopOpacity="0" />
+                  <stop
+                    offset="0%"
+                    stopColor="var(--slide-purple)"
+                    stopOpacity="0.4"
+                  />
+                  <stop
+                    offset="100%"
+                    stopColor="var(--slide-purple)"
+                    stopOpacity="0"
+                  />
                 </linearGradient>
-                <linearGradient id="opacity-line-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <linearGradient
+                  id="opacity-line-grad"
+                  x1="0%"
+                  y1="0%"
+                  x2="100%"
+                  y2="0%"
+                >
                   <stop offset="0%" stopColor="white" stopOpacity="0.15" />
                   <stop offset="100%" stopColor="white" stopOpacity="0" />
                 </linearGradient>
               </defs>
-              <path d={`${curvePath} L 540 300 L 0 300 Z`} fill="url(#area-grad)" />
-              <path d={curvePath} fill="none" stroke="url(#opacity-line-grad)" strokeWidth="24" />
-              <path d={curvePath} fill="none" stroke="url(#line-grad)" strokeWidth="4" />
+              <path
+                d={`${curvePath} L 540 300 L 0 300 Z`}
+                fill="url(#area-grad)"
+              />
+              <path
+                d={curvePath}
+                fill="none"
+                stroke="url(#opacity-line-grad)"
+                strokeWidth="24"
+              />
+              <path
+                d={curvePath}
+                fill="none"
+                stroke="url(#line-grad)"
+                strokeWidth="4"
+              />
             </svg>
           </div>
 
           <div className="absolute bottom-[22%] left-[44%] flex flex-col items-center">
-            <span className="mb-1 font-medium text-white" style={{ fontSize: LOW_MARKER_LABEL_SIZE }}>
+            <span
+              className="mb-1 font-medium text-white"
+              style={{ fontSize: LOW_MARKER_LABEL_SIZE }}
+            >
               32%
             </span>
             <div className="h-[40px] w-[2px] bg-white" />
             <div
               className="mt-1 flex items-center justify-center rounded-full bg-white/[0.08]"
-              style={{ width: LOW_MARKER_HALO_SIZE, height: LOW_MARKER_HALO_SIZE }}
+              style={{
+                width: LOW_MARKER_HALO_SIZE,
+                height: LOW_MARKER_HALO_SIZE,
+              }}
             >
               <GradientDot size={LOW_MARKER_SIZE} />
             </div>
           </div>
 
           <div className="absolute right-[5%] top-[-1%] flex flex-col items-center">
-            <span className="tracking-tight text-white" style={{ fontSize: HIGH_MARKER_LABEL_SIZE }}>
+            <span
+              className="tracking-tight text-white"
+              style={{ fontSize: HIGH_MARKER_LABEL_SIZE }}
+            >
               127%
             </span>
             <div className="h-[50px] w-[2px] bg-white" />
             <div
               className="mt-1 flex items-center justify-center rounded-full bg-white/[0.08]"
-              style={{ width: HIGH_MARKER_HALO_SIZE, height: HIGH_MARKER_HALO_SIZE }}
+              style={{
+                width: HIGH_MARKER_HALO_SIZE,
+                height: HIGH_MARKER_HALO_SIZE,
+              }}
             >
               <GradientDot size={HIGH_MARKER_SIZE} />
             </div>
           </div>
 
           <div className="absolute right-[20%] top-[24%] flex flex-col items-center">
-            <span className="mb-1 font-medium text-white" style={{ fontSize: UPPER_MARKER_LABEL_SIZE }}>
+            <span
+              className="mb-1 font-medium text-white"
+              style={{ fontSize: UPPER_MARKER_LABEL_SIZE }}
+            >
               102%
             </span>
             <div className="h-[38px] w-[2px] bg-white" />
             <div
               className="mt-1 flex items-center justify-center rounded-full bg-white/[0.08]"
-              style={{ width: UPPER_MARKER_HALO_SIZE, height: UPPER_MARKER_HALO_SIZE }}
+              style={{
+                width: UPPER_MARKER_HALO_SIZE,
+                height: UPPER_MARKER_HALO_SIZE,
+              }}
             >
               <GradientDot size={UPPER_MARKER_SIZE} />
             </div>
           </div>
 
           <div className="absolute right-[37%] top-[40%] flex flex-col items-center">
-            <span className="mb-1 font-medium text-white" style={{ fontSize: MID_MARKER_LABEL_SIZE }}>
+            <span
+              className="mb-1 font-medium text-white"
+              style={{ fontSize: MID_MARKER_LABEL_SIZE }}
+            >
               73%
             </span>
             <div className="h-[30px] w-[2px] bg-white" />
             <div
               className="mt-1 flex items-center justify-center rounded-full bg-white/[0.08]"
-              style={{ width: MID_MARKER_HALO_SIZE, height: MID_MARKER_HALO_SIZE }}
+              style={{
+                width: MID_MARKER_HALO_SIZE,
+                height: MID_MARKER_HALO_SIZE,
+              }}
             >
               <GradientDot size={MID_MARKER_SIZE} />
             </div>
@@ -188,7 +263,11 @@ export default function Slide3() {
             <div className="h-[1px] w-full bg-[var(--slide-axis)]" />
             <div className="mt-2 flex justify-between px-4">
               {years.map((year) => (
-                <span key={year} className="text-[var(--slide-muted)]" style={{ fontSize: "clamp(11px, 1vw, 18px)" }}>
+                <span
+                  key={year}
+                  className="text-[var(--slide-muted)]"
+                  style={{ fontSize: "clamp(11px, 1vw, 18px)" }}
+                >
                   {year}
                 </span>
               ))}

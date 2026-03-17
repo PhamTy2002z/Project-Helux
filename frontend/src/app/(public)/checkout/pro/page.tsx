@@ -79,14 +79,26 @@ function CheckoutProContent() {
         .mutateAsync({ plan_tier: "pro", idempotency_key: key })
         .then(async () => {
           await Promise.all([
-            queryClient.invalidateQueries({ queryKey: BILLING_SUBSCRIPTION_QUERY_KEY }),
-            queryClient.invalidateQueries({ queryKey: getQuotaUsageApiV1MetricsQuotasGetQueryKey() }),
+            queryClient.invalidateQueries({
+              queryKey: BILLING_SUBSCRIPTION_QUERY_KEY,
+            }),
+            queryClient.invalidateQueries({
+              queryKey: getQuotaUsageApiV1MetricsQuotasGetQueryKey(),
+            }),
           ]);
           router.replace("/dashboard?welcome=pro");
         })
         .catch(() => setError("Unable to unlock plan. Please try again."));
     }
-  }, [sub, isPro, isProviderMode, router, queryClient, createCheckout, simulateCheckout]);
+  }, [
+    sub,
+    isPro,
+    isProviderMode,
+    router,
+    queryClient,
+    createCheckout,
+    simulateCheckout,
+  ]);
 
   return (
     <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 p-8 text-center">

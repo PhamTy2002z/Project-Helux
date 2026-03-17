@@ -135,8 +135,14 @@ describe("BoardOnboardingChat polling", () => {
   });
 
   it("keeps waiting when backend repeats the same question with a new timestamp", async () => {
-    const initial = buildQuestionSession("Pick a style", "2026-02-15T00:00:00Z");
-    const repeated = buildQuestionSession("Pick a style", "2026-02-15T00:00:05Z");
+    const initial = buildQuestionSession(
+      "Pick a style",
+      "2026-02-15T00:00:00Z",
+    );
+    const repeated = buildQuestionSession(
+      "Pick a style",
+      "2026-02-15T00:00:05Z",
+    );
     const next = buildQuestionSession(
       "What timeline should we target?",
       "2026-02-15T00:00:10Z",

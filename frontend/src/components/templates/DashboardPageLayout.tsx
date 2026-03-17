@@ -83,9 +83,7 @@ export function DashboardPageLayout({
                       {title}
                     </h1>
                     {description ? (
-                      <p className="mt-1 text-sm text-muted">
-                        {description}
-                      </p>
+                      <p className="mt-1 text-sm text-muted">{description}</p>
                     ) : null}
                   </div>
                   {headerActions}

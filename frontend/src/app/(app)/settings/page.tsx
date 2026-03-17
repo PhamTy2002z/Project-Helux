@@ -69,7 +69,11 @@ const SETTINGS_SECTIONS: SettingsSection[] = [
 
 function UsageSection({ isSignedIn }: { isSignedIn: boolean }) {
   const quotaQuery = useQuotaUsageApiV1MetricsQuotasGet({
-    query: { ...withQueryPolicy("interactive"), enabled: isSignedIn, retry: false },
+    query: {
+      ...withQueryPolicy("interactive"),
+      enabled: isSignedIn,
+      retry: false,
+    },
   });
   const quotas = quotaQuery.data?.data?.quotas;
 
@@ -93,7 +97,8 @@ export default function SettingsPage() {
   const queryClient = useQueryClient();
   const { isSignedIn } = useAuth();
   const { user } = useUser();
-  const [activeSection, setActiveSection] = useState<SettingsSectionId>("billing");
+  const [activeSection, setActiveSection] =
+    useState<SettingsSectionId>("billing");
 
   const [name, setName] = useState("");
   const [timezone, setTimezone] = useState<string | null>(null);

@@ -48,15 +48,15 @@ export function TopMetricCard({
             ) : null}
           </div>
           <div className="mt-2 flex items-end gap-2">
-            <p className="font-heading text-4xl font-bold text-strong">{value}</p>
+            <p className="font-heading text-4xl font-bold text-strong">
+              {value}
+            </p>
             {secondary ? (
               <p className="pb-1 text-xs text-muted">{secondary}</p>
             ) : null}
           </div>
         </div>
-        <div className={`rounded-lg p-2 ${iconTone}`}>
-          {icon}
-        </div>
+        <div className={`rounded-lg p-2 ${iconTone}`}>{icon}</div>
       </div>
     </section>
   );
@@ -104,7 +104,10 @@ export function InfoBlock({
       </div>
       <div className="divide-y divide-[color:var(--border)] rounded-lg border border-[color:var(--border)] bg-[color:var(--surface)]">
         {rows.map((row) => (
-          <div key={`${row.label}-${row.value}`} className="flex items-start justify-between gap-3 px-3 py-2">
+          <div
+            key={`${row.label}-${row.value}`}
+            className="flex items-start justify-between gap-3 px-3 py-2"
+          >
             <span className="min-w-0 text-sm text-muted">{row.label}</span>
             <span
               className={`max-w-[65%] break-words text-right text-sm font-medium leading-5 ${

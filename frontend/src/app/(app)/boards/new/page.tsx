@@ -80,7 +80,10 @@ export default function NewBoardPage() {
       },
       onError: (err) => {
         const errorCode = getApiErrorCode(err);
-        if (errorCode === "blocked_for_payment" || errorCode === "quota_exceeded") {
+        if (
+          errorCode === "blocked_for_payment" ||
+          errorCode === "quota_exceeded"
+        ) {
           router.push("/settings");
           return;
         }
@@ -174,111 +177,111 @@ export default function NewBoardPage() {
           onSubmit={handleSubmit}
           className="space-y-6 rounded-xl border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm"
         >
-        <div className="space-y-4">
-          <div
-            className={`grid gap-6 ${
-              isSaasMode ? "md:grid-cols-2" : "md:grid-cols-3"
-            }`}
-          >
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-strong">
-                Board name <span className="text-red-500">*</span>
-              </label>
-              <Input
-                value={name}
-                onChange={(event) => setName(event.target.value)}
-                placeholder="e.g. Release operations"
-                disabled={isLoading}
-              />
-            </div>
-            {!isSaasMode ? (
+          <div className="space-y-4">
+            <div
+              className={`grid gap-6 ${
+                isSaasMode ? "md:grid-cols-2" : "md:grid-cols-3"
+              }`}
+            >
               <div className="space-y-2">
                 <label className="text-sm font-medium text-strong">
-                  Gateway <span className="text-red-500">*</span>
+                  Board name <span className="text-red-500">*</span>
+                </label>
+                <Input
+                  value={name}
+                  onChange={(event) => setName(event.target.value)}
+                  placeholder="e.g. Release operations"
+                  disabled={isLoading}
+                />
+              </div>
+              {!isSaasMode ? (
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-strong">
+                    Gateway <span className="text-red-500">*</span>
+                  </label>
+                  <SearchableSelect
+                    ariaLabel="Select gateway"
+                    value={displayGatewayId}
+                    onValueChange={setGatewayId}
+                    options={gatewayOptions}
+                    placeholder="Select gateway"
+                    searchPlaceholder="Search gateways..."
+                    emptyMessage="No gateways found."
+                    triggerClassName="w-full h-11 rounded-xl border border-[color:var(--border-strong)] bg-[color:var(--surface)] px-3 py-2 text-sm font-medium text-strong shadow-sm"
+                    contentClassName="rounded-xl border border-[color:var(--border)] shadow-lg"
+                    itemClassName="px-4 py-3 text-sm text-[color:var(--text)] data-[selected=true]:bg-[color:var(--surface-muted)] data-[selected=true]:text-strong"
+                  />
+                </div>
+              ) : null}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-strong">
+                  Board group
                 </label>
                 <SearchableSelect
-                  ariaLabel="Select gateway"
-                  value={displayGatewayId}
-                  onValueChange={setGatewayId}
-                  options={gatewayOptions}
-                  placeholder="Select gateway"
-                  searchPlaceholder="Search gateways..."
-                  emptyMessage="No gateways found."
+                  ariaLabel="Select board group"
+                  value={boardGroupId}
+                  onValueChange={setBoardGroupId}
+                  options={groupOptions}
+                  placeholder="No group"
+                  searchPlaceholder="Search groups..."
+                  emptyMessage="No groups found."
                   triggerClassName="w-full h-11 rounded-xl border border-[color:var(--border-strong)] bg-[color:var(--surface)] px-3 py-2 text-sm font-medium text-strong shadow-sm"
                   contentClassName="rounded-xl border border-[color:var(--border)] shadow-lg"
                   itemClassName="px-4 py-3 text-sm text-[color:var(--text)] data-[selected=true]:bg-[color:var(--surface-muted)] data-[selected=true]:text-strong"
+                  disabled={isLoading}
                 />
+                <p className="text-xs text-muted">
+                  Optional. Groups increase cross-board visibility.
+                </p>
               </div>
-            ) : null}
+            </div>
+
             <div className="space-y-2">
               <label className="text-sm font-medium text-strong">
-                Board group
+                Description <span className="text-red-500">*</span>
               </label>
-              <SearchableSelect
-                ariaLabel="Select board group"
-                value={boardGroupId}
-                onValueChange={setBoardGroupId}
-                options={groupOptions}
-                placeholder="No group"
-                searchPlaceholder="Search groups..."
-                emptyMessage="No groups found."
-                triggerClassName="w-full h-11 rounded-xl border border-[color:var(--border-strong)] bg-[color:var(--surface)] px-3 py-2 text-sm font-medium text-strong shadow-sm"
-                contentClassName="rounded-xl border border-[color:var(--border)] shadow-lg"
-                itemClassName="px-4 py-3 text-sm text-[color:var(--text)] data-[selected=true]:bg-[color:var(--surface-muted)] data-[selected=true]:text-strong"
+              <Textarea
+                value={description}
+                onChange={(event) => setDescription(event.target.value)}
+                placeholder="What context should the lead agent know before onboarding?"
+                className="min-h-[120px]"
                 disabled={isLoading}
               />
-              <p className="text-xs text-muted">
-                Optional. Groups increase cross-board visibility.
-              </p>
             </div>
           </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-strong">
-              Description <span className="text-red-500">*</span>
-            </label>
-            <Textarea
-              value={description}
-              onChange={(event) => setDescription(event.target.value)}
-              placeholder="What context should the lead agent know before onboarding?"
-              className="min-h-[120px]"
+          {!isSaasMode && gateways.length === 0 ? (
+            <div className="rounded-lg border border-[color:var(--border)] bg-[color:var(--surface-muted)] px-4 py-3 text-sm text-[color:var(--text-muted)]">
+              <p>
+                No gateways available. Create one in{" "}
+                <Link
+                  href="/gateways"
+                  className="font-medium text-blue-600 hover:text-blue-700"
+                >
+                  Gateways
+                </Link>{" "}
+                to continue.
+              </p>
+            </div>
+          ) : null}
+
+          {errorMessage ? (
+            <p className="text-sm text-red-500">{errorMessage}</p>
+          ) : null}
+
+          <div className="flex justify-end gap-3">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => router.push("/boards")}
               disabled={isLoading}
-            />
+            >
+              Cancel
+            </Button>
+            <Button type="submit" disabled={isLoading || !isFormReady}>
+              {isLoading ? "Creating…" : "Create board"}
+            </Button>
           </div>
-        </div>
-
-        {!isSaasMode && gateways.length === 0 ? (
-          <div className="rounded-lg border border-[color:var(--border)] bg-[color:var(--surface-muted)] px-4 py-3 text-sm text-[color:var(--text-muted)]">
-            <p>
-              No gateways available. Create one in{" "}
-              <Link
-                href="/gateways"
-                className="font-medium text-blue-600 hover:text-blue-700"
-              >
-                Gateways
-              </Link>{" "}
-              to continue.
-            </p>
-          </div>
-        ) : null}
-
-        {errorMessage ? (
-          <p className="text-sm text-red-500">{errorMessage}</p>
-        ) : null}
-
-        <div className="flex justify-end gap-3">
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={() => router.push("/boards")}
-            disabled={isLoading}
-          >
-            Cancel
-          </Button>
-          <Button type="submit" disabled={isLoading || !isFormReady}>
-            {isLoading ? "Creating…" : "Create board"}
-          </Button>
-        </div>
         </form>
       </DashboardPageLayout>
     </>

@@ -1,6 +1,12 @@
 "use client";
 
-import { startTransition, useCallback, useEffect, useRef, useState } from "react";
+import {
+  startTransition,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { LayoutDashboard, Bot, Router, Boxes } from "lucide-react";
@@ -74,7 +80,7 @@ export default function ProductTabs() {
           observer.disconnect();
         }
       },
-      { rootMargin: "240px 0px" }
+      { rootMargin: "240px 0px" },
     );
 
     observer.observe(section);
@@ -90,10 +96,10 @@ export default function ProductTabs() {
         const activeEntry = entries[0];
         if (!activeEntry) return;
         setIsSectionVisible(
-          activeEntry.isIntersecting && activeEntry.intersectionRatio >= 0.15
+          activeEntry.isIntersecting && activeEntry.intersectionRatio >= 0.15,
         );
       },
-      { threshold: [0, 0.15, 0.45] }
+      { threshold: [0, 0.15, 0.45] },
     );
 
     observer.observe(section);
@@ -120,16 +126,18 @@ export default function ProductTabs() {
     (e: React.KeyboardEvent) => {
       let next = activeTab;
       if (e.key === "ArrowRight") next = (activeTab + 1) % TABS.length;
-      else if (e.key === "ArrowLeft") next = (activeTab - 1 + TABS.length) % TABS.length;
+      else if (e.key === "ArrowLeft")
+        next = (activeTab - 1 + TABS.length) % TABS.length;
       else return;
       e.preventDefault();
       startTransition(() => setActiveTab(next));
       /* Focus the newly active tab button */
       const tablist = e.currentTarget;
-      const buttons = tablist.querySelectorAll<HTMLButtonElement>('[role="tab"]');
+      const buttons =
+        tablist.querySelectorAll<HTMLButtonElement>('[role="tab"]');
       buttons[next]?.focus();
     },
-    [activeTab]
+    [activeTab],
   );
 
   const handleActivateTab = useCallback((index: number) => {
@@ -208,7 +216,9 @@ export default function ProductTabs() {
                     aria-labelledby={`${tab.id}-tab`}
                     initial={shouldReduceMotion ? false : { opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    exit={shouldReduceMotion ? undefined : { opacity: 0, y: -10 }}
+                    exit={
+                      shouldReduceMotion ? undefined : { opacity: 0, y: -10 }
+                    }
                     transition={{ duration: 0.3, ease: "easeOut" }}
                     className="hero-glass-card mx-auto flex w-full max-w-[1200px] flex-col items-center rounded-3xl border border-white/15 px-5 py-6 sm:px-6 sm:py-8 md:px-10 md:py-10 fhd:max-w-[1360px] qhd:max-w-[1520px] uhd:max-w-[1680px]"
                   >
@@ -228,14 +238,25 @@ export default function ProductTabs() {
                           </div>
 
                           <div className="overflow-hidden rounded-xl border border-white/10 bg-black">
-                            <div className="w-full" style={{ aspectRatio: PREVIEW_ASPECT_RATIO }}>
+                            <div
+                              className="w-full"
+                              style={{ aspectRatio: PREVIEW_ASPECT_RATIO }}
+                            >
                               <video
                                 ref={activeVideoRef}
                                 key={tab.previewVideo}
                                 className="h-full w-full object-contain object-top"
-                                src={canLoadVideos ? withAssetVersion(tab.previewVideo) : undefined}
+                                src={
+                                  canLoadVideos
+                                    ? withAssetVersion(tab.previewVideo)
+                                    : undefined
+                                }
                                 poster={withAssetVersion(tab.previewPoster)}
-                                autoPlay={canLoadVideos && isSectionVisible && !shouldReduceMotion}
+                                autoPlay={
+                                  canLoadVideos &&
+                                  isSectionVisible &&
+                                  !shouldReduceMotion
+                                }
                                 loop
                                 muted
                                 playsInline
@@ -249,7 +270,10 @@ export default function ProductTabs() {
                       ) : (
                         <div className="flex h-[320px] items-center justify-center text-center">
                           <div>
-                            <tab.icon size={48} className="mx-auto mb-3 text-white/30" />
+                            <tab.icon
+                              size={48}
+                              className="mx-auto mb-3 text-white/30"
+                            />
                             <p className="text-sm text-white/45">
                               {tab.label} workspace preview
                             </p>
@@ -270,7 +294,7 @@ export default function ProductTabs() {
                       Explore {tab.label}
                     </Link>
                   </motion.div>
-                )
+                ),
             )}
           </AnimatePresence>
         </div>

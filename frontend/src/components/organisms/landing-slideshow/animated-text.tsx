@@ -67,12 +67,19 @@ export function WordByWordReveal({
   return (
     <p className={className} style={style}>
       {text.split(" ").map((word, index) => (
-        <span key={`${word}-${index}`} className="mr-[0.27em] inline-block overflow-hidden">
+        <span
+          key={`${word}-${index}`}
+          className="mr-[0.27em] inline-block overflow-hidden"
+        >
           <motion.span
             className="inline-block"
             initial={{ y: "100%" }}
             animate={{ y: "0%" }}
-            transition={{ duration, delay: baseDelay + index * stagger, ease: EASING }}
+            transition={{
+              duration,
+              delay: baseDelay + index * stagger,
+              ease: EASING,
+            }}
           >
             {word}
           </motion.span>

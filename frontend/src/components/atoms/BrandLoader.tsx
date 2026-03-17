@@ -40,19 +40,53 @@ export function BrandLoader({ size = 64 }: { size?: number }) {
 
         {/* Background */}
         <rect
-          x="16" y="16" width="480" height="480" rx="108"
+          x="16"
+          y="16"
+          width="480"
+          height="480"
+          rx="108"
           fill="url(#bl-bg)"
         />
         <rect
-          x="16" y="16" width="480" height="480" rx="108"
-          fill="none" stroke="#334155" strokeWidth="1"
+          x="16"
+          y="16"
+          width="480"
+          height="480"
+          rx="108"
+          fill="none"
+          stroke="#334155"
+          strokeWidth="1"
         />
 
         {/* Corner nodes — staggered fade-in */}
-        <circle className="bl-node bl-n1" cx="176" cy="176" r="28" fill="#CBD5E1" />
-        <circle className="bl-node bl-n2" cx="336" cy="176" r="28" fill="#CBD5E1" />
-        <circle className="bl-node bl-n3" cx="176" cy="336" r="28" fill="#CBD5E1" />
-        <circle className="bl-node bl-n4" cx="336" cy="336" r="28" fill="#CBD5E1" />
+        <circle
+          className="bl-node bl-n1"
+          cx="176"
+          cy="176"
+          r="28"
+          fill="#CBD5E1"
+        />
+        <circle
+          className="bl-node bl-n2"
+          cx="336"
+          cy="176"
+          r="28"
+          fill="#CBD5E1"
+        />
+        <circle
+          className="bl-node bl-n3"
+          cx="176"
+          cy="336"
+          r="28"
+          fill="#CBD5E1"
+        />
+        <circle
+          className="bl-node bl-n4"
+          cx="336"
+          cy="336"
+          r="28"
+          fill="#CBD5E1"
+        />
 
         {/* Flow S-curve — draw animation */}
         <path
@@ -65,11 +99,23 @@ export function BrandLoader({ size = 64 }: { size?: number }) {
         />
 
         {/* Center glow ring */}
-        <circle className="bl-glow" cx="256" cy="256" r="48" fill="url(#bl-glow)" />
+        <circle
+          className="bl-glow"
+          cx="256"
+          cy="256"
+          r="48"
+          fill="url(#bl-glow)"
+        />
 
         {/* Center amber node */}
         <circle className="bl-center" cx="256" cy="256" r="32" fill="#FCD34D" />
-        <circle className="bl-center-inner" cx="256" cy="256" r="15" fill="#78350F" />
+        <circle
+          className="bl-center-inner"
+          cx="256"
+          cy="256"
+          r="15"
+          fill="#78350F"
+        />
       </svg>
 
       <style>{`

@@ -59,9 +59,7 @@ export function PlanCard({
     >
       <div className="flex items-start justify-between gap-2">
         <div>
-          <p className="text-base font-semibold text-strong">
-            {content.title}
-          </p>
+          <p className="text-base font-semibold text-strong">{content.title}</p>
           <p className="mt-1 text-xs text-muted">{content.subtitle}</p>
         </div>
         <span className="rounded-full bg-[color:var(--surface-muted)] px-2 py-0.5 text-[11px] font-medium text-[color:var(--text)]">

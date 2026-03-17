@@ -7,7 +7,12 @@ import LandingNavbar from "./landing-navbar";
 const authState = vi.hoisted(() => ({ isSignedIn: false }));
 
 vi.mock("next/link", () => ({
-  default: ({ children, href, prefetch: _prefetch, ...props }: ComponentPropsWithoutRef<"a"> & {
+  default: ({
+    children,
+    href,
+    prefetch: _prefetch,
+    ...props
+  }: ComponentPropsWithoutRef<"a"> & {
     prefetch?: boolean;
   }) => (
     <a href={href} {...props}>
@@ -63,17 +68,22 @@ describe("LandingNavbar", () => {
 
     render(<LandingNavbar />);
 
-    expect(screen.getByRole("link", { name: "Open Board" })).toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: "Sign in" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: "Sign up" })).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "Open Board" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: "Sign in" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: "Sign up" }),
+    ).not.toBeInTheDocument();
   });
 
   it("routes Start Building Free CTA to sign-in for signed-out users", () => {
     render(<LandingNavbar />);
 
-    expect(screen.getByRole("link", { name: "Start Building Free" })).toHaveAttribute(
-      "href",
-      "/sign-in",
-    );
+    expect(
+      screen.getByRole("link", { name: "Start Building Free" }),
+    ).toHaveAttribute("href", "/sign-in");
   });
 });

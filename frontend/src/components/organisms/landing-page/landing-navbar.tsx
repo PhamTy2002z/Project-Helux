@@ -17,8 +17,16 @@ const NAV_LINKS = [
 
 const RESOURCE_LINKS = [
   { label: "Testimonials", href: "/testimonials" },
-  { label: "Documentation", href: "https://github.com/PhamTy2002z/FlowGrid/tree/master/docs", external: true },
-  { label: "Changelog", href: "https://github.com/PhamTy2002z/FlowGrid/releases", external: true },
+  {
+    label: "Documentation",
+    href: "https://github.com/PhamTy2002z/FlowGrid/tree/master/docs",
+    external: true,
+  },
+  {
+    label: "Changelog",
+    href: "https://github.com/PhamTy2002z/FlowGrid/releases",
+    external: true,
+  },
 ];
 
 const BTN_SIGNIN =
@@ -130,7 +138,7 @@ export default function LandingNavbar() {
                     >
                       {link.label}
                     </Link>
-                  )
+                  ),
                 )}
               </div>
             </div>
@@ -212,7 +220,7 @@ export default function LandingNavbar() {
                     >
                       {link.label}
                     </Link>
-                  )
+                  ),
                 )}
               </div>
             </div>
@@ -235,7 +243,10 @@ export default function LandingNavbar() {
                   </Link>
                 </>
               ) : (
-                <Link href="/boards" className={`${BTN_SIGNUP} min-h-[44px] text-center`}>
+                <Link
+                  href="/boards"
+                  className={`${BTN_SIGNUP} min-h-[44px] text-center`}
+                >
                   Open Board
                 </Link>
               )}

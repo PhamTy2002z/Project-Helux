@@ -21,7 +21,9 @@ vi.mock("@/lib/hooks/use-sse-stream", () => ({
   useSSEStream: (...args: unknown[]) => useSSEStreamMock(...args),
 }));
 
-const makeMessage = (overrides: Partial<BoardMemoryRead> = {}): BoardMemoryRead =>
+const makeMessage = (
+  overrides: Partial<BoardMemoryRead> = {},
+): BoardMemoryRead =>
   ({
     id: "msg-1",
     board_id: "board-1",

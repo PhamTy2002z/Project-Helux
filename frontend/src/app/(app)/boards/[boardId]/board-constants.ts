@@ -17,7 +17,9 @@ export const LIVE_FEED_EVENT_TYPES = new Set<LiveFeedEventType>([
   "approval.rejected",
 ]);
 
-export const isLiveFeedEventType = (value: string): value is LiveFeedEventType =>
+export const isLiveFeedEventType = (
+  value: string,
+): value is LiveFeedEventType =>
   LIVE_FEED_EVENT_TYPES.has(value as LiveFeedEventType);
 
 export const priorities = [

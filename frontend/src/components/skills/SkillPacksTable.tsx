@@ -92,9 +92,7 @@ export function SkillPacksTable({
         accessorKey: "branch",
         header: "Branch",
         cell: ({ row }) => (
-          <p className="text-sm text-strong">
-            {row.original.branch || "main"}
-          </p>
+          <p className="text-sm text-strong">{row.original.branch || "main"}</p>
         ),
       },
       {

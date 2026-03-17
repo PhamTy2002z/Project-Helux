@@ -21,7 +21,12 @@ export function useOnboardingGuard(isOnboardingPath: boolean) {
 
   useEffect(() => {
     if (!isSignedIn || isOnboardingPath) return;
-    if (onboardingQuery.isLoading || onboardingQuery.isError || !onboardingProgress) return;
+    if (
+      onboardingQuery.isLoading ||
+      onboardingQuery.isError ||
+      !onboardingProgress
+    )
+      return;
     if (!isOnboardingComplete(onboardingProgress)) {
       if (pathname.startsWith("/onboarding")) return;
       router.replace("/onboarding");

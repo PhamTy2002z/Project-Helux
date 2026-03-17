@@ -1,7 +1,13 @@
 "use client";
 
 import type { CSSProperties } from "react";
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
@@ -10,7 +16,8 @@ import TrustMarquee from "./trust-marquee";
 
 const HERO_ANIMATION_VIDEO_SRC =
   "https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260306_074215_04640ca7-042c-45d6-bb56-58b1e8a42489.mp4";
-const HERO_ANIMATION_VIDEO_POSTER = "/videos/hero-animation-poster.jpg?v=20260310";
+const HERO_ANIMATION_VIDEO_POSTER =
+  "/videos/hero-animation-poster.jpg?v=20260310";
 const HERO_LOOP_BLEND_MS = 700;
 const HERO_LOOP_BLEND_SECONDS = HERO_LOOP_BLEND_MS / 1000;
 const HERO_COPY_DELAYS = {
@@ -46,7 +53,9 @@ export default function LandingHeroSection() {
   const { isSignedIn } = useAuth();
   const showOpenBoardCta = hasHydrated && Boolean(isSignedIn);
   const visibleVideoIndex =
-    canBlendHeroVideo && canPlayHeroVideo && isHeroVisible ? activeVideoIndex : 0;
+    canBlendHeroVideo && canPlayHeroVideo && isHeroVisible
+      ? activeVideoIndex
+      : 0;
 
   const clearBlendTimeout = useCallback(() => {
     if (blendTimeoutRef.current === null) return;
@@ -81,7 +90,9 @@ export default function LandingHeroSection() {
     if (typeof window === "undefined") return;
 
     const desktopQuery = window.matchMedia("(min-width: 768px)");
-    const reducedMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const reducedMotionQuery = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    );
     const connection = (navigator as NetworkAwareNavigator).connection;
     const hardwareThreads = navigator.hardwareConcurrency || 8;
     const deviceMemory = (navigator as NetworkAwareNavigator).deviceMemory ?? 8;
@@ -101,7 +112,9 @@ export default function LandingHeroSection() {
 
       setShouldReduceMotion(reducedMotionEnabled);
       setCanPlayHeroVideo(canPlay);
-      setCanBlendHeroVideo(canPlay && hardwareThreads >= 8 && deviceMemory >= 8);
+      setCanBlendHeroVideo(
+        canPlay && hardwareThreads >= 8 && deviceMemory >= 8,
+      );
     };
 
     syncHeroVideoPolicy();
@@ -122,61 +135,79 @@ export default function LandingHeroSection() {
       (entries) => {
         const activeEntry = entries[0];
         if (!activeEntry) return;
-        setIsHeroVisible(activeEntry.isIntersecting && activeEntry.intersectionRatio >= 0.25);
+        setIsHeroVisible(
+          activeEntry.isIntersecting && activeEntry.intersectionRatio >= 0.25,
+        );
       },
-      { threshold: [0, 0.25, 0.6] }
+      { threshold: [0, 0.25, 0.6] },
     );
 
     observer.observe(section);
     return () => observer.disconnect();
   }, []);
 
-  const handleVideoTimeUpdate = useCallback((videoIndex: number) => {
-    if (!canBlendHeroVideo || !canPlayHeroVideo || shouldReduceMotion || !isHeroVisible) {
-      return;
-    }
-    if (standbyStartingRef.current || activeVideoIndexRef.current !== videoIndex) return;
+  const handleVideoTimeUpdate = useCallback(
+    (videoIndex: number) => {
+      if (
+        !canBlendHeroVideo ||
+        !canPlayHeroVideo ||
+        shouldReduceMotion ||
+        !isHeroVisible
+      ) {
+        return;
+      }
+      if (
+        standbyStartingRef.current ||
+        activeVideoIndexRef.current !== videoIndex
+      )
+        return;
 
-    const activeVideo = videoRefs.current[videoIndex];
-    if (!activeVideo) return;
+      const activeVideo = videoRefs.current[videoIndex];
+      if (!activeVideo) return;
 
-    const duration = activeVideo.duration;
-    if (!Number.isFinite(duration) || duration <= HERO_LOOP_BLEND_SECONDS + 0.15) return;
+      const duration = activeVideo.duration;
+      if (
+        !Number.isFinite(duration) ||
+        duration <= HERO_LOOP_BLEND_SECONDS + 0.15
+      )
+        return;
 
-    const remainingTime = duration - activeVideo.currentTime;
-    if (remainingTime > HERO_LOOP_BLEND_SECONDS) return;
+      const remainingTime = duration - activeVideo.currentTime;
+      if (remainingTime > HERO_LOOP_BLEND_SECONDS) return;
 
-    const standbyIndex = videoIndex === 0 ? 1 : 0;
-    const standbyVideo = videoRefs.current[standbyIndex];
-    if (!standbyVideo) return;
+      const standbyIndex = videoIndex === 0 ? 1 : 0;
+      const standbyVideo = videoRefs.current[standbyIndex];
+      if (!standbyVideo) return;
 
-    standbyStartingRef.current = true;
-    clearBlendTimeout();
+      standbyStartingRef.current = true;
+      clearBlendTimeout();
 
-    try {
-      standbyVideo.currentTime = 0;
-    } catch {
-      // Ignore browsers that block direct seek while metadata is not ready.
-    }
+      try {
+        standbyVideo.currentTime = 0;
+      } catch {
+        // Ignore browsers that block direct seek while metadata is not ready.
+      }
 
-    playVideo(standbyVideo);
-    syncActiveVideo(standbyIndex);
+      playVideo(standbyVideo);
+      syncActiveVideo(standbyIndex);
 
-    blendTimeoutRef.current = window.setTimeout(() => {
-      stopVideo(activeVideo);
-      standbyStartingRef.current = false;
-      blendTimeoutRef.current = null;
-    }, HERO_LOOP_BLEND_MS);
-  }, [
-    canBlendHeroVideo,
-    canPlayHeroVideo,
-    clearBlendTimeout,
-    isHeroVisible,
-    playVideo,
-    shouldReduceMotion,
-    stopVideo,
-    syncActiveVideo,
-  ]);
+      blendTimeoutRef.current = window.setTimeout(() => {
+        stopVideo(activeVideo);
+        standbyStartingRef.current = false;
+        blendTimeoutRef.current = null;
+      }, HERO_LOOP_BLEND_MS);
+    },
+    [
+      canBlendHeroVideo,
+      canPlayHeroVideo,
+      clearBlendTimeout,
+      isHeroVisible,
+      playVideo,
+      shouldReduceMotion,
+      stopVideo,
+      syncActiveVideo,
+    ],
+  );
 
   useEffect(() => {
     const videos = videoRefs.current;
@@ -219,31 +250,37 @@ export default function LandingHeroSection() {
       className="relative min-h-[100svh] scroll-mt-24 overflow-hidden bg-black lg:scroll-mt-28"
     >
       {/* Background animation video from viral-vision-hero */}
-      {Array.from({ length: canBlendHeroVideo ? 2 : 1 }).map((_, videoIndex) => (
-        <video
-          key={videoIndex}
-          ref={(element) => {
-            videoRefs.current[videoIndex] = element;
-          }}
-          className={`hero-media-layer absolute inset-0 z-0 h-full w-full object-cover transition-opacity duration-700 ${
-            visibleVideoIndex === videoIndex ? "opacity-100" : "opacity-0"
-          }`}
-          src={canPlayHeroVideo ? HERO_ANIMATION_VIDEO_SRC : undefined}
-          poster={HERO_ANIMATION_VIDEO_POSTER}
-          autoPlay={
-            canPlayHeroVideo &&
-            isHeroVisible &&
-            !shouldReduceMotion &&
-            videoIndex === 0
-          }
-          muted
-          playsInline
-          loop={!canBlendHeroVideo}
-          preload={canPlayHeroVideo ? "metadata" : "none"}
-          aria-hidden="true"
-          onTimeUpdate={canBlendHeroVideo ? () => handleVideoTimeUpdate(videoIndex) : undefined}
-        />
-      ))}
+      {Array.from({ length: canBlendHeroVideo ? 2 : 1 }).map(
+        (_, videoIndex) => (
+          <video
+            key={videoIndex}
+            ref={(element) => {
+              videoRefs.current[videoIndex] = element;
+            }}
+            className={`hero-media-layer absolute inset-0 z-0 h-full w-full object-cover transition-opacity duration-700 ${
+              visibleVideoIndex === videoIndex ? "opacity-100" : "opacity-0"
+            }`}
+            src={canPlayHeroVideo ? HERO_ANIMATION_VIDEO_SRC : undefined}
+            poster={HERO_ANIMATION_VIDEO_POSTER}
+            autoPlay={
+              canPlayHeroVideo &&
+              isHeroVisible &&
+              !shouldReduceMotion &&
+              videoIndex === 0
+            }
+            muted
+            playsInline
+            loop={!canBlendHeroVideo}
+            preload={canPlayHeroVideo ? "metadata" : "none"}
+            aria-hidden="true"
+            onTimeUpdate={
+              canBlendHeroVideo
+                ? () => handleVideoTimeUpdate(videoIndex)
+                : undefined
+            }
+          />
+        ),
+      )}
       {/* Content */}
       <div className="relative z-10 flex min-h-[100svh] flex-col">
         <div className="flex flex-1 flex-col items-center justify-center px-6 pb-24 pt-24 md:pt-28">
@@ -267,8 +304,8 @@ export default function LandingHeroSection() {
             }
           >
             FlowGrid gives your team one secure workspace to run agent
-            operations, approvals, and gateways — with full visibility and
-            zero handoff friction.
+            operations, approvals, and gateways — with full visibility and zero
+            handoff friction.
           </p>
 
           <div
@@ -289,7 +326,10 @@ export default function LandingHeroSection() {
                 <ArrowRight size={18} aria-hidden="true" />
               </Link>
             ) : (
-              <Link href="/boards" className="hero-btn-demo min-h-12 px-8 text-base">
+              <Link
+                href="/boards"
+                className="hero-btn-demo min-h-12 px-8 text-base"
+              >
                 Open Board
                 <ArrowRight size={18} aria-hidden="true" />
               </Link>

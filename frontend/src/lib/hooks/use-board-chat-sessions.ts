@@ -53,7 +53,10 @@ export const useBoardChatSessions = (
 ): UseBoardChatSessionsResult => {
   const queryClient = useQueryClient();
   const sessionsQueryKey = useMemo(
-    () => getListBoardChatSessionsApiV1BoardsBoardIdChatSessionsGetQueryKey(boardId),
+    () =>
+      getListBoardChatSessionsApiV1BoardsBoardIdChatSessionsGetQueryKey(
+        boardId,
+      ),
     [boardId],
   );
 

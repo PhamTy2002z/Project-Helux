@@ -67,7 +67,9 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
           headline: post.title,
           description: post.excerpt,
           datePublished: post.publishDateISO,
-          url: post.href.startsWith("http") ? post.href : `${siteUrl}${post.href}`,
+          url: post.href.startsWith("http")
+            ? post.href
+            : `${siteUrl}${post.href}`,
         },
       })),
     },
@@ -88,7 +90,10 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
             Skip to Main Content
           </a>
           <LandingNavbar />
-          <BlogPageContent selectedCategory={selectedCategory} filteredPosts={filteredPosts} />
+          <BlogPageContent
+            selectedCategory={selectedCategory}
+            filteredPosts={filteredPosts}
+          />
           <LandingFooter />
         </div>
       </ScrollProvider>

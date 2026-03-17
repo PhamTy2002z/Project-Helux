@@ -311,9 +311,7 @@ export default function EditBoardGroupPage() {
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium text-strong">
-            Description
-          </label>
+          <label className="text-sm font-medium text-strong">Description</label>
           <Textarea
             value={resolvedDescription}
             onChange={(event) => setDescription(event.target.value)}

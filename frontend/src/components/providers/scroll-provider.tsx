@@ -16,9 +16,9 @@ export function ScrollProvider({ children }: { children: ReactNode }) {
     const browserNavigator = navigator as Navigator & {
       connection?: { saveData?: boolean };
     };
-    const prefersReducedMotion = window
-      .matchMedia("(prefers-reduced-motion: reduce)")
-      .matches;
+    const prefersReducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
     const saveDataEnabled = browserNavigator.connection?.saveData === true;
     const lowEndCpu =
       browserNavigator.hardwareConcurrency > 0 &&

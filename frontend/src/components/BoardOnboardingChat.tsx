@@ -165,9 +165,7 @@ function WaitingStateCard({
           {submittedAnswer ? (
             <p className="mt-1 text-xs text-[color:var(--text-muted)]">
               Sent:{" "}
-              <span className="font-medium text-strong">
-                {submittedAnswer}
-              </span>
+              <span className="font-medium text-strong">{submittedAnswer}</span>
             </p>
           ) : null}
           <p className="mt-1 text-xs text-muted">
@@ -515,13 +513,17 @@ export function BoardOnboardingChat({
                   <p className="text-xs font-semibold uppercase tracking-wide text-muted">
                     Objective
                   </p>
-                  <p className="text-sm text-strong">{draft.objective || "—"}</p>
+                  <p className="text-sm text-strong">
+                    {draft.objective || "—"}
+                  </p>
                 </div>
                 <div className="space-y-1">
                   <p className="text-xs font-semibold uppercase tracking-wide text-muted">
                     Target date
                   </p>
-                  <p className="text-sm text-strong">{draft.target_date || "—"}</p>
+                  <p className="text-sm text-strong">
+                    {draft.target_date || "—"}
+                  </p>
                 </div>
                 <div className="space-y-1">
                   <p className="text-xs font-semibold uppercase tracking-wide text-muted">

@@ -45,7 +45,10 @@ function LandingSkeletonBlock({ className }: { className: string }) {
 
 function LandingFooterSkeleton() {
   return (
-    <footer aria-hidden="true" className="landing-deferred-section bg-black px-4 py-24 sm:px-6 lg:px-10" />
+    <footer
+      aria-hidden="true"
+      className="landing-deferred-section bg-black px-4 py-24 sm:px-6 lg:px-10"
+    />
   );
 }
 

@@ -16,7 +16,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { useOnboardingProgress, useUpdateOnboardingStep } from "@/lib/onboarding";
+import {
+  useOnboardingProgress,
+  useUpdateOnboardingStep,
+} from "@/lib/onboarding";
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -34,9 +37,14 @@ export default function OnboardingPage() {
     setShowSkipDialog(false);
     setSkipError(null);
     try {
-      const pendingSteps = progress.steps.filter((step) => step.status === "pending");
+      const pendingSteps = progress.steps.filter(
+        (step) => step.status === "pending",
+      );
       for (const step of pendingSteps) {
-        await updateStepMutation.mutateAsync({ step: step.key, action: "skip" });
+        await updateStepMutation.mutateAsync({
+          step: step.key,
+          action: "skip",
+        });
       }
       router.push("/dashboard");
     } catch (error) {
@@ -112,9 +120,7 @@ export default function OnboardingPage() {
                     >
                       Cancel
                     </Button>
-                    <Button onClick={handleConfirmSkip}>
-                      Skip all
-                    </Button>
+                    <Button onClick={handleConfirmSkip}>Skip all</Button>
                   </DialogFooter>
                 </DialogContent>
               </Dialog>

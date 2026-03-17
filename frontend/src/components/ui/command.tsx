@@ -25,7 +25,10 @@ const CommandInput = React.forwardRef<
   React.ElementRef<typeof CommandPrimitive.Input>,
   React.ComponentPropsWithoutRef<typeof CommandPrimitive.Input>
 >(({ className, ...props }, ref) => (
-  <div className="border-b border-[color:var(--border)] p-2" cmdk-input-wrapper="">
+  <div
+    className="border-b border-[color:var(--border)] p-2"
+    cmdk-input-wrapper=""
+  >
     <div className="relative">
       <Search className="absolute left-2 top-2.5 h-4 w-4 text-quiet" />
       <CommandPrimitive.Input

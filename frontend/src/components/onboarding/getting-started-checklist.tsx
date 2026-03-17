@@ -5,7 +5,10 @@ import { CheckCircle2, Circle } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { type OnboardingProgress, type OnboardingStepKey } from "@/lib/onboarding";
+import {
+  type OnboardingProgress,
+  type OnboardingStepKey,
+} from "@/lib/onboarding";
 
 type GettingStartedChecklistProps = {
   progress: OnboardingProgress | null | undefined;
@@ -18,18 +21,24 @@ const STEP_LINKS: Record<OnboardingStepKey, string> = {
   invite_teammate: "/onboarding",
 };
 
-export function GettingStartedChecklist({ progress }: GettingStartedChecklistProps) {
+export function GettingStartedChecklist({
+  progress,
+}: GettingStartedChecklistProps) {
   if (!progress) {
     return null;
   }
 
-  const completed = progress.steps.filter((step) => step.status !== "pending").length;
+  const completed = progress.steps.filter(
+    (step) => step.status !== "pending",
+  ).length;
   if (progress.completed) {
     return (
       <section className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 p-4">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <p className="text-sm font-semibold text-emerald-900">Onboarding complete</p>
+            <p className="text-sm font-semibold text-emerald-900">
+              Onboarding complete
+            </p>
             <p className="mt-1 text-sm text-emerald-700">
               All modules are unlocked for this workspace.
             </p>
@@ -44,12 +53,17 @@ export function GettingStartedChecklist({ progress }: GettingStartedChecklistPro
     <section className="mb-4 rounded-xl border border-blue-200 bg-blue-50 p-4">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="text-sm font-semibold text-blue-900">Getting started checklist</p>
+          <p className="text-sm font-semibold text-blue-900">
+            Getting started checklist
+          </p>
           <p className="mt-1 text-sm text-blue-800">
-            Complete onboarding to unlock full navigation and reduce setup mistakes.
+            Complete onboarding to unlock full navigation and reduce setup
+            mistakes.
           </p>
         </div>
-        <Badge variant="accent">{completed}/{progress.steps.length}</Badge>
+        <Badge variant="accent">
+          {completed}/{progress.steps.length}
+        </Badge>
       </div>
       <div className="mt-3 space-y-2">
         {progress.steps.map((step) => (

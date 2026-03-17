@@ -22,25 +22,35 @@ type BlogPageContentProps = {
   filteredPosts: BlogPost[];
 };
 
-export default function BlogPageContent({ selectedCategory, filteredPosts }: BlogPageContentProps) {
+export default function BlogPageContent({
+  selectedCategory,
+  filteredPosts,
+}: BlogPageContentProps) {
   return (
     <main id="blog-content" className="bg-black pb-20 pt-28 sm:pt-32">
       <section className="px-[5%]">
         <ScrollReveal>
           <div className="mx-auto max-w-5xl rounded-3xl border border-white/15 bg-[radial-gradient(circle_at_top_left,rgba(255,91,53,0.18),rgba(255,91,53,0.02)_32%,transparent_58%)] p-8 sm:p-12">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">Insights</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">
+              Insights
+            </p>
             <h1 className="mt-4 max-w-4xl text-balance font-[var(--font-display)] text-4xl leading-tight text-white sm:text-5xl">
               Practical Stories, Ideas, and Patterns for Multi-Agent Operations.
             </h1>
             <p className="mt-5 max-w-3xl text-base leading-relaxed text-white/70">
-              From open-source experiments to enterprise deployments, FlowGrid insights help
-              teams design resilient AI workflows that scale from first prototype to production
-              governance.
+              From open-source experiments to enterprise deployments, FlowGrid
+              insights help teams design resilient AI workflows that scale from
+              first prototype to production governance.
             </p>
-            <nav className="mt-8 flex flex-wrap gap-3" aria-label="Blog Categories">
+            <nav
+              className="mt-8 flex flex-wrap gap-3"
+              aria-label="Blog Categories"
+            >
               {BLOG_CATEGORIES.map((categoryItem) => {
                 const href =
-                  categoryItem.slug === "all" ? "/blog" : `/blog?category=${categoryItem.slug}`;
+                  categoryItem.slug === "all"
+                    ? "/blog"
+                    : `/blog?category=${categoryItem.slug}`;
                 const isSelected = selectedCategory === categoryItem.slug;
                 return (
                   <Link
@@ -82,21 +92,29 @@ export default function BlogPageContent({ selectedCategory, filteredPosts }: Blo
                   </Link>
                 )}
                 <div className="p-6">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/45">{post.category}</p>
-                <h2 className="mt-4 text-2xl font-semibold leading-tight text-white">{post.title}</h2>
-                <p className="mt-3 text-sm leading-relaxed text-white/65">{post.excerpt}</p>
-                <div className="mt-6 flex items-center justify-between gap-3 text-xs text-white/50">
-                  <time dateTime={post.publishDateISO}>{post.publishDateLabel}</time>
-                  <span>{post.readTime}</span>
-                </div>
-                <Link
-                  href={post.href}
-                  prefetch={false}
-                  className="mt-6 inline-flex min-h-[44px] items-center gap-2 text-sm font-semibold text-white transition-colors hover:text-white/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
-                >
-                  Read Story
-                  <ArrowRight size={15} aria-hidden="true" />
-                </Link>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/45">
+                    {post.category}
+                  </p>
+                  <h2 className="mt-4 text-2xl font-semibold leading-tight text-white">
+                    {post.title}
+                  </h2>
+                  <p className="mt-3 text-sm leading-relaxed text-white/65">
+                    {post.excerpt}
+                  </p>
+                  <div className="mt-6 flex items-center justify-between gap-3 text-xs text-white/50">
+                    <time dateTime={post.publishDateISO}>
+                      {post.publishDateLabel}
+                    </time>
+                    <span>{post.readTime}</span>
+                  </div>
+                  <Link
+                    href={post.href}
+                    prefetch={false}
+                    className="mt-6 inline-flex min-h-[44px] items-center gap-2 text-sm font-semibold text-white transition-colors hover:text-white/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                  >
+                    Read Story
+                    <ArrowRight size={15} aria-hidden="true" />
+                  </Link>
                 </div>
               </article>
             </ScrollReveal>
@@ -111,25 +129,37 @@ export default function BlogPageContent({ selectedCategory, filteredPosts }: Blo
               Ready to Get Started?
             </h2>
             <p className="mt-3 max-w-3xl text-sm leading-relaxed text-white/65 sm:text-base">
-              Pick the deployment path that matches your team, from managed cloud operations to private
-              infrastructure and open-source extension.
+              Pick the deployment path that matches your team, from managed
+              cloud operations to private infrastructure and open-source
+              extension.
             </p>
             <div className="mt-8 grid gap-4 md:grid-cols-3">
               {BLOG_PRODUCT_CARDS.map((card) => {
                 const Icon = ICONS[card.iconKey];
                 return (
-                  <article key={card.title} className="rounded-2xl border border-white/10 bg-black/40 p-5">
+                  <article
+                    key={card.title}
+                    className="rounded-2xl border border-white/10 bg-black/40 p-5"
+                  >
                     <div className="inline-flex rounded-xl border border-white/20 bg-white/[0.06] p-2.5">
                       <Icon size={18} aria-hidden="true" />
                     </div>
-                    <h3 className="mt-4 text-xl font-semibold text-white">{card.title}</h3>
-                    <p className="mt-3 min-h-[88px] text-sm leading-relaxed text-white/65">{card.description}</p>
+                    <h3 className="mt-4 text-xl font-semibold text-white">
+                      {card.title}
+                    </h3>
+                    <p className="mt-3 min-h-[88px] text-sm leading-relaxed text-white/65">
+                      {card.description}
+                    </p>
                     <Link
                       href={card.href}
                       prefetch={false}
                       className="mt-4 inline-flex min-h-[44px] items-center gap-2 text-sm font-semibold text-white transition-colors hover:text-white/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
-                      target={card.href.startsWith("http") ? "_blank" : undefined}
-                      rel={card.href.startsWith("http") ? "noreferrer" : undefined}
+                      target={
+                        card.href.startsWith("http") ? "_blank" : undefined
+                      }
+                      rel={
+                        card.href.startsWith("http") ? "noreferrer" : undefined
+                      }
                     >
                       {card.cta}
                       <ArrowRight size={15} aria-hidden="true" />

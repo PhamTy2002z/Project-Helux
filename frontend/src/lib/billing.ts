@@ -44,8 +44,12 @@ type UpgradeModalOpenPayload = {
   source: "sidebar" | "settings" | "boards_new" | "agents_new" | "unknown";
 };
 
-export const BILLING_SUBSCRIPTION_QUERY_KEY = ["/api/v1/billing/me/subscription"] as const;
-export const BILLING_HISTORY_QUERY_KEY = ["/api/v1/billing/me/history"] as const;
+export const BILLING_SUBSCRIPTION_QUERY_KEY = [
+  "/api/v1/billing/me/subscription",
+] as const;
+export const BILLING_HISTORY_QUERY_KEY = [
+  "/api/v1/billing/me/history",
+] as const;
 
 export type BillingHistoryRow = {
   id: string;
@@ -78,13 +82,14 @@ export const useBillingHistory = (enabled: boolean) =>
     retry: false,
   });
 
-export const getBillingSubscription = async (): Promise<BillingSubscription> => {
-  const response = await customFetch<BillingSubscriptionResponse>(
-    "/api/v1/billing/me/subscription",
-    { method: "GET" },
-  );
-  return response.data;
-};
+export const getBillingSubscription =
+  async (): Promise<BillingSubscription> => {
+    const response = await customFetch<BillingSubscriptionResponse>(
+      "/api/v1/billing/me/subscription",
+      { method: "GET" },
+    );
+    return response.data;
+  };
 
 export const simulateCheckout = async (
   payload: SimulateCheckoutPayload,
@@ -102,13 +107,14 @@ export const simulateCheckout = async (
 export const trackUpgradeModalOpen = async (
   payload: UpgradeModalOpenPayload,
 ): Promise<void> => {
-  await customFetch<{ data: { ok: boolean }; status: number; headers: Headers }>(
-    "/api/v1/billing/events/upgrade-modal-open",
-    {
-      method: "POST",
-      body: JSON.stringify(payload),
-    },
-  );
+  await customFetch<{
+    data: { ok: boolean };
+    status: number;
+    headers: Headers;
+  }>("/api/v1/billing/events/upgrade-modal-open", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
 };
 
 export const useBillingSubscription = (enabled: boolean) =>
@@ -170,7 +176,10 @@ export const useCreateCheckout = () =>
 // --- Helpers ---
 
 export const createIdempotencyKey = (): string => {
-  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+  if (
+    typeof crypto !== "undefined" &&
+    typeof crypto.randomUUID === "function"
+  ) {
     return crypto.randomUUID();
   }
   return `idem-${Date.now()}`;
@@ -205,7 +214,9 @@ const toStringOrNull = (value: unknown): string | null =>
 const toNumberOrNull = (value: unknown): number | null =>
   typeof value === "number" && Number.isFinite(value) ? value : null;
 
-export const getApiErrorDetail = (error: unknown): BillingApiErrorDetail | null => {
+export const getApiErrorDetail = (
+  error: unknown,
+): BillingApiErrorDetail | null => {
   if (!(error instanceof ApiError)) {
     return null;
   }
@@ -240,7 +251,8 @@ export const getApiErrorDetail = (error: unknown): BillingApiErrorDetail | null 
 export const getApiErrorCode = (error: unknown): string | null =>
   getApiErrorDetail(error)?.code ?? null;
 
-const formatLimit = (value: number): string => Intl.NumberFormat("en-US").format(value);
+const formatLimit = (value: number): string =>
+  Intl.NumberFormat("en-US").format(value);
 
 export const getUpgradeReasonFromError = (
   error: unknown,

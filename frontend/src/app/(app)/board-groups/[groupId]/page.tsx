@@ -758,9 +758,7 @@ export default function BoardGroupDetailPage() {
                       {group.description}
                     </p>
                   ) : (
-                    <p className="mt-2 text-sm text-quiet">
-                      No description
-                    </p>
+                    <p className="mt-2 text-sm text-quiet">No description</p>
                   )}
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
@@ -957,9 +955,7 @@ export default function BoardGroupDetailPage() {
               ) : null}
               {heartbeatApplyResult ? (
                 <div className="rounded-xl border border-[color:var(--border)] bg-[color:var(--surface)] p-4 text-sm text-[color:var(--text)] shadow-sm">
-                  <p className="font-semibold text-strong">
-                    Heartbeat applied
-                  </p>
+                  <p className="font-semibold text-strong">Heartbeat applied</p>
                   <p className="mt-1 text-[color:var(--text-muted)]">
                     Updated {heartbeatApplyResult.updated_agent_ids.length}{" "}
                     agents, failed{" "}

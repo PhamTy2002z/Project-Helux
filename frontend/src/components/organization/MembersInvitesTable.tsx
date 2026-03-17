@@ -108,9 +108,7 @@ export function MembersInvitesTable({
                   <div className="text-sm font-semibold text-strong">
                     {display.primary}
                   </div>
-                  <div className="text-xs text-muted">
-                    {display.secondary}
-                  </div>
+                  <div className="text-xs text-muted">{display.secondary}</div>
                 </div>
               </div>
             );
@@ -205,7 +203,9 @@ export function MembersInvitesTable({
                 onClick={() => onResendInvite(invite.id)}
                 disabled={resendingInviteId === invite.id}
               >
-                {resendingInviteId === invite.id ? "Sending..." : "Resend email"}
+                {resendingInviteId === invite.id
+                  ? "Sending..."
+                  : "Resend email"}
               </Button>
               <Button
                 type="button"

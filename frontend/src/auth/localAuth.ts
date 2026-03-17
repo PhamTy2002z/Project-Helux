@@ -60,9 +60,9 @@ export async function verifyLocalAuthSession(): Promise<boolean> {
       clearLocalAuthToken();
       return false;
     }
-    const payload = (await response.json().catch(() => null)) as
-      | { authenticated?: unknown }
-      | null;
+    const payload = (await response.json().catch(() => null)) as {
+      authenticated?: unknown;
+    } | null;
     const authenticated = payload?.authenticated === true;
     if (!authenticated) {
       localSessionActive = false;
@@ -100,9 +100,9 @@ export async function establishLocalAuthSession(token: string): Promise<void> {
   });
 
   if (!response.ok) {
-    const payload = (await response.json().catch(() => null)) as
-      | { detail?: unknown }
-      | null;
+    const payload = (await response.json().catch(() => null)) as {
+      detail?: unknown;
+    } | null;
     const detail =
       typeof payload?.detail === "string"
         ? payload.detail

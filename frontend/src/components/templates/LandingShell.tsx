@@ -89,7 +89,9 @@ export function LandingShell({ children }: { children: ReactNode }) {
         <div className="footer-content">
           <div className="footer-brand">
             <h3>FlowGrid</h3>
-            <p>The agent operations platform for boards, approvals, and gateways.</p>
+            <p>
+              The agent operations platform for boards, approvals, and gateways.
+            </p>
             <div className="footer-tagline">Realtime Execution Visibility</div>
           </div>
 

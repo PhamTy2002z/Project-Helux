@@ -566,9 +566,7 @@ export function BoardApprovalsPanel({
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
               <CheckCircle2 className="h-6 w-6" />
             </div>
-            <p className="mt-4 text-sm font-semibold text-strong">
-              All clear
-            </p>
+            <p className="mt-4 text-sm font-semibold text-strong">All clear</p>
             <p className="mt-2 text-sm text-muted">
               No approvals to review right now. New approvals will show up here
               as soon as they arrive.

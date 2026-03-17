@@ -75,13 +75,14 @@ export const updateOnboardingStep = async (
 export const trackOnboardingStepViewed = async (
   payload: StepViewedPayload,
 ): Promise<void> => {
-  await customFetch<{ data: { ok: boolean }; status: number; headers: Headers }>(
-    "/api/v1/onboarding/progress/me/events/viewed",
-    {
-      method: "POST",
-      body: JSON.stringify(payload),
-    },
-  );
+  await customFetch<{
+    data: { ok: boolean };
+    status: number;
+    headers: Headers;
+  }>("/api/v1/onboarding/progress/me/events/viewed", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
 };
 
 export const useOnboardingProgress = (enabled: boolean) =>

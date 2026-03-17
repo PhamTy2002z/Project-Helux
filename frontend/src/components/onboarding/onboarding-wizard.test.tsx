@@ -24,9 +24,10 @@ vi.mock("next/link", () => {
 });
 
 vi.mock("@/lib/onboarding", async () => {
-  const actual = await vi.importActual<typeof import("@/lib/onboarding")>(
-    "@/lib/onboarding",
-  );
+  const actual =
+    await vi.importActual<typeof import("@/lib/onboarding")>(
+      "@/lib/onboarding",
+    );
   return {
     ...actual,
     useUpdateOnboardingStep: () => ({
@@ -116,7 +117,9 @@ describe("OnboardingWizard use case selection", () => {
   });
 
   it("hydrates custom value from saved onboarding details", () => {
-    render(<OnboardingWizard progress={buildProgress("Biotech research ops")} />);
+    render(
+      <OnboardingWizard progress={buildProgress("Biotech research ops")} />,
+    );
 
     expect(
       screen.getByRole("button", { name: /other \(custom\)/i }),
@@ -127,7 +130,9 @@ describe("OnboardingWizard use case selection", () => {
   });
 
   it("submits non-board step answers without navigation actions", async () => {
-    render(<OnboardingWizard progress={buildProgress("", "create_first_board")} />);
+    render(
+      <OnboardingWizard progress={buildProgress("", "create_first_board")} />,
+    );
 
     fireEvent.click(screen.getByRole("radio", { name: "Solo operator" }));
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));

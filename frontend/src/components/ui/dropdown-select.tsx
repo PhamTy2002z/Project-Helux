@@ -150,7 +150,10 @@ export default function DropdownSelect({
           >
             {SelectedIcon ? (
               <SelectedIcon
-                className={cn("h-4 w-4 text-[color:var(--text-muted)]", selectedIconClassName)}
+                className={cn(
+                  "h-4 w-4 text-[color:var(--text-muted)]",
+                  selectedIconClassName,
+                )}
               />
             ) : null}
             <span className="truncate">
@@ -209,16 +212,16 @@ export default function DropdownSelect({
                       <OptionIcon
                         className={cn(
                           "h-4 w-4",
-                          isSelected ? "text-[color:var(--text)]" : "text-muted",
+                          isSelected
+                            ? "text-[color:var(--text)]"
+                            : "text-muted",
                           option.iconClassName,
                         )}
                       />
                     ) : null}
                     <span className="truncate font-medium">{option.label}</span>
                   </span>
-                  {isSelected ? (
-                    <Check className="h-4 w-4 text-quiet" />
-                  ) : null}
+                  {isSelected ? <Check className="h-4 w-4 text-quiet" /> : null}
                 </CommandItem>
               );
             })}

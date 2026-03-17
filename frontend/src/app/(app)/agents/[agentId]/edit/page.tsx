@@ -278,9 +278,7 @@ export default function EditAgentPage() {
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-strong">
-                  Role
-                </label>
+                <label className="text-sm font-medium text-strong">Role</label>
                 <Input
                   value={resolvedIdentityProfile.role}
                   onChange={(event) =>
@@ -350,9 +348,7 @@ export default function EditAgentPage() {
                 ) : null}
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-strong">
-                  Emoji
-                </label>
+                <label className="text-sm font-medium text-strong">Emoji</label>
                 <Select
                   value={resolvedIdentityProfile.emoji}
                   onValueChange={(value) =>

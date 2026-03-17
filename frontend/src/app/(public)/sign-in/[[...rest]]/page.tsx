@@ -43,7 +43,8 @@ const clerkAppearance = {
     socialButtonsBlockButtonText: "font-medium text-white",
     dividerLine: "bg-white/10",
     dividerText: "text-white/45",
-    formFieldLabel: "text-xs font-semibold uppercase tracking-[0.08em] text-white/55",
+    formFieldLabel:
+      "text-xs font-semibold uppercase tracking-[0.08em] text-white/55",
     formFieldInput:
       "h-11 border-white/15 bg-white/[0.03] text-white placeholder:text-white/40 focus:border-white/40",
     formButtonPrimary:
@@ -91,7 +92,10 @@ export default function SignInPage() {
   return (
     <AuthProvider>
       <div className="landing-page relative min-h-screen overflow-x-hidden bg-black text-white">
-        <div className="pointer-events-none absolute inset-0" aria-hidden="true">
+        <div
+          className="pointer-events-none absolute inset-0"
+          aria-hidden="true"
+        >
           <div className="absolute -left-28 top-20 h-72 w-72 rounded-full bg-[rgba(255,91,53,0.2)] blur-3xl" />
           <div className="absolute -right-24 bottom-20 h-80 w-80 rounded-full bg-[rgba(56,189,248,0.18)] blur-3xl" />
         </div>
@@ -114,13 +118,21 @@ export default function SignInPage() {
                   Sign In and Continue Operating.
                 </h1>
                 <p className="max-w-xl text-base leading-relaxed text-white/70 sm:text-lg">
-                  Access boards, approvals, and gateway activity from one secure command surface.
+                  Access boards, approvals, and gateway activity from one secure
+                  command surface.
                 </p>
               </div>
               <ul className="space-y-3">
                 {SIGN_IN_STEPS.map((step) => (
-                  <li key={step} className="flex items-start gap-3 text-sm text-white/75 sm:text-base">
-                    <CheckCircle2 size={18} className="mt-0.5 shrink-0 text-white/80" aria-hidden="true" />
+                  <li
+                    key={step}
+                    className="flex items-start gap-3 text-sm text-white/75 sm:text-base"
+                  >
+                    <CheckCircle2
+                      size={18}
+                      className="mt-0.5 shrink-0 text-white/80"
+                      aria-hidden="true"
+                    />
                     <span>{step}</span>
                   </li>
                 ))}
@@ -141,10 +153,12 @@ export default function SignInPage() {
                   role="alert"
                   className="rounded-2xl border border-amber-300/35 bg-amber-200/10 p-5 text-sm text-amber-100"
                 >
-                  <p className="font-semibold text-amber-50">Clerk chưa được cấu hình hợp lệ.</p>
+                  <p className="font-semibold text-amber-50">
+                    Clerk chưa được cấu hình hợp lệ.
+                  </p>
                   <p className="mt-2">
-                    Cần set `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` ở frontend và `CLERK_SECRET_KEY` ở
-                    backend rồi restart service.
+                    Cần set `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` ở frontend và
+                    `CLERK_SECRET_KEY` ở backend rồi restart service.
                   </p>
                 </div>
               )}

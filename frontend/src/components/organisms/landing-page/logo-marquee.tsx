@@ -54,7 +54,10 @@ export default function LogoMarquee() {
             <LogoItem key={name} name={name} />
           ))}
         </div>
-        <div className="animate-marquee-reverse flex shrink-0" aria-hidden="true">
+        <div
+          className="animate-marquee-reverse flex shrink-0"
+          aria-hidden="true"
+        >
           {LOGOS.map((name) => (
             <LogoItem key={`dup-${name}`} name={name} />
           ))}

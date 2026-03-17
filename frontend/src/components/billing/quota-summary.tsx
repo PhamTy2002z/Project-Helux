@@ -22,7 +22,10 @@ const RESOURCE_LABELS: Record<string, string> = {
   org_daily_cost: "Org cost / day",
 };
 
-const formatValue = (value: number | null | undefined, resource?: string): string => {
+const formatValue = (
+  value: number | null | undefined,
+  resource?: string,
+): string => {
   if (typeof value !== "number") return "Unlimited";
   if (resource?.includes("cost")) return `$${value.toFixed(2)}`;
   return Intl.NumberFormat("en-US").format(value);
@@ -33,7 +36,12 @@ export function QuotaSummary({ quotas, className }: QuotaSummaryProps) {
     return null;
   }
   return (
-    <div className={cn("rounded-xl border border-[color:var(--border)] bg-[color:var(--surface)] p-4", className)}>
+    <div
+      className={cn(
+        "rounded-xl border border-[color:var(--border)] bg-[color:var(--surface)] p-4",
+        className,
+      )}
+    >
       <p className="text-sm font-semibold text-strong">Quota summary</p>
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
         {quotas.map((quota) => (
@@ -41,14 +49,17 @@ export function QuotaSummary({ quotas, className }: QuotaSummaryProps) {
             key={quota.resource}
             className={cn(
               "rounded-lg border px-3.5 py-2.5",
-              quota.exceeded ? "status-danger" : "border-[color:var(--border)] bg-[color:var(--surface-muted)]",
+              quota.exceeded
+                ? "status-danger"
+                : "border-[color:var(--border)] bg-[color:var(--surface-muted)]",
             )}
           >
             <p className="text-xs text-[color:var(--text-muted)]">
               {RESOURCE_LABELS[quota.resource] ?? quota.resource}
             </p>
             <p className="mt-1 text-sm font-semibold text-strong">
-              {formatValue(quota.used, quota.resource)} / {formatValue(quota.limit, quota.resource)}
+              {formatValue(quota.used, quota.resource)} /{" "}
+              {formatValue(quota.limit, quota.resource)}
             </p>
           </div>
         ))}

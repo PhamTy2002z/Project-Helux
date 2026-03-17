@@ -46,12 +46,20 @@ import type {
 } from "@/api/generated/model";
 import nextDynamic from "next/dynamic";
 const BoardOnboardingChat = nextDynamic(
-  () => import("@/components/BoardOnboardingChat").then(m => m.BoardOnboardingChat),
-  { ssr: false }
+  () =>
+    import("@/components/BoardOnboardingChat").then(
+      (m) => m.BoardOnboardingChat,
+    ),
+  { ssr: false },
 );
 import { DashboardPageLayout } from "@/components/templates/DashboardPageLayout";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogClose, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -564,8 +572,8 @@ export default function EditBoardPage() {
 
   const isFormReady = Boolean(
     resolvedName.trim() &&
-      resolvedDescription.trim() &&
-      (isSaasMode || displayGatewayId),
+    resolvedDescription.trim() &&
+    (isSaasMode || displayGatewayId),
   );
 
   const gatewayOptions = useMemo(
@@ -959,9 +967,7 @@ export default function EditBoardPage() {
 
             <section className="space-y-3 border-t border-[color:var(--border)] pt-4">
               <div>
-                <h2 className="text-base font-semibold text-strong">
-                  Rules
-                </h2>
+                <h2 className="text-base font-semibold text-strong">Rules</h2>
                 <p className="text-xs text-[color:var(--text-muted)]">
                   Configure board-level workflow enforcement.
                 </p>

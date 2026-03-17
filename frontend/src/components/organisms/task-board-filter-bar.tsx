@@ -89,7 +89,11 @@ export function TaskBoardFilterBar({
         <select
           aria-label="Saved view"
           value={state.savedView}
-          onChange={(event) => patch({ savedView: event.target.value as BoardQueryState["savedView"] })}
+          onChange={(event) =>
+            patch({
+              savedView: event.target.value as BoardQueryState["savedView"],
+            })
+          }
           className="rounded-lg border border-[color:var(--border)] bg-[color:var(--surface)] px-2.5 py-1.5 text-sm"
         >
           {BOARD_SAVED_VIEW_OPTIONS.map((option) => (
@@ -102,7 +106,9 @@ export function TaskBoardFilterBar({
         <select
           aria-label="Status filter"
           value={state.status}
-          onChange={(event) => patch({ status: event.target.value as BoardStatusFilter })}
+          onChange={(event) =>
+            patch({ status: event.target.value as BoardStatusFilter })
+          }
           className="rounded-lg border border-[color:var(--border)] bg-[color:var(--surface)] px-2.5 py-1.5 text-sm"
         >
           {STATUS_OPTIONS.map((option) => (
@@ -115,7 +121,9 @@ export function TaskBoardFilterBar({
         <select
           aria-label="Priority filter"
           value={state.priority}
-          onChange={(event) => patch({ priority: event.target.value as BoardPriorityFilter })}
+          onChange={(event) =>
+            patch({ priority: event.target.value as BoardPriorityFilter })
+          }
           className="rounded-lg border border-[color:var(--border)] bg-[color:var(--surface)] px-2.5 py-1.5 text-sm"
         >
           {PRIORITY_OPTIONS.map((option) => (
@@ -193,7 +201,12 @@ export function TaskBoardFilterBar({
                 {activeToggleCount}
               </span>
             )}
-            <ChevronDown className={cn("h-3 w-3 transition-transform", isMoreOpen && "rotate-180")} />
+            <ChevronDown
+              className={cn(
+                "h-3 w-3 transition-transform",
+                isMoreOpen && "rotate-180",
+              )}
+            />
           </button>
 
           {isMoreOpen && (
@@ -201,17 +214,28 @@ export function TaskBoardFilterBar({
               <ToggleOption
                 label="Compact Density"
                 active={state.density === "compact"}
-                onClick={() => patch({ density: state.density === "comfortable" ? "compact" : "comfortable" })}
+                onClick={() =>
+                  patch({
+                    density:
+                      state.density === "comfortable"
+                        ? "compact"
+                        : "comfortable",
+                  })
+                }
               />
               <ToggleOption
                 label="Compress Done Lane"
                 active={state.doneCompression}
-                onClick={() => patch({ doneCompression: !state.doneCompression })}
+                onClick={() =>
+                  patch({ doneCompression: !state.doneCompression })
+                }
               />
               <ToggleOption
                 label="Include Archived"
                 active={state.includeArchived}
-                onClick={() => patch({ includeArchived: !state.includeArchived })}
+                onClick={() =>
+                  patch({ includeArchived: !state.includeArchived })
+                }
               />
             </div>
           )}
@@ -220,9 +244,19 @@ export function TaskBoardFilterBar({
 
       {/* Row 2: counter */}
       <p className="mt-2 text-xs text-muted">
-        Showing <span className="font-semibold text-[color:var(--text)]">{visibleCount}</span> of{" "}
-        <span className="font-semibold text-[color:var(--text)]">{totalCount}</span> tasks across{" "}
-        <span className="font-semibold text-[color:var(--text)]">{groupCount}</span> groups.
+        Showing{" "}
+        <span className="font-semibold text-[color:var(--text)]">
+          {visibleCount}
+        </span>{" "}
+        of{" "}
+        <span className="font-semibold text-[color:var(--text)]">
+          {totalCount}
+        </span>{" "}
+        tasks across{" "}
+        <span className="font-semibold text-[color:var(--text)]">
+          {groupCount}
+        </span>{" "}
+        groups.
       </p>
     </div>
   );
@@ -248,13 +282,17 @@ function ToggleOption({
       <span
         className={cn(
           "flex h-4 w-8 items-center rounded-full transition-colors",
-          active ? "justify-end bg-[color:var(--text)]" : "justify-start bg-[color:var(--surface-strong)]",
+          active
+            ? "justify-end bg-[color:var(--text)]"
+            : "justify-start bg-[color:var(--surface-strong)]",
         )}
       >
-        <span className={cn(
-          "h-3 w-3 rounded-full bg-white shadow-sm transition-transform",
-          active ? "mr-0.5" : "ml-0.5",
-        )} />
+        <span
+          className={cn(
+            "h-3 w-3 rounded-full bg-white shadow-sm transition-transform",
+            active ? "mr-0.5" : "ml-0.5",
+          )}
+        />
       </span>
     </button>
   );

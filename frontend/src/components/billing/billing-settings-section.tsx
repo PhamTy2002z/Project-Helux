@@ -21,7 +21,10 @@ import {
   useCreateCheckout,
   useSimulateCheckout,
 } from "@/lib/billing";
-import type { BillingHistoryRow as ApiBillingHistoryRow, BillingPlanTier } from "@/lib/billing";
+import type {
+  BillingHistoryRow as ApiBillingHistoryRow,
+  BillingPlanTier,
+} from "@/lib/billing";
 import { planLabelFromTier } from "@/lib/plan-labels";
 import { cn } from "@/lib/utils";
 
@@ -30,7 +33,9 @@ type PortalSessionResponse = { portal_url: string };
 type HistoryStatus = "all" | "succeeded" | "pending" | "failed";
 
 const getPortalSession = async (): Promise<PortalSessionResponse> => {
-  const response = await (await import("@/api/mutator")).customFetch<{
+  const response = await (
+    await import("@/api/mutator")
+  ).customFetch<{
     data: PortalSessionResponse;
     status: number;
     headers: Headers;
@@ -50,7 +55,9 @@ const formatIsoDate = (value: string | null | undefined): string => {
   return `${year}-${month}-${day}`;
 };
 
-function trialDaysRemaining(expiresAt: string | null | undefined): number | null {
+function trialDaysRemaining(
+  expiresAt: string | null | undefined,
+): number | null {
   if (!expiresAt) return null;
   const diff = new Date(expiresAt).getTime() - Date.now();
   return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
@@ -97,7 +104,9 @@ function PlanCard({
       )}
     >
       <div className="flex items-center justify-between gap-3">
-        <h3 className="text-sm font-semibold tracking-wide uppercase">{title}</h3>
+        <h3 className="text-sm font-semibold tracking-wide uppercase">
+          {title}
+        </h3>
         <span
           className={cn(
             "rounded-full px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide",
@@ -122,7 +131,12 @@ function PlanCard({
         </span>
       </div>
 
-      <div className={cn("my-5 h-px", featured ? "bg-slate-700" : "bg-[color:var(--border)]")} />
+      <div
+        className={cn(
+          "my-5 h-px",
+          featured ? "bg-slate-700" : "bg-[color:var(--border)]",
+        )}
+      />
 
       <ul className="flex-1 space-y-3">
         {features.map((feature) => (
@@ -174,7 +188,11 @@ const STATUS_STYLES: Record<string, string> = {
   failed: "status-badge-danger",
 };
 
-export function BillingSettingsSection({ isSignedIn }: { isSignedIn: boolean }) {
+export function BillingSettingsSection({
+  isSignedIn,
+}: {
+  isSignedIn: boolean;
+}) {
   const queryClient = useQueryClient();
   const [portalError, setPortalError] = useState<string | null>(null);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
@@ -202,7 +220,8 @@ export function BillingSettingsSection({ isSignedIn }: { isSignedIn: boolean }) 
   const filteredHistory = useMemo(() => {
     const keyword = historySearch.trim().toLowerCase();
     return historyRows.filter((row: ApiBillingHistoryRow) => {
-      const statusMatch = historyStatus === "all" || row.status === historyStatus;
+      const statusMatch =
+        historyStatus === "all" || row.status === historyStatus;
       if (!statusMatch) return false;
       if (!keyword) return true;
       const rowContent =
@@ -229,18 +248,30 @@ export function BillingSettingsSection({ isSignedIn }: { isSignedIn: boolean }) 
     const key = createIdempotencyKey();
     if (isProviderMode) {
       try {
-        const result = await createCheckout.mutateAsync({ plan_tier: "pro", idempotency_key: key });
+        const result = await createCheckout.mutateAsync({
+          plan_tier: "pro",
+          idempotency_key: key,
+        });
         window.location.href = result.checkout_url;
       } catch {
         setCheckoutError("Unable to start checkout. Try again.");
       }
     } else {
       try {
-        await simulateCheckout.mutateAsync({ plan_tier: "pro", idempotency_key: key });
+        await simulateCheckout.mutateAsync({
+          plan_tier: "pro",
+          idempotency_key: key,
+        });
         await Promise.all([
-          queryClient.invalidateQueries({ queryKey: BILLING_SUBSCRIPTION_QUERY_KEY }),
-          queryClient.invalidateQueries({ queryKey: BILLING_HISTORY_QUERY_KEY }),
-          queryClient.invalidateQueries({ queryKey: getQuotaUsageApiV1MetricsQuotasGetQueryKey() }),
+          queryClient.invalidateQueries({
+            queryKey: BILLING_SUBSCRIPTION_QUERY_KEY,
+          }),
+          queryClient.invalidateQueries({
+            queryKey: BILLING_HISTORY_QUERY_KEY,
+          }),
+          queryClient.invalidateQueries({
+            queryKey: getQuotaUsageApiV1MetricsQuotasGetQueryKey(),
+          }),
         ]);
       } catch {
         setCheckoutError("Unable to unlock plan. Try again.");
@@ -260,7 +291,11 @@ export function BillingSettingsSection({ isSignedIn }: { isSignedIn: boolean }) 
       ]),
     ];
     const csv = csvRows
-      .map((columns) => columns.map((value) => `"${String(value).replace(/"/g, '""')}"`).join(","))
+      .map((columns) =>
+        columns
+          .map((value) => `"${String(value).replace(/"/g, '""')}"`)
+          .join(","),
+      )
       .join("\n");
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
@@ -276,9 +311,7 @@ export function BillingSettingsSection({ isSignedIn }: { isSignedIn: boolean }) 
       <section className="space-y-6">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
-            <h2 className="text-lg font-semibold text-strong">
-              Plans
-            </h2>
+            <h2 className="text-lg font-semibold text-strong">Plans</h2>
             <p className="mt-1 text-sm text-muted">
               Choose the plan that fits your team.
             </p>
@@ -290,7 +323,12 @@ export function BillingSettingsSection({ isSignedIn }: { isSignedIn: boolean }) 
                   </span>
                 ) : null}
                 {isTrial && daysLeft !== null ? (
-                  <span className={cn("text-xs font-medium", countdownColor(daysLeft))}>
+                  <span
+                    className={cn(
+                      "text-xs font-medium",
+                      countdownColor(daysLeft),
+                    )}
+                  >
                     Trial expires in {daysLeft} day{daysLeft === 1 ? "" : "s"}
                   </span>
                 ) : null}
@@ -346,7 +384,13 @@ export function BillingSettingsSection({ isSignedIn }: { isSignedIn: boolean }) 
               "200M org tokens / month, 16k max tokens / run",
             ]}
             onAction={isPro ? () => undefined : handleUpgrade}
-            actionLabel={isPro ? "Current plan" : isCheckingOut ? "Processing..." : "Upgrade plan"}
+            actionLabel={
+              isPro
+                ? "Current plan"
+                : isCheckingOut
+                  ? "Processing..."
+                  : "Upgrade plan"
+            }
             actionDisabled={isPro || isCheckingOut}
             cardVariant="featured"
           />
@@ -399,7 +443,9 @@ export function BillingSettingsSection({ isSignedIn }: { isSignedIn: boolean }) 
               <Filter className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-quiet" />
               <select
                 value={historyStatus}
-                onChange={(event) => setHistoryStatus(event.target.value as HistoryStatus)}
+                onChange={(event) =>
+                  setHistoryStatus(event.target.value as HistoryStatus)
+                }
                 className="h-9 min-w-[140px] rounded-lg border border-[color:var(--border-strong)] bg-[color:var(--surface)] pl-9 pr-8 text-sm text-[color:var(--text)] focus:outline-none"
               >
                 <option value="all">All status</option>
@@ -436,10 +482,13 @@ export function BillingSettingsSection({ isSignedIn }: { isSignedIn: boolean }) 
               {filteredHistory.map((row: ApiBillingHistoryRow) => (
                 <tr key={row.id} className="text-[color:var(--text)]">
                   <td className="px-3 py-3.5 font-medium text-strong">
-                    {planLabelFromTier(row.plan_tier as BillingPlanTier) ?? row.plan_tier}
+                    {planLabelFromTier(row.plan_tier as BillingPlanTier) ??
+                      row.plan_tier}
                   </td>
                   <td className="px-3 py-3.5">{row.amount}</td>
-                  <td className="px-3 py-3.5">{formatIsoDate(row.created_at)}</td>
+                  <td className="px-3 py-3.5">
+                    {formatIsoDate(row.created_at)}
+                  </td>
                   <td className="px-3 py-3.5">
                     <span
                       className={cn(
@@ -455,7 +504,11 @@ export function BillingSettingsSection({ isSignedIn }: { isSignedIn: boolean }) 
                       type="button"
                       className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-[color:var(--border)] text-muted transition hover:bg-[color:var(--surface-muted)] hover:text-[color:var(--text)]"
                       aria-label={`Manage subscription for ${row.plan_tier}`}
-                      onClick={canOpenPortal ? handleManageSubscription : () => undefined}
+                      onClick={
+                        canOpenPortal
+                          ? handleManageSubscription
+                          : () => undefined
+                      }
                       disabled={!canOpenPortal}
                     >
                       <ExternalLink className="h-4 w-4" />
@@ -472,7 +525,6 @@ export function BillingSettingsSection({ isSignedIn }: { isSignedIn: boolean }) 
           ) : null}
         </div>
       </section>
-
     </>
   );
 }

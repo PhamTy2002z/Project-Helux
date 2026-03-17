@@ -16,11 +16,18 @@ import { withQueryPolicy } from "@/lib/query-policy";
  * Isolated header section that subscribes to user profile + billing data.
  * Prevents re-rendering the entire DashboardShell when these queries update.
  */
-export function DashboardHeaderUserInfo({ isOnboardingPath }: { isOnboardingPath: boolean }) {
+export function DashboardHeaderUserInfo({
+  isOnboardingPath,
+}: {
+  isOnboardingPath: boolean;
+}) {
   const { isSignedIn } = useAuth();
   const enabled = Boolean(isSignedIn) && !isOnboardingPath;
 
-  const meQuery = useGetMeApiV1UsersMeGet<getMeApiV1UsersMeGetResponse, ApiError>({
+  const meQuery = useGetMeApiV1UsersMeGet<
+    getMeApiV1UsersMeGetResponse,
+    ApiError
+  >({
     query: {
       ...withQueryPolicy("interactive"),
       enabled,
@@ -41,7 +48,9 @@ export function DashboardHeaderUserInfo({ isOnboardingPath }: { isOnboardingPath
         <p className="text-sm font-semibold text-strong">{displayName}</p>
         <p className="text-xs text-muted">
           Current plan:{" "}
-          <span className="font-medium text-[color:var(--text)]">{currentPlanLabel ?? "—"}</span>
+          <span className="font-medium text-[color:var(--text)]">
+            {currentPlanLabel ?? "—"}
+          </span>
         </p>
       </div>
       <UserMenu displayName={displayName} displayEmail={displayEmail} />

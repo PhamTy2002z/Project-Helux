@@ -44,7 +44,9 @@ describe("TaskBoard overlay", () => {
     );
 
     expect(screen.getByTestId("task-board-overlay")).toBeInTheDocument();
-    expect(screen.getByRole("searchbox", { name: /search tasks/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("searchbox", { name: /search tasks/i }),
+    ).toBeInTheDocument();
     expect(screen.getByText("Group group-al")).toBeInTheDocument();
     expect(screen.getByText("Group group-be")).toBeInTheDocument();
   });
@@ -59,11 +61,15 @@ describe("TaskBoard overlay", () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: /Collapse All Groups/i }));
+    fireEvent.click(
+      screen.getByRole("button", { name: /Collapse All Groups/i }),
+    );
     expect(screen.getAllByText("Expand").length).toBeGreaterThanOrEqual(2);
 
     fireEvent.click(screen.getByRole("button", { name: /Expand All Groups/i }));
-    expect(screen.getAllByRole("button", { name: /^Collapse$/ }).length).toBeGreaterThanOrEqual(2);
+    expect(
+      screen.getAllByRole("button", { name: /^Collapse$/ }).length,
+    ).toBeGreaterThanOrEqual(2);
   });
 
   it("applies status filter from overlay filter bar", () => {

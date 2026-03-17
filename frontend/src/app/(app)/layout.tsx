@@ -8,9 +8,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   return (
     <QueryProvider>
       <GlobalLoader />
-      <AuthProvider>
-        {children}
-      </AuthProvider>
+      <AuthProvider>{children}</AuthProvider>
     </QueryProvider>
   );
 }

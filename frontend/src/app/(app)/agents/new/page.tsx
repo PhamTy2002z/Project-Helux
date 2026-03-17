@@ -64,7 +64,8 @@ export default function NewAgentPage() {
   const { isAdmin } = useOrganizationMembership(isSignedIn);
 
   const [showTemplatePicker, setShowTemplatePicker] = useState(true);
-  const [selectedTemplate, setSelectedTemplate] = useState<WorkspaceTemplateRead | null>(null);
+  const [selectedTemplate, setSelectedTemplate] =
+    useState<WorkspaceTemplateRead | null>(null);
   const [name, setName] = useState("");
   const [boardId, setBoardId] = useState<string>("");
   const [heartbeatEvery, setHeartbeatEvery] = useState("10m");
@@ -102,7 +103,10 @@ export default function NewAgentPage() {
       },
       onError: (err) => {
         const errorCode = getApiErrorCode(err);
-        if (errorCode === "blocked_for_payment" || errorCode === "quota_exceeded") {
+        if (
+          errorCode === "blocked_for_payment" ||
+          errorCode === "quota_exceeded"
+        ) {
           router.push("/settings");
           return;
         }
@@ -164,9 +168,12 @@ export default function NewAgentPage() {
         {showTemplatePicker ? (
           <div className="rounded-xl border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm space-y-4">
             <div>
-              <p className="text-sm font-semibold text-strong">Choose a template</p>
+              <p className="text-sm font-semibold text-strong">
+                Choose a template
+              </p>
               <p className="text-xs text-muted mt-0.5">
-                Start from a pre-built workspace or skip to configure from scratch.
+                Start from a pre-built workspace or skip to configure from
+                scratch.
               </p>
             </div>
             <TemplatePickerStep
@@ -175,190 +182,193 @@ export default function NewAgentPage() {
             />
           </div>
         ) : (
-        <div className="space-y-3">
-          {selectedTemplate ? (
-            <div className="flex items-center justify-between rounded-lg border px-4 py-2 status-info">
-              <p className="text-sm">
-                Template: <span className="font-semibold">{selectedTemplate.name}</span>
-              </p>
-              <Button
-                variant="outline"
-                type="button"
-                size="sm"
-                onClick={() => setShowTemplatePicker(true)}
-              >
-                Change template
-              </Button>
-            </div>
-          ) : (
-            <div className="flex justify-end">
-              <Button
-                variant="outline"
-                type="button"
-                size="sm"
-                onClick={() => setShowTemplatePicker(true)}
-              >
-                Choose template
-              </Button>
-            </div>
-          )}
-        <form
-          onSubmit={handleSubmit}
-          className="rounded-xl border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm space-y-6"
-        >
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted">
-            Basic configuration
-          </p>
-          <div className="mt-4 space-y-6">
-            <div className="grid gap-6 md:grid-cols-2">
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-strong">
-                  Agent name <span className="text-red-500">*</span>
-                </label>
-                <Input
-                  value={name}
-                  onChange={(event) => setName(event.target.value)}
-                  placeholder="e.g. Deploy bot"
-                  disabled={isLoading}
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-strong">
-                  Role
-                </label>
-                <Input
-                  value={identityProfile.role}
-                  onChange={(event) =>
-                    setIdentityProfile((current) => ({
-                      ...current,
-                      role: event.target.value,
-                    }))
-                  }
-                  placeholder="e.g. Founder, Social Media Manager"
-                  disabled={isLoading}
-                />
-              </div>
-            </div>
-            <div className="grid gap-6 md:grid-cols-2">
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-strong">
-                  Board <span className="text-red-500">*</span>
-                </label>
-                <SearchableSelect
-                  ariaLabel="Select board"
-                  value={displayBoardId}
-                  onValueChange={setBoardId}
-                  options={getBoardOptions(boards)}
-                  placeholder="Select board"
-                  searchPlaceholder="Search boards..."
-                  emptyMessage="No matching boards."
-                  triggerClassName="w-full h-11 rounded-xl border border-[color:var(--border-strong)] bg-[color:var(--surface)] px-3 py-2 text-sm font-medium text-strong shadow-sm"
-                  contentClassName="rounded-xl border border-[color:var(--border)] shadow-lg"
-                  itemClassName="px-4 py-3 text-sm text-[color:var(--text)] data-[selected=true]:bg-[color:var(--surface-muted)] data-[selected=true]:text-strong"
-                  disabled={boards.length === 0}
-                />
-                {boards.length === 0 ? (
-                  <p className="text-xs text-muted">
-                    Create a board before adding agents.
-                  </p>
-                ) : null}
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-strong">
-                  Emoji
-                </label>
-                <Select
-                  value={identityProfile.emoji}
-                  onValueChange={(value) =>
-                    setIdentityProfile((current) => ({
-                      ...current,
-                      emoji: value,
-                    }))
-                  }
-                  disabled={isLoading}
+          <div className="space-y-3">
+            {selectedTemplate ? (
+              <div className="flex items-center justify-between rounded-lg border px-4 py-2 status-info">
+                <p className="text-sm">
+                  Template:{" "}
+                  <span className="font-semibold">{selectedTemplate.name}</span>
+                </p>
+                <Button
+                  variant="outline"
+                  type="button"
+                  size="sm"
+                  onClick={() => setShowTemplatePicker(true)}
                 >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select emoji" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {AGENT_EMOJI_OPTIONS.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.glyph} {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  Change template
+                </Button>
               </div>
-            </div>
-          </div>
-        </div>
+            ) : (
+              <div className="flex justify-end">
+                <Button
+                  variant="outline"
+                  type="button"
+                  size="sm"
+                  onClick={() => setShowTemplatePicker(true)}
+                >
+                  Choose template
+                </Button>
+              </div>
+            )}
+            <form
+              onSubmit={handleSubmit}
+              className="rounded-xl border border-[color:var(--border)] bg-[color:var(--surface)] p-6 shadow-sm space-y-6"
+            >
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted">
+                  Basic configuration
+                </p>
+                <div className="mt-4 space-y-6">
+                  <div className="grid gap-6 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-strong">
+                        Agent name <span className="text-red-500">*</span>
+                      </label>
+                      <Input
+                        value={name}
+                        onChange={(event) => setName(event.target.value)}
+                        placeholder="e.g. Deploy bot"
+                        disabled={isLoading}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-strong">
+                        Role
+                      </label>
+                      <Input
+                        value={identityProfile.role}
+                        onChange={(event) =>
+                          setIdentityProfile((current) => ({
+                            ...current,
+                            role: event.target.value,
+                          }))
+                        }
+                        placeholder="e.g. Founder, Social Media Manager"
+                        disabled={isLoading}
+                      />
+                    </div>
+                  </div>
+                  <div className="grid gap-6 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-strong">
+                        Board <span className="text-red-500">*</span>
+                      </label>
+                      <SearchableSelect
+                        ariaLabel="Select board"
+                        value={displayBoardId}
+                        onValueChange={setBoardId}
+                        options={getBoardOptions(boards)}
+                        placeholder="Select board"
+                        searchPlaceholder="Search boards..."
+                        emptyMessage="No matching boards."
+                        triggerClassName="w-full h-11 rounded-xl border border-[color:var(--border-strong)] bg-[color:var(--surface)] px-3 py-2 text-sm font-medium text-strong shadow-sm"
+                        contentClassName="rounded-xl border border-[color:var(--border)] shadow-lg"
+                        itemClassName="px-4 py-3 text-sm text-[color:var(--text)] data-[selected=true]:bg-[color:var(--surface-muted)] data-[selected=true]:text-strong"
+                        disabled={boards.length === 0}
+                      />
+                      {boards.length === 0 ? (
+                        <p className="text-xs text-muted">
+                          Create a board before adding agents.
+                        </p>
+                      ) : null}
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-strong">
+                        Emoji
+                      </label>
+                      <Select
+                        value={identityProfile.emoji}
+                        onValueChange={(value) =>
+                          setIdentityProfile((current) => ({
+                            ...current,
+                            emoji: value,
+                          }))
+                        }
+                        disabled={isLoading}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select emoji" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {AGENT_EMOJI_OPTIONS.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.glyph} {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted">
-            Personality & behavior
-          </p>
-          <div className="mt-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-strong">
-                Communication style
-              </label>
-              <Input
-                value={identityProfile.communication_style}
-                onChange={(event) =>
-                  setIdentityProfile((current) => ({
-                    ...current,
-                    communication_style: event.target.value,
-                  }))
-                }
-                disabled={isLoading}
-              />
-            </div>
-          </div>
-        </div>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted">
+                  Personality & behavior
+                </p>
+                <div className="mt-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-strong">
+                      Communication style
+                    </label>
+                    <Input
+                      value={identityProfile.communication_style}
+                      onChange={(event) =>
+                        setIdentityProfile((current) => ({
+                          ...current,
+                          communication_style: event.target.value,
+                        }))
+                      }
+                      disabled={isLoading}
+                    />
+                  </div>
+                </div>
+              </div>
 
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted">
-            Schedule & notifications
-          </p>
-          <div className="mt-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-strong">
-                Interval
-              </label>
-              <Input
-                value={heartbeatEvery}
-                onChange={(event) => setHeartbeatEvery(event.target.value)}
-                placeholder="e.g. 10m"
-                disabled={isLoading}
-              />
-              <p className="text-xs text-muted">
-                How often this agent runs HEARTBEAT.md (10m, 30m, 2h).
-              </p>
-            </div>
-          </div>
-        </div>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted">
+                  Schedule & notifications
+                </p>
+                <div className="mt-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-strong">
+                      Interval
+                    </label>
+                    <Input
+                      value={heartbeatEvery}
+                      onChange={(event) =>
+                        setHeartbeatEvery(event.target.value)
+                      }
+                      placeholder="e.g. 10m"
+                      disabled={isLoading}
+                    />
+                    <p className="text-xs text-muted">
+                      How often this agent runs HEARTBEAT.md (10m, 30m, 2h).
+                    </p>
+                  </div>
+                </div>
+              </div>
 
-        {errorMessage ? (
-          <div className="rounded-lg border border-[color:var(--border)] bg-[color:var(--surface)] p-3 text-sm text-[color:var(--text-muted)] shadow-sm">
-            {errorMessage}
-          </div>
-        ) : null}
+              {errorMessage ? (
+                <div className="rounded-lg border border-[color:var(--border)] bg-[color:var(--surface)] p-3 text-sm text-[color:var(--text-muted)] shadow-sm">
+                  {errorMessage}
+                </div>
+              ) : null}
 
-        <div className="flex flex-wrap items-center gap-3">
-          <Button type="submit" disabled={isLoading}>
-            {isLoading ? "Creating…" : "Create agent"}
-          </Button>
-          <Button
-            variant="outline"
-            type="button"
-            onClick={() => router.push("/agents")}
-          >
-            Back to agents
-          </Button>
-        </div>
-        </form>
-        </div>
+              <div className="flex flex-wrap items-center gap-3">
+                <Button type="submit" disabled={isLoading}>
+                  {isLoading ? "Creating…" : "Create agent"}
+                </Button>
+                <Button
+                  variant="outline"
+                  type="button"
+                  onClick={() => router.push("/agents")}
+                >
+                  Back to agents
+                </Button>
+              </div>
+            </form>
+          </div>
         )}
       </DashboardPageLayout>
     </>

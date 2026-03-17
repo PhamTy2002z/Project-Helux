@@ -6,7 +6,8 @@ import { AuthMode } from "@/auth/mode";
 import { isSaasAuthProfile } from "@/auth/profile";
 
 const isClerkEnabled = () =>
-  (isSaasAuthProfile() || process.env.NEXT_PUBLIC_AUTH_MODE !== AuthMode.Local) &&
+  (isSaasAuthProfile() ||
+    process.env.NEXT_PUBLIC_AUTH_MODE !== AuthMode.Local) &&
   isLikelyValidClerkPublishableKey(
     process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
   );

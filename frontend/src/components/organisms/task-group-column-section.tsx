@@ -3,7 +3,10 @@ import { useMemo, useState } from "react";
 import { TaskCard } from "@/components/molecules/TaskCard";
 import { parseApiDatetime } from "@/lib/datetime";
 import type { BoardDensity, TaskStatus } from "@/lib/boards/board-query-state";
-import type { BoardTaskGroupView, BoardTaskItem } from "@/lib/boards/board-view-model";
+import type {
+  BoardTaskGroupView,
+  BoardTaskItem,
+} from "@/lib/boards/board-view-model";
 import { cn } from "@/lib/utils";
 
 type TaskGroupColumnSectionProps = {
@@ -31,15 +34,30 @@ const columns: Array<{
   dot: string;
   badge: string;
 }> = [
-  { title: "Inbox", status: "inbox", dot: "bg-[color:var(--text-quiet)]", badge: "bg-[color:var(--surface-muted)] text-[color:var(--text-muted)]" },
+  {
+    title: "Inbox",
+    status: "inbox",
+    dot: "bg-[color:var(--text-quiet)]",
+    badge: "bg-[color:var(--surface-muted)] text-[color:var(--text-muted)]",
+  },
   {
     title: "In Progress",
     status: "in_progress",
     dot: "bg-purple-500",
     badge: "bg-purple-100 text-purple-700",
   },
-  { title: "Review", status: "review", dot: "bg-indigo-500", badge: "bg-indigo-100 text-indigo-700" },
-  { title: "Done", status: "done", dot: "bg-green-500", badge: "bg-emerald-100 text-emerald-700" },
+  {
+    title: "Review",
+    status: "review",
+    dot: "bg-indigo-500",
+    badge: "bg-indigo-100 text-indigo-700",
+  },
+  {
+    title: "Done",
+    status: "done",
+    dot: "bg-green-500",
+    badge: "bg-emerald-100 text-emerald-700",
+  },
 ];
 
 const resolveDueState = (
@@ -75,16 +93,26 @@ export function TaskGroupColumnSection({
   onDragStart,
   onDragEnd,
 }: TaskGroupColumnSectionProps) {
-  const [visibleLimitByStatus, setVisibleLimitByStatus] = useState<Record<TaskStatus, number>>({
+  const [visibleLimitByStatus, setVisibleLimitByStatus] = useState<
+    Record<TaskStatus, number>
+  >({
     inbox: density === "compact" ? 48 : 36,
     in_progress: density === "compact" ? 48 : 36,
     review: density === "compact" ? 48 : 36,
-    done: doneCompression ? (density === "compact" ? 20 : 14) : density === "compact" ? 48 : 36,
+    done: doneCompression
+      ? density === "compact"
+        ? 20
+        : 14
+      : density === "compact"
+        ? 48
+        : 36,
   });
 
   const canShowMore = useMemo(() => {
     return columns.some(
-      (column) => (group.tasksByStatus[column.status]?.length ?? 0) > visibleLimitByStatus[column.status],
+      (column) =>
+        (group.tasksByStatus[column.status]?.length ?? 0) >
+        visibleLimitByStatus[column.status],
     );
   }, [group.tasksByStatus, visibleLimitByStatus]);
 
@@ -157,7 +185,9 @@ export function TaskGroupColumnSection({
               key={`${group.id}-${column.status}`}
               className={cn(
                 "rounded-xl border border-[color:var(--border)] bg-[color:var(--surface)]",
-                activeColumn === column.status && !readOnly && "ring-2 ring-[color:var(--border)]",
+                activeColumn === column.status &&
+                  !readOnly &&
+                  "ring-2 ring-[color:var(--border)]",
               )}
               onDrop={readOnly ? undefined : handleDrop(column.status)}
               onDragOver={(event) => {
@@ -184,7 +214,12 @@ export function TaskGroupColumnSection({
                 </span>
               </div>
 
-              <div className={cn("space-y-2 p-2", density === "compact" && "space-y-1.5") }>
+              <div
+                className={cn(
+                  "space-y-2 p-2",
+                  density === "compact" && "space-y-1.5",
+                )}
+              >
                 {visibleTasks.map((task, index) => {
                   const dueState = resolveDueState(task);
                   return (
@@ -217,11 +252,15 @@ export function TaskGroupColumnSection({
                     onClick={() =>
                       setVisibleLimitByStatus((prev) => ({
                         ...prev,
-                        [column.status]: prev[column.status] + (density === "compact" ? 32 : 24),
+                        [column.status]:
+                          prev[column.status] +
+                          (density === "compact" ? 32 : 24),
                       }))
                     }
                   >
-                    Show {Math.min(hiddenCount, density === "compact" ? 32 : 24)} more
+                    Show{" "}
+                    {Math.min(hiddenCount, density === "compact" ? 32 : 24)}{" "}
+                    more
                   </button>
                 ) : null}
               </div>
@@ -232,7 +271,8 @@ export function TaskGroupColumnSection({
 
       {canShowMore ? (
         <p className="mt-3 text-xs text-muted">
-          Large-list mode active. Render is batched to keep board interactions responsive at scale.
+          Large-list mode active. Render is batched to keep board interactions
+          responsive at scale.
         </p>
       ) : null}
     </section>

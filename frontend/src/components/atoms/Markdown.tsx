@@ -49,7 +49,10 @@ const KNOWN_STATUS_VALUES = new Set([
 ]);
 
 const trimTrailingPunctuation = (value: string): string =>
-  value.trim().replace(/[.。]+$/, "").trim();
+  value
+    .trim()
+    .replace(/[.。]+$/, "")
+    .trim();
 
 const splitTopLevelCommas = (value: string): string[] => {
   const parts: string[] = [];
@@ -111,7 +114,7 @@ const parseStructuredSummary = (text: string): StructuredSummary | null => {
   if (!heading || !entriesRaw) return null;
 
   const rawEntries = splitTopLevelCommas(entriesRaw)
-    .map(entry => trimTrailingPunctuation(entry))
+    .map((entry) => trimTrailingPunctuation(entry))
     .filter(Boolean);
   const entries = rawEntries
     .map((entry) => {
@@ -120,7 +123,7 @@ const parseStructuredSummary = (text: string): StructuredSummary | null => {
 
       const label = detailsMatch[1]?.trim() ?? "";
       const details = splitTopLevelCommas(detailsMatch[2] ?? "")
-        .map(part => trimTrailingPunctuation(part))
+        .map((part) => trimTrailingPunctuation(part))
         .filter(Boolean);
       if (!label || details.length === 0) return null;
 
@@ -136,7 +139,8 @@ const parseStructuredSummary = (text: string): StructuredSummary | null => {
     })
     .filter((entry): entry is StructuredSummaryEntry => entry !== null);
 
-  if (rawEntries.length < 2 || rawEntries.length !== entries.length) return null;
+  if (rawEntries.length < 2 || rawEntries.length !== entries.length)
+    return null;
   return { heading, entries };
 };
 
@@ -326,10 +330,16 @@ const MARKDOWN_TABLE_COMPONENTS: Components = {
     </div>
   ),
   thead: ({ node: _node, className, ...props }) => (
-    <thead className={cn("bg-[color:var(--surface-muted)]", className)} {...props} />
+    <thead
+      className={cn("bg-[color:var(--surface-muted)]", className)}
+      {...props}
+    />
   ),
   tbody: ({ node: _node, className, ...props }) => (
-    <tbody className={cn("divide-y divide-[color:var(--border)]", className)} {...props} />
+    <tbody
+      className={cn("divide-y divide-[color:var(--border)]", className)}
+      {...props}
+    />
   ),
   tr: ({ node: _node, className, ...props }) => (
     <tr className={cn("align-top", className)} {...props} />
@@ -347,7 +357,10 @@ const MARKDOWN_TABLE_COMPONENTS: Components = {
   ),
   td: ({ node: _node, className, children, ...props }) => (
     <td
-      className={cn("border border-[color:var(--border)] px-3 py-2 align-top", className)}
+      className={cn(
+        "border border-[color:var(--border)] px-3 py-2 align-top",
+        className,
+      )}
       {...props}
     >
       {renderMentions(children)}
@@ -434,7 +447,10 @@ const MARKDOWN_COMPONENTS_CHAT: Components = {
     );
   },
   h1: ({ node: _node, className, children, ...props }) => (
-    <h1 className={cn("mb-2 mt-1 text-base font-semibold", className)} {...props}>
+    <h1
+      className={cn("mb-2 mt-1 text-base font-semibold", className)}
+      {...props}
+    >
       {renderMentions(children)}
     </h1>
   ),
@@ -460,7 +476,10 @@ const MARKDOWN_COMPONENTS_CHAT: Components = {
     </blockquote>
   ),
   hr: ({ node: _node, className, ...props }) => (
-    <hr className={cn("my-3 border-[color:var(--border)]", className)} {...props} />
+    <hr
+      className={cn("my-3 border-[color:var(--border)]", className)}
+      {...props}
+    />
   ),
   input: ({ node: _node, className, ...props }) => (
     <input
@@ -480,7 +499,7 @@ const normalizeChatContent = (content: string): string => {
   return content
     .replace(/\r\n?/g, "\n")
     .split("\n")
-    .map(line => line.replace(/\s+$/g, ""))
+    .map((line) => line.replace(/\s+$/g, ""))
     .join("\n")
     .replace(/\n{3,}/g, "\n\n")
     .trim();

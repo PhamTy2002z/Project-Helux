@@ -32,9 +32,9 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: Request) {
-  const body = (await request.json().catch(() => null)) as
-    | { token?: unknown }
-    | null;
+  const body = (await request.json().catch(() => null)) as {
+    token?: unknown;
+  } | null;
   const token = typeof body?.token === "string" ? body.token.trim() : "";
 
   if (!token || token.length < LOCAL_AUTH_TOKEN_MIN_LENGTH) {

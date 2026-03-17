@@ -42,8 +42,13 @@ export default function Slide1() {
             <Logo />
             <div className="flex flex-wrap justify-end gap-5">
               {deckMeta.map((item) => (
-                <div key={item.label} className="flex min-w-[110px] flex-col gap-[2px]">
-                  <span className="text-[13px] text-[var(--slide-muted)]">{item.label}</span>
+                <div
+                  key={item.label}
+                  className="flex min-w-[110px] flex-col gap-[2px]"
+                >
+                  <span className="text-[13px] text-[var(--slide-muted)]">
+                    {item.label}
+                  </span>
                   <span className="text-[13px] text-white">{item.value}</span>
                 </div>
               ))}
@@ -60,9 +65,13 @@ export default function Slide1() {
             className="text-balance leading-[0.9] tracking-tight text-white"
             style={{ fontSize: "clamp(44px, 9vw, 128px)" }}
           >
-            <SlideUpLine delay={0.3} duration={0.7}>Run Every Board in One Place.</SlideUpLine>
+            <SlideUpLine delay={0.3} duration={0.7}>
+              Run Every Board in One Place.
+            </SlideUpLine>
             <br />
-            <SlideUpLine delay={0.4} duration={0.7}>Never Miss a Decision.</SlideUpLine>
+            <SlideUpLine delay={0.4} duration={0.7}>
+              Never Miss a Decision.
+            </SlideUpLine>
           </h1>
 
           <p

@@ -29,7 +29,15 @@ import { withQueryPolicy } from "@/lib/query-policy";
 import { QuotaSummary } from "./quota-summary";
 
 /* Feature comparison row (inline helper) */
-function FeatureRow({ label, free, pro }: { label: string; free: string; pro: string }) {
+function FeatureRow({
+  label,
+  free,
+  pro,
+}: {
+  label: string;
+  free: string;
+  pro: string;
+}) {
   return (
     <div className="flex items-center justify-between text-sm">
       <span className="text-[color:var(--text-muted)]">{label}</span>
@@ -71,7 +79,8 @@ export function UpgradeModal({
   const trackOpenMutation = useTrackUpgradeModalOpen();
   const wasOpenRef = useRef(false);
   const isProviderMode = subscriptionQuery.data?.billing_mode === "provider";
-  const isSubmitting = simulateCheckoutMutation.isPending || createCheckoutMutation.isPending;
+  const isSubmitting =
+    simulateCheckoutMutation.isPending || createCheckoutMutation.isPending;
   const trialExpired = subscriptionQuery.data?.status === "blocked_for_payment";
 
   useEffect(() => {
@@ -112,7 +121,9 @@ export function UpgradeModal({
           idempotency_key: createIdempotencyKey(),
         });
         await Promise.all([
-          queryClient.invalidateQueries({ queryKey: BILLING_SUBSCRIPTION_QUERY_KEY }),
+          queryClient.invalidateQueries({
+            queryKey: BILLING_SUBSCRIPTION_QUERY_KEY,
+          }),
           queryClient.invalidateQueries({
             queryKey: getQuotaUsageApiV1MetricsQuotasGetQueryKey(),
           }),
@@ -163,12 +174,18 @@ export function UpgradeModal({
         ) : null}
 
         <DialogFooter className="gap-2 pt-2">
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+          >
             Cancel
           </Button>
           <Button type="button" onClick={onCheckout} disabled={isSubmitting}>
             {isSubmitting
-              ? (isProviderMode ? "Redirecting…" : "Unlocking…")
+              ? isProviderMode
+                ? "Redirecting…"
+                : "Unlocking…"
               : "Upgrade to Pro — $25/mo"}
           </Button>
         </DialogFooter>

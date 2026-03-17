@@ -57,7 +57,8 @@ describe("auth/clerk fallbacks", () => {
   const previousClerkKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
   beforeEach(() => {
-    process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY = "pk_test_abc123def456ghi789";
+    process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY =
+      "pk_test_abc123def456ghi789";
     clerkState.throwMissingProvider = true;
   });
 

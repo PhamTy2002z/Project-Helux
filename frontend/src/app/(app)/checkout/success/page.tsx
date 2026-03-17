@@ -64,7 +64,9 @@ export default function CheckoutSuccessPage() {
   return (
     <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4">
       <Loader2 className="h-10 w-10 animate-spin text-blue-500" />
-      <h1 className="text-xl font-semibold text-strong">Activating your Pro plan…</h1>
+      <h1 className="text-xl font-semibold text-strong">
+        Activating your Pro plan…
+      </h1>
       <p className="text-sm text-muted">This usually takes a few seconds.</p>
     </div>
   );
