@@ -73,7 +73,10 @@ async def handle_polar_webhook(
     # Serialize event to JSON-safe dict
     raw_payload: dict = {}
     try:
-        raw_payload = {"type": event_type, "data": event_data if isinstance(event_data, dict) else {}}
+        raw_payload = {
+            "type": event_type,
+            "data": event_data if isinstance(event_data, dict) else {},
+        }
         if hasattr(event_data, "model_dump"):
             raw_payload["data"] = event_data.model_dump(mode="json")
         elif hasattr(event_data, "__dict__"):
