@@ -97,18 +97,18 @@ const MessageCard = memo(function MessageCard({
       <div
         className={cn(
           "w-fit max-w-[84%] rounded-2xl border px-4 py-3 shadow-sm",
-          "border-slate-200 bg-white text-slate-900",
+          "border-[color:var(--border)] bg-[color:var(--surface)] text-strong",
         )}
       >
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="text-[13px] font-semibold text-slate-900">
+          <p className="text-[13px] font-semibold text-strong">
             {sourceLabel}
           </p>
-          <span className="text-[11px] text-slate-400">
+          <span className="text-[11px] text-quiet">
             {formatShortTimestamp(message.created_at)}
           </span>
         </div>
-        <div className="mt-1 select-text cursor-text text-sm leading-6 break-words text-slate-900">
+        <div className="mt-1 select-text cursor-text text-sm leading-6 break-words text-strong">
           <LazyMarkdown content={cleanedContent} variant="chat" />
         </div>
         {((message as unknown as { attachments?: MessageAttachment[] }).attachments)?.length ? (
@@ -116,7 +116,7 @@ const MessageCard = memo(function MessageCard({
             {(message as unknown as { attachments: MessageAttachment[] }).attachments.map((att) => (
               <span
                 key={att.id}
-                className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-slate-50 px-2 py-1 text-xs text-slate-600"
+                className="inline-flex items-center gap-1.5 rounded-md border border-[color:var(--border)] bg-[color:var(--surface-muted)] px-2 py-1 text-xs text-[color:var(--text-muted)]"
               >
                 <FileText className="h-3 w-3 flex-shrink-0" />
                 <span className="max-w-[120px] truncate">{att.file_name}</span>
@@ -205,7 +205,7 @@ export const BoardChatThread = memo(function BoardChatThread({
     <div className="flex h-full min-h-0 flex-1 flex-col">
       <div
         ref={containerRef}
-        className="min-h-0 flex-1 space-y-3 overflow-y-auto rounded-2xl border border-slate-200 bg-slate-50/60 p-4"
+        className="min-h-0 flex-1 space-y-3 overflow-y-auto rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface-muted)]/60 p-4"
       >
         {hasMore ? (
           <div className="flex justify-center">
@@ -222,7 +222,7 @@ export const BoardChatThread = memo(function BoardChatThread({
         ) : null}
 
         {isLoading ? (
-          <p className="text-sm text-slate-500">Loading messages...</p>
+          <p className="text-sm text-muted">Loading messages...</p>
         ) : null}
         {error ? (
           <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
@@ -231,7 +231,7 @@ export const BoardChatThread = memo(function BoardChatThread({
         ) : null}
 
         {!isLoading && messages.length === 0 ? (
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-muted">
             No messages yet. Start the conversation with your lead agent.
           </p>
         ) : (
@@ -247,13 +247,13 @@ export const BoardChatThread = memo(function BoardChatThread({
         {/* Typing indicator — visible while sending or awaiting agent reply */}
         {(isSending || isAwaitingReply) && (
           <div className="flex justify-start">
-            <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
+            <div className="flex items-center gap-2 rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] px-4 py-3 shadow-sm">
               <div className="flex items-center gap-1.5" role="status" aria-label="Agent is typing">
-                <span className="h-1.5 w-1.5 rounded-full bg-slate-400 animate-typing-dot-1" />
-                <span className="h-1.5 w-1.5 rounded-full bg-slate-400 animate-typing-dot-2" />
-                <span className="h-1.5 w-1.5 rounded-full bg-slate-400 animate-typing-dot-3" />
+                <span className="h-1.5 w-1.5 rounded-full bg-[color:var(--text-quiet)] animate-typing-dot-1" />
+                <span className="h-1.5 w-1.5 rounded-full bg-[color:var(--text-quiet)] animate-typing-dot-2" />
+                <span className="h-1.5 w-1.5 rounded-full bg-[color:var(--text-quiet)] animate-typing-dot-3" />
               </div>
-              <span className="text-xs text-slate-400">
+              <span className="text-xs text-quiet">
                 {isSending ? "Sending..." : "Awaiting reply..."}
               </span>
             </div>
