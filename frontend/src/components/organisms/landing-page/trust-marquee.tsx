@@ -30,7 +30,14 @@ function DocuSignMark(props: SVGProps<SVGSVGElement>) {
 function PepsiCoMark(props: SVGProps<SVGSVGElement>) {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
-      <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" strokeWidth="2" />
+      <circle
+        cx="12"
+        cy="12"
+        r="10"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+      />
       <path d="M4 12c0-1 8-6 16-2M4 14c4-4 12-2 16 0" />
     </svg>
   );
@@ -47,9 +54,31 @@ function NttDataMark(props: SVGProps<SVGSVGElement>) {
 function GloboMark(props: SVGProps<SVGSVGElement>) {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
-      <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" strokeWidth="2" />
-      <ellipse cx="12" cy="12" rx="4" ry="9" fill="none" stroke="currentColor" strokeWidth="1.5" />
-      <line x1="3" y1="12" x2="21" y2="12" stroke="currentColor" strokeWidth="1.5" />
+      <circle
+        cx="12"
+        cy="12"
+        r="9"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+      />
+      <ellipse
+        cx="12"
+        cy="12"
+        rx="4"
+        ry="9"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+      />
+      <line
+        x1="3"
+        y1="12"
+        x2="21"
+        y2="12"
+        stroke="currentColor"
+        strokeWidth="1.5"
+      />
     </svg>
   );
 }
@@ -88,7 +117,11 @@ function BdoMark(props: SVGProps<SVGSVGElement>) {
 
 /* Brand data: SVG component icon OR image URL */
 type Brand =
-  | { name: string; Icon: ComponentType<SVGProps<SVGSVGElement>>; imgSrc?: never }
+  | {
+      name: string;
+      Icon: ComponentType<SVGProps<SVGSVGElement>>;
+      imgSrc?: never;
+    }
   | { name: string; imgSrc: string; Icon?: never };
 
 const BRANDS: Brand[] = [
@@ -105,12 +138,21 @@ const BRANDS: Brand[] = [
   /* Tech integrations */
   { name: "OpenAI", imgSrc: "/icons/brands/openai.svg" },
   { name: "Anthropic", imgSrc: "https://cdn.simpleicons.org/anthropic/white" },
-  { name: "Google Cloud", imgSrc: "https://cdn.simpleicons.org/googlecloud/white" },
+  {
+    name: "Google Cloud",
+    imgSrc: "https://cdn.simpleicons.org/googlecloud/white",
+  },
   { name: "GitHub", imgSrc: "https://cdn.simpleicons.org/github/white" },
   { name: "Vercel", imgSrc: "https://cdn.simpleicons.org/vercel/white" },
   { name: "Docker", imgSrc: "https://cdn.simpleicons.org/docker/white" },
-  { name: "Kubernetes", imgSrc: "https://cdn.simpleicons.org/kubernetes/white" },
-  { name: "PostgreSQL", imgSrc: "https://cdn.simpleicons.org/postgresql/white" },
+  {
+    name: "Kubernetes",
+    imgSrc: "https://cdn.simpleicons.org/kubernetes/white",
+  },
+  {
+    name: "PostgreSQL",
+    imgSrc: "https://cdn.simpleicons.org/postgresql/white",
+  },
   { name: "Redis", imgSrc: "https://cdn.simpleicons.org/redis/white" },
   { name: "Next.js", imgSrc: "https://cdn.simpleicons.org/nextdotjs/white" },
 ];
@@ -119,7 +161,10 @@ function BrandItem({ brand }: { brand: Brand }) {
   return (
     <span className="inline-flex shrink-0 items-center gap-2.5">
       {brand.Icon ? (
-        <brand.Icon className="h-5 w-5 text-white/85 sm:h-6 sm:w-6" aria-hidden="true" />
+        <brand.Icon
+          className="h-5 w-5 text-white/85 sm:h-6 sm:w-6"
+          aria-hidden="true"
+        />
       ) : (
         /* eslint-disable-next-line @next/next/no-img-element */
         <img
@@ -164,7 +209,10 @@ export default function TrustMarquee() {
               className="flex shrink-0 items-center gap-6 pr-6 sm:gap-8 sm:pr-8 fhd:gap-10 fhd:pr-10"
             >
               {BRANDS.map((brand) => (
-                <span key={`${stripIndex}-${brand.name}`} className="inline-flex shrink-0">
+                <span
+                  key={`${stripIndex}-${brand.name}`}
+                  className="inline-flex shrink-0"
+                >
                   <BrandItem brand={brand} />
                 </span>
               ))}

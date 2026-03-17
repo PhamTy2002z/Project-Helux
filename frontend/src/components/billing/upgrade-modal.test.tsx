@@ -24,7 +24,11 @@ vi.mock("@/lib/billing", () => ({
   BILLING_SUBSCRIPTION_QUERY_KEY: ["/api/v1/billing/me/subscription"],
   createIdempotencyKey: () => "idem-123",
   useBillingSubscription: () => ({
-    data: { plan_tier: "trial_7d", status: "active", billing_mode: "simulated" },
+    data: {
+      plan_tier: "trial_7d",
+      status: "active",
+      billing_mode: "simulated",
+    },
   }),
   useSimulateCheckout: () => ({
     isPending: false,
@@ -52,9 +56,13 @@ vi.mock("@/api/generated/metrics/metrics", () => ({
 
 describe("UpgradeModal", () => {
   it("tracks modal open with provided source", async () => {
-    render(<UpgradeModal open={true} onOpenChange={vi.fn()} source="settings" />);
+    render(
+      <UpgradeModal open={true} onOpenChange={vi.fn()} source="settings" />,
+    );
 
-    await waitFor(() => expect(trackOpenMock).toHaveBeenCalledWith({ source: "settings" }));
+    await waitFor(() =>
+      expect(trackOpenMock).toHaveBeenCalledWith({ source: "settings" }),
+    );
   });
 
   it("runs checkout and closes modal after unlock", async () => {
@@ -68,7 +76,9 @@ describe("UpgradeModal", () => {
     });
     const onOpenChange = vi.fn();
     const user = userEvent.setup();
-    render(<UpgradeModal open={true} onOpenChange={onOpenChange} source="sidebar" />);
+    render(
+      <UpgradeModal open={true} onOpenChange={onOpenChange} source="sidebar" />,
+    );
 
     await user.click(screen.getByRole("button", { name: /Upgrade to Pro/ }));
 

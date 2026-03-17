@@ -160,7 +160,9 @@ export const applyBoardQueryStateToSearchParams = (
   setOrDeleteParam(
     next,
     SAVED_VIEW_PARAM_KEY,
-    state.savedView === defaultBoardQueryState.savedView ? null : state.savedView,
+    state.savedView === defaultBoardQueryState.savedView
+      ? null
+      : state.savedView,
   );
   setOrDeleteParam(
     next,

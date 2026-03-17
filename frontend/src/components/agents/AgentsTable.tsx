@@ -62,7 +62,6 @@ const DEFAULT_EMPTY_ICON = (
   </svg>
 );
 
-
 export function AgentsTable({
   agents,
   boards = [],
@@ -202,7 +201,8 @@ export function AgentsTable({
                         label: "Delete",
                         onClick: onDelete,
                         shouldShow: (agent: AgentRead) =>
-                          !Boolean(agent.is_gateway_main) && !Boolean(agent.is_board_lead),
+                          !Boolean(agent.is_gateway_main) &&
+                          !Boolean(agent.is_board_lead),
                       },
                     ]
                   : []),

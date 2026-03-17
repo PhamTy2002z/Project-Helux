@@ -75,7 +75,11 @@ interface TemplateCardProps {
   onSelect: () => void;
 }
 
-export function TemplateCard({ template, selected, onSelect }: TemplateCardProps) {
+export function TemplateCard({
+  template,
+  selected,
+  onSelect,
+}: TemplateCardProps) {
   const description = template.description
     ? template.description.length > 80
       ? template.description.slice(0, 77) + "..."
@@ -105,9 +109,13 @@ export function TemplateCard({ template, selected, onSelect }: TemplateCardProps
         ) : null}
       </div>
       <div>
-        <p className="text-sm font-semibold text-strong leading-snug">{template.name}</p>
+        <p className="text-sm font-semibold text-strong leading-snug">
+          {template.name}
+        </p>
         {description ? (
-          <p className="mt-1 text-xs text-muted leading-relaxed">{description}</p>
+          <p className="mt-1 text-xs text-muted leading-relaxed">
+            {description}
+          </p>
         ) : null}
       </div>
     </button>

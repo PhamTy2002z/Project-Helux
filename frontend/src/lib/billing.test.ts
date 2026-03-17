@@ -5,34 +5,28 @@ import { getApiErrorCode, getUpgradeReasonFromError } from "@/lib/billing";
 
 describe("billing error helpers", () => {
   it("extracts quota_exceeded code and builds a quota-specific upgrade reason", () => {
-    const error = new ApiError(
-      429,
-      "agents_per_board quota exceeded",
-      {
-        detail: {
-          code: "quota_exceeded",
-          resource: "agents_per_board",
-          used: 3,
-          limit: 3,
-        },
+    const error = new ApiError(429, "agents_per_board quota exceeded", {
+      detail: {
+        code: "quota_exceeded",
+        resource: "agents_per_board",
+        used: 3,
+        limit: 3,
       },
-    );
+    });
 
     expect(getApiErrorCode(error)).toBe("quota_exceeded");
-    expect(getUpgradeReasonFromError(error, "fallback")).toContain("agents per board");
+    expect(getUpgradeReasonFromError(error, "fallback")).toContain(
+      "agents per board",
+    );
     expect(getUpgradeReasonFromError(error, "fallback")).toContain("(3/3)");
   });
 
   it("builds blocked-for-payment upgrade reason from API detail", () => {
-    const error = new ApiError(
-      402,
-      "Trial period has ended",
-      {
-        detail: {
-          code: "blocked_for_payment",
-        },
+    const error = new ApiError(402, "Trial period has ended", {
+      detail: {
+        code: "blocked_for_payment",
       },
-    );
+    });
 
     expect(getApiErrorCode(error)).toBe("blocked_for_payment");
     expect(getUpgradeReasonFromError(error, "fallback")).toContain(
@@ -47,6 +41,8 @@ describe("billing error helpers", () => {
       },
     });
 
-    expect(getUpgradeReasonFromError(error, "fallback reason")).toBe("fallback reason");
+    expect(getUpgradeReasonFromError(error, "fallback reason")).toBe(
+      "fallback reason",
+    );
   });
 });

@@ -29,7 +29,7 @@ export default function TestimonialCarousel() {
       (entries) => {
         setIsVisible(entries.some((entry) => entry.isIntersecting));
       },
-      { threshold: 0.2 }
+      { threshold: 0.2 },
     );
 
     observer.observe(section);
@@ -72,7 +72,10 @@ export default function TestimonialCarousel() {
         </ScrollReveal>
 
         {/* Quote area */}
-        <div className="relative min-h-[220px] md:min-h-[240px] fhd:min-h-[280px]" aria-live="polite">
+        <div
+          className="relative min-h-[220px] md:min-h-[240px] fhd:min-h-[280px]"
+          aria-live="polite"
+        >
           <AnimatePresence mode="wait">
             <motion.blockquote
               key={active}
@@ -84,7 +87,10 @@ export default function TestimonialCarousel() {
             >
               <p
                 className="mb-8 text-balance text-white/90"
-                style={{ fontSize: "clamp(18px, 2.2vw, 28px)", lineHeight: 1.5 }}
+                style={{
+                  fontSize: "clamp(18px, 2.2vw, 28px)",
+                  lineHeight: 1.5,
+                }}
               >
                 &ldquo;{CAROUSEL_ITEMS[active].quote}&rdquo;
               </p>
@@ -119,12 +125,18 @@ export default function TestimonialCarousel() {
           aria-label="Testimonials"
           onKeyDown={(e) => {
             let next = active;
-            if (e.key === "ArrowRight") next = (active + 1) % CAROUSEL_ITEMS.length;
-            else if (e.key === "ArrowLeft") next = (active - 1 + CAROUSEL_ITEMS.length) % CAROUSEL_ITEMS.length;
+            if (e.key === "ArrowRight")
+              next = (active + 1) % CAROUSEL_ITEMS.length;
+            else if (e.key === "ArrowLeft")
+              next =
+                (active - 1 + CAROUSEL_ITEMS.length) % CAROUSEL_ITEMS.length;
             else return;
             e.preventDefault();
             setActive(next);
-            const buttons = e.currentTarget.querySelectorAll<HTMLButtonElement>('[role="tab"]');
+            const buttons =
+              e.currentTarget.querySelectorAll<HTMLButtonElement>(
+                '[role="tab"]',
+              );
             buttons[next]?.focus();
           }}
         >

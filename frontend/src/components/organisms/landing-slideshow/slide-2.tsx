@@ -29,7 +29,9 @@ export default function Slide2() {
         <BlurReveal delay={0.05} className="px-[5%] pt-[3.5%]">
           <div className="flex items-center justify-between">
             <Logo />
-            <span className="text-[20px] leading-[1.4] text-[var(--slide-muted)]">02</span>
+            <span className="text-[20px] leading-[1.4] text-[var(--slide-muted)]">
+              02
+            </span>
           </div>
         </BlurReveal>
 
@@ -40,7 +42,10 @@ export default function Slide2() {
         <div className="flex flex-1 flex-col justify-between px-[5%] pb-[5%] pt-[4%]">
           <div className="max-w-[85%]">
             <BlurReveal delay={0.15}>
-              <p className="text-[var(--slide-muted)]" style={{ fontSize: "clamp(12px, 1.2vw, 18px)" }}>
+              <p
+                className="text-[var(--slide-muted)]"
+                style={{ fontSize: "clamp(12px, 1.2vw, 18px)" }}
+              >
                 Operational Gap
               </p>
             </BlurReveal>
@@ -73,7 +78,10 @@ export default function Slide2() {
                 >
                   {stat.value}
                 </span>
-                <span className="leading-[1.4] text-white" style={{ fontSize: "clamp(13px, 1.2vw, 20px)" }}>
+                <span
+                  className="leading-[1.4] text-white"
+                  style={{ fontSize: "clamp(13px, 1.2vw, 20px)" }}
+                >
                   {stat.label}
                 </span>
               </motion.div>

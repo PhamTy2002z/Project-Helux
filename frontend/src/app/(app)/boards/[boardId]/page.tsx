@@ -39,8 +39,9 @@ import type { DependencyBannerDependency } from "@/components/molecules/Dependen
 import { DashboardShell } from "@/components/templates/DashboardShell";
 import nextDynamic from "next/dynamic";
 const BoardChatPanel = nextDynamic(
-  () => import("@/components/boards/BoardChatPanel").then(m => m.BoardChatPanel),
-  { ssr: false }
+  () =>
+    import("@/components/boards/BoardChatPanel").then((m) => m.BoardChatPanel),
+  { ssr: false },
 );
 import { TaskDetailPanel } from "./TaskDetailPanel";
 import { TaskCreateDialog } from "./TaskCreateDialog";
@@ -91,10 +92,7 @@ import type {
   TaskRead,
 } from "@/api/generated/model";
 import { useSSEStream } from "@/lib/hooks/use-sse-stream";
-import {
-  apiDatetimeToMs,
-  parseApiDatetime,
-} from "@/lib/datetime";
+import { apiDatetimeToMs, parseApiDatetime } from "@/lib/datetime";
 import {
   DEFAULT_HUMAN_LABEL,
   resolveMemberDisplayName,
@@ -108,9 +106,7 @@ import { cn } from "@/lib/utils";
 import { usePageActive } from "@/hooks/usePageActive";
 import { loadBoardDetailBootstrap } from "@/lib/hooks/board-detail/load-board-detail-bootstrap";
 import { isBoardOverlayEnabled } from "@/lib/query-policy";
-import {
-  boardCustomFieldValues,
-} from "./custom-field-utils";
+import { boardCustomFieldValues } from "./custom-field-utils";
 import type {
   Agent,
   Approval,
@@ -122,9 +118,7 @@ import type {
   TaskStatus,
   ToastMessage,
 } from "./board-types";
-import {
-  SSE_RECONNECT_BACKOFF,
-} from "./board-constants";
+import { SSE_RECONNECT_BACKOFF } from "./board-constants";
 import {
   commentElementId,
   formatActionError,
@@ -242,7 +236,9 @@ export default function BoardDetailPage() {
         nextState,
       );
       const next = nextParams.toString();
-      router.replace(next ? `${pathname}?${next}` : pathname, { scroll: false });
+      router.replace(next ? `${pathname}?${next}` : pathname, {
+        scroll: false,
+      });
     },
     [pathname, router, searchParams],
   );
@@ -671,7 +667,9 @@ export default function BoardDetailPage() {
     try {
       const bootstrap = await loadBoardDetailBootstrap(boardId);
       if (!bootstrap.snapshot) {
-        throw new Error(bootstrap.snapshotError ?? "Unable to load board snapshot.");
+        throw new Error(
+          bootstrap.snapshotError ?? "Unable to load board snapshot.",
+        );
       }
 
       const snapshot = bootstrap.snapshot;
@@ -741,7 +739,12 @@ export default function BoardDetailPage() {
   const isAgentsPaused = lastAgentControlCommand === "/pause";
 
   useSSEStream({
-    enabled: !!isPageActive && !!isSignedIn && !!boardId && !!board && (isChatOpen || isLiveFeedOpen),
+    enabled:
+      !!isPageActive &&
+      !!isSignedIn &&
+      !!boardId &&
+      !!board &&
+      (isChatOpen || isLiveFeedOpen),
     key: `chat-${boardId}`,
     backoffConfig: SSE_RECONNECT_BACKOFF,
     connect: async (signal) => {
@@ -761,7 +764,9 @@ export default function BoardDetailPage() {
     onEvent: (event) => {
       if (event.eventType === "memory" && event.data) {
         try {
-          const payload = JSON.parse(event.data) as { memory?: BoardChatMessage };
+          const payload = JSON.parse(event.data) as {
+            memory?: BoardChatMessage;
+          };
           if (payload.memory?.tags?.includes("chat")) {
             appendBoardChatMessage(payload.memory);
           }
@@ -795,14 +800,23 @@ export default function BoardDetailPage() {
         const payload = JSON.parse(event.data) as {
           approval?: ApprovalRead;
           task_counts?:
-            | { task_id?: string; approvals_count?: number; approvals_pending_count?: number }
-            | Array<{ task_id?: string; approvals_count?: number; approvals_pending_count?: number }>;
+            | {
+                task_id?: string;
+                approvals_count?: number;
+                approvals_pending_count?: number;
+              }
+            | Array<{
+                task_id?: string;
+                approvals_count?: number;
+                approvals_pending_count?: number;
+              }>;
           pending_approvals_count?: number;
         };
         if (payload.approval) {
           const normalized = normalizeApproval(payload.approval);
           const previousApproval =
-            approvalsRef.current.find((item) => item.id === normalized.id) ?? null;
+            approvalsRef.current.find((item) => item.id === normalized.id) ??
+            null;
           pushLiveFeed(toLiveFeedFromApproval(normalized, previousApproval));
           setApprovals((prev) => {
             const index = prev.findIndex((item) => item.id === normalized.id);
@@ -831,7 +845,8 @@ export default function BoardDetailPage() {
                 ...task,
                 approvals_count: counts.approvals_count ?? task.approvals_count,
                 approvals_pending_count:
-                  counts.approvals_pending_count ?? task.approvals_pending_count,
+                  counts.approvals_pending_count ??
+                  task.approvals_pending_count,
               };
             });
           });
@@ -960,7 +975,10 @@ export default function BoardDetailPage() {
           const normalized = normalizeAgent(payload.agent);
           const previousAgent =
             agentsRef.current.find((item) => item.id === normalized.id) ?? null;
-          const liveEvent = toLiveFeedFromAgentUpdate(normalized, previousAgent);
+          const liveEvent = toLiveFeedFromAgentUpdate(
+            normalized,
+            previousAgent,
+          );
           if (liveEvent) {
             pushLiveFeed(liveEvent);
           }
@@ -1333,11 +1351,7 @@ export default function BoardDetailPage() {
     }
     setIsLiveFeedOpen(false);
     setIsChatOpen(true);
-    if (
-      panelFromUrl !== "chat" ||
-      taskIdFromUrl ||
-      commentIdFromUrl
-    ) {
+    if (panelFromUrl !== "chat" || taskIdFromUrl || commentIdFromUrl) {
       startTransition(() => {
         router.replace(buildUrlWithTaskAndComment(null, null, "chat"), {
           scroll: false,
@@ -1702,11 +1716,7 @@ export default function BoardDetailPage() {
                           isAgentsPaused ? "resume" : "pause",
                         )
                       }
-                      disabled={
-                        !isSignedIn ||
-                        !boardId ||
-                        !canWrite
-                      }
+                      disabled={!isSignedIn || !boardId || !canWrite}
                       className={cn(
                         "h-9 w-9 p-0",
                         isAgentsPaused
@@ -1773,10 +1783,14 @@ export default function BoardDetailPage() {
               >
                 {/* Header — always rendered, clipped by overflow-hidden */}
                 <div className="flex shrink-0 items-center justify-between border-b border-[color:var(--border)] px-3 py-3">
-                  <div className={cn(
-                    "min-w-0 overflow-hidden transition-opacity duration-200",
-                    isAgentsPanelCollapsed ? "w-0 opacity-0" : "flex-1 opacity-100",
-                  )}>
+                  <div
+                    className={cn(
+                      "min-w-0 overflow-hidden transition-opacity duration-200",
+                      isAgentsPanelCollapsed
+                        ? "w-0 opacity-0"
+                        : "flex-1 opacity-100",
+                    )}
+                  >
                     <p className="whitespace-nowrap text-xs font-semibold uppercase tracking-wider text-muted">
                       Agents
                     </p>
@@ -1786,7 +1800,11 @@ export default function BoardDetailPage() {
                   </div>
                   <button
                     type="button"
-                    aria-label={isAgentsPanelCollapsed ? "Expand agents panel" : "Collapse agents panel"}
+                    aria-label={
+                      isAgentsPanelCollapsed
+                        ? "Expand agents panel"
+                        : "Collapse agents panel"
+                    }
                     onClick={() => setIsAgentsPanelCollapsed((prev) => !prev)}
                     className="shrink-0 rounded-md border border-[color:var(--border)] p-1.5 text-muted transition hover:border-[color:var(--border-strong)] hover:bg-[color:var(--surface-muted)]"
                   >

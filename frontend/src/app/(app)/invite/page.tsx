@@ -92,7 +92,8 @@ function InviteContent() {
                 You&apos;re Invited to Join a Team.
               </h1>
               <p className="max-w-xl text-base leading-relaxed text-white/70 sm:text-lg">
-                Sign in and accept your invite to start collaborating on boards, approvals, and workflows.
+                Sign in and accept your invite to start collaborating on boards,
+                approvals, and workflows.
               </p>
             </div>
             <ul className="space-y-3">
@@ -101,8 +102,15 @@ function InviteContent() {
                 "Accept the invite to join the organization.",
                 "Start collaborating on shared boards instantly.",
               ].map((step) => (
-                <li key={step} className="flex items-start gap-3 text-sm text-white/75 sm:text-base">
-                  <CheckCircle2 size={18} className="mt-0.5 shrink-0 text-white/80" aria-hidden="true" />
+                <li
+                  key={step}
+                  className="flex items-start gap-3 text-sm text-white/75 sm:text-base"
+                >
+                  <CheckCircle2
+                    size={18}
+                    className="mt-0.5 shrink-0 text-white/80"
+                    aria-hidden="true"
+                  />
                   <span>{step}</span>
                 </li>
               ))}
@@ -120,7 +128,9 @@ function InviteContent() {
                 className="h-9 w-9"
               />
               <div>
-                <p className="text-sm font-semibold text-white">Organization Invite</p>
+                <p className="text-sm font-semibold text-white">
+                  Organization Invite
+                </p>
                 <p className="text-xs text-white/50">{helperText}</p>
               </div>
             </div>
@@ -140,7 +150,7 @@ function InviteContent() {
                   onChange={(event) => setToken(event.target.value)}
                   placeholder="Paste invite token"
                   disabled={accepted || isSubmitting}
-                  className="h-11 w-full rounded-xl border border-white/15 bg-white/[0.03] px-4 text-sm text-white placeholder:text-white/40 focus:border-white/40 focus:outline-none disabled:opacity-50"
+                  className="h-11 w-full rounded-xl border border-white/15 bg-white/[0.03] px-4 text-sm text-white placeholder:text-white/40 focus:outline-none disabled:opacity-50"
                 />
               </div>
 
@@ -163,7 +173,10 @@ function InviteContent() {
                     <Mail size={16} className="shrink-0" />
                     <span>Sign in to accept your invite.</span>
                   </div>
-                  <SignInButton mode="modal" forceRedirectUrl={`/invite${token ? `?token=${encodeURIComponent(token)}` : ""}`}>
+                  <SignInButton
+                    mode="modal"
+                    forceRedirectUrl={`/invite${token ? `?token=${encodeURIComponent(token)}` : ""}`}
+                  >
                     <button
                       type="button"
                       className="h-11 w-full cursor-pointer rounded-xl border border-white/20 bg-white text-sm font-semibold text-black transition-colors hover:bg-white/90"
@@ -175,10 +188,7 @@ function InviteContent() {
               </SignedOut>
 
               <SignedIn>
-                <form
-                  className="flex flex-col gap-3"
-                  onSubmit={handleAccept}
-                >
+                <form className="flex flex-col gap-3" onSubmit={handleAccept}>
                   <button
                     type="submit"
                     disabled={!isReady || isSubmitting || accepted}
@@ -218,7 +228,10 @@ export default function InvitePage() {
     <Suspense
       fallback={
         <div className="relative min-h-screen overflow-x-hidden bg-black text-white">
-          <div className="pointer-events-none absolute inset-0" aria-hidden="true">
+          <div
+            className="pointer-events-none absolute inset-0"
+            aria-hidden="true"
+          >
             <div className="absolute -left-28 top-20 h-72 w-72 rounded-full bg-[rgba(255,91,53,0.2)] blur-3xl" />
             <div className="absolute -right-24 bottom-20 h-80 w-80 rounded-full bg-[rgba(56,189,248,0.18)] blur-3xl" />
           </div>

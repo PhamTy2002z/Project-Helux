@@ -157,7 +157,8 @@ export const TaskCard = memo(function TaskCard({
           <span
             className={cn(
               "inline-flex items-center rounded-full px-2 py-1 text-[10px] font-semibold uppercase tracking-wide",
-              priorityBadge(priority) ?? "bg-[color:var(--surface-muted)] text-[color:var(--text-muted)]",
+              priorityBadge(priority) ??
+                "bg-[color:var(--surface-muted)] text-[color:var(--text-muted)]",
             )}
           >
             {priorityLabel}

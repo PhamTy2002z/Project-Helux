@@ -150,9 +150,7 @@ export default function NewBoardGroupPage() {
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium text-strong">
-            Description
-          </label>
+          <label className="text-sm font-medium text-strong">Description</label>
           <Textarea
             value={description}
             onChange={(event) => setDescription(event.target.value)}

@@ -1,4 +1,8 @@
-import type { AgentRead, ApprovalRead, TaskCardRead } from "@/api/generated/model";
+import type {
+  AgentRead,
+  ApprovalRead,
+  TaskCardRead,
+} from "@/api/generated/model";
 import type { Agent, Approval, Task } from "./board-types";
 
 export const normalizeTask = (task: TaskCardRead): Task => ({

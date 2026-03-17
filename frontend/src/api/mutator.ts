@@ -61,7 +61,9 @@ export const customFetch = async <T>(
   const response = await fetch(targetUrl, {
     ...options,
     headers,
-    credentials: localModeWithoutAuthHeader ? "same-origin" : options.credentials,
+    credentials: localModeWithoutAuthHeader
+      ? "same-origin"
+      : options.credentials,
   });
 
   if (!response.ok) {

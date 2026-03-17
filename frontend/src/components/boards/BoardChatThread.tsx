@@ -57,7 +57,10 @@ const formatShortTimestamp = (value: string) => {
   });
 };
 
-const sanitizeMessageContent = (content: string, sourceLabel: string): string => {
+const sanitizeMessageContent = (
+  content: string,
+  sourceLabel: string,
+): string => {
   const normalized = content.replace(/\r\n?/g, "\n");
   const lines = normalized.split("\n");
   const nonEmptyIndexes = lines
@@ -72,7 +75,10 @@ const sanitizeMessageContent = (content: string, sourceLabel: string): string =>
     EMBEDDED_TIMESTAMP_PATTERN.test(second.line);
   if (!isEmbeddedHeader) return normalized;
 
-  return lines.slice(second.index + 1).join("\n").trimStart();
+  return lines
+    .slice(second.index + 1)
+    .join("\n")
+    .trimStart();
 };
 
 const MessageCard = memo(function MessageCard({
@@ -93,7 +99,9 @@ const MessageCard = memo(function MessageCard({
   );
 
   return (
-    <div className={cn("flex", isCurrentUser ? "justify-end" : "justify-start")}>
+    <div
+      className={cn("flex", isCurrentUser ? "justify-end" : "justify-start")}
+    >
       <div
         className={cn(
           "w-fit max-w-[84%] rounded-2xl border px-4 py-3 shadow-sm",
@@ -101,9 +109,7 @@ const MessageCard = memo(function MessageCard({
         )}
       >
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="text-[13px] font-semibold text-strong">
-            {sourceLabel}
-          </p>
+          <p className="text-[13px] font-semibold text-strong">{sourceLabel}</p>
           <span className="text-[11px] text-quiet">
             {formatShortTimestamp(message.created_at)}
           </span>
@@ -111,9 +117,12 @@ const MessageCard = memo(function MessageCard({
         <div className="mt-1 select-text cursor-text text-sm leading-6 break-words text-strong">
           <LazyMarkdown content={cleanedContent} variant="chat" />
         </div>
-        {((message as unknown as { attachments?: MessageAttachment[] }).attachments)?.length ? (
+        {(message as unknown as { attachments?: MessageAttachment[] })
+          .attachments?.length ? (
           <div className="mt-2 flex flex-wrap gap-1.5">
-            {(message as unknown as { attachments: MessageAttachment[] }).attachments.map((att) => (
+            {(
+              message as unknown as { attachments: MessageAttachment[] }
+            ).attachments.map((att) => (
               <span
                 key={att.id}
                 className="inline-flex items-center gap-1.5 rounded-md border border-[color:var(--border)] bg-[color:var(--surface-muted)] px-2 py-1 text-xs text-[color:var(--text-muted)]"
@@ -248,7 +257,11 @@ export const BoardChatThread = memo(function BoardChatThread({
         {(isSending || isAwaitingReply) && (
           <div className="flex justify-start">
             <div className="flex items-center gap-2 rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] px-4 py-3 shadow-sm">
-              <div className="flex items-center gap-1.5" role="status" aria-label="Agent is typing">
+              <div
+                className="flex items-center gap-1.5"
+                role="status"
+                aria-label="Agent is typing"
+              >
                 <span className="h-1.5 w-1.5 rounded-full bg-[color:var(--text-quiet)] animate-typing-dot-1" />
                 <span className="h-1.5 w-1.5 rounded-full bg-[color:var(--text-quiet)] animate-typing-dot-2" />
                 <span className="h-1.5 w-1.5 rounded-full bg-[color:var(--text-quiet)] animate-typing-dot-3" />

@@ -26,7 +26,9 @@ export function generateStaticParams() {
   return BLOG_ARTICLES.map((article) => ({ slug: article.slug }));
 }
 
-export async function generateMetadata({ params }: BlogArticlePageProps): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: BlogArticlePageProps): Promise<Metadata> {
   const { slug } = await params;
   const article = getBlogArticleBySlug(slug);
   if (!article) {
@@ -70,7 +72,9 @@ export async function generateMetadata({ params }: BlogArticlePageProps): Promis
   };
 }
 
-export default async function BlogArticlePage({ params }: BlogArticlePageProps) {
+export default async function BlogArticlePage({
+  params,
+}: BlogArticlePageProps) {
   const { slug } = await params;
   const article = getBlogArticleBySlug(slug);
   if (!article) {
@@ -120,7 +124,9 @@ export default async function BlogArticlePage({ params }: BlogArticlePageProps) 
                 {article.excerpt}
               </p>
               <div className="mt-6 flex flex-wrap gap-4 text-sm text-white/50">
-                <time dateTime={article.publishDateISO}>{article.publishDateLabel}</time>
+                <time dateTime={article.publishDateISO}>
+                  {article.publishDateLabel}
+                </time>
                 <span>{article.readTime}</span>
               </div>
 
@@ -140,10 +146,15 @@ export default async function BlogArticlePage({ params }: BlogArticlePageProps) 
               <div className="mt-10 space-y-10">
                 {article.sections.map((section) => (
                   <section key={section.heading}>
-                    <h2 className="text-2xl font-semibold text-white sm:text-3xl">{section.heading}</h2>
+                    <h2 className="text-2xl font-semibold text-white sm:text-3xl">
+                      {section.heading}
+                    </h2>
                     <div className="mt-4 space-y-4">
                       {section.paragraphs.map((paragraph) => (
-                        <p key={paragraph} className="text-base leading-relaxed text-white/75">
+                        <p
+                          key={paragraph}
+                          className="text-base leading-relaxed text-white/75"
+                        >
                           {paragraph}
                         </p>
                       ))}
@@ -153,19 +164,31 @@ export default async function BlogArticlePage({ params }: BlogArticlePageProps) 
               </div>
 
               <section className="mt-12 rounded-2xl border border-white/15 bg-white/[0.04] p-6">
-                <h2 className="text-xl font-semibold text-white">Next Step for Your Team</h2>
+                <h2 className="text-xl font-semibold text-white">
+                  Next Step for Your Team
+                </h2>
                 <p className="mt-3 text-sm leading-relaxed text-white/70 sm:text-base">
-                  Move from article insights to execution by launching your first board and routing
-                  approvals with policy controls in FlowGrid.
+                  Move from article insights to execution by launching your
+                  first board and routing approvals with policy controls in
+                  FlowGrid.
                 </p>
                 <div className="mt-6 flex flex-wrap gap-3">
-                  <Link href="/onboarding" className="hero-btn-primary inline-flex items-center">
+                  <Link
+                    href="/onboarding"
+                    className="hero-btn-primary inline-flex items-center"
+                  >
                     Start Building Free
                   </Link>
-                  <Link href="/pricing" className="hero-btn-secondary inline-flex items-center">
+                  <Link
+                    href="/pricing"
+                    className="hero-btn-secondary inline-flex items-center"
+                  >
                     View Pricing
                   </Link>
-                  <Link href="/blog" className="inline-flex items-center text-sm font-semibold text-white/80">
+                  <Link
+                    href="/blog"
+                    className="inline-flex items-center text-sm font-semibold text-white/80"
+                  >
                     Back to Blog
                   </Link>
                 </div>

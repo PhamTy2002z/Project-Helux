@@ -21,7 +21,13 @@ const slides = [
   dynamic(loadSlide5, { ssr: false }),
 ];
 
-const slideLoaders = [loadSlide1, loadSlide2, loadSlide3, loadSlide4, loadSlide5];
+const slideLoaders = [
+  loadSlide1,
+  loadSlide2,
+  loadSlide3,
+  loadSlide4,
+  loadSlide5,
+];
 
 function clampIndex(index: number) {
   return Math.max(0, Math.min(index, slides.length - 1));
@@ -38,7 +44,11 @@ export default function SlideApp() {
 
   useEffect(() => {
     const handleKeydown = (event: KeyboardEvent) => {
-      if (event.key === "ArrowRight" || event.key === "ArrowDown" || event.key === " ") {
+      if (
+        event.key === "ArrowRight" ||
+        event.key === "ArrowDown" ||
+        event.key === " "
+      ) {
         event.preventDefault();
         setActiveIndex((currentIndex) => clampIndex(currentIndex + 1));
         return;
@@ -67,7 +77,9 @@ export default function SlideApp() {
   return (
     <div
       className="landing-slideshow relative h-screen w-full overflow-hidden bg-black"
-      style={{ fontFamily: "var(--font-heading), var(--font-body), sans-serif" }}
+      style={{
+        fontFamily: "var(--font-heading), var(--font-body), sans-serif",
+      }}
     >
       <AnimatePresence mode="wait">
         <motion.div
@@ -76,13 +88,20 @@ export default function SlideApp() {
           initial={shouldReduceMotion ? false : { opacity: 0.2 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: shouldReduceMotion ? 0 : 0.35, ease: "easeInOut" }}
+          transition={{
+            duration: shouldReduceMotion ? 0 : 0.35,
+            ease: "easeInOut",
+          }}
         >
           <ActiveSlide />
         </motion.div>
       </AnimatePresence>
 
-      <NavigationDots total={slides.length} active={activeIndex} onDotClick={goTo} />
+      <NavigationDots
+        total={slides.length}
+        active={activeIndex}
+        onDotClick={goTo}
+      />
     </div>
   );
 }

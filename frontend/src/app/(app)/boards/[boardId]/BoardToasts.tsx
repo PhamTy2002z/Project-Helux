@@ -30,7 +30,9 @@ export function BoardToasts({ toasts, onDismiss }: BoardToastsProps) {
                 toast.tone === "error" ? "bg-rose-500" : "bg-emerald-500",
               )}
             />
-            <p className="flex-1 text-sm text-[color:var(--text)]">{toast.message}</p>
+            <p className="flex-1 text-sm text-[color:var(--text)]">
+              {toast.message}
+            </p>
             <button
               type="button"
               className="text-xs text-quiet hover:text-[color:var(--text-muted)]"

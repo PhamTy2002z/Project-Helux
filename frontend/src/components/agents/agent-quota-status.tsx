@@ -29,7 +29,10 @@ const resolveLevel = (percentage: number, isBlocked: boolean): QuotaLevel => {
   return "ok";
 };
 
-const LEVEL_STYLES: Record<QuotaLevel, { bar: string; bg: string; text: string; label: string }> = {
+const LEVEL_STYLES: Record<
+  QuotaLevel,
+  { bar: string; bg: string; text: string; label: string }
+> = {
   ok: {
     bar: "bg-emerald-500",
     bg: "bg-emerald-50 border-emerald-200",
@@ -159,11 +162,17 @@ export function AgentQuotaCell({ agent }: AgentQuotaCellProps) {
   const style = LEVEL_STYLES[quota.level];
 
   return (
-    <div className="flex min-w-[140px] flex-col gap-1.5" title={quota.resetHint}>
+    <div
+      className="flex min-w-[140px] flex-col gap-1.5"
+      title={quota.resetHint}
+    >
       {/* Progress bar */}
       <div className="h-1.5 w-full overflow-hidden rounded-full bg-[color:var(--surface-muted)]">
         <div
-          className={cn("h-full rounded-full transition-all duration-500", style.bar)}
+          className={cn(
+            "h-full rounded-full transition-all duration-500",
+            style.bar,
+          )}
           style={{ width: `${quota.percentage}%` }}
         />
       </div>
@@ -244,7 +253,8 @@ export function AgentQuotaCard({ agent, className }: AgentQuotaCardProps) {
               {quota.remainingLabel}
             </p>
             <p className="mt-0.5 text-xs text-muted">
-              remaining of {quota.limitLabel} daily {unitLabel.toLowerCase()} budget
+              remaining of {quota.limitLabel} daily {unitLabel.toLowerCase()}{" "}
+              budget
             </p>
           </div>
           <p className="text-sm font-semibold tabular-nums text-muted">

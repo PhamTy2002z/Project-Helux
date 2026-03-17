@@ -1,11 +1,18 @@
-import type { ActivityEventRead, ApprovalRead, TaskCommentRead } from "@/api/generated/model";
+import type {
+  ActivityEventRead,
+  ApprovalRead,
+  TaskCommentRead,
+} from "@/api/generated/model";
 import { apiDatetimeToMs } from "@/lib/datetime";
-import {
-  DEFAULT_HUMAN_LABEL,
-  resolveHumanActorName,
-} from "@/lib/display-name";
+import { DEFAULT_HUMAN_LABEL, resolveHumanActorName } from "@/lib/display-name";
 import { isLiveFeedEventType } from "./board-constants";
-import type { Agent, BoardChatMessage, LiveFeedEventType, LiveFeedItem, TaskComment } from "./board-types";
+import type {
+  Agent,
+  BoardChatMessage,
+  LiveFeedEventType,
+  LiveFeedItem,
+  TaskComment,
+} from "./board-types";
 
 export const toLiveFeedFromActivity = (
   event: ActivityEventRead,
@@ -24,7 +31,9 @@ export const toLiveFeedFromActivity = (
   };
 };
 
-export const toLiveFeedFromComment = (comment: TaskCommentRead): LiveFeedItem => ({
+export const toLiveFeedFromComment = (
+  comment: TaskCommentRead,
+): LiveFeedItem => ({
   id: comment.id,
   created_at: comment.created_at,
   message: comment.message ?? null,
@@ -35,7 +44,9 @@ export const toLiveFeedFromComment = (comment: TaskCommentRead): LiveFeedItem =>
   event_type: "task.comment",
 });
 
-export const mergeCommentsById = (...collections: TaskComment[][]): TaskComment[] => {
+export const mergeCommentsById = (
+  ...collections: TaskComment[][]
+): TaskComment[] => {
   const byId = new Map<string, TaskComment>();
   for (const collection of collections) {
     for (const comment of collection) {
@@ -61,7 +72,9 @@ export const mergeCommentsById = (...collections: TaskComment[][]): TaskComment[
   });
 };
 
-export const toLiveFeedFromBoardChat = (memory: BoardChatMessage): LiveFeedItem => {
+export const toLiveFeedFromBoardChat = (
+  memory: BoardChatMessage,
+): LiveFeedItem => {
   const content = (memory.content ?? "").trim();
   const actorName = resolveHumanActorName(memory.source, DEFAULT_HUMAN_LABEL);
   const isCommand = content.startsWith("/");
@@ -232,7 +245,9 @@ export const liveFeedEventLabel = (eventType: LiveFeedEventType): string => {
   return "Updated";
 };
 
-export const liveFeedEventPillClass = (eventType: LiveFeedEventType): string => {
+export const liveFeedEventPillClass = (
+  eventType: LiveFeedEventType,
+): string => {
   if (eventType === "task.comment") {
     return "border-blue-200 bg-blue-50 text-blue-700";
   }

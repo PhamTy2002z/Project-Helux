@@ -5,7 +5,6 @@ import HlsVideo from "./hls-video";
 import Logo from "./logo";
 
 export default function Slide4() {
-
   return (
     <div className="relative flex h-full w-full flex-col overflow-hidden bg-black">
       <HlsVideo
@@ -20,7 +19,9 @@ export default function Slide4() {
           <BlurReveal delay={0.05}>
             <div className="flex items-center justify-between">
               <Logo />
-              <span className="text-[20px] leading-[1.4] text-[var(--slide-muted)]">04</span>
+              <span className="text-[20px] leading-[1.4] text-[var(--slide-muted)]">
+                04
+              </span>
             </div>
           </BlurReveal>
         </div>
@@ -32,7 +33,10 @@ export default function Slide4() {
         <div className="flex h-full w-full flex-col justify-center">
           <div className="max-w-[65%] px-[5%]">
             <BlurReveal delay={0.15}>
-              <p className="text-[var(--slide-muted)]" style={{ fontSize: "clamp(12px, 1.2vw, 26px)" }}>
+              <p
+                className="text-[var(--slide-muted)]"
+                style={{ fontSize: "clamp(12px, 1.2vw, 26px)" }}
+              >
                 Workflow Orchestration
               </p>
             </BlurReveal>
@@ -45,7 +49,10 @@ export default function Slide4() {
               duration={0.55}
             />
             <BlurReveal delay={1.2} className="mt-6">
-              <p className="max-w-[784px] text-[var(--slide-muted)]" style={{ fontSize: "clamp(12px, 1.1vw, 26px)" }}>
+              <p
+                className="max-w-[784px] text-[var(--slide-muted)]"
+                style={{ fontSize: "clamp(12px, 1.1vw, 26px)" }}
+              >
                 Configure board-level controls, route sensitive actions through
                 approvals, and keep distributed execution visible from start to
                 finish.

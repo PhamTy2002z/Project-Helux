@@ -24,7 +24,10 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { TaskCustomFieldsEditor } from "./TaskCustomFieldsEditor";
-import type { TagRead, TaskCustomFieldDefinitionRead } from "@/api/generated/model";
+import type {
+  TagRead,
+  TaskCustomFieldDefinitionRead,
+} from "@/api/generated/model";
 import { createTaskApiV1BoardsBoardIdTasksPost } from "@/api/generated/tasks/tasks";
 import type { TaskCardRead } from "@/api/generated/model";
 import { localDateInputToUtcIso } from "@/lib/datetime";
@@ -307,10 +310,7 @@ export function TaskCreateDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button
-            onClick={handleCreateTask}
-            disabled={!canWrite || isCreating}
-          >
+          <Button onClick={handleCreateTask} disabled={!canWrite || isCreating}>
             {isCreating ? "Creating…" : "Create task"}
           </Button>
         </DialogFooter>

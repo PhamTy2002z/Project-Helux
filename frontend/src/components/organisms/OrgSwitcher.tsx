@@ -145,7 +145,7 @@ export function OrgSwitcher() {
   return (
     <div className="relative">
       <Select value={orgValue} onValueChange={handleOrgChange}>
-        <SelectTrigger className="h-9 w-[220px] rounded-md border-[color:var(--border)] bg-[color:var(--surface)] px-3 text-sm font-medium text-strong shadow-none focus:ring-2 focus:ring-[color:var(--accent)]/30 focus:ring-offset-0">
+        <SelectTrigger className="h-9 w-[220px] rounded-md border-[color:var(--border)] bg-[color:var(--surface)] px-3 text-sm font-medium text-strong shadow-none focus:ring-offset-0">
           <span className="flex items-center gap-2">
             <Building2 className="h-4 w-4 text-quiet" />
             <SelectValue placeholder="Select organization" />

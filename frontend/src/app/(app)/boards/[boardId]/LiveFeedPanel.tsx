@@ -78,9 +78,7 @@ export function LiveFeedPanel({
               {liveFeedHistoryError}
             </div>
           ) : orderedLiveFeed.length === 0 ? (
-            <p className="text-sm text-muted">
-              Waiting for new activity…
-            </p>
+            <p className="text-sm text-muted">Waiting for new activity…</p>
           ) : (
             <div className="space-y-3">
               {orderedLiveFeed.map((item) => {
@@ -115,9 +113,7 @@ export function LiveFeedPanel({
                     authorName={authorName}
                     authorRole={authorRole}
                     authorAvatar={authorAvatar}
-                    onViewTask={
-                      taskId ? () => onViewTask(taskId) : undefined
-                    }
+                    onViewTask={taskId ? () => onViewTask(taskId) : undefined}
                   />
                 );
               })}

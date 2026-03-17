@@ -25,12 +25,16 @@ function SkeletonGrid() {
   );
 }
 
-export function TemplatePickerStep({ onSelect, onSkip }: TemplatePickerStepProps) {
+export function TemplatePickerStep({
+  onSelect,
+  onSkip,
+}: TemplatePickerStepProps) {
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState("all");
   const [selected, setSelected] = useState<string | null>(null);
 
-  const { data, isLoading } = useListWorkspaceTemplatesApiV1WorkspaceTemplatesGet();
+  const { data, isLoading } =
+    useListWorkspaceTemplatesApiV1WorkspaceTemplatesGet();
 
   const templates: WorkspaceTemplateRead[] = useMemo(() => {
     if (!data || data.status !== 200) return [];
@@ -87,7 +91,9 @@ export function TemplatePickerStep({ onSelect, onSkip }: TemplatePickerStepProps
           {isLoading ? (
             <SkeletonGrid />
           ) : filtered.length === 0 ? (
-            <p className="py-8 text-center text-sm text-muted">No templates found.</p>
+            <p className="py-8 text-center text-sm text-muted">
+              No templates found.
+            </p>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
               {filtered.map((template) => (

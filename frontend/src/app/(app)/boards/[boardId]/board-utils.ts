@@ -93,7 +93,9 @@ export const latestAgentTimestamp = (items: Agent[]): string | null => {
   return latestTime ? new Date(latestTime).toISOString() : null;
 };
 
-export const latestChatTimestamp = (items: BoardChatMessage[]): string | undefined => {
+export const latestChatTimestamp = (
+  items: BoardChatMessage[],
+): string | undefined => {
   if (!items.length) return undefined;
   const latest = items.reduce((max, item) => {
     const ts = apiDatetimeToMs(item.created_at);

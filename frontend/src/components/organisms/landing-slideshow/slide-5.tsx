@@ -6,7 +6,6 @@ import HlsVideo from "./hls-video";
 import Logo from "./logo";
 
 export default function Slide5() {
-
   return (
     <div className="relative flex h-full w-full flex-col overflow-hidden bg-[var(--slide-bg-alt)]">
       <HlsVideo
@@ -20,7 +19,9 @@ export default function Slide5() {
         <BlurReveal delay={0.05} className="px-[5%] pt-[3.5%]">
           <div className="flex items-center justify-between">
             <Logo />
-            <span className="text-[20px] leading-[1.4] text-[var(--slide-muted)]">05</span>
+            <span className="text-[20px] leading-[1.4] text-[var(--slide-muted)]">
+              05
+            </span>
           </div>
         </BlurReveal>
 
@@ -32,7 +33,10 @@ export default function Slide5() {
 
         <div className="max-w-[60%] px-[5%] pb-[5%]">
           <BlurReveal delay={0.15}>
-            <p className="text-[var(--slide-muted)]" style={{ fontSize: "clamp(12px, 1.2vw, 26px)" }}>
+            <p
+              className="text-[var(--slide-muted)]"
+              style={{ fontSize: "clamp(12px, 1.2vw, 26px)" }}
+            >
               Go Live
             </p>
           </BlurReveal>
@@ -45,7 +49,10 @@ export default function Slide5() {
             duration={0.55}
           />
           <BlurReveal delay={0.6} className="mt-4">
-            <p className="max-w-[680px] text-[var(--slide-muted)]" style={{ fontSize: "clamp(12px, 1.1vw, 26px)" }}>
+            <p
+              className="max-w-[680px] text-[var(--slide-muted)]"
+              style={{ fontSize: "clamp(12px, 1.1vw, 26px)" }}
+            >
               Provision your first board, assign owners, and run approvals with
               full activity traceability from day one.
             </p>

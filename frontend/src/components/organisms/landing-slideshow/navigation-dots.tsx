@@ -19,7 +19,9 @@ export default function NavigationDots({
           aria-pressed={index === active}
           onClick={() => onDotClick(index)}
           className={`touch-manipulation rounded-full transition-[width,background-color,opacity] duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black ${
-            index === active ? "h-2 w-6 bg-white" : "h-2 w-2 bg-white/40 hover:bg-white/70"
+            index === active
+              ? "h-2 w-6 bg-white"
+              : "h-2 w-2 bg-white/40 hover:bg-white/70"
           }`}
         />
       ))}

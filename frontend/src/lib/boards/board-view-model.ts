@@ -43,7 +43,9 @@ export type BoardViewModel = {
 
 const STATUS_ORDER: TaskStatus[] = ["inbox", "in_progress", "review", "done"];
 
-const normalizedPriority = (value: string): "low" | "medium" | "high" | "other" => {
+const normalizedPriority = (
+  value: string,
+): "low" | "medium" | "high" | "other" => {
   const normalized = value.trim().toLowerCase();
   if (normalized === "low") return "low";
   if (normalized === "medium") return "medium";
@@ -51,7 +53,10 @@ const normalizedPriority = (value: string): "low" | "medium" | "high" | "other" 
   return "other";
 };
 
-const matchesSavedView = (task: BoardTaskItem, view: BoardSavedView): boolean => {
+const matchesSavedView = (
+  task: BoardTaskItem,
+  view: BoardSavedView,
+): boolean => {
   if (view === "all") return true;
   if (view === "focus") {
     return task.status !== "done" && !task.is_blocked;
@@ -133,13 +138,17 @@ export const buildBoardViewModel = (
 
   const groups = new Map<string, BoardTaskGroupView>();
   for (const task of filtered) {
-    const groupId = queryState.groupByTaskGroup ? task.task_group_id ?? "ungrouped" : "all";
+    const groupId = queryState.groupByTaskGroup
+      ? (task.task_group_id ?? "ungrouped")
+      : "all";
     const existing = groups.get(groupId);
     const group =
       existing ??
       ({
         id: groupId,
-        title: queryState.groupByTaskGroup ? groupLabel(task.task_group_id) : "All Tasks",
+        title: queryState.groupByTaskGroup
+          ? groupLabel(task.task_group_id)
+          : "All Tasks",
         counts: {
           inbox: 0,
           in_progress: 0,
@@ -169,10 +178,14 @@ export const buildBoardViewModel = (
   const orderedGroups = [...groups.values()]
     .map((group) => {
       STATUS_ORDER.forEach((status) => {
-        group.tasksByStatus[status] = [...group.tasksByStatus[status]].sort(byTaskSortOrder);
+        group.tasksByStatus[status] = [...group.tasksByStatus[status]].sort(
+          byTaskSortOrder,
+        );
       });
       group.progressPct =
-        group.totalCount === 0 ? 0 : Math.round((group.doneCount / group.totalCount) * 100);
+        group.totalCount === 0
+          ? 0
+          : Math.round((group.doneCount / group.totalCount) * 100);
       return group;
     })
     .sort((left, right) => left.title.localeCompare(right.title));

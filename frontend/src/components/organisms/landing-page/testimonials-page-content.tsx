@@ -20,13 +20,14 @@ const CATEGORY_LABELS: Record<Testimonial["category"], string> = {
 const CATEGORIES = ["engineering", "devops", "leadership", "platform"] as const;
 const ALL_CATEGORIES = ["all", ...CATEGORIES] as const;
 type CategoryFilter = (typeof ALL_CATEGORIES)[number];
-const CATEGORY_COUNTS: Record<Testimonial["category"], number> = TESTIMONIALS.reduce(
-  (acc, testimonial) => {
-    acc[testimonial.category] += 1;
-    return acc;
-  },
-  { engineering: 0, devops: 0, leadership: 0, platform: 0 }
-);
+const CATEGORY_COUNTS: Record<Testimonial["category"], number> =
+  TESTIMONIALS.reduce(
+    (acc, testimonial) => {
+      acc[testimonial.category] += 1;
+      return acc;
+    },
+    { engineering: 0, devops: 0, leadership: 0, platform: 0 },
+  );
 
 export default function TestimonialsPageContent() {
   const [filter, setFilter] = useState<CategoryFilter>("all");
@@ -36,7 +37,8 @@ export default function TestimonialsPageContent() {
     filter === "all"
       ? TESTIMONIALS
       : TESTIMONIALS.filter((t) => t.category === filter);
-  const filterLabel = filter === "all" ? "All testimonials" : CATEGORY_LABELS[filter];
+  const filterLabel =
+    filter === "all" ? "All testimonials" : CATEGORY_LABELS[filter];
 
   return (
     <>
@@ -103,9 +105,9 @@ export default function TestimonialsPageContent() {
           >
             {ALL_CATEGORIES.map((cat) => {
               const isActive = filter === cat;
-              const label =
-                cat === "all" ? "All" : CATEGORY_LABELS[cat];
-              const count = cat === "all" ? TESTIMONIALS.length : CATEGORY_COUNTS[cat];
+              const label = cat === "all" ? "All" : CATEGORY_LABELS[cat];
+              const count =
+                cat === "all" ? TESTIMONIALS.length : CATEGORY_COUNTS[cat];
 
               return (
                 <button
@@ -123,7 +125,9 @@ export default function TestimonialsPageContent() {
                   {label}
                   <span
                     className={`rounded-full px-2 py-0.5 text-xs ${
-                      isActive ? "bg-black/10 text-black/70" : "bg-white/10 text-white/65"
+                      isActive
+                        ? "bg-black/10 text-black/70"
+                        : "bg-white/10 text-white/65"
                     }`}
                   >
                     {count}
@@ -163,13 +167,24 @@ export default function TestimonialsPageContent() {
                       <span className="rounded-full border border-white/15 bg-white/[0.04] px-2.5 py-1 text-[11px] font-medium uppercase tracking-[0.12em] text-white/65">
                         {CATEGORY_LABELS[t.category]}
                       </span>
-                      <div className="flex items-center gap-0.5 text-white/70" aria-label="Rated 5 out of 5">
+                      <div
+                        className="flex items-center gap-0.5 text-white/70"
+                        aria-label="Rated 5 out of 5"
+                      >
                         {Array.from({ length: 5 }).map((_, starIndex) => (
-                          <Star key={`${t.author}-star-${starIndex}`} size={12} fill="currentColor" />
+                          <Star
+                            key={`${t.author}-star-${starIndex}`}
+                            size={12}
+                            fill="currentColor"
+                          />
                         ))}
                       </div>
                     </div>
-                    <Quote size={20} className="mb-4 text-white/25" aria-hidden="true" />
+                    <Quote
+                      size={20}
+                      className="mb-4 text-white/25"
+                      aria-hidden="true"
+                    />
                     <p className="text-[15px] leading-relaxed text-white/85">
                       &ldquo;{t.quote}&rdquo;
                     </p>

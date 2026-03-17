@@ -68,17 +68,21 @@ export function DashboardSidebar() {
         ? "System status unavailable"
         : "System degraded";
 
-  const isBlockedForPayment = subscriptionQuery.data?.status === "blocked_for_payment";
+  const isBlockedForPayment =
+    subscriptionQuery.data?.status === "blocked_for_payment";
   const onboardingProgress = onboardingQuery.data ?? null;
-  const onboardingPending = Boolean(onboardingProgress && !onboardingProgress.completed);
+  const onboardingPending = Boolean(
+    onboardingProgress && !onboardingProgress.completed,
+  );
   const createBoardReady =
-    onboardingProgress?.steps.find((step) => step.key === "create_first_board")?.status !==
-    "pending";
+    onboardingProgress?.steps.find((step) => step.key === "create_first_board")
+      ?.status !== "pending";
   const runChatReady =
-    onboardingProgress?.steps.find((step) => step.key === "run_onboarding_chat")?.status !==
-    "pending";
+    onboardingProgress?.steps.find((step) => step.key === "run_onboarding_chat")
+      ?.status !== "pending";
   const inviteReady =
-    onboardingProgress?.steps.find((step) => step.key === "invite_teammate")?.status !== "pending";
+    onboardingProgress?.steps.find((step) => step.key === "invite_teammate")
+      ?.status !== "pending";
 
   const lockedNavItem = (label: string) => (
     <div className="flex items-center justify-between rounded-lg border border-[color:var(--border)] bg-[color:var(--surface-muted)] px-3 py-2.5 text-muted">

@@ -20,7 +20,8 @@ export const SHOWCASE_STORIES: ShowcaseStory[] = [
       "FlowGrid brings builder configuration, deployment commands, and operational capabilities into one surface so teams can launch agents with less handoff friction.",
     ctaLabel: "Explore orchestration",
     ctaHref: "#",
-    previewImageSrc: "/images/landing/flowgrid-showcase-orchestrate-20260312.png",
+    previewImageSrc:
+      "/images/landing/flowgrid-showcase-orchestrate-20260312.png",
     previewImageAlt:
       "FlowGrid orchestration illustration showing an AI builder, deployment terminal, and capabilities card connected in one workflow.",
     previewImageClassName: "scale-[1.01]",
@@ -34,7 +35,8 @@ export const SHOWCASE_STORIES: ShowcaseStory[] = [
       "Route Finance, Marketing, Law firm, and Product workflows into one unified orchestration layer, then track execution volume and cluster health from a single overview.",
     ctaLabel: "Explore observability",
     ctaHref: "#",
-    previewImageSrc: "/images/landing/flowgrid-showcase-executions-20260312.png",
+    previewImageSrc:
+      "/images/landing/flowgrid-showcase-executions-20260312.png",
     previewImageAlt:
       "FlowGrid execution illustration showing four business functions feeding a central orchestration node with analytics and deployment overview.",
     previewImageClassName: "",
@@ -48,10 +50,15 @@ export const SHOWCASE_STORIES: ShowcaseStory[] = [
       "Assign board leads, enforce approval checkpoints, and monitor execution signals in one unified orchestration layer as you scale teams.",
     ctaLabel: "Explore governance controls",
     ctaHref: "#",
-    previewImageSrc: "/images/landing/flowgrid-showcase-manage-scale-20260312.png",
+    previewImageSrc:
+      "/images/landing/flowgrid-showcase-manage-scale-20260312.png",
     previewImageAlt:
       "FlowGrid operations visual showing board lead assignment, execution pipeline, operational tracking, and audit signals.",
     previewImageClassName: "scale-[1.06] -translate-x-[2%]",
-    highlights: ["Board lead ownership", "Approval checkpoints", "Operational signals"],
+    highlights: [
+      "Board lead ownership",
+      "Approval checkpoints",
+      "Operational signals",
+    ],
   },
 ];

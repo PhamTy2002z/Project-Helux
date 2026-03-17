@@ -217,7 +217,11 @@ function BoardChatComposerImpl({
                       : "text-emerald-600"
                 }
               >
-                {f.status === "uploading" ? "..." : f.status === "failed" ? "!" : "✓"}
+                {f.status === "uploading"
+                  ? "..."
+                  : f.status === "failed"
+                    ? "!"
+                    : "✓"}
               </span>
               {onRemovePendingFile && (
                 <button
@@ -259,88 +263,88 @@ function BoardChatComposerImpl({
             </>
           )}
           <Textarea
-          ref={textareaRef}
-          value={value}
-          onChange={(event) => {
-            const nextValue = event.target.value;
-            setValue(nextValue);
-            autoResize();
-            refreshMentionTarget(
-              nextValue,
-              event.target.selectionStart ?? nextValue.length,
-            );
-          }}
-          onClick={(event) => {
-            refreshMentionTarget(
-              value,
-              event.currentTarget.selectionStart ?? value.length,
-            );
-          }}
-          onKeyUp={(event) => {
-            refreshMentionTarget(
-              value,
-              event.currentTarget.selectionStart ?? value.length,
-            );
-          }}
-          onBlur={() => {
-            if (closeMenuTimeoutRef.current !== null) {
-              window.clearTimeout(closeMenuTimeoutRef.current);
-            }
-            closeMenuTimeoutRef.current = window.setTimeout(() => {
-              setMentionTarget(null);
-              setActiveMentionIndex(0);
-            }, 120);
-          }}
-          onFocus={(event) => {
-            refreshMentionTarget(
-              value,
-              event.currentTarget.selectionStart ?? value.length,
-            );
-          }}
-          onKeyDown={(event) => {
-            if (filteredMentionOptions.length > 0 && mentionTarget) {
-              if (event.key === "ArrowDown") {
-                event.preventDefault();
-                setActiveMentionIndex(
-                  (prev) => (prev + 1) % filteredMentionOptions.length,
-                );
-                return;
+            ref={textareaRef}
+            value={value}
+            onChange={(event) => {
+              const nextValue = event.target.value;
+              setValue(nextValue);
+              autoResize();
+              refreshMentionTarget(
+                nextValue,
+                event.target.selectionStart ?? nextValue.length,
+              );
+            }}
+            onClick={(event) => {
+              refreshMentionTarget(
+                value,
+                event.currentTarget.selectionStart ?? value.length,
+              );
+            }}
+            onKeyUp={(event) => {
+              refreshMentionTarget(
+                value,
+                event.currentTarget.selectionStart ?? value.length,
+              );
+            }}
+            onBlur={() => {
+              if (closeMenuTimeoutRef.current !== null) {
+                window.clearTimeout(closeMenuTimeoutRef.current);
               }
-              if (event.key === "ArrowUp") {
-                event.preventDefault();
-                setActiveMentionIndex(
-                  (prev) =>
-                    (prev - 1 + filteredMentionOptions.length) %
-                    filteredMentionOptions.length,
-                );
-                return;
-              }
-              if (event.key === "Enter" || event.key === "Tab") {
-                event.preventDefault();
-                const selected = filteredMentionOptions[activeIndex];
-                if (selected) {
-                  applyMentionSelection(selected);
-                }
-                return;
-              }
-              if (event.key === "Escape") {
-                event.preventDefault();
+              closeMenuTimeoutRef.current = window.setTimeout(() => {
                 setMentionTarget(null);
                 setActiveMentionIndex(0);
-                return;
+              }, 120);
+            }}
+            onFocus={(event) => {
+              refreshMentionTarget(
+                value,
+                event.currentTarget.selectionStart ?? value.length,
+              );
+            }}
+            onKeyDown={(event) => {
+              if (filteredMentionOptions.length > 0 && mentionTarget) {
+                if (event.key === "ArrowDown") {
+                  event.preventDefault();
+                  setActiveMentionIndex(
+                    (prev) => (prev + 1) % filteredMentionOptions.length,
+                  );
+                  return;
+                }
+                if (event.key === "ArrowUp") {
+                  event.preventDefault();
+                  setActiveMentionIndex(
+                    (prev) =>
+                      (prev - 1 + filteredMentionOptions.length) %
+                      filteredMentionOptions.length,
+                  );
+                  return;
+                }
+                if (event.key === "Enter" || event.key === "Tab") {
+                  event.preventDefault();
+                  const selected = filteredMentionOptions[activeIndex];
+                  if (selected) {
+                    applyMentionSelection(selected);
+                  }
+                  return;
+                }
+                if (event.key === "Escape") {
+                  event.preventDefault();
+                  setMentionTarget(null);
+                  setActiveMentionIndex(0);
+                  return;
+                }
               }
-            }
-            if (event.key !== "Enter") return;
-            if (event.nativeEvent.isComposing) return;
-            if (event.shiftKey) return;
-            event.preventDefault();
-            void send();
-          }}
-          placeholder={placeholder}
-          rows={1}
-          className="min-h-[24px] min-w-0 !w-auto max-h-40 flex-1 resize-none border-0 bg-transparent px-0 py-0.5 text-[15px] leading-6 text-[color:var(--text)] shadow-none placeholder:text-quiet focus-visible:ring-0"
-          disabled={isComposerDisabled}
-        />
+              if (event.key !== "Enter") return;
+              if (event.nativeEvent.isComposing) return;
+              if (event.shiftKey) return;
+              event.preventDefault();
+              void send();
+            }}
+            placeholder={placeholder}
+            rows={1}
+            className="min-h-[24px] min-w-0 !w-auto max-h-40 flex-1 resize-none border-0 bg-transparent px-0 py-0.5 text-[15px] leading-6 text-[color:var(--text)] shadow-none placeholder:text-quiet focus-visible:ring-0"
+            disabled={isComposerDisabled}
+          />
           <div className="flex flex-shrink-0 items-center">
             <button
               type="button"

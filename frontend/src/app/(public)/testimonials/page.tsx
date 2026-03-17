@@ -14,10 +14,7 @@ import {
 import { getSiteUrl } from "@/lib/site-url";
 
 const TestimonialsPageContent = dynamic(
-  () =>
-    import(
-      "@/components/organisms/landing-page/testimonials-page-content"
-    ),
+  () => import("@/components/organisms/landing-page/testimonials-page-content"),
   {
     loading: () => (
       <div className="flex min-h-[60vh] items-center justify-center">

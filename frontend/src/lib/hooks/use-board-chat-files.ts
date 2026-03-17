@@ -44,7 +44,13 @@ type UseBoardChatFilesResult = {
   refreshFiles: () => Promise<void>;
 };
 
-const ALLOWED_TYPES = ["text/plain", "text/markdown", "text/csv", "application/json", "application/pdf"];
+const ALLOWED_TYPES = [
+  "text/plain",
+  "text/markdown",
+  "text/csv",
+  "application/json",
+  "application/pdf",
+];
 const ALLOWED_EXTENSIONS = [".txt", ".md", ".csv", ".json", ".pdf"];
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const MAX_FILES_PER_MESSAGE = 3;
@@ -52,7 +58,11 @@ const FILE_UPLOAD_TIMEOUT_MS = 30_000;
 
 const resolveAuthHeaders = async (): Promise<Record<string, string>> => {
   if (typeof window === "undefined") return {};
-  const clerk = (window as unknown as { Clerk?: { session?: { getToken: () => Promise<string> } | null } }).Clerk;
+  const clerk = (
+    window as unknown as {
+      Clerk?: { session?: { getToken: () => Promise<string> } | null };
+    }
+  ).Clerk;
   if (!clerk?.session) return {};
   try {
     const token = await clerk.session.getToken();
@@ -106,13 +116,16 @@ export const useBoardChatFiles = ({
 
       const validFiles = selected.filter((file) => {
         const ext = `.${file.name.split(".").pop()?.toLowerCase() ?? ""}`;
-        const typeOk = ALLOWED_TYPES.includes(file.type) || ALLOWED_EXTENSIONS.includes(ext);
+        const typeOk =
+          ALLOWED_TYPES.includes(file.type) || ALLOWED_EXTENSIONS.includes(ext);
         return typeOk && file.size <= MAX_FILE_SIZE;
       });
 
       const allowed = validFiles.slice(0, MAX_FILES_PER_MESSAGE);
       if (!allowed.length) {
-        setError("No valid files selected. Allowed: txt, md, csv, json, pdf. Max 10MB each.");
+        setError(
+          "No valid files selected. Allowed: txt, md, csv, json, pdf. Max 10MB each.",
+        );
         return [];
       }
 

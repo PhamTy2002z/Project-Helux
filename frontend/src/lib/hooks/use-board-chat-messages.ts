@@ -84,8 +84,10 @@ const preserveExistingAttachments = (
   existing: BoardMemoryRead,
   incoming: BoardMemoryRead,
 ): BoardMemoryRead => {
-  const existingAttachments = (existing as BoardMemoryWithAttachments).attachments;
-  const incomingAttachments = (incoming as BoardMemoryWithAttachments).attachments;
+  const existingAttachments = (existing as BoardMemoryWithAttachments)
+    .attachments;
+  const incomingAttachments = (incoming as BoardMemoryWithAttachments)
+    .attachments;
   if (!existingAttachments?.length || incomingAttachments?.length) {
     return incoming;
   }
@@ -99,7 +101,9 @@ const upsertSortedMessage = (
   items: BoardMemoryRead[],
   incoming: BoardMemoryRead,
 ): BoardMemoryRead[] => {
-  const existingIndex = items.findIndex((message) => message.id === incoming.id);
+  const existingIndex = items.findIndex(
+    (message) => message.id === incoming.id,
+  );
   if (existingIndex === -1) {
     const insertionIndex = findInsertionIndex(items, incoming);
     return [
@@ -121,7 +125,10 @@ const upsertSortedMessage = (
     ...items.slice(0, existingIndex),
     ...items.slice(existingIndex + 1),
   ];
-  const insertionIndex = findInsertionIndex(withoutExisting, normalizedIncoming);
+  const insertionIndex = findInsertionIndex(
+    withoutExisting,
+    normalizedIncoming,
+  );
   return [
     ...withoutExisting.slice(0, insertionIndex),
     normalizedIncoming,
@@ -190,15 +197,18 @@ export const useBoardChatMessages = ({
     messagesRef.current = messages;
   }, [messages]);
 
-  const resetState = useCallback((clearError = false) => {
-    setMessages([]);
-    setHasMore(false);
-    fetchedCountRef.current = 0;
-    clearAwaitingReply();
-    if (clearError) {
-      setError(null);
-    }
-  }, [clearAwaitingReply]);
+  const resetState = useCallback(
+    (clearError = false) => {
+      setMessages([]);
+      setHasMore(false);
+      fetchedCountRef.current = 0;
+      clearAwaitingReply();
+      if (clearError) {
+        setError(null);
+      }
+    },
+    [clearAwaitingReply],
+  );
 
   useEffect(() => {
     if (!isAwaitingReply || !awaitingSinceRef.current) return;
@@ -249,7 +259,10 @@ export const useBoardChatMessages = ({
       // current user, the agent hasn't replied yet.
       if (items.length > 0) {
         const lastMsg = items[items.length - 1];
-        const lastSource = resolveHumanActorName(lastMsg.source, DEFAULT_HUMAN_LABEL);
+        const lastSource = resolveHumanActorName(
+          lastMsg.source,
+          DEFAULT_HUMAN_LABEL,
+        );
         if (lastSource === source) {
           const lastAt = apiDatetimeToMs(lastMsg.created_at) ?? 0;
           const age = lastAt ? Date.now() - lastAt : Number.POSITIVE_INFINITY;
@@ -353,7 +366,9 @@ export const useBoardChatMessages = ({
           attachments?.length && !created.attachments?.length
             ? { ...created, attachments }
             : created;
-        setMessages((prev) => mergeMessagesById(prev, [createdWithAttachments as BoardMemoryRead]));
+        setMessages((prev) =>
+          mergeMessagesById(prev, [createdWithAttachments as BoardMemoryRead]),
+        );
         onMessageCreated?.(createdWithAttachments as BoardMemoryRead);
         startAwaitingReply(
           apiDatetimeToMs(createdWithAttachments.created_at) ?? Date.now(),

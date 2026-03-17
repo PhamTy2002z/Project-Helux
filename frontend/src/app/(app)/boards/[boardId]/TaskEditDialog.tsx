@@ -24,13 +24,13 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { TaskCustomFieldsEditor } from "./TaskCustomFieldsEditor";
-import type { TagRead, TaskCustomFieldDefinitionRead } from "@/api/generated/model";
+import type {
+  TagRead,
+  TaskCustomFieldDefinitionRead,
+} from "@/api/generated/model";
 import type { TaskCardRead } from "@/api/generated/model";
 import { updateTaskApiV1BoardsBoardIdTasksTaskIdPatch } from "@/api/generated/tasks/tasks";
-import {
-  localDateInputToUtcIso,
-  toLocalDateInput,
-} from "@/lib/datetime";
+import { localDateInputToUtcIso, toLocalDateInput } from "@/lib/datetime";
 import {
   boardCustomFieldValues,
   canonicalizeCustomFieldValues,
@@ -93,7 +93,9 @@ export function TaskEditDialog({
   const [editDueDate, setEditDueDate] = useState("");
   const [editAssigneeId, setEditAssigneeId] = useState("");
   const [editTagIds, setEditTagIds] = useState<string[]>([]);
-  const [editDependsOnTaskIds, setEditDependsOnTaskIds] = useState<string[]>([]);
+  const [editDependsOnTaskIds, setEditDependsOnTaskIds] = useState<string[]>(
+    [],
+  );
   const [editCustomFieldValues, setEditCustomFieldValues] =
     useState<TaskCustomFieldValues>({});
   const [isSavingTask, setIsSavingTask] = useState(false);
@@ -509,9 +511,7 @@ export function TaskEditDialog({
               </SelectContent>
             </Select>
             {assignableAgents.length === 0 ? (
-              <p className="text-xs text-muted">
-                Add agents to assign tasks.
-              </p>
+              <p className="text-xs text-muted">Add agents to assign tasks.</p>
             ) : null}
           </div>
           <div className="space-y-2">

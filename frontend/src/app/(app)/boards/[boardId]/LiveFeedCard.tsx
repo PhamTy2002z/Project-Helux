@@ -72,7 +72,9 @@ export const LiveFeedCard = memo(function LiveFeedCard({
             >
               {eventLabel}
             </span>
-            <span className="font-medium text-[color:var(--text)]">{authorName}</span>
+            <span className="font-medium text-[color:var(--text)]">
+              {authorName}
+            </span>
             {authorRole ? (
               <>
                 <span className="text-quiet">·</span>

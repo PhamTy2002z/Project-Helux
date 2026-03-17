@@ -69,7 +69,11 @@ const SETTINGS_SECTIONS: SettingsSection[] = [
 
 function UsageSection({ isSignedIn }: { isSignedIn: boolean }) {
   const quotaQuery = useQuotaUsageApiV1MetricsQuotasGet({
-    query: { ...withQueryPolicy("interactive"), enabled: isSignedIn, retry: false },
+    query: {
+      ...withQueryPolicy("interactive"),
+      enabled: isSignedIn,
+      retry: false,
+    },
   });
   const quotas = quotaQuery.data?.data?.quotas;
 
@@ -93,7 +97,8 @@ export default function SettingsPage() {
   const queryClient = useQueryClient();
   const { isSignedIn } = useAuth();
   const { user } = useUser();
-  const [activeSection, setActiveSection] = useState<SettingsSectionId>("billing");
+  const [activeSection, setActiveSection] =
+    useState<SettingsSectionId>("billing");
 
   const [name, setName] = useState("");
   const [timezone, setTimezone] = useState<string | null>(null);
@@ -253,7 +258,7 @@ export default function SettingsPage() {
                         }}
                         placeholder="Your name"
                         disabled={isSaving}
-                        className="border-[color:var(--border-strong)] text-strong focus-visible:ring-[color:var(--accent)]"
+                        className="border-[color:var(--border-strong)] text-strong"
                       />
                     </div>
                     <div className="space-y-2">
@@ -273,7 +278,7 @@ export default function SettingsPage() {
                         searchPlaceholder="Search timezones..."
                         emptyMessage="No matching timezones."
                         disabled={isSaving}
-                        triggerClassName="h-11 w-full rounded-xl border border-[color:var(--border-strong)] bg-[color:var(--surface)] px-3 py-2 text-sm font-medium text-strong shadow-sm focus:border-[color:var(--accent)] focus:ring-2 focus:ring-[color:var(--accent)]/20"
+                        triggerClassName="h-11 w-full rounded-xl border border-[color:var(--border-strong)] bg-[color:var(--surface)] px-3 py-2 text-sm font-medium text-strong shadow-sm"
                         contentClassName="rounded-xl border border-[color:var(--border)] shadow-lg"
                         itemClassName="px-4 py-3 text-sm text-[color:var(--text)] data-[selected=true]:bg-[color:var(--surface-muted)] data-[selected=true]:text-strong"
                       />

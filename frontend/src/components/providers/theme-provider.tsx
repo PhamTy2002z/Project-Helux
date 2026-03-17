@@ -56,10 +56,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     applyTheme(theme === "dark" ? "light" : "dark");
   }, [theme, applyTheme]);
 
-  const setTheme = useCallback(
-    (next: Theme) => applyTheme(next),
-    [applyTheme],
-  );
+  const setTheme = useCallback((next: Theme) => applyTheme(next), [applyTheme]);
 
   useEffect(() => {
     const mql = window.matchMedia("(prefers-color-scheme: dark)");

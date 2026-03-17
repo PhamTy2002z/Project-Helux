@@ -5,9 +5,19 @@ import { useQuotaUsageApiV1MetricsQuotasGet } from "@/api/generated/metrics/metr
 import { withQueryPolicy, visibilityAwareInterval } from "@/lib/query-policy";
 import { usePageActive } from "@/hooks/usePageActive";
 import { cn } from "@/lib/utils";
-import { QUOTA_RESOURCE_LABELS, formatCompact, usageBarColor } from "./billing-display-helpers";
+import {
+  QUOTA_RESOURCE_LABELS,
+  formatCompact,
+  usageBarColor,
+} from "./billing-display-helpers";
 
-type Quota = { resource: string; used: number; limit: number | null; remaining: number | null; exceeded: boolean };
+type Quota = {
+  resource: string;
+  used: number;
+  limit: number | null;
+  remaining: number | null;
+  exceeded: boolean;
+};
 
 function pickPrimaryQuota(quotas: Quota[]): Quota | null {
   let best: Quota | null = null;
@@ -45,13 +55,21 @@ export function SidebarUsageMeter({ enabled }: { enabled: boolean }) {
   const barColor = usageBarColor(pct);
 
   return (
-    <Link href="/settings" className="block cursor-pointer rounded-lg px-3 py-2 hover:bg-[color:var(--surface-muted)] transition">
+    <Link
+      href="/settings"
+      className="block cursor-pointer rounded-lg px-3 py-2 hover:bg-[color:var(--surface-muted)] transition"
+    >
       <div className="flex justify-between text-[11px] text-muted">
         <span>{label}</span>
-        <span>{formatCompact(primary.used)}/{formatCompact(primary.limit)}</span>
+        <span>
+          {formatCompact(primary.used)}/{formatCompact(primary.limit)}
+        </span>
       </div>
       <div className="mt-1 h-1.5 rounded-full bg-[color:var(--surface-strong)]">
-        <div className={cn("h-full rounded-full transition-all", barColor)} style={{ width: `${pct}%` }} />
+        <div
+          className={cn("h-full rounded-full transition-all", barColor)}
+          style={{ width: `${pct}%` }}
+        />
       </div>
     </Link>
   );

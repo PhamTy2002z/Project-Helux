@@ -159,38 +159,43 @@ export function DataTable<TData>({
                   <td className={rowActions?.cellClassName ?? cellClassName}>
                     <div className="flex justify-end gap-2">
                       {resolvedRowActions
-                        .filter((action) => action.shouldShow?.(row.original) ?? true)
+                        .filter(
+                          (action) => action.shouldShow?.(row.original) ?? true,
+                        )
                         .map((action) => {
-                        const href = action.href?.(row.original) ?? null;
-                        if (href) {
-                          return (
-                            <Link
-                              key={action.key}
-                              href={href}
-                              className={
-                                action.className ??
-                                buttonVariants({ variant: "ghost", size: "sm" })
-                              }
-                            >
-                              {action.label}
-                            </Link>
-                          );
-                        }
-                        if (action.onClick) {
-                          return (
-                            <Button
-                              key={action.key}
-                              variant="ghost"
-                              size="sm"
-                              className={action.className}
-                              onClick={() => action.onClick?.(row.original)}
-                            >
-                              {action.label}
-                            </Button>
-                          );
-                        }
-                        return null;
-                      })}
+                          const href = action.href?.(row.original) ?? null;
+                          if (href) {
+                            return (
+                              <Link
+                                key={action.key}
+                                href={href}
+                                className={
+                                  action.className ??
+                                  buttonVariants({
+                                    variant: "ghost",
+                                    size: "sm",
+                                  })
+                                }
+                              >
+                                {action.label}
+                              </Link>
+                            );
+                          }
+                          if (action.onClick) {
+                            return (
+                              <Button
+                                key={action.key}
+                                variant="ghost"
+                                size="sm"
+                                className={action.className}
+                                onClick={() => action.onClick?.(row.original)}
+                              >
+                                {action.label}
+                              </Button>
+                            );
+                          }
+                          return null;
+                        })}
                     </div>
                   </td>
                 ) : null}
@@ -207,10 +212,7 @@ export function DataTable<TData>({
             />
           ) : (
             <tr>
-              <td
-                colSpan={colSpan}
-                className="px-6 py-8 text-sm text-muted"
-              >
+              <td colSpan={colSpan} className="px-6 py-8 text-sm text-muted">
                 {emptyMessage}
               </td>
             </tr>

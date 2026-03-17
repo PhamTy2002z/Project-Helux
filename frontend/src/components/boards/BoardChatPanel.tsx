@@ -54,7 +54,9 @@ export const BoardChatPanel = memo(function BoardChatPanel({
   const [isSessionMenuOpen, setIsSessionMenuOpen] = useState(false);
 
   // Track session IDs that were just created — skip initial fetch for these
-  const [freshSessionIds, setFreshSessionIds] = useState<Set<string>>(() => new Set());
+  const [freshSessionIds, setFreshSessionIds] = useState<Set<string>>(
+    () => new Set(),
+  );
 
   const sessions = sessionsState.sessions;
   const effectiveActiveSessionId = useMemo(() => {
@@ -82,7 +84,10 @@ export const BoardChatPanel = memo(function BoardChatPanel({
   // setState here is intentional: we need to sync the "consumed" flag after the
   // skip-fetch decision has been read during this render cycle.
   useEffect(() => {
-    if (effectiveActiveSessionId && freshSessionIds.has(effectiveActiveSessionId)) {
+    if (
+      effectiveActiveSessionId &&
+      freshSessionIds.has(effectiveActiveSessionId)
+    ) {
       // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional: clear consumed flag after render
       setFreshSessionIds((prev) => {
         const next = new Set(prev);
@@ -220,7 +225,9 @@ export const BoardChatPanel = memo(function BoardChatPanel({
 
   const activeSessionTitle = useMemo(() => {
     if (!effectiveActiveSessionId) return null;
-    return sessions.find((s) => s.id === effectiveActiveSessionId)?.title ?? null;
+    return (
+      sessions.find((s) => s.id === effectiveActiveSessionId)?.title ?? null
+    );
   }, [effectiveActiveSessionId, sessions]);
 
   const combinedError = sessionsState.error?.message ?? messagesState.error;
@@ -262,15 +269,23 @@ export const BoardChatPanel = memo(function BoardChatPanel({
 
           {/* Session selector bar — above chat thread */}
           <div className="flex items-center justify-between border-b border-[color:var(--border)] px-4 py-2">
-            <Popover open={isSessionMenuOpen} onOpenChange={setIsSessionMenuOpen}>
+            <Popover
+              open={isSessionMenuOpen}
+              onOpenChange={setIsSessionMenuOpen}
+            >
               <PopoverTrigger asChild>
                 <button
                   type="button"
                   className="flex min-w-0 items-center gap-2 rounded-lg px-2 py-1.5 text-left text-sm transition hover:bg-[color:var(--surface-muted)] focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-                  title={isSessionMenuOpen ? "Close session menu" : "Switch session"}
+                  title={
+                    isSessionMenuOpen ? "Close session menu" : "Switch session"
+                  }
                   aria-expanded={isSessionMenuOpen}
                 >
-                  <MessageSquare aria-hidden="true" className="h-3.5 w-3.5 flex-shrink-0 text-[color:var(--text-muted)]" />
+                  <MessageSquare
+                    aria-hidden="true"
+                    className="h-3.5 w-3.5 flex-shrink-0 text-[color:var(--text-muted)]"
+                  />
                   <span className="max-w-[200px] truncate font-medium text-[color:var(--text)]">
                     {activeSessionTitle ?? "No session"}
                   </span>

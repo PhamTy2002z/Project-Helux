@@ -57,7 +57,10 @@ const INDIVIDUAL_PLANS = [
 
 export default function PricingCards() {
   return (
-    <section id="pricing" className="relative overflow-hidden bg-black px-[5%] pb-16 pt-8 sm:pb-20 sm:pt-10">
+    <section
+      id="pricing"
+      className="relative overflow-hidden bg-black px-[5%] pb-16 pt-8 sm:pb-20 sm:pt-10"
+    >
       {/* Hero-style background image with overlay + blur */}
       <div className="pointer-events-none absolute inset-0">
         <Image
@@ -143,16 +146,16 @@ export default function PricingCards() {
                     ))}
                   </ul>
                   {plan.disabled ? (
-                    <span
-                      className="block cursor-not-allowed text-center opacity-50 hero-btn-secondary"
-                    >
+                    <span className="block cursor-not-allowed text-center opacity-50 hero-btn-secondary">
                       {plan.cta.label}
                     </span>
                   ) : (
                     <Link
                       href={plan.cta.href}
                       className={`block text-center ${
-                        plan.highlighted ? "hero-btn-primary" : "hero-btn-secondary"
+                        plan.highlighted
+                          ? "hero-btn-primary"
+                          : "hero-btn-secondary"
                       }`}
                     >
                       {plan.cta.label}

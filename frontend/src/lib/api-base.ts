@@ -2,7 +2,12 @@ const LOOPBACK_HOSTS = new Set(["localhost", "127.0.0.1", "::1", "[::1]"]);
 
 const normalizeAutoHost = (host: string): string => {
   const normalized = host.trim().toLowerCase();
-  if (!normalized || normalized === "0.0.0.0" || normalized === "::" || normalized === "[::]") {
+  if (
+    !normalized ||
+    normalized === "0.0.0.0" ||
+    normalized === "::" ||
+    normalized === "[::]"
+  ) {
     return "localhost";
   }
   return normalized;

@@ -33,13 +33,19 @@ describe("FeatureCards", () => {
         name: /trusted by teams\. built for scale\./i,
       }),
     ).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Trusted" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Scalable" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Trusted" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Scalable" }),
+    ).toBeInTheDocument();
     expect(
       screen.getByAltText(/trusted poster showing an agent workflow timeline/i),
     ).toBeInTheDocument();
     expect(
-      screen.getByAltText(/scalable poster showing workflow growth across departments/i),
+      screen.getByAltText(
+        /scalable poster showing workflow growth across departments/i,
+      ),
     ).toBeInTheDocument();
     expect(screen.getByText("Workflow tracing")).toBeInTheDocument();
     expect(screen.getByText("Role-based access control")).toBeInTheDocument();

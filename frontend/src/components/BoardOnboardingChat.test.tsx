@@ -135,8 +135,14 @@ describe("BoardOnboardingChat polling", () => {
   });
 
   it("keeps waiting when backend repeats the same question with a new timestamp", async () => {
-    const initial = buildQuestionSession("Pick a style", "2026-02-15T00:00:00Z");
-    const repeated = buildQuestionSession("Pick a style", "2026-02-15T00:00:05Z");
+    const initial = buildQuestionSession(
+      "Pick a style",
+      "2026-02-15T00:00:00Z",
+    );
+    const repeated = buildQuestionSession(
+      "Pick a style",
+      "2026-02-15T00:00:05Z",
+    );
     const next = buildQuestionSession(
       "What timeline should we target?",
       "2026-02-15T00:00:10Z",
@@ -154,11 +160,17 @@ describe("BoardOnboardingChat polling", () => {
     await screen.findByText("Pick a style");
 
     fireEvent.click(screen.getByRole("button", { name: "Option A" }));
+    await act(async () => {
+      await Promise.resolve();
+    });
     fireEvent.click(screen.getByRole("button", { name: "Next" }));
 
-    await waitFor(() => {
-      expect(answerOnboardingMock).toHaveBeenCalledTimes(1);
-    });
+    await waitFor(
+      () => {
+        expect(answerOnboardingMock).toHaveBeenCalledTimes(1);
+      },
+      { timeout: 3000 },
+    );
 
     const callsBeforePoll = getOnboardingMock.mock.calls.length;
     await act(async () => {

@@ -8,8 +8,11 @@ import { SignInButton, SignedIn, SignedOut } from "@/auth/clerk";
 
 import nextDynamic from "next/dynamic";
 const BoardApprovalsPanel = nextDynamic(
-  () => import("@/components/BoardApprovalsPanel").then(m => m.BoardApprovalsPanel),
-  { ssr: false }
+  () =>
+    import("@/components/BoardApprovalsPanel").then(
+      (m) => m.BoardApprovalsPanel,
+    ),
+  { ssr: false },
 );
 import { DashboardSidebar } from "@/components/organisms/DashboardSidebar";
 import { DashboardShell } from "@/components/templates/DashboardShell";

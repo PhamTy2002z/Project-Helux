@@ -46,12 +46,20 @@ import type {
 } from "@/api/generated/model";
 import nextDynamic from "next/dynamic";
 const BoardOnboardingChat = nextDynamic(
-  () => import("@/components/BoardOnboardingChat").then(m => m.BoardOnboardingChat),
-  { ssr: false }
+  () =>
+    import("@/components/BoardOnboardingChat").then(
+      (m) => m.BoardOnboardingChat,
+    ),
+  { ssr: false },
 );
 import { DashboardPageLayout } from "@/components/templates/DashboardPageLayout";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogClose, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -564,8 +572,8 @@ export default function EditBoardPage() {
 
   const isFormReady = Boolean(
     resolvedName.trim() &&
-      resolvedDescription.trim() &&
-      (isSaasMode || displayGatewayId),
+    resolvedDescription.trim() &&
+    (isSaasMode || displayGatewayId),
   );
 
   const gatewayOptions = useMemo(
@@ -828,7 +836,7 @@ export default function EditBoardPage() {
                     placeholder="Select gateway"
                     searchPlaceholder="Search gateways..."
                     emptyMessage="No gateways found."
-                    triggerClassName="w-full h-11 rounded-xl border border-[color:var(--border-strong)] bg-[color:var(--surface)] px-3 py-2 text-sm font-medium text-strong shadow-sm focus:border-[color:var(--accent)] focus:ring-2 focus:ring-[color:var(--accent)]"
+                    triggerClassName="w-full h-11 rounded-xl border border-[color:var(--border-strong)] bg-[color:var(--surface)] px-3 py-2 text-sm font-medium text-strong shadow-sm"
                     contentClassName="rounded-xl border border-[color:var(--border)] shadow-lg"
                     itemClassName="px-4 py-3 text-sm text-[color:var(--text)] data-[selected=true]:bg-[color:var(--surface-muted)] data-[selected=true]:text-strong"
                   />
@@ -883,7 +891,7 @@ export default function EditBoardPage() {
                   placeholder="No group"
                   searchPlaceholder="Search groups..."
                   emptyMessage="No groups found."
-                  triggerClassName="w-full h-11 rounded-xl border border-[color:var(--border-strong)] bg-[color:var(--surface)] px-3 py-2 text-sm font-medium text-strong shadow-sm focus:border-[color:var(--accent)] focus:ring-2 focus:ring-[color:var(--accent)]"
+                  triggerClassName="w-full h-11 rounded-xl border border-[color:var(--border-strong)] bg-[color:var(--surface)] px-3 py-2 text-sm font-medium text-strong shadow-sm"
                   contentClassName="rounded-xl border border-[color:var(--border)] shadow-lg"
                   itemClassName="px-4 py-3 text-sm text-[color:var(--text)] data-[selected=true]:bg-[color:var(--surface-muted)] data-[selected=true]:text-strong"
                   disabled={isLoading}
@@ -959,9 +967,7 @@ export default function EditBoardPage() {
 
             <section className="space-y-3 border-t border-[color:var(--border)] pt-4">
               <div>
-                <h2 className="text-base font-semibold text-strong">
-                  Rules
-                </h2>
+                <h2 className="text-base font-semibold text-strong">Rules</h2>
                 <p className="text-xs text-[color:var(--text-muted)]">
                   Configure board-level workflow enforcement.
                 </p>

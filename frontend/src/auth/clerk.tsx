@@ -22,7 +22,9 @@ function hasLocalAuthToken(): boolean {
 
 function isMissingClerkProviderError(error: unknown): boolean {
   if (!(error instanceof Error)) return false;
-  return error.message.includes("can only be used within the <ClerkProvider />");
+  return error.message.includes(
+    "can only be used within the <ClerkProvider />",
+  );
 }
 
 function getSignedOutAuthState() {

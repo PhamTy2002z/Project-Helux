@@ -23,7 +23,7 @@ type SearchableSelectProps = {
 };
 
 const baseTriggerClassName =
-  "w-auto h-auto rounded-xl border-2 border-[color:var(--border)] bg-[color:var(--surface)] px-4 py-3 text-left text-sm font-semibold text-[color:var(--text)] shadow-sm transition-all duration-200 hover:border-[color:var(--border-strong)] focus:border-[color:var(--accent)] focus:ring-4 focus:ring-[color:var(--accent)]/20";
+  "w-auto h-auto rounded-xl border-2 border-[color:var(--border)] bg-[color:var(--surface)] px-4 py-3 text-left text-sm font-semibold text-[color:var(--text)] shadow-sm transition-all duration-200 hover:border-[color:var(--border-strong)]";
 const baseContentClassName =
   "rounded-xl border-2 border-[color:var(--border)] bg-[color:var(--surface)] shadow-xl";
 const baseItemClassName =

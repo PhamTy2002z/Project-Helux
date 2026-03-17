@@ -137,7 +137,7 @@ export default function DropdownSelect({
           aria-haspopup="listbox"
           disabled={disabled}
           className={cn(
-            "inline-flex h-10 w-auto cursor-pointer items-center justify-between gap-2 rounded-md border border-[color:var(--border-strong)] bg-[color:var(--surface)] px-3 py-2 text-sm font-medium text-strong shadow-sm transition-colors hover:bg-[color:var(--surface-muted)] focus:outline-none focus:ring-2 focus:ring-[color:var(--accent)] focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50",
+            "inline-flex h-10 w-auto cursor-pointer items-center justify-between gap-2 rounded-md border border-[color:var(--border-strong)] bg-[color:var(--surface)] px-3 py-2 text-sm font-medium text-strong shadow-sm transition-colors hover:bg-[color:var(--surface-muted)] focus:outline-none focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50",
             open && "bg-[color:var(--surface-muted)]",
             triggerClassName,
           )}
@@ -150,7 +150,10 @@ export default function DropdownSelect({
           >
             {SelectedIcon ? (
               <SelectedIcon
-                className={cn("h-4 w-4 text-[color:var(--text-muted)]", selectedIconClassName)}
+                className={cn(
+                  "h-4 w-4 text-[color:var(--text-muted)]",
+                  selectedIconClassName,
+                )}
               />
             ) : null}
             <span className="truncate">
@@ -209,16 +212,16 @@ export default function DropdownSelect({
                       <OptionIcon
                         className={cn(
                           "h-4 w-4",
-                          isSelected ? "text-[color:var(--text)]" : "text-muted",
+                          isSelected
+                            ? "text-[color:var(--text)]"
+                            : "text-muted",
                           option.iconClassName,
                         )}
                       />
                     ) : null}
                     <span className="truncate font-medium">{option.label}</span>
                   </span>
-                  {isSelected ? (
-                    <Check className="h-4 w-4 text-quiet" />
-                  ) : null}
+                  {isSelected ? <Check className="h-4 w-4 text-quiet" /> : null}
                 </CommandItem>
               );
             })}

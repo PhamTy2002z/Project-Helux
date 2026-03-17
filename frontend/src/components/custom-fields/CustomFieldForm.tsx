@@ -101,9 +101,7 @@ export function CustomFieldForm({
         </p>
         <div className="mt-4 grid gap-6 md:grid-cols-2">
           <label className="space-y-1">
-            <span className="text-sm font-semibold text-strong">
-              Field key
-            </span>
+            <span className="text-sm font-semibold text-strong">Field key</span>
             <Input
               value={formState.fieldKey}
               onChange={(event) =>

@@ -54,13 +54,15 @@ export default function LandingFooter() {
         <div className="hero-glass-card grid items-start gap-10 rounded-3xl border border-white/15 p-6 sm:p-8 md:grid-cols-2 md:gap-8 md:p-10 lg:grid-cols-[minmax(240px,1.1fr)_repeat(3,minmax(0,1fr))] lg:gap-10 fhd:gap-16">
           {/* Logo column */}
           <div className="max-w-[320px] md:max-w-none lg:max-w-[320px]">
-            <p className="text-[22px] font-semibold tracking-[-0.02em] text-white">FlowGrid</p>
+            <p className="text-[22px] font-semibold tracking-[-0.02em] text-white">
+              FlowGrid
+            </p>
             <p className="mt-1 text-[11px] uppercase tracking-[0.18em] text-white/55">
               Cloud SaaS Platform
             </p>
             <p className="mt-4 text-[15px] leading-relaxed text-white/55 sm:text-base">
-              FlowGrid helps operations teams run boards, approvals, and gateways in one managed
-              SaaS workspace.
+              FlowGrid helps operations teams run boards, approvals, and
+              gateways in one managed SaaS workspace.
             </p>
           </div>
 

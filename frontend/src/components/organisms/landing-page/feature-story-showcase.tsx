@@ -44,7 +44,9 @@ export default function FeatureStoryShowcase() {
                     </div>
                   </div>
 
-                  <div className={`px-1 sm:px-2 ${index % 2 === 0 ? "lg:order-1" : "lg:order-2"}`}>
+                  <div
+                    className={`px-1 sm:px-2 ${index % 2 === 0 ? "lg:order-1" : "lg:order-2"}`}
+                  >
                     <p className="text-xs font-semibold uppercase tracking-[0.14em] text-white/65">
                       {story.kicker}
                     </p>
@@ -57,10 +59,10 @@ export default function FeatureStoryShowcase() {
 
                     <ul className="mt-4 flex flex-wrap gap-2">
                       {story.highlights.map((highlight) => (
-                          <li
-                            key={highlight}
-                            className="rounded-full border border-white/30 bg-white/[0.08] px-3 py-1.5 text-xs font-medium text-white/90"
-                          >
+                        <li
+                          key={highlight}
+                          className="rounded-full border border-white/30 bg-white/[0.08] px-3 py-1.5 text-xs font-medium text-white/90"
+                        >
                           {highlight}
                         </li>
                       ))}

@@ -221,9 +221,7 @@ export default function GatewayDetailPage() {
                 </div>
                 <div className="mt-4 space-y-3 text-sm text-[color:var(--text)]">
                   <div>
-                    <p className="text-xs uppercase text-quiet">
-                      Gateway URL
-                    </p>
+                    <p className="text-xs uppercase text-quiet">Gateway URL</p>
                     <p className="mt-1 text-sm font-medium text-strong">
                       {gateway.url}
                     </p>
@@ -260,17 +258,13 @@ export default function GatewayDetailPage() {
                   </div>
                   <div className="grid gap-3 sm:grid-cols-2">
                     <div>
-                      <p className="text-xs uppercase text-quiet">
-                        Created
-                      </p>
+                      <p className="text-xs uppercase text-quiet">Created</p>
                       <p className="mt-1 text-sm font-medium text-strong">
                         {formatTimestamp(gateway.created_at)}
                       </p>
                     </div>
                     <div>
-                      <p className="text-xs uppercase text-quiet">
-                        Updated
-                      </p>
+                      <p className="text-xs uppercase text-quiet">Updated</p>
                       <p className="mt-1 text-sm font-medium text-strong">
                         {formatTimestamp(gateway.updated_at)}
                       </p>

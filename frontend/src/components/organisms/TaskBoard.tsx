@@ -67,7 +67,8 @@ const columns: Array<{
     title: "Inbox",
     status: "inbox",
     dot: "bg-[color:var(--text-quiet)]",
-    accent: "hover:border-[color:var(--border-strong)] hover:bg-[color:var(--surface-muted)]",
+    accent:
+      "hover:border-[color:var(--border-strong)] hover:bg-[color:var(--surface-muted)]",
     text: "group-hover:text-[color:var(--text)] text-muted",
     badge: "bg-[color:var(--surface-muted)] text-[color:var(--text-muted)]",
   },
@@ -164,7 +165,8 @@ export const TaskBoard = memo(function TaskBoard({
     useState<BoardQueryState>(defaultBoardQueryState);
 
   const effectiveOverlayState = queryState ?? internalOverlayQueryState;
-  const setEffectiveOverlayState = onQueryStateChange ?? setInternalOverlayQueryState;
+  const setEffectiveOverlayState =
+    onQueryStateChange ?? setInternalOverlayQueryState;
   const overlayViewModel = useMemo(
     () => buildBoardViewModel(tasks, effectiveOverlayState),
     [tasks, effectiveOverlayState],
@@ -402,7 +404,9 @@ export const TaskBoard = memo(function TaskBoard({
   }, []);
 
   const collapseAllGroups = useCallback(() => {
-    setCollapsedGroupIds(new Set(overlayViewModel.groups.map((group) => group.id)));
+    setCollapsedGroupIds(
+      new Set(overlayViewModel.groups.map((group) => group.id)),
+    );
   }, [overlayViewModel.groups]);
 
   const expandAllGroups = useCallback(() => {
@@ -411,7 +415,11 @@ export const TaskBoard = memo(function TaskBoard({
 
   if (overlayEnabled) {
     return (
-      <div ref={boardRef} data-testid="task-board-overlay" className="space-y-4 pb-6">
+      <div
+        ref={boardRef}
+        data-testid="task-board-overlay"
+        className="space-y-4 pb-6"
+      >
         <TaskBoardFilterBar
           state={effectiveOverlayState}
           visibleCount={overlayViewModel.filteredCount}

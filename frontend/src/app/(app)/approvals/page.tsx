@@ -25,7 +25,10 @@ import { visibilityAwareInterval, withQueryPolicy } from "@/lib/query-policy";
 import { parseSSEBuffer } from "@/lib/sse-parser";
 
 const BoardApprovalsPanel = nextDynamic(
-  () => import("@/components/BoardApprovalsPanel").then((m) => m.BoardApprovalsPanel),
+  () =>
+    import("@/components/BoardApprovalsPanel").then(
+      (m) => m.BoardApprovalsPanel,
+    ),
   { ssr: false },
 );
 
@@ -50,7 +53,9 @@ const approvalTimestampMs = (approval: ApprovalRead): number => {
 };
 
 const sortApprovalsByRecent = (items: ApprovalRead[]): ApprovalRead[] =>
-  [...items].sort((left, right) => approvalTimestampMs(right) - approvalTimestampMs(left));
+  [...items].sort(
+    (left, right) => approvalTimestampMs(right) - approvalTimestampMs(left),
+  );
 
 const hasApprovalChanged = (left: ApprovalRead, right: ApprovalRead): boolean =>
   left.status !== right.status ||
@@ -60,7 +65,10 @@ const hasApprovalChanged = (left: ApprovalRead, right: ApprovalRead): boolean =>
   left.created_at !== right.created_at ||
   left.action_type !== right.action_type;
 
-const mergeApproval = (items: ApprovalRead[], incoming: ApprovalRead): ApprovalRead[] => {
+const mergeApproval = (
+  items: ApprovalRead[],
+  incoming: ApprovalRead,
+): ApprovalRead[] => {
   const index = items.findIndex((item) => item.id === incoming.id);
   if (index === -1) {
     return sortApprovalsByRecent([incoming, ...items]);
@@ -74,7 +82,10 @@ const mergeApproval = (items: ApprovalRead[], incoming: ApprovalRead): ApprovalR
   return sortApprovalsByRecent(next);
 };
 
-const latestApprovalSinceForBoard = (boardId: string, approvals: ApprovalRead[]): string | undefined => {
+const latestApprovalSinceForBoard = (
+  boardId: string,
+  approvals: ApprovalRead[],
+): string | undefined => {
   let latestMs = 0;
   for (const approval of approvals) {
     if (approval.board_id !== boardId) continue;
@@ -109,7 +120,10 @@ function GlobalApprovalsInner() {
   }, [boards]);
 
   const boardIds = useMemo(
-    () => boards.map((board) => board.id).sort((left, right) => left.localeCompare(right)),
+    () =>
+      boards
+        .map((board) => board.id)
+        .sort((left, right) => left.localeCompare(right)),
     [boards],
   );
 
@@ -162,7 +176,9 @@ function GlobalApprovalsInner() {
 
   const updateApprovalMutation = useMutation<
     Awaited<
-      ReturnType<typeof updateApprovalApiV1BoardsBoardIdApprovalsApprovalIdPatch>
+      ReturnType<
+        typeof updateApprovalApiV1BoardsBoardIdApprovalsApprovalIdPatch
+      >
     >,
     ApiError,
     { boardId: string; approvalId: string; status: "approved" | "rejected" }
@@ -199,21 +215,27 @@ function GlobalApprovalsInner() {
     for (const [index, boardId] of boardIds.entries()) {
       const boardDelay = index * APPROVAL_STREAM_CONNECT_SPACING_MS;
       const abortController = new AbortController();
-      const backoff = createExponentialBackoff(APPROVAL_STREAM_RECONNECT_BACKOFF);
+      const backoff = createExponentialBackoff(
+        APPROVAL_STREAM_RECONNECT_BACKOFF,
+      );
       let reconnectTimeout: number | undefined;
       let connectTimeout: number | undefined;
 
       const connect = async () => {
         try {
-          const since = latestApprovalSinceForBoard(boardId, approvalsRef.current);
-          const streamResult = await streamApprovalsApiV1BoardsBoardIdApprovalsStreamGet(
+          const since = latestApprovalSinceForBoard(
             boardId,
-            since ? { since } : undefined,
-            {
-              headers: { Accept: "text/event-stream" },
-              signal: abortController.signal,
-            },
+            approvalsRef.current,
           );
+          const streamResult =
+            await streamApprovalsApiV1BoardsBoardIdApprovalsStreamGet(
+              boardId,
+              since ? { since } : undefined,
+              {
+                headers: { Accept: "text/event-stream" },
+                signal: abortController.signal,
+              },
+            );
 
           if (streamResult.status !== 200) {
             throw new Error("Unable to connect approvals stream.");
@@ -242,17 +264,25 @@ function GlobalApprovalsInner() {
             for (const event of parsed.events) {
               if (event.eventType !== "approval" || !event.data) continue;
               try {
-                const payload = JSON.parse(event.data) as { approval?: ApprovalRead };
+                const payload = JSON.parse(event.data) as {
+                  approval?: ApprovalRead;
+                };
                 if (!payload.approval) continue;
-                queryClient.setQueryData<GlobalApprovalsData>(approvalsKey, (previous) => {
-                  const base = previous ?? { approvals: [], warnings: [] };
-                  const mergedApprovals = mergeApproval(base.approvals, payload.approval as ApprovalRead);
-                  if (mergedApprovals === base.approvals) return base;
-                  return {
-                    ...base,
-                    approvals: mergedApprovals,
-                  };
-                });
+                queryClient.setQueryData<GlobalApprovalsData>(
+                  approvalsKey,
+                  (previous) => {
+                    const base = previous ?? { approvals: [], warnings: [] };
+                    const mergedApprovals = mergeApproval(
+                      base.approvals,
+                      payload.approval as ApprovalRead,
+                    );
+                    if (mergedApprovals === base.approvals) return base;
+                    return {
+                      ...base,
+                      approvals: mergedApprovals,
+                    };
+                  },
+                );
               } catch {
                 // Ignore malformed payloads.
               }

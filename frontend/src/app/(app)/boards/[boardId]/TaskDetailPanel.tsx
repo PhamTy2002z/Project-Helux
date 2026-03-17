@@ -109,9 +109,8 @@ function approvalPayloadValues(
 
 function getApprovalTaskIds(approval: Approval): string[] {
   const payload = approval.payload ?? {};
-  const linkedTaskIds = (
-    approval as Approval & { task_ids?: string[] | null }
-  ).task_ids;
+  const linkedTaskIds = (approval as Approval & { task_ids?: string[] | null })
+    .task_ids;
   const singleTaskId =
     approval.task_id ??
     approvalPayloadValue(payload, "task_id") ??
@@ -166,8 +165,10 @@ function normalizeMentionSuggestion(value: string): string | null {
   const trimmed = value.trim().replace(/^@+/, "");
   if (!trimmed) return null;
   const normalized =
-    trimmed.split(/\s+/)[0]?.replace(/[^A-Za-z0-9_-]/g, "").toLowerCase() ??
-    "";
+    trimmed
+      .split(/\s+/)[0]
+      ?.replace(/[^A-Za-z0-9_-]/g, "")
+      .toLowerCase() ?? "";
   return normalized || null;
 }
 
@@ -215,9 +216,8 @@ export function TaskDetailPanel({
   onNavigate,
 }: TaskDetailPanelProps) {
   const [commentDraft, setCommentDraft] = useState("");
-  const [mentionTarget, setMentionTarget] = useState<CommentMentionTarget | null>(
-    null,
-  );
+  const [mentionTarget, setMentionTarget] =
+    useState<CommentMentionTarget | null>(null);
   const [activeMentionIndex, setActiveMentionIndex] = useState(0);
   const commentTextareaRef = useRef<HTMLTextAreaElement | null>(null);
   const closeMentionMenuTimeoutRef = useRef<number | null>(null);
@@ -263,13 +263,16 @@ export function TaskDetailPanel({
       ? Math.min(activeMentionIndex, filteredMentionOptions.length - 1)
       : 0;
 
-  const refreshMentionTarget = useCallback((nextValue: string, caret: number) => {
-    const nextTarget = findCommentMentionTarget(nextValue, caret);
-    setMentionTarget(nextTarget);
-    if (!nextTarget) {
-      setActiveMentionIndex(0);
-    }
-  }, []);
+  const refreshMentionTarget = useCallback(
+    (nextValue: string, caret: number) => {
+      const nextTarget = findCommentMentionTarget(nextValue, caret);
+      setMentionTarget(nextTarget);
+      if (!nextTarget) {
+        setActiveMentionIndex(0);
+      }
+    },
+    [],
+  );
 
   const applyMentionSelection = useCallback(
     (handle: string) => {
@@ -383,9 +386,7 @@ export function TaskDetailPanel({
                 />
               </div>
             ) : (
-              <p className="text-sm text-muted">
-                No description provided.
-              </p>
+              <p className="text-sm text-muted">No description provided.</p>
             )}
           </div>
           <div className="space-y-2">
@@ -615,36 +616,43 @@ export function TaskDetailPanel({
                     onClick={(event) => {
                       refreshMentionTarget(
                         commentDraft,
-                        event.currentTarget.selectionStart ?? commentDraft.length,
+                        event.currentTarget.selectionStart ??
+                          commentDraft.length,
                       );
                     }}
                     onKeyUp={(event) => {
                       refreshMentionTarget(
                         commentDraft,
-                        event.currentTarget.selectionStart ?? commentDraft.length,
+                        event.currentTarget.selectionStart ??
+                          commentDraft.length,
                       );
                     }}
                     onFocus={(event) => {
                       refreshMentionTarget(
                         commentDraft,
-                        event.currentTarget.selectionStart ?? commentDraft.length,
+                        event.currentTarget.selectionStart ??
+                          commentDraft.length,
                       );
                     }}
                     onBlur={() => {
                       if (closeMentionMenuTimeoutRef.current !== null) {
                         window.clearTimeout(closeMentionMenuTimeoutRef.current);
                       }
-                      closeMentionMenuTimeoutRef.current = window.setTimeout(() => {
-                        setMentionTarget(null);
-                        setActiveMentionIndex(0);
-                      }, 120);
+                      closeMentionMenuTimeoutRef.current = window.setTimeout(
+                        () => {
+                          setMentionTarget(null);
+                          setActiveMentionIndex(0);
+                        },
+                        120,
+                      );
                     }}
                     onKeyDown={(event) => {
                       if (filteredMentionOptions.length > 0 && mentionTarget) {
                         if (event.key === "ArrowDown") {
                           event.preventDefault();
                           setActiveMentionIndex(
-                            (prev) => (prev + 1) % filteredMentionOptions.length,
+                            (prev) =>
+                              (prev + 1) % filteredMentionOptions.length,
                           );
                           return;
                         }

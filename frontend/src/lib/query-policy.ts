@@ -53,7 +53,10 @@ export const visibilityAwareInterval = (
   isPageActive: boolean,
 ): number | false => (isPageActive ? intervalMs : false);
 
-const parseEnvBoolean = (value: string | undefined, fallback = false): boolean => {
+const parseEnvBoolean = (
+  value: string | undefined,
+  fallback = false,
+): boolean => {
   if (value == null) return fallback;
   const normalized = value.trim().toLowerCase();
   if (["1", "true", "yes", "on"].includes(normalized)) return true;
@@ -107,16 +110,24 @@ const matchesCanary = (
   const normalizedOrganizationId = context.organizationId?.trim().toLowerCase();
   return Boolean(
     (normalizedBoardId && boardIds.has(normalizedBoardId)) ||
-      (normalizedOrganizationId && organizationIds.has(normalizedOrganizationId)),
+    (normalizedOrganizationId && organizationIds.has(normalizedOrganizationId)),
   );
 };
 
 export const isBoardOverlayEnabled = (context: BoardFlagContext): boolean => {
   if (OVERLAY_DEFAULT_ENABLED) return true;
-  return matchesCanary(context, OVERLAY_CANARY_BOARD_IDS, OVERLAY_CANARY_ORG_IDS);
+  return matchesCanary(
+    context,
+    OVERLAY_CANARY_BOARD_IDS,
+    OVERLAY_CANARY_ORG_IDS,
+  );
 };
 
 export const isBoardQueryV2Enabled = (context: BoardFlagContext): boolean => {
   if (QUERY_V2_DEFAULT_ENABLED) return true;
-  return matchesCanary(context, QUERY_V2_CANARY_BOARD_IDS, QUERY_V2_CANARY_ORG_IDS);
+  return matchesCanary(
+    context,
+    QUERY_V2_CANARY_BOARD_IDS,
+    QUERY_V2_CANARY_ORG_IDS,
+  );
 };

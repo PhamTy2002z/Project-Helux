@@ -11,7 +11,10 @@ const MENTION_PATTERN =
 const HEAVY_MARKDOWN_PATTERN =
   /(^|\n)\s*(#{1,6}\s|>|\* |\d+\.\s|- |\|.+\||```|~~~)|\[[^\]]+\]\([^)]+\)|`|~~|^\s*[-*]\s\[[ xX]\]/m;
 
-const normalizeLiteContent = (content: string, variant: MarkdownVariant): string => {
+const normalizeLiteContent = (
+  content: string,
+  variant: MarkdownVariant,
+): string => {
   const trimmed = content.trim();
   if (variant !== "chat") return trimmed;
   return trimmed
