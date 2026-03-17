@@ -26,8 +26,6 @@ permissions:
 
 env:
   REGISTRY: ghcr.io
-  BACKEND_IMAGE: ghcr.io/${{ github.repository_owner }}/flowgrid-backend
-  FRONTEND_IMAGE: ghcr.io/${{ github.repository_owner }}/flowgrid-frontend
 
 jobs:
   build-and-push:
@@ -46,6 +44,16 @@ jobs:
         with:
           ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
+      - name: Compute image metadata
+        id: meta
+        run: |
+          OWNER_LC="$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')"
+          COMMIT_SHA="${{ github.event.workflow_run.head_sha || github.sha }}"
+          SHORT_SHA="${COMMIT_SHA::7}"
+          echo "version=${SHORT_SHA}" >> "$GITHUB_OUTPUT"
+          echo "backend_image=ghcr.io/${OWNER_LC}/flowgrid-backend" >> "$GITHUB_OUTPUT"
+          echo "frontend_image=ghcr.io/${OWNER_LC}/flowgrid-frontend" >> "$GITHUB_OUTPUT"
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -56,13 +64,6 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Generate image tag
-        id: meta
-        run: |
-          COMMIT_SHA="${{ github.event.workflow_run.head_sha || github.sha }}"
-          SHORT_SHA="${COMMIT_SHA::7}"
-          echo "version=${SHORT_SHA}" >> "$GITHUB_OUTPUT"
-
       - name: Build and push backend
         uses: docker/build-push-action@v6
         with:
@@ -70,8 +71,8 @@ jobs:
           file: backend/Dockerfile
           push: true
           tags: |
-            ${{ env.BACKEND_IMAGE }}:${{ steps.meta.outputs.version }}
-            ${{ env.BACKEND_IMAGE }}:latest
+            ${{ steps.meta.outputs.backend_image }}:${{ steps.meta.outputs.version }}
+            ${{ steps.meta.outputs.backend_image }}:latest
           cache-from: type=gha,scope=backend
           cache-to: type=gha,mode=max,scope=backend
 
@@ -92,8 +93,8 @@ jobs:
             NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL=${{ secrets.NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL || '/boards' }}
             NEXT_PUBLIC_CLERK_AFTER_SIGN_OUT_URL=${{ secrets.NEXT_PUBLIC_CLERK_AFTER_SIGN_OUT_URL || '/' }}
           tags: |
-            ${{ env.FRONTEND_IMAGE }}:${{ steps.meta.outputs.version }}
-            ${{ env.FRONTEND_IMAGE }}:latest
+            ${{ steps.meta.outputs.frontend_image }}:${{ steps.meta.outputs.version }}
+            ${{ steps.meta.outputs.frontend_image }}:latest
           cache-from: type=gha,scope=frontend
           cache-to: type=gha,mode=max,scope=frontend
 
