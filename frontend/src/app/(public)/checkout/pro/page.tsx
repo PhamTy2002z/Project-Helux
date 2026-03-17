@@ -109,8 +109,8 @@ function CheckoutProContent() {
         </>
       ) : (
         <>
-          <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
-          <p className="text-sm text-slate-500">Setting up your Pro plan...</p>
+          <Loader2 className="h-8 w-8 animate-spin text-quiet" />
+          <p className="text-sm text-muted">Setting up your Pro plan...</p>
         </>
       )}
     </div>
