@@ -6,8 +6,6 @@ import pytest
 
 import app.services.openclaw.gateway_rpc as gateway_rpc
 from app.services.openclaw.gateway_rpc import (
-    CONTROL_UI_CLIENT_ID,
-    CONTROL_UI_CLIENT_MODE,
     DEFAULT_GATEWAY_CLIENT_ID,
     DEFAULT_GATEWAY_CLIENT_MODE,
     GATEWAY_OPERATOR_SCOPES,
