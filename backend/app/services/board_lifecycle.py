@@ -168,13 +168,14 @@ async def delete_board(session: AsyncSession, *, board: Board) -> OkResponse:
             agent_id=None,
             commit=False,
         )
-        # Soft-delete agents to preserve usage billing data (RESTRICT FK).
+        # Soft-delete agents and detach from board to avoid FK violation on board delete.
         now = utcnow()
         for agent in agents:
             if agent.deleted_at is None:
                 agent.deleted_at = now
                 agent.updated_at = now
-                session.add(agent)
+            agent.board_id = None
+            session.add(agent)
         await session.flush()
 
     await session.delete(board)
