@@ -52,9 +52,7 @@ describe("LandingHeroSection", () => {
   it("renders the CSS star background layers", () => {
     const { container } = render(<LandingHeroSection />);
 
-    const starLayers = container.querySelectorAll(
-      "[class*='animate-stars-']",
-    );
+    const starLayers = container.querySelectorAll("[class*='animate-stars-']");
     expect(starLayers).toHaveLength(3);
   });
 
