@@ -26,17 +26,15 @@ permissions:
 
 env:
   REGISTRY: ghcr.io
-  BACKEND_IMAGE: ghcr.io/phamty2002z/visgniteai-backend
-  FRONTEND_IMAGE: ghcr.io/phamty2002z/visgniteai-frontend
 
 jobs:
-  build-and-push:
+  build-backend:
     # Only run if CI passed (workflow_run) or manual trigger (workflow_dispatch)
     if: >-
       github.event_name == 'workflow_dispatch' ||
       (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
     runs-on: self-hosted
-    timeout-minutes: 20
+    timeout-minutes: 15
     outputs:
       image_tag: ${{ steps.meta.outputs.version }}
 
@@ -53,8 +51,7 @@ jobs:
           COMMIT_SHA="${{ github.event.workflow_run.head_sha || github.sha }}"
           SHORT_SHA="${COMMIT_SHA::7}"
           echo "version=${SHORT_SHA}" >> "$GITHUB_OUTPUT"
-          echo "backend_image=ghcr.io/${OWNER_LC}/visgniteai-backend" >> "$GITHUB_OUTPUT"
-          echo "frontend_image=ghcr.io/${OWNER_LC}/visgniteai-frontend" >> "$GITHUB_OUTPUT"
+          echo "image=ghcr.io/${OWNER_LC}/visgniteai-backend" >> "$GITHUB_OUTPUT"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -73,10 +70,47 @@ jobs:
           file: backend/Dockerfile
           push: true
           tags: |
-            ${{ env.BACKEND_IMAGE }}:${{ steps.meta.outputs.version }}
-            ${{ env.BACKEND_IMAGE }}:latest
-          cache-from: type=gha,scope=backend
-          cache-to: type=gha,mode=max,scope=backend
+            ${{ steps.meta.outputs.image }}:${{ steps.meta.outputs.version }}
+            ${{ steps.meta.outputs.image }}:latest
+          cache-from: |
+            type=registry,ref=${{ steps.meta.outputs.image }}:buildcache
+            type=gha,scope=backend
+          cache-to: type=registry,ref=${{ steps.meta.outputs.image }}:buildcache,mode=max
+
+  build-frontend:
+    # Only run if CI passed (workflow_run) or manual trigger (workflow_dispatch)
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
+    runs-on: self-hosted
+    timeout-minutes: 15
+    outputs:
+      image_tag: ${{ steps.meta.outputs.version }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      - name: Compute image metadata
+        id: meta
+        run: |
+          OWNER_LC="$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')"
+          COMMIT_SHA="${{ github.event.workflow_run.head_sha || github.sha }}"
+          SHORT_SHA="${COMMIT_SHA::7}"
+          echo "version=${SHORT_SHA}" >> "$GITHUB_OUTPUT"
+          echo "image=ghcr.io/${OWNER_LC}/visgniteai-frontend" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push frontend
         uses: docker/build-push-action@v6
@@ -95,14 +129,16 @@ jobs:
             NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL=${{ secrets.NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL || '/boards' }}
             NEXT_PUBLIC_CLERK_AFTER_SIGN_OUT_URL=${{ secrets.NEXT_PUBLIC_CLERK_AFTER_SIGN_OUT_URL || '/' }}
           tags: |
-            ${{ env.FRONTEND_IMAGE }}:${{ steps.meta.outputs.version }}
-            ${{ env.FRONTEND_IMAGE }}:latest
-          cache-from: type=gha,scope=frontend
-          cache-to: type=gha,mode=max,scope=frontend
+            ${{ steps.meta.outputs.image }}:${{ steps.meta.outputs.version }}
+            ${{ steps.meta.outputs.image }}:latest
+          cache-from: |
+            type=registry,ref=${{ steps.meta.outputs.image }}:buildcache
+            type=gha,scope=frontend
+          cache-to: type=registry,ref=${{ steps.meta.outputs.image }}:buildcache,mode=max
 
   deploy:
     runs-on: self-hosted
-    needs: build-and-push
+    needs: [build-backend, build-frontend]
     environment: production
     timeout-minutes: 10
 
@@ -115,7 +151,7 @@ jobs:
       - name: Pull and restart containers
         working-directory: /opt/projects/Project-VisgniteAI
         env:
-          GHCR_IMAGE_TAG: ${{ needs.build-and-push.outputs.image_tag }}
+          GHCR_IMAGE_TAG: ${{ needs.build-backend.outputs.image_tag }}
         run: |
           set -euo pipefail
 
