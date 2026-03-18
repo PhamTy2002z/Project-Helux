@@ -1,20 +1,19 @@
 {
   "meta": {
-    "lastTouchedVersion": "2026.3.14",
-    "lastTouchedAt": "2026-03-17T15:43:14.249Z"
+    "lastTouchedVersion": "2026.3.13",
+    "lastTouchedAt": "2026-03-18T14:42:16.675Z"
   },
   "models": {
     "mode": "merge",
     "providers": {
       "custom-model": {
-        "baseUrl": "http://172.18.0.1:8317/api/provider/codex",
+        "baseUrl": "http://host.docker.internal:8317/api/provider/codex",
         "apiKey": "ccs-internal-managed",
         "api": "anthropic-messages",
         "models": [
           {
-            "id": "gpt-5.4",
-            "name": "gpt-5.4 (Custom Provider)",
-            "api": "anthropic-messages",
+            "id": "gpt-5.4-mini",
+            "name": "gpt-5.4-mini (Custom Provider)",
             "reasoning": false,
             "input": [
               "text"
@@ -25,31 +24,8 @@
               "cacheRead": 0,
               "cacheWrite": 0
             },
-            "contextWindow": 1000000,
-            "maxTokens": 24384
-          }
-        ]
-      },
-      "custom-model-2": {
-        "baseUrl": "http://172.18.0.1:8317/api/provider/codex",
-        "apiKey": "ccs-internal-managed",
-        "api": "anthropic-messages",
-        "models": [
-          {
-            "id": "gpt-5.1-codex-mini",
-            "name": "gpt-5.1-codex-mini (Custom Provider)",
-            "reasoning": false,
-            "input": [
-              "text"
-            ],
-            "cost": {
-              "input": 0,
-              "output": 0,
-              "cacheRead": 0,
-              "cacheWrite": 0
-            },
-            "contextWindow": 200000,
-            "maxTokens": 8096
+            "contextWindow": 400000,
+            "maxTokens": 16000
           }
         ]
       }
@@ -58,13 +34,13 @@
   "agents": {
     "defaults": {
       "model": {
-        "primary": "custom-model-2/gpt-5.1-codex-mini"
+        "primary": "custom-model/gpt-5.4-mini",
+        "fallbacks": []
       },
       "models": {
-        "custom-model-2/gpt-5.1-codex-mini": {}
+        "custom-model/gpt-5.4-mini": {}
       },
       "workspace": "/data/.openclaw/workspace",
-      "contextTokens": 400000,
       "compaction": {
         "mode": "safeguard"
       }
@@ -74,10 +50,10 @@
         "id": "main"
       },
       {
-        "id": "mc-gateway-33f8bd68-e612-4d6a-84d6-7d3d1c92032c",
-        "name": "Managed GateWay Agent - 33f8bd68-e612-4d6a-84d6-7d3d1c92032c",
-        "workspace": "/shared/openclaw-managed/org-3150bd68-3e2c-4efb-a842-f0f11c5ca794/workspace-gateway-33f8bd68-e612-4d6a-84d6-7d3d1c92032c",
-        "agentDir": "/data/.openclaw/agents/mc-gateway-33f8bd68-e612-4d6a-84d6-7d3d1c92032c/agent",
+        "id": "mc-gateway-2e765a91-1c22-478b-ba6c-9605fa97d207",
+        "name": "Managed GateWay Agent - 2e765a91-1c22-478b-ba6c-9605fa97d207",
+        "workspace": "/shared/openclaw-managed/org-2cfcec75-c379-4bf7-8eb8-1da7cb834b04/workspace-gateway-2e765a91-1c22-478b-ba6c-9605fa97d207",
+        "agentDir": "/data/.openclaw/agents/mc-gateway-2e765a91-1c22-478b-ba6c-9605fa97d207/agent",
         "heartbeat": {
           "every": "10m",
           "includeReasoning": false,
@@ -88,10 +64,10 @@
         }
       },
       {
-        "id": "lead-dfb960de-5eed-47e9-ab59-76532149f21d",
-        "name": "lead-dfb960de-5eed-47e9-ab59-76532149f21d",
-        "workspace": "/shared/openclaw-managed/org-3150bd68-3e2c-4efb-a842-f0f11c5ca794/workspace-lead-dfb960de-5eed-47e9-ab59-76532149f21d",
-        "agentDir": "/data/.openclaw/agents/lead-dfb960de-5eed-47e9-ab59-76532149f21d/agent"
+        "id": "lead-0df54f86-e593-4eae-8c75-f9072eb6fa23",
+        "name": "lead-0df54f86-e593-4eae-8c75-f9072eb6fa23",
+        "workspace": "/shared/openclaw-managed/org-2cfcec75-c379-4bf7-8eb8-1da7cb834b04/workspace-lead-0df54f86-e593-4eae-8c75-f9072eb6fa23",
+        "agentDir": "/data/.openclaw/agents/lead-0df54f86-e593-4eae-8c75-f9072eb6fa23/agent"
       }
     ]
   },
@@ -123,17 +99,13 @@
   "gateway": {
     "port": 18789,
     "mode": "local",
-    "bind": "lan",
+    "bind": "loopback",
     "controlUi": {
-      "allowedOrigins": [
-        "http://localhost:18789",
-        "http://openclaw:18789"
-      ],
       "dangerouslyAllowHostHeaderOriginFallback": true
     },
     "auth": {
       "mode": "token",
-      "token": "cbb3e72060a74c9d04f5023ce4904bc85ab41551cecc82ec"
+      "token": "9947989b3195c03c3f4c702daa063f524efe9becdfd3984d"
     },
     "tailscale": {
       "mode": "off",
