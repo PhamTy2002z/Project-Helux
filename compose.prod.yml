@@ -9,7 +9,7 @@
 # Optional invite-email vars (required only when EMAIL_PROVIDER=resend):
 #   RESEND_API_KEY, EMAIL_FROM_INVITES, INVITE_ACCEPT_BASE_URL
 
-name: flowgrid-prod
+name: visgniteai-prod
 
 x-logging: &default-logging
   driver: json-file
@@ -124,7 +124,7 @@ services:
     build:
       context: ./openclaw
       dockerfile: Dockerfile
-    image: flowgrid-openclaw:latest
+    image: visgniteai-openclaw:latest
     # Bind to 0.0.0.0 so backend/worker containers can reach the gateway.
     # Config at /data/openclaw.json must set controlUi.dangerouslyAllowHostHeaderOriginFallback=true.
     command: ["node", "openclaw.mjs", "gateway", "--allow-unconfigured", "--bind", "lan"]
@@ -158,7 +158,7 @@ services:
 
   # ---------- application ----------
   backend:
-    image: ghcr.io/${GHCR_OWNER:-phamty2002z}/flowgrid-backend:${GHCR_IMAGE_TAG:-latest}
+    image: ghcr.io/${GHCR_OWNER:-phamty2002z}/visgniteai-backend:${GHCR_IMAGE_TAG:-latest}
     <<: *default-restart
     logging: *default-logging
     environment:
@@ -227,7 +227,7 @@ services:
           memory: 1G
 
   frontend:
-    image: ghcr.io/${GHCR_OWNER:-phamty2002z}/flowgrid-frontend:${GHCR_IMAGE_TAG:-latest}
+    image: ghcr.io/${GHCR_OWNER:-phamty2002z}/visgniteai-frontend:${GHCR_IMAGE_TAG:-latest}
     <<: *default-restart
     logging: *default-logging
     environment:
@@ -253,7 +253,7 @@ services:
           memory: 512M
 
   webhook-worker:
-    image: ghcr.io/${GHCR_OWNER:-phamty2002z}/flowgrid-backend:${GHCR_IMAGE_TAG:-latest}
+    image: ghcr.io/${GHCR_OWNER:-phamty2002z}/visgniteai-backend:${GHCR_IMAGE_TAG:-latest}
     command: ["python", "scripts/rq-docker", "worker"]
     <<: *default-restart
     logging: *default-logging

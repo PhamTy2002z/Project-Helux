@@ -2,7 +2,7 @@
 
 ## High-Level Architecture
 
-FlowGrid follows a three-tier architecture with clear separation between presentation, application, and data layers.
+VisgniteAI follows a three-tier architecture with clear separation between presentation, application, and data layers.
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -374,7 +374,7 @@ Organization bootstrap service
 ### Gateway Communication Flow
 
 ```
-FlowGrid Backend
+VisgniteAI Backend
     │
     ▼
 WebSocket Connection
@@ -397,7 +397,7 @@ WebSocket Connection
     │   └─→ Return Agent Status
     │
     └─→ Agent Lifecycle Events
-        └─→ Update FlowGrid state
+        └─→ Update VisgniteAI state
 ```
 
 ## Authentication and Authorization Flow
@@ -767,7 +767,7 @@ Organizations
 **Managed Gateway** (Docker service at port 18789):
 - Auto-provisioned per organization with workspace volume (`MANAGED_GATEWAY_WORKSPACE_ROOT`)
 - Status transitions: `activating` → `ready` | `degraded`
-- Compatibility checked against FlowGrid agent/heartbeat contract
+- Compatibility checked against VisgniteAI agent/heartbeat contract
 - 3 custom OpenClaw model providers configured
 
 **Email Delivery** (Resend provider + RQ async queue):

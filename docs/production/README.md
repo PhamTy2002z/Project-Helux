@@ -1,6 +1,6 @@
 # Production notes
 
-This page defines minimum production posture for FlowGrid SaaS beta.
+This page defines minimum production posture for VisgniteAI SaaS beta.
 Apply these controls before onboarding external tenants.
 
 ## Runtime requirements

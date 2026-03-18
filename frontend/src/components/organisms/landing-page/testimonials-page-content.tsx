@@ -52,7 +52,7 @@ export default function TestimonialsPageContent() {
           <ScrollReveal>
             <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/[0.05] px-4 py-2 text-xs font-medium uppercase tracking-[0.16em] text-white/80">
               <span className="h-1.5 w-1.5 rounded-full bg-white/75" />
-              FlowGrid operators
+              VisgniteAI operators
             </div>
             <h1
               className="mt-6 text-balance text-white"
@@ -62,7 +62,7 @@ export default function TestimonialsPageContent() {
             </h1>
             <p className="mx-auto mt-5 max-w-2xl text-balance text-base leading-relaxed text-white/55 sm:text-lg">
               Engineering leaders, DevOps teams, and platform operators share
-              how FlowGrid transformed their agent operations.
+              how VisgniteAI transformed their agent operations.
             </p>
           </ScrollReveal>
 

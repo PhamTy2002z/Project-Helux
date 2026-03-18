@@ -1,49 +1,49 @@
 #!/usr/bin/env bash
-# FlowGrid production setup for Ubuntu laptop server + Cloudflare Tunnel.
+# VisgniteAI production setup for Ubuntu laptop server + Cloudflare Tunnel.
 # Run as phamty (with sudo).
 #
 # Usage: sudo bash deploy/setup-vps.sh
 #
 # Prerequisites:
 #   - Ubuntu Server 24.04 with Docker + cloudflared already installed
-#   - Cloudflare Tunnel "flowgrid" already active for flowgrid.live
+#   - Cloudflare Tunnel "visgniteai" already active for visgnite.com
 #
 # What this does:
-#   1. Create /opt/flowgrid directory
+#   1. Create /opt/visgniteai directory
 #   2. Generate .env.prod with secure random secrets
-#   3. Update cloudflared config (add api.flowgrid.live)
+#   3. Update cloudflared config (add api.visgnite.com)
 #   4. Install GitHub Actions self-hosted runner
 #   5. Print next steps
 # Note: OpenClaw runs in Docker (compose.prod.yml), no host install needed.
 
 set -euo pipefail
 
-DOMAIN="flowgrid.live"
+DOMAIN="visgnite.com"
 GITHUB_USER="<GITHUB_USER>"
 GITHUB_REPO="<GITHUB_ORG>/<GITHUB_REPO>"
 DEPLOY_USER="<DEPLOY_USER>"
 TUNNEL_ID="<TUNNEL_ID>"
 
-echo "==> Setting up FlowGrid production on $(hostname)"
+echo "==> Setting up VisgniteAI production on $(hostname)"
 echo "    Domain: ${DOMAIN}"
 echo "    User:   ${DEPLOY_USER}"
 echo ""
 
 # --- 1. Create project directory ---
-echo "==> [1/4] Creating /opt/flowgrid"
-mkdir -p /opt/flowgrid
-chown "${DEPLOY_USER}:${DEPLOY_USER}" /opt/flowgrid
+echo "==> [1/4] Creating /opt/visgniteai"
+mkdir -p /opt/visgniteai
+chown "${DEPLOY_USER}:${DEPLOY_USER}" /opt/visgniteai
 
 # --- 2. Generate .env.prod ---
 echo "==> [2/4] Generating .env.prod"
-ENV_FILE="/opt/flowgrid/.env.prod"
+ENV_FILE="/opt/visgniteai/.env.prod"
 if [ ! -f "$ENV_FILE" ]; then
   PG_PASS=$(openssl rand -base64 24 | tr -d '/+=' | head -c 32)
   MINIO_PASS=$(openssl rand -base64 24 | tr -d '/+=' | head -c 32)
   AUTH_TOKEN=$(openssl rand -base64 48 | tr -d '/+=' | head -c 64)
 
   cat > "$ENV_FILE" <<ENVEOF
-# FlowGrid Production — flowgrid.live
+# VisgniteAI Production — visgnite.com
 # Generated: $(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
 DOMAIN=${DOMAIN}
@@ -117,7 +117,7 @@ CFEOF
 echo "    cloudflared config updated"
 
 # Route api subdomain DNS (idempotent)
-cloudflared tunnel route dns flowgrid "api.${DOMAIN}" 2>/dev/null || true
+cloudflared tunnel route dns visgniteai "api.${DOMAIN}" 2>/dev/null || true
 echo "    DNS route: api.${DOMAIN} → tunnel"
 
 # Restart tunnel
@@ -153,8 +153,8 @@ echo ""
 echo "==> Setup complete!"
 echo ""
 echo "Checklist before first deploy:"
-echo "  [ ] Review /opt/flowgrid/.env.prod"
-echo "  [ ] Copy compose.prod.yml to /opt/flowgrid/"
+echo "  [ ] Review /opt/visgniteai/.env.prod"
+echo "  [ ] Copy compose.prod.yml to /opt/visgniteai/"
 echo "  [ ] Install GitHub Actions runner (see above)"
 echo "  [ ] OpenClaw runs in Docker — onboard via: docker compose exec openclaw openclaw onboard"
 echo "  [ ] Verify: curl https://${DOMAIN} and https://api.${DOMAIN}/health"

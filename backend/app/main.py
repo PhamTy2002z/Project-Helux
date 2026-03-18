@@ -489,7 +489,7 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
 
 
 app = MissionControlFastAPI(
-    title="FlowGrid API",
+    title="VisgniteAI API",
     version="0.1.0",
     lifespan=lifespan,
     openapi_tags=OPENAPI_TAGS,

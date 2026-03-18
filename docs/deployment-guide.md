@@ -2,7 +2,7 @@
 
 ## Overview
 
-FlowGrid supports two deployment modes:
+VisgniteAI supports two deployment modes:
 - **Docker Mode**: Production-like deployment with all services containerized
 - **Local Mode**: Native development deployment for rapid iteration
 
@@ -43,7 +43,7 @@ The installer script handles all setup automatically:
 
 ```bash
 # If not cloned yet, installer will clone the repo
-curl -fsSL https://raw.githubusercontent.com/PhamTy2002z/FlowGrid/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/PhamTy2002z/VisgniteAI/main/install.sh | bash
 
 # If already cloned
 ./install.sh
@@ -78,7 +78,7 @@ cp frontend/.env.example frontend/.env
 
 ### Step 2: Configure Authentication Mode
 
-FlowGrid supports two authentication modes:
+VisgniteAI supports two authentication modes:
 
 #### Local Bearer Token Mode (Default)
 
@@ -150,7 +150,7 @@ EMAIL_PROVIDER=none
 # EMAIL_PROVIDER=resend
 # RESEND_API_KEY=re_xxx
 # RESEND_WEBHOOK_SECRET=whsec_xxx
-# EMAIL_FROM_INVITES=FlowGrid <noreply@example.com>
+# EMAIL_FROM_INVITES=VisgniteAI <noreply@example.com>
 # EMAIL_REPLY_TO=support@example.com
 # INVITE_ACCEPT_BASE_URL=https://app.example.com/invite
 ```

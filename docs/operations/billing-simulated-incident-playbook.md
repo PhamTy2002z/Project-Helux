@@ -18,7 +18,7 @@ Use this runbook for incidents in SaaS v1 Polar billing flows:
 ## 1. Check for Polar webhook in event table
 
 ```bash
-psql -U postgres -d flowgrid -c "
+psql -U postgres -d visgniteai -c "
 SELECT id, event_id, event_type, organization_id, processed_at, created_at
 FROM polar_webhook_events
 WHERE created_at > (NOW() - INTERVAL '1 hour')
@@ -74,7 +74,7 @@ Expected event types:
 ## 5. Check for duplicate billing history
 
 ```bash
-psql -U postgres -d flowgrid -c "
+psql -U postgres -d visgniteai -c "
 SELECT idempotency_key, COUNT(*) as count
 FROM billing_checkout_attempts
 WHERE organization_id = '<org-id>'

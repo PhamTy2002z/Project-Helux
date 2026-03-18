@@ -19,12 +19,12 @@ const RESOURCE_LINKS = [
   { label: "Testimonials", href: "/testimonials" },
   {
     label: "Documentation",
-    href: "https://github.com/PhamTy2002z/FlowGrid/tree/master/docs",
+    href: "https://github.com/PhamTy2002z/VisgniteAI/tree/master/docs",
     external: true,
   },
   {
     label: "Changelog",
-    href: "https://github.com/PhamTy2002z/FlowGrid/releases",
+    href: "https://github.com/PhamTy2002z/VisgniteAI/releases",
     external: true,
   },
 ];
@@ -84,7 +84,7 @@ export default function LandingNavbar() {
               <Logo />
             </button>
           ) : (
-            <Link href="/" aria-label="FlowGrid home">
+            <Link href="/" aria-label="VisgniteAI home">
               <Logo />
             </Link>
           )}

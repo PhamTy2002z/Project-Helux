@@ -9,7 +9,7 @@ import {
   type ReactNode,
 } from "react";
 
-const STORAGE_KEY = "flowgrid_sidebar_collapsed";
+const STORAGE_KEY = "visgniteai_sidebar_collapsed";
 
 interface SidebarCollapseCtx {
   collapsed: boolean;

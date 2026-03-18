@@ -33,7 +33,7 @@ vi.mock("next/navigation", () => ({
 }));
 
 vi.mock("@/components/organisms/landing-slideshow/logo", () => ({
-  default: () => <span>FlowGrid</span>,
+  default: () => <span>VisgniteAI</span>,
 }));
 
 vi.mock("lucide-react", () => ({

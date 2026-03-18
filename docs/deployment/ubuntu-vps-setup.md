@@ -7,20 +7,20 @@ Self-hosted Ubuntu Server on a repurposed laptop, exposed to internet via Cloudf
 | Item | Detail |
 |------|--------|
 | OS | Ubuntu Server 24.04.4 LTS (Noble) |
-| Hostname | `flowgrid` |
+| Hostname | `visgniteai` |
 | User | `phamty` |
 | Storage | Lexar SSD 119GB (LVM) |
 | Network | WiFi (`wlp2s0`), LAN (`enp3s0`) |
 | Local IP | `192.168.1.5` |
 | SSH | Port 22, OpenSSH |
-| Domain | `flowgrid.live` |
-| Tunnel | Cloudflare Tunnel `flowgrid` |
+| Domain | `visgnite.com` |
+| Tunnel | Cloudflare Tunnel `visgniteai` |
 | Tunnel ID | `6d5407d7-b3a7-4d7b-b9be-5c04af0e23b9` |
 
 ## Architecture
 
 ```
-Internet → flowgrid.live → Cloudflare Edge (HTTPS/DDoS)
+Internet → visgnite.com → Cloudflare Edge (HTTPS/DDoS)
     → Cloudflare Tunnel (encrypted outbound)
     → cloudflared daemon on laptop
     → localhost:3000
@@ -73,19 +73,19 @@ cat /etc/systemd/logind.conf | grep HandleLidSwitch
 ### 4. Cloudflare Tunnel Setup
 
 #### Domain Setup
-1. Add `flowgrid.live` to Cloudflare dashboard (Free plan)
+1. Add `visgnite.com` to Cloudflare dashboard (Free plan)
 2. Update nameservers at domain registrar to Cloudflare's assigned nameservers
 3. Wait for domain status to become **Active**
 
 #### Tunnel Creation
 ```bash
 cloudflared tunnel login
-# Opens URL → authorize in browser → select flowgrid.live
+# Opens URL → authorize in browser → select visgnite.com
 
-cloudflared tunnel create flowgrid
+cloudflared tunnel create visgniteai
 # Returns Tunnel ID: 6d5407d7-b3a7-4d7b-b9be-5c04af0e23b9
 
-cloudflared tunnel route dns flowgrid flowgrid.live
+cloudflared tunnel route dns visgniteai visgnite.com
 ```
 
 #### Tunnel Config
@@ -97,7 +97,7 @@ tunnel: 6d5407d7-b3a7-4d7b-b9be-5c04af0e23b9
 credentials-file: /home/phamty/.cloudflared/6d5407d7-b3a7-4d7b-b9be-5c04af0e23b9.json
 
 ingress:
-  - hostname: flowgrid.live
+  - hostname: visgnite.com
     service: http://localhost:3000
   - service: http_status:404
 ```
@@ -149,16 +149,16 @@ Edit `/etc/cloudflared/config.yml` to add more services:
 
 ```yaml
 ingress:
-  - hostname: flowgrid.live
+  - hostname: visgnite.com
     service: http://localhost:3000
-  - hostname: api.flowgrid.live
+  - hostname: api.visgnite.com
     service: http://localhost:8000
   - service: http_status:404
 ```
 
 Then create DNS route and restart:
 ```bash
-cloudflared tunnel route dns flowgrid api.flowgrid.live
+cloudflared tunnel route dns visgniteai api.visgnite.com
 sudo systemctl restart cloudflared
 ```
 

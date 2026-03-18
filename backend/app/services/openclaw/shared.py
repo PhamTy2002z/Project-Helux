@@ -13,7 +13,7 @@ from app.services.openclaw.constants import (
 
 
 class GatewayAgentIdentity:
-    """Naming and identity rules for FlowGrid gateway-main agents."""
+    """Naming and identity rules for VisgniteAI gateway-main agents."""
 
     @classmethod
     def session_key_for_id(cls, gateway_id: UUID) -> str:

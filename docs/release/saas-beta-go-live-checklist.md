@@ -1,6 +1,6 @@
 # SaaS beta go-live checklist
 
-Use this checklist to roll out FlowGrid in controlled stages. Advance only
+Use this checklist to roll out VisgniteAI in controlled stages. Advance only
 when current-stage exit criteria pass.
 
 ## Stage 0: Internal tenants only

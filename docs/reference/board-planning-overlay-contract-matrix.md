@@ -1,7 +1,7 @@
 # Board Planning Overlay Contract Matrix
 
 Status: Active  
-Owner: FlowGrid backend/frontend maintainers  
+Owner: VisgniteAI backend/frontend maintainers  
 Last updated: 2026-03-11
 
 ## Purpose

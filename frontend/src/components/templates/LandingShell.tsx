@@ -19,12 +19,12 @@ export function LandingShell({ children }: { children: ReactNode }) {
     <div className="landing-enterprise">
       <nav className="landing-nav" aria-label="Primary navigation">
         <div className="nav-container">
-          <Link href="/" className="logo-section" aria-label="FlowGrid home">
+          <Link href="/" className="logo-section" aria-label="VisgniteAI home">
             <div className="logo-icon" aria-hidden="true">
               FG
             </div>
             <div className="logo-text">
-              <div className="logo-name">FlowGrid</div>
+              <div className="logo-name">VisgniteAI</div>
               <div className="logo-tagline">OpenClaw</div>
             </div>
           </Link>
@@ -88,7 +88,7 @@ export function LandingShell({ children }: { children: ReactNode }) {
       <footer className="landing-footer">
         <div className="footer-content">
           <div className="footer-brand">
-            <h3>FlowGrid</h3>
+            <h3>VisgniteAI</h3>
             <p>
               The agent operations platform for boards, approvals, and gateways.
             </p>
@@ -150,7 +150,7 @@ export function LandingShell({ children }: { children: ReactNode }) {
 
         <div className="footer-bottom">
           <div className="footer-copyright">
-            © {new Date().getFullYear()} FlowGrid. All rights reserved.
+            © {new Date().getFullYear()} VisgniteAI. All rights reserved.
           </div>
           <div className="footer-bottom-links">
             <Link href="#capabilities">Capabilities</Link>

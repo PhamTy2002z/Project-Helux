@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "NODE_OPTIONS='--max-old-space-size=2048' next dev",
+    "dev": "cross-env NODE_OPTIONS=--max-old-space-size=2048 next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
@@ -52,6 +52,7 @@
     "autoprefixer": "^10.4.24",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "cross-env": "^10.1.0",
     "cypress": "^14.5.4",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",

@@ -334,7 +334,7 @@ export default function SettingsPage() {
                   Delete account
                 </h2>
                 <p className="mt-1 text-sm">
-                  This permanently removes your FlowGrid account and related
+                  This permanently removes your VisgniteAI account and related
                   personal data. This action cannot be undone.
                 </p>
                 <div className="mt-4">

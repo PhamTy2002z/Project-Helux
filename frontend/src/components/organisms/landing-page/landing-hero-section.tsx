@@ -136,7 +136,7 @@ export default function LandingHeroSection() {
               } as CSSProperties
             }
           >
-            FlowGrid gives your team one secure workspace to run agent
+            VisgniteAI gives your team one secure workspace to run agent
             operations, approvals, and gateways — with full visibility and zero
             handoff friction.
           </p>

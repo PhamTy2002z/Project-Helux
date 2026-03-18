@@ -2,7 +2,7 @@
 
 ## Overview
 
-FlowGrid integrates with Polar for real subscription payments with webhook-driven lifecycle management. The architecture uses a **store-then-process pattern** for webhooks to ensure:
+VisgniteAI integrates with Polar for real subscription payments with webhook-driven lifecycle management. The architecture uses a **store-then-process pattern** for webhooks to ensure:
 - Audit trail of all Polar events
 - Replay capability on worker failures
 - No duplicate processing (idempotency)
@@ -198,7 +198,7 @@ Jobs are enqueued non-blocking via `enqueue_billing_email()`.
 ## Reconciliation & State Checking
 
 **Reconciliation service** (`billing_reconciliation.py`):
-- Detects state drift between Polar API and FlowGrid database
+- Detects state drift between Polar API and VisgniteAI database
 - Reports mismatches (e.g., pro tier but no polar_subscription_id in metadata)
 - Can be run ad-hoc to validate data consistency
 

@@ -457,9 +457,9 @@ class GatewayCoordinationService(AbstractGatewayMessagingService):
             f"{payload.content.strip()}\n\n"
             "Please reach the user via your configured OpenClaw channel(s) "
             "(Slack/SMS/etc).\n"
-            "If you cannot reach them there, post the question in FlowGrid "
+            "If you cannot reach them there, post the question in VisgniteAI "
             "board chat as a fallback.\n\n"
-            "When you receive the answer, reply in FlowGrid by writing a "
+            "When you receive the answer, reply in VisgniteAI by writing a "
             "NON-chat memory item on this board:\n"
             f"POST {base_url}/api/v1/agent/boards/{board.id}/memory\n"
             f'Body: {{"content":"<answer>","tags":{tags_json},"source":"{reply_source}"}}\n'

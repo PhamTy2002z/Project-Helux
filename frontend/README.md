@@ -1,8 +1,8 @@
-# FlowGrid Frontend (`frontend/`)
+# VisgniteAI Frontend (`frontend/`)
 
-This package is the **Next.js** web UI for FlowGrid.
+This package is the **Next.js** web UI for VisgniteAI.
 
-- Talks to the FlowGrid **backend** over HTTP (typically `http://localhost:8000`).
+- Talks to the VisgniteAI **backend** over HTTP (typically `http://localhost:8000`).
 - Uses **React Query** for data fetching.
 - Supports two auth modes:
   - **local** shared bearer token mode (self-host default)

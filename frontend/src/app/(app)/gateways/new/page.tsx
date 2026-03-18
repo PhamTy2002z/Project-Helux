@@ -116,7 +116,7 @@ export default function NewGatewayPage() {
         forceRedirectUrl: "/gateways/new",
       }}
       title="Create gateway"
-      description="Configure a gateway connection for FlowGrid."
+      description="Configure a gateway connection for VisgniteAI."
       isAdmin={isAdmin}
       adminOnlyMessage="Only organization owners and admins can create gateways."
     >
