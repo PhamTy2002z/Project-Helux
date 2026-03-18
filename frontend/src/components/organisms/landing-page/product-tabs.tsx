@@ -160,7 +160,7 @@ export default function ProductTabs() {
             className="text-balance text-white"
             style={{ fontSize: "clamp(26px, 3.5vw, 52px)" }}
           >
-            The FlowGrid Platform
+            The VisgniteAI Platform
           </h2>
           <p className="mx-auto mt-3 max-w-2xl text-balance text-[13px] leading-relaxed text-white/55 sm:text-sm md:max-w-3xl fhd:text-base">
             Keep every operational surface in one cohesive system without losing

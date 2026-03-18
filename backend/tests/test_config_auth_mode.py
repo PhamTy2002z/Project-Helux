@@ -149,7 +149,7 @@ def test_resend_email_provider_requires_required_fields() -> None:
             base_url=BASE_URL,
             email_provider="resend",
             resend_api_key="",
-            email_from_invites="FlowGrid <noreply@example.com>",
+            email_from_invites="VisgniteAI <noreply@example.com>",
             invite_accept_base_url="http://localhost:3000/invite",
         )
 
@@ -179,7 +179,7 @@ def test_resend_email_provider_requires_required_fields() -> None:
             base_url=BASE_URL,
             email_provider="resend",
             resend_api_key="re_test",
-            email_from_invites="FlowGrid <noreply@example.com>",
+            email_from_invites="VisgniteAI <noreply@example.com>",
             invite_accept_base_url="",
         )
 
@@ -207,7 +207,7 @@ def test_resend_email_provider_normalizes_invite_url_and_reply_to() -> None:
         base_url=BASE_URL,
         email_provider="resend",
         resend_api_key="re_test",
-        email_from_invites="FlowGrid <noreply@example.com>",
+        email_from_invites="VisgniteAI <noreply@example.com>",
         email_reply_to=" support@example.com ",
         invite_accept_base_url="http://localhost:3000/invite/ ",
     )

@@ -1,11 +1,11 @@
-# FlowGrid
+# VisgniteAI
 
 A centralized operations and governance platform for AI agents.
 Provides unified work orchestration, agent management, approval-driven governance, and API-backed automation with board chat, file uploads, and scalable planning overlays.
 
 ## Overview
 
-FlowGrid is a SaaS platform for teams to operate AI agents with:
+VisgniteAI is a SaaS platform for teams to operate AI agents with:
 
 - **Work orchestration**: organization → board group → board → task → tag → custom fields
 - **Agent management**: create, configure, monitor with workspace templates
@@ -98,7 +98,7 @@ See `.env.example` files in root, `backend/`, and `frontend/`.
 ## Project Structure
 
 ```
-FlowGrid/
+VisgniteAI/
 ├── backend/          # FastAPI application
 │   ├── app/
 │   │   ├── api/      # Route handlers
@@ -135,7 +135,7 @@ Under active development. APIs and features may change between releases.
 
 Issues and pull requests are welcome.
 
-- [Open issues](https://github.com/PhamTy2002z/FlowGrid/issues)
+- [Open issues](https://github.com/PhamTy2002z/VisgniteAI/issues)
 
 ## License
 

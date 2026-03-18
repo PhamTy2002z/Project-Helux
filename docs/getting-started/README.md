@@ -1,8 +1,8 @@
 # Getting started
 
-## What is FlowGrid?
+## What is VisgniteAI?
 
-FlowGrid is the web UI and HTTP API for operating OpenClaw.
+VisgniteAI is the web UI and HTTP API for operating OpenClaw.
 
 It provides a control plane for boards, tasks, agents, approvals, and (optionally) gateway connections.
 

@@ -18,8 +18,8 @@ export function BrandMark() {
         className="group relative flex h-10 w-10 cursor-pointer items-center justify-center"
       >
         <Image
-          src="/images/brand/flowgrid-favicon.svg"
-          alt="FlowGrid logo"
+          src="/images/brand/visgniteai-favicon.svg"
+          alt="VisgniteAI logo"
           width={40}
           height={40}
           className="h-10 w-10 transition-opacity duration-150 group-hover:opacity-0"
@@ -37,8 +37,8 @@ export function BrandMark() {
     <div className="flex w-full items-center justify-between">
       <div className="flex items-center gap-3.5">
         <Image
-          src="/images/brand/flowgrid-favicon.svg"
-          alt="FlowGrid logo"
+          src="/images/brand/visgniteai-favicon.svg"
+          alt="VisgniteAI logo"
           width={40}
           height={40}
           className="h-10 w-10 flex-shrink-0"
@@ -46,7 +46,7 @@ export function BrandMark() {
         />
         <div className="flex flex-col gap-0.5">
           <span className="font-heading text-[15px] font-bold tracking-tight text-strong">
-            FlowGrid
+            VisgniteAI
           </span>
           <span className="font-heading text-[11px] uppercase tracking-[0.18em] text-quiet">
             Openclaw

@@ -8,7 +8,7 @@ export default function Loading() {
     >
       <div className="flex flex-col items-center gap-4">
         <BrandLoader size={72} />
-        <p className="text-sm text-muted">Loading FlowGrid...</p>
+        <p className="text-sm text-muted">Loading VisgniteAI...</p>
       </div>
     </div>
   );

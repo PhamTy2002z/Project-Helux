@@ -22,9 +22,9 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       { url: "/favicon.ico", sizes: "any" },
-      { url: "/images/brand/flowgrid-favicon.svg", type: "image/svg+xml" },
+      { url: "/images/brand/visgniteai-favicon.svg", type: "image/svg+xml" },
     ],
-    apple: "/images/brand/flowgrid-favicon.svg",
+    apple: "/images/brand/visgniteai-favicon.svg",
   },
   title: {
     default: `${PRODUCT_NAME} | AI Agent Operations Platform`,
@@ -35,11 +35,11 @@ export const metadata: Metadata = {
   applicationName: PRODUCT_NAME,
   keywords: [
     "ai agent operations platform",
-    "flowgrid ai operations",
+    "visgniteai ai operations",
     "board orchestration",
     "approval workflows",
     "gateway management",
-    "flowgrid",
+    "visgniteai",
   ],
   openGraph: {
     type: "website",

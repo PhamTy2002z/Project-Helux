@@ -1,4 +1,4 @@
-"""Periodic reconciliation between FlowGrid plan state and Polar subscriptions."""
+"""Periodic reconciliation between VisgniteAI plan state and Polar subscriptions."""
 
 from __future__ import annotations
 

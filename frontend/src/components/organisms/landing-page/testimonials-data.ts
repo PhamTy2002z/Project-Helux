@@ -12,7 +12,7 @@ export type Testimonial = {
 export const TESTIMONIALS: Testimonial[] = [
   {
     quote:
-      "FlowGrid unified our board operations. Approvals that took days now take minutes.",
+      "VisgniteAI unified our board operations. Approvals that took days now take minutes.",
     author: "Sarah Chen",
     role: "Engineering Lead",
     company: "Series B Startup",
@@ -36,7 +36,7 @@ export const TESTIMONIALS: Testimonial[] = [
   },
   {
     quote:
-      "Gateway management used to be our biggest bottleneck. FlowGrid made it seamless with one control surface.",
+      "Gateway management used to be our biggest bottleneck. VisgniteAI made it seamless with one control surface.",
     author: "Priya Sharma",
     role: "Platform Engineer",
     company: "Cloud Infrastructure Co.",
@@ -44,7 +44,7 @@ export const TESTIMONIALS: Testimonial[] = [
   },
   {
     quote:
-      "We cut our incident response time by 60% after routing all agent alerts through FlowGrid.",
+      "We cut our incident response time by 60% after routing all agent alerts through VisgniteAI.",
     author: "James Wu",
     role: "SRE Team Lead",
     company: "FinTech Scale-up",
@@ -60,7 +60,7 @@ export const TESTIMONIALS: Testimonial[] = [
   },
   {
     quote:
-      "Running 200+ agents across 12 boards — FlowGrid is the only tool that keeps it all visible.",
+      "Running 200+ agents across 12 boards — VisgniteAI is the only tool that keeps it all visible.",
     author: "Alex Tanaka",
     role: "Staff Engineer",
     company: "AI Research Lab",
@@ -86,7 +86,7 @@ export const TESTIMONIALS: Testimonial[] = [
 
 /** Stats shown on the testimonials page hero */
 export const TESTIMONIAL_STATS = [
-  { value: "120+", label: "Teams using FlowGrid" },
+  { value: "120+", label: "Teams using VisgniteAI" },
   { value: "99.5%", label: "Platform uptime" },
   { value: "28%", label: "Faster incident response" },
   { value: "4.6/5", label: "Average satisfaction score" },

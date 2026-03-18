@@ -29,12 +29,12 @@ const COLUMNS: { title: string; links: FooterLink[] }[] = [
     links: [
       {
         label: "Contact Sales",
-        href: "mailto:sales@flowgrid.ai",
+        href: "mailto:sales@visgnite.com",
         external: true,
       },
       {
         label: "Customer Support",
-        href: "mailto:support@flowgrid.ai",
+        href: "mailto:support@visgnite.com",
         external: true,
       },
       { label: "Start Free", href: "/sign-in" },
@@ -55,13 +55,13 @@ export default function LandingFooter() {
           {/* Logo column */}
           <div className="max-w-[320px] md:max-w-none lg:max-w-[320px]">
             <p className="text-[22px] font-semibold tracking-[-0.02em] text-white">
-              FlowGrid
+              VisgniteAI
             </p>
             <p className="mt-1 text-[11px] uppercase tracking-[0.18em] text-white/55">
               Cloud SaaS Platform
             </p>
             <p className="mt-4 text-[15px] leading-relaxed text-white/55 sm:text-base">
-              FlowGrid helps operations teams run boards, approvals, and
+              VisgniteAI helps operations teams run boards, approvals, and
               gateways in one managed SaaS workspace.
             </p>
           </div>
@@ -103,7 +103,7 @@ export default function LandingFooter() {
         <div className="mt-8 flex flex-col gap-4 border-t border-white/10 pt-8 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-col gap-2 sm:gap-1">
             <p className="text-xs text-white/35">
-              &copy; {new Date().getFullYear()} FlowGrid. All rights reserved.
+              &copy; {new Date().getFullYear()} VisgniteAI. All rights reserved.
             </p>
             <div className="flex items-center gap-2 text-[11px] text-white/30">
               <svg
@@ -126,7 +126,7 @@ export default function LandingFooter() {
           </div>
           <div className="flex items-center gap-3">
             <a
-              href="mailto:sales@flowgrid.ai"
+              href="mailto:sales@visgnite.com"
               className="inline-flex min-h-[44px] items-center rounded-full border border-white/20 px-4 py-2 text-sm font-medium text-white/80 transition-colors hover:border-white/40 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
             >
               Contact Sales

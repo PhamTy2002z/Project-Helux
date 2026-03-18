@@ -46,7 +46,7 @@ describe("LandingHeroSection", () => {
     expect(
       screen.getByText(/one platform to orchestrate/i),
     ).toBeInTheDocument();
-    expect(screen.getByText(/flowgrid gives your team/i)).toBeInTheDocument();
+    expect(screen.getByText(/visgniteai gives your team/i)).toBeInTheDocument();
   });
 
   it("renders the CSS star background layers", () => {

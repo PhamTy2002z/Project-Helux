@@ -20,7 +20,7 @@ const SECONDARY_BTN_CLASS =
 
 const deckMeta = [
   { label: "Type", value: "Landing Deck" },
-  { label: "Product", value: "FlowGrid" },
+  { label: "Product", value: "VisgniteAI" },
   { label: "Date", value: "March 2026" },
   { label: "Mode", value: "OpenClaw" },
 ];

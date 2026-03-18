@@ -78,7 +78,7 @@ export function AgentsControlDialog({
               </span>{" "}
               to board chat.
             </li>
-            <li>FlowGrid forwards it to all agents on this board.</li>
+            <li>VisgniteAI forwards it to all agents on this board.</li>
           </ul>
         </div>
 

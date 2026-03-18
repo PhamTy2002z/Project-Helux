@@ -43,9 +43,9 @@ def build_organization_invite_email(
     escaped_org_name = escape(org_name)
     escaped_accept_url = escape(accept_url, quote=True)
 
-    subject = f"You're invited to join {org_name} on FlowGrid"
+    subject = f"You're invited to join {org_name} on VisgniteAI"
     text = (
-        f"You have been invited to join {org_name} on FlowGrid.\n\n"
+        f"You have been invited to join {org_name} on VisgniteAI.\n\n"
         f"Accept invite: {accept_url}\n\n"
         "If the button does not work, copy and paste the URL into your browser."
     )
@@ -69,7 +69,7 @@ def build_organization_invite_email(
         '<tr><td style="background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%);'
         "padding:32px 40px;'>"
         '<p style="margin:0;font-size:13px;font-weight:600;letter-spacing:0.5px;'
-        'text-transform:uppercase;color:#94a3b8;">FlowGrid</p>'
+        'text-transform:uppercase;color:#94a3b8;">VisgniteAI</p>'
         '<p style="margin:8px 0 0;font-size:22px;font-weight:700;color:#ffffff;">'
         "You're invited to collaborate</p>"
         "</td></tr>"
@@ -78,7 +78,7 @@ def build_organization_invite_email(
         f'<p style="margin:0 0 6px;font-size:15px;color:#475569;">Hi there,</p>'
         f'<p style="margin:0 0 24px;font-size:15px;color:#475569;line-height:1.6;">'
         f'You\'ve been invited to join <strong style="color:#0f172a;">'
-        f"{escaped_org_name}</strong> on FlowGrid. Click the button below to "
+        f"{escaped_org_name}</strong> on VisgniteAI. Click the button below to "
         "accept and get started.</p>"
         # CTA button
         '<table role="presentation" cellpadding="0" cellspacing="0" '
@@ -102,7 +102,7 @@ def build_organization_invite_email(
         '<tr><td style="padding:20px 40px;background-color:#f8fafc;'
         'border-top:1px solid #e2e8f0;">'
         '<p style="margin:0;font-size:11px;color:#94a3b8;text-align:center;">'
-        "This invite was sent by FlowGrid. If you didn't expect this, "
+        "This invite was sent by VisgniteAI. If you didn't expect this, "
         "you can safely ignore it.</p>"
         "</td></tr>"
         "</table>"

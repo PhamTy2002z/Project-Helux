@@ -10,9 +10,9 @@ import {
 import { getSiteUrl } from "@/lib/site-url";
 
 const landingTitle =
-  "FlowGrid — One Platform to Orchestrate Agents, Boards, and Approvals";
+  "VisgniteAI — One Platform to Orchestrate Agents, Boards, and Approvals";
 const landingDescription =
-  "FlowGrid gives teams one secure workspace to run agent operations, approvals, and gateways — with full visibility and zero handoff friction.";
+  "VisgniteAI gives teams one secure workspace to run agent operations, approvals, and gateways — with full visibility and zero handoff friction.";
 const siteUrl = getSiteUrl();
 
 export const metadata: Metadata = {
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     canonical: "/",
   },
   keywords: [
-    "flowgrid",
+    "visgniteai",
     "agent operations platform",
     "ai orchestration",
     "board management",
@@ -71,7 +71,7 @@ const landingStructuredData = {
       "@type": "Organization",
       name: PRODUCT_SHORT_NAME,
       url: siteUrl,
-      sameAs: ["https://github.com/PhamTy2002z/FlowGrid"],
+      sameAs: ["https://github.com/PhamTy2002z/VisgniteAI"],
     },
   ],
 };

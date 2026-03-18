@@ -64,7 +64,7 @@
 - Updated BrandMark component with new logo variations
 - Added useSidebarCollapse hook for dashboard sidebar state management
 - Added brand image assets to public/images/brand/
-- Updated favicon with new FlowGrid brand mark
+- Updated favicon with new VisgniteAI brand mark
 
 ---
 
@@ -218,7 +218,7 @@
   - `Trusted`
   - `Scalable`
 - Added the original CrewAI poster assets to the frontend public bundle for the landing page feature section.
-- Updated the landing page feature section copy to frame trusted execution and scalable rollout in the current FlowGrid narrative.
+- Updated the landing page feature section copy to frame trusted execution and scalable rollout in the current VisgniteAI narrative.
 - Added frontend component test coverage for the new feature card rendering.
 
 ## 2026-03-09

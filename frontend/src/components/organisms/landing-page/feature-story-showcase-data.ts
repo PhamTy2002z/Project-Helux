@@ -17,15 +17,15 @@ export const SHOWCASE_STORIES: ShowcaseStory[] = [
     kicker: "Orchestrate",
     title: "Move from agent design to deployment inside one orchestration loop",
     description:
-      "FlowGrid brings builder configuration, deployment commands, and operational capabilities into one surface so teams can launch agents with less handoff friction.",
+      "VisgniteAI brings builder configuration, deployment commands, and operational capabilities into one surface so teams can launch agents with less handoff friction.",
     ctaLabel: "Explore orchestration",
     ctaHref: "#",
     previewImageSrc:
-      "/images/landing/flowgrid-showcase-orchestrate-20260312.png",
+      "/images/landing/visgniteai-showcase-orchestrate-20260312.png",
     previewImageAlt:
-      "FlowGrid orchestration illustration showing an AI builder, deployment terminal, and capabilities card connected in one workflow.",
+      "VisgniteAI orchestration illustration showing an AI builder, deployment terminal, and capabilities card connected in one workflow.",
     previewImageClassName: "scale-[1.01]",
-    highlights: ["AI builder", "FlowGrid deploy", "Capabilities layer"],
+    highlights: ["AI builder", "VisgniteAI deploy", "Capabilities layer"],
   },
   {
     id: "build-integrate",
@@ -36,9 +36,9 @@ export const SHOWCASE_STORIES: ShowcaseStory[] = [
     ctaLabel: "Explore observability",
     ctaHref: "#",
     previewImageSrc:
-      "/images/landing/flowgrid-showcase-executions-20260312.png",
+      "/images/landing/visgniteai-showcase-executions-20260312.png",
     previewImageAlt:
-      "FlowGrid execution illustration showing four business functions feeding a central orchestration node with analytics and deployment overview.",
+      "VisgniteAI execution illustration showing four business functions feeding a central orchestration node with analytics and deployment overview.",
     previewImageClassName: "",
     highlights: ["Finance to Product", "Execution analytics", "Cluster health"],
   },
@@ -51,9 +51,9 @@ export const SHOWCASE_STORIES: ShowcaseStory[] = [
     ctaLabel: "Explore governance controls",
     ctaHref: "#",
     previewImageSrc:
-      "/images/landing/flowgrid-showcase-manage-scale-20260312.png",
+      "/images/landing/visgniteai-showcase-manage-scale-20260312.png",
     previewImageAlt:
-      "FlowGrid operations visual showing board lead assignment, execution pipeline, operational tracking, and audit signals.",
+      "VisgniteAI operations visual showing board lead assignment, execution pipeline, operational tracking, and audit signals.",
     previewImageClassName: "scale-[1.06] -translate-x-[2%]",
     highlights: [
       "Board lead ownership",

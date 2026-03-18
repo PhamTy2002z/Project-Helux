@@ -86,7 +86,7 @@ function InviteContent() {
             </Link>
             <div className="space-y-3">
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/55">
-                FlowGrid
+                VisgniteAI
               </p>
               <h1 className="text-balance font-[var(--font-display)] text-4xl leading-tight text-white sm:text-5xl">
                 You&apos;re Invited to Join a Team.
@@ -121,8 +121,8 @@ function InviteContent() {
           <section className="rounded-3xl border border-white/15 bg-white/[0.04] p-6 backdrop-blur-sm sm:p-8">
             <div className="mb-6 flex items-center gap-3">
               <Image
-                src="/images/brand/flowgrid-favicon.svg"
-                alt="FlowGrid logo"
+                src="/images/brand/visgniteai-favicon.svg"
+                alt="VisgniteAI logo"
                 width={36}
                 height={36}
                 className="h-9 w-9"

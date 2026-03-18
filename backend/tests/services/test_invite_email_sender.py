@@ -45,7 +45,7 @@ async def test_resend_sender_maps_payload_and_idempotency_options() -> None:
 
     sender = ResendInviteEmailSender(
         api_key="re_test",
-        sender="FlowGrid <noreply@example.com>",
+        sender="VisgniteAI <noreply@example.com>",
         reply_to="support@example.com",
         send_email=_fake_send,
     )
@@ -65,7 +65,7 @@ async def test_resend_sender_maps_payload_and_idempotency_options() -> None:
 
     payload = captured["payload"]
     assert isinstance(payload, dict)
-    assert payload["from"] == "FlowGrid <noreply@example.com>"
+    assert payload["from"] == "VisgniteAI <noreply@example.com>"
     assert payload["to"] == ["user@example.com"]
     assert payload["reply_to"] == "support@example.com"
     assert captured["options"] == {"idempotency_key": "idem-123"}
@@ -83,7 +83,7 @@ async def test_resend_sender_marks_retryable_errors() -> None:
 
     sender = ResendInviteEmailSender(
         api_key="re_test",
-        sender="FlowGrid <noreply@example.com>",
+        sender="VisgniteAI <noreply@example.com>",
         reply_to=None,
         send_email=_fake_send,
     )
@@ -113,7 +113,7 @@ async def test_resend_sender_marks_non_retryable_errors() -> None:
 
     sender = ResendInviteEmailSender(
         api_key="re_test",
-        sender="FlowGrid <noreply@example.com>",
+        sender="VisgniteAI <noreply@example.com>",
         reply_to=None,
         send_email=_fake_send,
     )

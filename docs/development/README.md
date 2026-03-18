@@ -1,6 +1,6 @@
 # Development
 
-This section is for contributors developing FlowGrid locally.
+This section is for contributors developing VisgniteAI locally.
 
 ## Recommended workflow (fast loop)
 

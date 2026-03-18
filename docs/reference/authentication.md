@@ -1,6 +1,6 @@
 # Authentication
 
-FlowGrid authentication is controlled by two inputs:
+VisgniteAI authentication is controlled by two inputs:
 `AUTH_PROFILE` and `AUTH_MODE`. You use `AUTH_PROFILE` to define deployment
 strictness, and you use `AUTH_MODE` to select the auth provider.
 

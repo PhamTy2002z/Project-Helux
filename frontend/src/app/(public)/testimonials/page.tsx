@@ -26,7 +26,7 @@ const TestimonialsPageContent = dynamic(
 
 const pageTitle = `Customer Testimonials — ${PRODUCT_NAME}`;
 const pageDescription =
-  "Engineering leaders, DevOps teams, and platform operators share how FlowGrid transformed their agent operations.";
+  "Engineering leaders, DevOps teams, and platform operators share how VisgniteAI transformed their agent operations.";
 const siteUrl = getSiteUrl();
 
 export const metadata: Metadata = {
@@ -62,7 +62,7 @@ const testimonialsStructuredData = {
       {
         "@type": "Review",
         reviewBody:
-          "FlowGrid unified our board operations. Approvals that took days now take minutes.",
+          "VisgniteAI unified our board operations. Approvals that took days now take minutes.",
         author: { "@type": "Person", name: "Sarah Chen" },
       },
       {
@@ -101,7 +101,7 @@ export default function TestimonialsPage() {
               <ScrollReveal>
                 <div className="hero-glass-card mx-auto max-w-5xl rounded-3xl border border-white/15 px-8 py-12 text-center">
                   <h2 className="text-balance text-3xl font-bold tracking-tight text-white sm:text-4xl">
-                    See what FlowGrid can do for your team
+                    See what VisgniteAI can do for your team
                   </h2>
                   <p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-white/65">
                     Launch your first board in minutes. No credit card required.
