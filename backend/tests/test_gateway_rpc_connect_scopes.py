@@ -69,7 +69,16 @@ def test_build_connect_params_defaults_to_device_pairing(
     assert captured["connect_nonce"] is None
 
 
-def test_build_connect_params_uses_control_ui_when_pairing_disabled() -> None:
+def test_build_connect_params_uses_device_mode_when_pairing_disabled(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """When disable_device_pairing is True, connect still uses device mode
+    (the flag means the identity was pre-provisioned, not that we skip device auth)."""
+    monkeypatch.setattr(
+        gateway_rpc,
+        "_build_device_connect_payload",
+        lambda **_kw: {"id": "device-id", "publicKey": "pk", "signature": "sig", "signedAt": 1},
+    )
     params = _build_connect_params(
         GatewayConfig(
             url="ws://gateway.example/ws",
@@ -80,9 +89,9 @@ def test_build_connect_params_uses_control_ui_when_pairing_disabled() -> None:
 
     assert params["auth"] == {"token": "secret-token"}
     assert params["scopes"] == list(GATEWAY_OPERATOR_SCOPES)
-    assert params["client"]["id"] == CONTROL_UI_CLIENT_ID
-    assert params["client"]["mode"] == CONTROL_UI_CLIENT_MODE
-    assert "device" not in params
+    assert params["client"]["id"] == DEFAULT_GATEWAY_CLIENT_ID
+    assert params["client"]["mode"] == DEFAULT_GATEWAY_CLIENT_MODE
+    assert "device" in params
 
 
 def test_build_connect_params_passes_nonce_to_device_payload(
