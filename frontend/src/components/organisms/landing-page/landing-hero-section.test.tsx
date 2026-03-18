@@ -44,7 +44,7 @@ describe("LandingHeroSection", () => {
     render(<LandingHeroSection />);
 
     expect(
-      screen.getByText(/one platform to orchestrate/i),
+      screen.getByText(/orchestrate multi-agent workflows/i),
     ).toBeInTheDocument();
     expect(screen.getByText(/visgniteai gives your team/i)).toBeInTheDocument();
   });
