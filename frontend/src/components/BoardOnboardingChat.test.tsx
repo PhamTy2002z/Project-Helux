@@ -115,11 +115,18 @@ describe("BoardOnboardingChat polling", () => {
     await screen.findByText("Pick a style");
 
     fireEvent.click(screen.getByRole("button", { name: "Option A" }));
+    // Flush React state so selectedOptions is updated before clicking Next
+    await act(async () => {
+      await Promise.resolve();
+    });
     fireEvent.click(screen.getByRole("button", { name: "Next" }));
 
-    await waitFor(() => {
-      expect(answerOnboardingMock).toHaveBeenCalledTimes(1);
-    });
+    await waitFor(
+      () => {
+        expect(answerOnboardingMock).toHaveBeenCalledTimes(1);
+      },
+      { timeout: 3000 },
+    );
 
     // Wait for component to enter the "waiting for next question" state
     // so the polling interval is established before we advance timers.

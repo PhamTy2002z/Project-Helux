@@ -162,7 +162,7 @@ function BrandItem({ brand }: { brand: Brand }) {
     <span className="inline-flex shrink-0 items-center gap-2.5">
       {brand.Icon ? (
         <brand.Icon
-          className="h-5 w-5 text-white/85 sm:h-6 sm:w-6"
+          className="h-7 w-7 text-white/85 sm:h-8 sm:w-8"
           aria-hidden="true"
         />
       ) : (
@@ -173,11 +173,11 @@ function BrandItem({ brand }: { brand: Brand }) {
           aria-hidden="true"
           width={24}
           height={24}
-          className="h-5 w-5 opacity-80 sm:h-6 sm:w-6"
+          className="h-7 w-7 opacity-80 sm:h-8 sm:w-8"
           loading="lazy"
         />
       )}
-      <span className="text-xs font-semibold text-white/90 sm:text-sm fhd:text-base">
+      <span className="text-sm font-semibold text-white/90 sm:text-base fhd:text-lg">
         {brand.name}
       </span>
     </span>
@@ -195,14 +195,14 @@ export default function TrustMarquee() {
       <p className="mb-6 text-center text-lg font-medium tracking-tight text-white/80 sm:mb-8 sm:text-xl md:text-2xl">
         Loved by AI builders. Trusted by AI leaders.
       </p>
-      <div className="relative overflow-hidden">
-        {/* Fade edges */}
-        <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-10 bg-gradient-to-r from-black to-transparent sm:w-16" />
-        <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-10 bg-gradient-to-l from-black to-transparent sm:w-16" />
+      <div className="relative mx-auto w-[70%] overflow-hidden">
+        {/* Fade edges — matches hero bg #0a0a0a */}
+        <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-10 bg-gradient-to-r from-[#0a0a0a] to-transparent sm:w-16" />
+        <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-10 bg-gradient-to-l from-[#0a0a0a] to-transparent sm:w-16" />
 
-        {/* Four identical strips keep the viewport continuously filled, so the loop resets without a dead gap. */}
-        <div className="animate-marquee-loop flex w-max items-center [--marquee-end:-25%] [animation-duration:32s] fhd:[animation-duration:28s]">
-          {Array.from({ length: 4 }).map((_, stripIndex) => (
+        {/* Three identical strips keep the viewport continuously filled */}
+        <div className="animate-marquee-loop flex w-max items-center [--marquee-end:-33.333%] [animation-duration:54s] fhd:[animation-duration:49s]">
+          {Array.from({ length: 3 }).map((_, stripIndex) => (
             <div
               key={stripIndex}
               aria-hidden={stripIndex > 0}
