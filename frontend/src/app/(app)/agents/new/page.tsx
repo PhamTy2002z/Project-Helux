@@ -110,7 +110,17 @@ export default function NewAgentPage() {
           router.push("/settings");
           return;
         }
-        setError(err.message || "Something went wrong.");
+        const raw = err.message || "";
+        const isGatewayError =
+          raw.includes("Failed to fetch") ||
+          raw.includes("Gateway") ||
+          raw.includes("502") ||
+          raw.includes("network");
+        setError(
+          isGatewayError
+            ? "Could not reach the agent gateway. Please try again."
+            : raw || "Something went wrong.",
+        );
       },
     },
   });
@@ -350,8 +360,16 @@ export default function NewAgentPage() {
               </div>
 
               {errorMessage ? (
-                <div className="rounded-lg border border-[color:var(--border)] bg-[color:var(--surface)] p-3 text-sm text-[color:var(--text-muted)] shadow-sm">
-                  {errorMessage}
+                <div className="flex items-center gap-3 rounded-lg border border-[color:var(--border)] bg-[color:var(--surface)] p-3 text-sm text-[color:var(--text-muted)] shadow-sm">
+                  <span className="flex-1">{errorMessage}</span>
+                  <Button
+                    variant="outline"
+                    type="submit"
+                    size="sm"
+                    disabled={isLoading}
+                  >
+                    Try again
+                  </Button>
                 </div>
               ) : null}
 
