@@ -1,4 +1,4 @@
-"""Authentication bootstrap endpoints for the FlowGrid API."""
+"""Authentication bootstrap endpoints for the VisgniteAI API."""
 
 from __future__ import annotations
 

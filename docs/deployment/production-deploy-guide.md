@@ -1,13 +1,13 @@
-# FlowGrid Production Deploy Guide
+# VisgniteAI Production Deploy Guide
 
-Full step-by-step guide to deploy FlowGrid + OpenClaw on Ubuntu laptop server with Cloudflare Tunnel + GitHub Actions CI/CD.
+Full step-by-step guide to deploy VisgniteAI + OpenClaw on Ubuntu laptop server with Cloudflare Tunnel + GitHub Actions CI/CD.
 
 ## Prerequisites
 
-- Ubuntu Server 24.04 laptop (hostname: `flowgrid`, user: `phamty`)
+- Ubuntu Server 24.04 laptop (hostname: `visgniteai`, user: `phamty`)
 - Docker (with at least **6GB memory** allocated) + cloudflared installed and tunnel active
-- Domain `flowgrid.live` on Cloudflare (tunnel working)
-- GitHub repo: `PhamTy2002z/Project-FlowGrid`
+- Domain `visgnite.com` on Cloudflare (tunnel working)
+- GitHub repo: `PhamTy2002z/Project-VisgniteAI`
 - Mac (dev machine) can SSH to laptop: `ssh phamty@192.168.1.5`
 
 ---
@@ -31,9 +31,9 @@ sudo chown phamty:phamty /opt/projects
 
 ```bash
 cd /opt/projects
-git clone https://github.com/PhamTy2002z/Project-FlowGrid.git Project-FlowGrid
+git clone https://github.com/PhamTy2002z/Project-VisgniteAI.git Project-VisgniteAI
 # Hoặc dùng SSH:
-# git clone git@github.com:PhamTy2002z/Project-FlowGrid.git Project-FlowGrid
+# git clone git@github.com:PhamTy2002z/Project-VisgniteAI.git Project-VisgniteAI
 ```
 
 ### Step 1.4 — Update cloudflared config thêm api subdomain
@@ -49,9 +49,9 @@ tunnel: 6d5407d7-b3a7-4d7b-b9be-5c04af0e23b9
 credentials-file: /home/phamty/.cloudflared/6d5407d7-b3a7-4d7b-b9be-5c04af0e23b9.json
 
 ingress:
-  - hostname: flowgrid.live
+  - hostname: visgnite.com
     service: http://localhost:3000
-  - hostname: api.flowgrid.live
+  - hostname: api.visgnite.com
     service: http://localhost:8000
     originRequest:
       connectTimeout: 30s
@@ -62,7 +62,7 @@ ingress:
 ### Step 1.5 — Route DNS cho api subdomain + restart tunnel
 
 ```bash
-cloudflared tunnel route dns flowgrid api.flowgrid.live
+cloudflared tunnel route dns visgniteai api.visgnite.com
 sudo systemctl restart cloudflared
 sudo systemctl status cloudflared  # Verify: active (running)
 ```
@@ -83,7 +83,7 @@ sudo systemctl status cloudflared  # Verify: active (running)
 > **not** need to be in `.env.prod` on the server.
 
 ```bash
-cd /opt/projects/Project-FlowGrid
+cd /opt/projects/Project-VisgniteAI
 
 # Generate random passwords
 PG_PASS=$(openssl rand -base64 24 | tr -d '/+=' | head -c 32)
@@ -92,12 +92,12 @@ AUTH_TOKEN=$(openssl rand -base64 48 | tr -d '/+=' | head -c 64)
 GW_TOKEN=$(openssl rand -hex 24)
 
 cat > .env.prod <<EOF
-# FlowGrid Production — flowgrid.live
+# VisgniteAI Production — visgnite.com
 # See compose.prod.yml for which vars are passed to each container.
 # NEXT_PUBLIC_* vars live in frontend/.env on the build machine, NOT here.
 
 # --- Domain & images ---
-DOMAIN=flowgrid.live
+DOMAIN=visgnite.com
 GHCR_OWNER=phamty2002z
 GHCR_IMAGE_TAG=latest
 
@@ -127,15 +127,15 @@ PAYMENT_PROVIDER=none
 # POLAR_WEBHOOK_SECRET=whsec_xxx
 # POLAR_PRODUCT_ID_PRO=1e83f145-db6f-41cb-ad76-00ba9d66a2f7
 # POLAR_ENVIRONMENT=production
-# POLAR_SUCCESS_URL=https://flowgrid.live/checkout/success?checkout_id={CHECKOUT_ID}
+# POLAR_SUCCESS_URL=https://visgnite.com/checkout/success?checkout_id={CHECKOUT_ID}
 
 # --- Email (org invites + welcome email on signup) ---
 EMAIL_PROVIDER=none
 # EMAIL_PROVIDER=resend
 # RESEND_API_KEY=re_xxx
-# EMAIL_FROM_INVITES=FlowGrid <noreply@flowgrid.live>
-# EMAIL_REPLY_TO=support@flowgrid.live
-# INVITE_ACCEPT_BASE_URL=https://flowgrid.live/invite
+# EMAIL_FROM_INVITES=VisgniteAI <noreply@visgnite.com>
+# EMAIL_REPLY_TO=support@visgnite.com
+# INVITE_ACCEPT_BASE_URL=https://visgnite.com/invite
 
 # --- Clerk webhook (required when AUTH_MODE=clerk for welcome email) ---
 # Obtain from Clerk Dashboard → Webhooks → Signing Secret.
@@ -159,10 +159,10 @@ chmod 600 .env.prod
 Edit `frontend/.env` before building the frontend image. Key production values:
 
 ```env
-NEXT_PUBLIC_API_URL=https://api.flowgrid.live
+NEXT_PUBLIC_API_URL=https://api.visgnite.com
 NEXT_PUBLIC_AUTH_MODE=local
 NEXT_PUBLIC_AUTH_PROFILE=self_hosted
-NEXT_PUBLIC_SITE_URL=https://flowgrid.live
+NEXT_PUBLIC_SITE_URL=https://visgnite.com
 NEXT_PUBLIC_BOARD_PLANNING_OVERLAY_V1=false
 NEXT_PUBLIC_BOARD_QUERY_V2=false
 # NEXT_PUBLIC_CLERK_* — only needed when AUTH_MODE=clerk
@@ -174,7 +174,7 @@ All vars in `frontend/.env.example` are accepted as build ARGs in `frontend/Dock
 
 ```bash
 grep -E '(LOCAL_AUTH_TOKEN|MANAGED_GATEWAY_TOKEN)' .env.prod
-# Copy LOCAL_AUTH_TOKEN — cần dùng khi login vào FlowGrid UI
+# Copy LOCAL_AUTH_TOKEN — cần dùng khi login vào VisgniteAI UI
 # Copy MANAGED_GATEWAY_TOKEN — cần set vào openclaw config (Phase 7)
 ```
 
@@ -182,11 +182,11 @@ grep -E '(LOCAL_AUTH_TOKEN|MANAGED_GATEWAY_TOKEN)' .env.prod
 
 1. Mở Resend dashboard: `https://resend.com`
 2. Vào **API Keys** -> **Create API Key** -> copy key dạng `re_...`
-3. Vào **Domains** -> chọn `flowgrid.live` (status phải là **Verified**)
+3. Vào **Domains** -> chọn `visgnite.com` (status phải là **Verified**)
 4. Chọn địa chỉ gửi tại domain đã verify:
-   `FlowGrid <noreply@flowgrid.live>` cho `EMAIL_FROM_INVITES`
+   `VisgniteAI <noreply@visgnite.com>` cho `EMAIL_FROM_INVITES`
 5. (Optional) Chọn mailbox nhận phản hồi cho `EMAIL_REPLY_TO`, for example
-   `support@flowgrid.live`
+   `support@visgnite.com`
 
 > Note: Resend dùng cho invite email và welcome email (khi signup qua Clerk).
 > `RESEND_WEBHOOK_SECRET` chưa bắt buộc vì backend chưa dùng inbound Resend webhook.
@@ -194,7 +194,7 @@ grep -E '(LOCAL_AUTH_TOKEN|MANAGED_GATEWAY_TOKEN)' .env.prod
 ### Step 2.4 — Bật Resend trong `.env.prod` (khi đã sẵn sàng production)
 
 ```bash
-cd /opt/projects/Project-FlowGrid
+cd /opt/projects/Project-VisgniteAI
 nano .env.prod
 ```
 
@@ -203,9 +203,9 @@ Set giá trị như sau:
 ```env
 EMAIL_PROVIDER=resend
 RESEND_API_KEY=re_xxx
-EMAIL_FROM_INVITES=FlowGrid <noreply@flowgrid.live>
-EMAIL_REPLY_TO=support@flowgrid.live
-INVITE_ACCEPT_BASE_URL=https://flowgrid.live/invite
+EMAIL_FROM_INVITES=VisgniteAI <noreply@visgnite.com>
+EMAIL_REPLY_TO=support@visgnite.com
+INVITE_ACCEPT_BASE_URL=https://visgnite.com/invite
 # Optional (reserved for future inbound webhook support):
 # RESEND_WEBHOOK_SECRET=whsec_xxx
 ```
@@ -223,14 +223,14 @@ CLERK_WEBHOOK_SECRET=whsec_xxx
 
 Setup trên Clerk Dashboard:
 1. Mở **Webhooks** → **Create Endpoint**
-2. URL: `https://api.flowgrid.live/api/v1/webhooks/clerk`
+2. URL: `https://api.visgnite.com/api/v1/webhooks/clerk`
 3. Subscribe events: `user.created`
 4. Copy **Signing Secret** → set vào `CLERK_WEBHOOK_SECRET`
 
 Restart backend + worker để nhận env mới:
 
 ```bash
-cd /opt/projects/Project-FlowGrid
+cd /opt/projects/Project-VisgniteAI
 docker compose -f compose.prod.yml --env-file .env.prod restart backend webhook-worker
 ```
 
@@ -249,7 +249,7 @@ POLAR_ACCESS_TOKEN=polar_at_xxx
 POLAR_WEBHOOK_SECRET=whsec_xxx
 POLAR_PRODUCT_ID_PRO=1e83f145-db6f-41cb-ad76-00ba9d66a2f7
 POLAR_ENVIRONMENT=production
-POLAR_SUCCESS_URL=https://flowgrid.live/checkout/success?checkout_id={CHECKOUT_ID}
+POLAR_SUCCESS_URL=https://visgnite.com/checkout/success?checkout_id={CHECKOUT_ID}
 ```
 
 Các biến bắt buộc khi `PAYMENT_PROVIDER=polar`:
@@ -260,7 +260,7 @@ Các biến bắt buộc khi `PAYMENT_PROVIDER=polar`:
 Restart backend:
 
 ```bash
-cd /opt/projects/Project-FlowGrid
+cd /opt/projects/Project-VisgniteAI
 docker compose -f compose.prod.yml --env-file .env.prod restart backend
 ```
 
@@ -281,14 +281,14 @@ grep -E '^(BILLING_MODE|PAYMENT_PROVIDER|POLAR_)' .env.prod
 ### Step 3.1 — Từ Mac (dev machine)
 
 ```bash
-scp compose.prod.yml phamty@192.168.1.5:/opt/projects/Project-FlowGrid/
+scp compose.prod.yml phamty@192.168.1.5:/opt/projects/Project-VisgniteAI/
 ```
 
 ### Step 3.2 — Verify trên server
 
 ```bash
 ssh phamty@192.168.1.5
-ls -la /opt/projects/Project-FlowGrid/
+ls -la /opt/projects/Project-VisgniteAI/
 # Should see: compose.prod.yml  .env.prod  backend/  frontend/  ...
 ```
 
@@ -298,7 +298,7 @@ ls -la /opt/projects/Project-FlowGrid/
 
 ### Step 4.1 — Lấy runner token từ GitHub
 
-1. Mở browser: `https://github.com/PhamTy2002z/Project-FlowGrid/settings/actions/runners/new`
+1. Mở browser: `https://github.com/PhamTy2002z/Project-VisgniteAI/settings/actions/runners/new`
 2. Chọn **Linux**, **x64**
 3. Copy token hiển thị (dùng ở bước 4.3)
 
@@ -322,9 +322,9 @@ tar xzf actions-runner-linux-x64-2.322.0.tar.gz
 cd ~/actions-runner
 
 ./config.sh \
-  --url https://github.com/PhamTy2002z/Project-FlowGrid \
+  --url https://github.com/PhamTy2002z/Project-VisgniteAI \
   --token <RUNNER_TOKEN_TU_BUOC_4.1> \
-  --name flowgrid-laptop \
+  --name visgniteai-laptop \
   --labels self-hosted,linux,x64,production \
   --work /opt/projects/_work \
   --runasservice
@@ -332,7 +332,7 @@ cd ~/actions-runner
 
 Khi hỏi:
 - Runner group: **Enter** (default)
-- Runner name: `flowgrid-laptop`
+- Runner name: `visgniteai-laptop`
 - Work folder: `/opt/projects/_work`
 
 ### Step 4.4 — Install as systemd service (auto-start on boot)
@@ -346,8 +346,8 @@ sudo ./svc.sh status  # Verify: active (running)
 
 ### Step 4.5 — Verify runner online
 
-1. Mở: `https://github.com/PhamTy2002z/Project-FlowGrid/settings/actions/runners`
-2. Runner `flowgrid-laptop` hiển thị **Idle** = OK
+1. Mở: `https://github.com/PhamTy2002z/Project-VisgniteAI/settings/actions/runners`
+2. Runner `visgniteai-laptop` hiển thị **Idle** = OK
 
 ---
 
@@ -355,17 +355,17 @@ sudo ./svc.sh status  # Verify: active (running)
 
 ### Step 5.1 — Add secrets
 
-Mở: `https://github.com/PhamTy2002z/Project-FlowGrid/settings/secrets/actions`
+Mở: `https://github.com/PhamTy2002z/Project-VisgniteAI/settings/secrets/actions`
 
 Add **Repository secrets** — these are injected as build args when CI builds
 the frontend image (`NEXT_PUBLIC_*` are baked into the Next.js bundle):
 
 | Secret | Value |
 |--------|-------|
-| `NEXT_PUBLIC_API_URL` | `https://api.flowgrid.live` |
+| `NEXT_PUBLIC_API_URL` | `https://api.visgnite.com` |
 | `NEXT_PUBLIC_AUTH_MODE` | `local` |
 | `NEXT_PUBLIC_AUTH_PROFILE` | `self_hosted` |
-| `NEXT_PUBLIC_SITE_URL` | `https://flowgrid.live` |
+| `NEXT_PUBLIC_SITE_URL` | `https://visgnite.com` |
 | `NEXT_PUBLIC_BOARD_PLANNING_OVERLAY_V1` | `false` |
 | `NEXT_PUBLIC_BOARD_QUERY_V2` | `false` |
 | `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | _(leave empty unless AUTH_MODE=clerk)_ |
@@ -380,7 +380,7 @@ the frontend image (`NEXT_PUBLIC_*` are baked into the Next.js bundle):
 
 ### Step 5.2 — Create "production" environment
 
-1. Mở: `https://github.com/PhamTy2002z/Project-FlowGrid/settings/environments`
+1. Mở: `https://github.com/PhamTy2002z/Project-VisgniteAI/settings/environments`
 2. Click **New environment** → name: `production`
 3. (Optional) Enable **Required reviewers** nếu muốn approve trước khi deploy
 
@@ -403,31 +403,31 @@ echo "<GITHUB_PAT>" | docker login ghcr.io -u phamty2002z --password-stdin
 
 ```bash
 # Trên Mac (dev machine), tại project root
-cd ~/Documents/GitHub/Project-FlowGrid
+cd ~/Documents/GitHub/Project-VisgniteAI
 
 # Login GHCR
 echo "<GITHUB_PAT>" | docker login ghcr.io -u phamty2002z --password-stdin
 
 # Build backend (context: repo root)
-docker build -t ghcr.io/phamty2002z/flowgrid-backend:latest -f backend/Dockerfile .
+docker build -t ghcr.io/phamty2002z/visgniteai-backend:latest -f backend/Dockerfile .
 
 # Build frontend — NEXT_PUBLIC_* baked at build time, inject from frontend/.env
 # frontend/Dockerfile accepts all vars as ARGs; compose.yml wires them automatically
 env $(grep -E '^NEXT_PUBLIC_' frontend/.env | xargs) \
   docker compose --profile docker-frontend build frontend
 
-docker tag project-helux-frontend:latest ghcr.io/phamty2002z/flowgrid-frontend:latest
+docker tag project-helux-frontend:latest ghcr.io/phamty2002z/visgniteai-frontend:latest
 
 # Push
-docker push ghcr.io/phamty2002z/flowgrid-backend:latest
-docker push ghcr.io/phamty2002z/flowgrid-frontend:latest
+docker push ghcr.io/phamty2002z/visgniteai-backend:latest
+docker push ghcr.io/phamty2002z/visgniteai-frontend:latest
 ```
 
 ### Step 6.3 — Pull và start trên laptop server
 
 ```bash
 ssh phamty@192.168.1.5
-cd /opt/projects/Project-FlowGrid
+cd /opt/projects/Project-VisgniteAI
 
 # Pull images (add --profile managed-gateway if using OpenClaw)
 docker compose -f compose.prod.yml --profile managed-gateway --env-file .env.prod pull
@@ -457,9 +457,9 @@ curl -s http://localhost:3000 | head -5
 ### Step 6.5 — Test qua internet
 
 Mở browser:
-- `https://flowgrid.live` → Frontend load
-- `https://api.flowgrid.live/health` → Backend health response
-- `https://api.flowgrid.live/docs` → Swagger UI
+- `https://visgnite.com` → Frontend load
+- `https://api.visgnite.com/health` → Backend health response
+- `https://api.visgnite.com/docs` → Swagger UI
 
 ---
 
@@ -470,7 +470,7 @@ compose). If auto-migrate is disabled or you want to run migrations manually:
 
 ```bash
 ssh phamty@192.168.1.5
-cd /opt/projects/Project-FlowGrid
+cd /opt/projects/Project-VisgniteAI
 
 docker compose -f compose.prod.yml --env-file .env.prod exec backend \
   alembic upgrade head
@@ -534,14 +534,14 @@ cd openclaw
 docker build -t openclaw/gateway:latest .
 
 # Cleanup source after build
-cd /opt/projects/Project-FlowGrid
+cd /opt/projects/Project-VisgniteAI
 rm -rf /tmp/openclaw
 ```
 
 ### Step 7.2 — Tạo openclaw config directory
 
 ```bash
-cd /opt/projects/Project-FlowGrid
+cd /opt/projects/Project-VisgniteAI
 mkdir -p openclaw
 ```
 
@@ -554,7 +554,7 @@ Config file: `openclaw/openclaw.json` (not `.prod.json` — compose reads this n
 > `gateway.auth.token` trong config file.
 
 ```bash
-cd /opt/projects/Project-FlowGrid
+cd /opt/projects/Project-VisgniteAI
 
 # Lấy gateway token đã tạo ở Step 2.1
 GW_TOKEN=$(grep MANAGED_GATEWAY_TOKEN .env.prod | cut -d= -f2)
@@ -630,7 +630,7 @@ docker compose -f compose.prod.yml --profile managed-gateway --env-file .env.pro
 
 # Fix permissions
 docker run --rm \
-  -v flowgrid-prod_openclaw_data:/data \
+  -v visgniteai-prod_openclaw_data:/data \
   alpine sh -c "mkdir -p /data/.openclaw && chown -R 1000:1000 /data/.openclaw /data"
 
 # Start lại
@@ -640,7 +640,7 @@ docker compose -f compose.prod.yml --profile managed-gateway --env-file .env.pro
 ### Step 7.5 — Onboard gateway + device pairing
 
 ```bash
-cd /opt/projects/Project-FlowGrid
+cd /opt/projects/Project-VisgniteAI
 
 # Chạy onboard wizard
 docker compose -f compose.prod.yml --env-file .env.prod exec -it openclaw openclaw onboard
@@ -653,7 +653,7 @@ docker compose -f compose.prod.yml --env-file .env.prod exec -it openclaw opencl
 ### Step 7.6 — Verify gateway
 
 ```bash
-cd /opt/projects/Project-FlowGrid
+cd /opt/projects/Project-VisgniteAI
 
 # Check container health
 docker compose -f compose.prod.yml --env-file .env.prod ps openclaw
@@ -696,7 +696,7 @@ cd openclaw && git checkout v2026.x.x  # specific version
 docker build -t openclaw/gateway:latest .
 rm -rf /tmp/openclaw
 
-cd /opt/projects/Project-FlowGrid
+cd /opt/projects/Project-VisgniteAI
 docker compose -f compose.prod.yml --profile managed-gateway --env-file .env.prod up -d openclaw
 ```
 
@@ -722,7 +722,7 @@ GitHub Actions (self-hosted runner on laptop) — "deploy" job
     └── docker image prune (dọn images cũ)
     │
     ▼
-Live tại flowgrid.live trong ~30 giây
+Live tại visgnite.com trong ~30 giây
 ```
 
 > **Note:** CI/CD chỉ deploy backend + frontend + webhook-worker.
@@ -741,9 +741,9 @@ git push -u origin test/cicd-verify
 ```
 
 1. Tạo PR → merge vào `main`
-2. Xem Actions tab: `https://github.com/PhamTy2002z/Project-FlowGrid/actions`
+2. Xem Actions tab: `https://github.com/PhamTy2002z/Project-VisgniteAI/actions`
 3. Verify cả 2 jobs pass: `build-and-push` + `deploy`
-4. Check `https://flowgrid.live` load OK
+4. Check `https://visgnite.com` load OK
 
 ---
 
@@ -752,7 +752,7 @@ git push -u origin test/cicd-verify
 ### Xem logs
 
 ```bash
-cd /opt/projects/Project-FlowGrid
+cd /opt/projects/Project-VisgniteAI
 
 # All services
 docker compose -f compose.prod.yml --env-file .env.prod logs -f
@@ -767,7 +767,7 @@ docker compose -f compose.prod.yml --env-file .env.prod logs -f openclaw
 ### Restart services
 
 ```bash
-cd /opt/projects/Project-FlowGrid
+cd /opt/projects/Project-VisgniteAI
 
 # Restart app only (db/redis/minio/openclaw stay up)
 docker compose -f compose.prod.yml --env-file .env.prod \
@@ -780,14 +780,14 @@ docker compose -f compose.prod.yml --env-file .env.prod restart
 ### Stop everything
 
 ```bash
-cd /opt/projects/Project-FlowGrid
+cd /opt/projects/Project-VisgniteAI
 docker compose -f compose.prod.yml --env-file .env.prod down
 ```
 
 ### Manual deploy (without CI/CD)
 
 ```bash
-cd /opt/projects/Project-FlowGrid
+cd /opt/projects/Project-VisgniteAI
 docker compose -f compose.prod.yml --env-file .env.prod pull
 docker compose -f compose.prod.yml --env-file .env.prod \
   up -d --no-deps backend webhook-worker frontend
@@ -796,7 +796,7 @@ docker compose -f compose.prod.yml --env-file .env.prod \
 ### Database backup
 
 ```bash
-cd /opt/projects/Project-FlowGrid
+cd /opt/projects/Project-VisgniteAI
 docker compose -f compose.prod.yml --env-file .env.prod exec db \
   pg_dump -U postgres mission_control > backup-$(date +%Y%m%d).sql
 ```
@@ -804,7 +804,7 @@ docker compose -f compose.prod.yml --env-file .env.prod exec db \
 ### Database restore
 
 ```bash
-cd /opt/projects/Project-FlowGrid
+cd /opt/projects/Project-VisgniteAI
 cat backup-20260314.sql | docker compose -f compose.prod.yml --env-file .env.prod exec -T db \
   psql -U postgres mission_control
 ```
@@ -854,8 +854,8 @@ docker compose -f compose.prod.yml --env-file .env.prod logs backend
   with the correct value: `docker inspect <image> | grep NEXT_PUBLIC_API_URL`
 - If wrong, rebuild the frontend image with the correct `frontend/.env` and
   use `env $(grep -E '^NEXT_PUBLIC_' frontend/.env | xargs) docker compose --profile docker-frontend build frontend`
-- Check `CORS_ORIGINS` in backend = `https://flowgrid.live` (set via DOMAIN in compose.prod.yml)
-- Check cloudflared config has `api.flowgrid.live` entry
+- Check `CORS_ORIGINS` in backend = `https://visgnite.com` (set via DOMAIN in compose.prod.yml)
+- Check cloudflared config has `api.visgnite.com` entry
 
 ### Billing/payments not working
 
@@ -931,7 +931,7 @@ Toàn bộ stack Docker-based → migrate dễ dàng. Downtime ~30 phút.
 ### Step 9.1 — Backup trên server cũ
 
 ```bash
-cd /opt/projects/Project-FlowGrid
+cd /opt/projects/Project-VisgniteAI
 
 # 1. Backup database
 docker compose -f compose.prod.yml --env-file .env.prod exec db \
@@ -939,13 +939,13 @@ docker compose -f compose.prod.yml --env-file .env.prod exec db \
 
 # 2. Backup MinIO data (uploaded files)
 docker run --rm \
-  -v flowgrid-prod_minio_data:/data \
+  -v visgniteai-prod_minio_data:/data \
   -v $(pwd):/backup \
   alpine tar czf /backup/minio-backup.tar.gz /data
 
 # 3. (Optional) Backup OpenClaw state
 docker run --rm \
-  -v flowgrid-prod_openclaw_data:/data \
+  -v visgniteai-prod_openclaw_data:/data \
   -v $(pwd):/backup \
   alpine tar czf /backup/openclaw-backup.tar.gz /data
 ```
@@ -955,9 +955,9 @@ docker run --rm \
 ```bash
 # Từ server cũ hoặc dev machine
 scp backup.sql minio-backup.tar.gz .env.prod openclaw/openclaw.json \
-  user@new-vps:/opt/projects/Project-FlowGrid/
+  user@new-vps:/opt/projects/Project-VisgniteAI/
 # Optional:
-scp openclaw-backup.tar.gz user@new-vps:/opt/projects/Project-FlowGrid/
+scp openclaw-backup.tar.gz user@new-vps:/opt/projects/Project-VisgniteAI/
 ```
 
 ### Step 9.3 — Setup VPS mới
@@ -968,8 +968,8 @@ ssh user@new-vps
 # Clone repo
 sudo mkdir -p /opt/projects && sudo chown $USER:$USER /opt/projects
 cd /opt/projects
-git clone https://github.com/PhamTy2002z/Project-FlowGrid.git
-cd Project-FlowGrid
+git clone https://github.com/PhamTy2002z/Project-VisgniteAI.git
+cd Project-VisgniteAI
 
 # Copy .env.prod và openclaw config đã scp ở bước trên
 # Start stack (database sẽ empty)
@@ -979,7 +979,7 @@ docker compose -f compose.prod.yml --profile managed-gateway --env-file .env.pro
 ### Step 9.4 — Restore data
 
 ```bash
-cd /opt/projects/Project-FlowGrid
+cd /opt/projects/Project-VisgniteAI
 
 # Stop app containers (giữ db running)
 docker compose -f compose.prod.yml --env-file .env.prod stop backend webhook-worker frontend
@@ -991,7 +991,7 @@ cat backup.sql | docker compose -f compose.prod.yml --env-file .env.prod exec -T
 # Restore MinIO
 docker compose -f compose.prod.yml --env-file .env.prod stop minio
 docker run --rm \
-  -v flowgrid-prod_minio_data:/data \
+  -v visgniteai-prod_minio_data:/data \
   -v $(pwd):/backup \
   alpine tar xzf /backup/minio-backup.tar.gz -C /
 docker compose -f compose.prod.yml --env-file .env.prod start minio
@@ -999,7 +999,7 @@ docker compose -f compose.prod.yml --env-file .env.prod start minio
 # (Optional) Restore OpenClaw state
 docker compose -f compose.prod.yml --profile managed-gateway --env-file .env.prod stop openclaw
 docker run --rm \
-  -v flowgrid-prod_openclaw_data:/data \
+  -v visgniteai-prod_openclaw_data:/data \
   -v $(pwd):/backup \
   alpine tar xzf /backup/openclaw-backup.tar.gz -C /
 docker compose -f compose.prod.yml --profile managed-gateway --env-file .env.prod start openclaw

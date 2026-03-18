@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     canonical: "/blog",
   },
   keywords: [
-    "flowgrid blog",
+    "visgniteai blog",
     "ai agent tutorials",
     "enterprise ai operations",
     "agent factory deployment",

@@ -170,7 +170,7 @@ export default async function BlogArticlePage({
                 <p className="mt-3 text-sm leading-relaxed text-white/70 sm:text-base">
                   Move from article insights to execution by launching your
                   first board and routing approvals with policy controls in
-                  FlowGrid.
+                  VisgniteAI.
                 </p>
                 <div className="mt-6 flex flex-wrap gap-3">
                   <Link

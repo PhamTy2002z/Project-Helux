@@ -125,7 +125,7 @@ export default function LandingHeroSection() {
               } as CSSProperties
             }
           >
-            One Platform to Orchestrate Every Agent, Board, and Approval
+            Orchestrate Multi-Agent Workflows from Boards to Approvals
           </h1>
 
           <p
@@ -136,7 +136,7 @@ export default function LandingHeroSection() {
               } as CSSProperties
             }
           >
-            FlowGrid gives your team one secure workspace to run agent
+            VisgniteAI gives your team one secure workspace to run agent
             operations, approvals, and gateways — with full visibility and zero
             handoff friction.
           </p>

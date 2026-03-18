@@ -1,6 +1,6 @@
 # OpenClaw Baseline Configuration (Getting Started)
 
-This guide turns the provided baseline into a practical starting point for local OpenClaw setup and FlowGrid integration.
+This guide turns the provided baseline into a practical starting point for local OpenClaw setup and VisgniteAI integration.
 
 For OpenClaw CLI installs, the default config path is:
 
@@ -220,7 +220,7 @@ Per-model override map keyed by full model id.
 Filesystem root for agent state/workspaces.
 
 - Must exist and be writable by the runtime.
-- Align this with FlowGrid gateway `workspace_root` for consistency.
+- Align this with VisgniteAI gateway `workspace_root` for consistency.
 
 #### `agents.defaults.contextPruning`
 
@@ -473,16 +473,16 @@ openclaw health
 openclaw dashboard
 ```
 
-## FlowGrid Connection (This Repo)
+## VisgniteAI Connection (This Repo)
 
-When adding a gateway in FlowGrid:
+When adding a gateway in VisgniteAI:
 
 - URL: `ws://127.0.0.1:18789` (or your host/IP with explicit port)
 - Token: provide only if your gateway requires token auth
 - Device pairing: enabled by default and recommended
   - Keep pairing enabled for normal operation.
   - Optional bypass: enable `Disable device pairing` per gateway only when the gateway is explicitly configured for control UI auth bypass (for example `gateway.controlUi.dangerouslyDisableDeviceAuth: true` plus appropriate `gateway.controlUi.allowedOrigins`).
-- Workspace root (in FlowGrid gateway config): align with `agents.defaults.workspace` when possible
+- Workspace root (in VisgniteAI gateway config): align with `agents.defaults.workspace` when possible
 
 ## Security Notes
 

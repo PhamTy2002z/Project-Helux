@@ -1,6 +1,6 @@
 # Testing
 
-This guide describes how to run FlowGrid tests locally.
+This guide describes how to run VisgniteAI tests locally.
 
 ## Quick start (repo root)
 

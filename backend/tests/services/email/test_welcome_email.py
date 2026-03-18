@@ -51,7 +51,7 @@ class TestBuildWelcomeEmail:
         content = build_welcome_email(payload)
 
         assert "Charlie" in content.subject
-        assert "Welcome to FlowGrid" in content.subject
+        assert "Welcome to VisgniteAI" in content.subject
 
     def test_subject_fallback_to_there_when_empty(self) -> None:
         payload = WelcomeEmailRenderInput(
@@ -61,7 +61,7 @@ class TestBuildWelcomeEmail:
         content = build_welcome_email(payload)
 
         assert "there" in content.subject
-        assert "Welcome to FlowGrid, there!" in content.subject
+        assert "Welcome to VisgniteAI, there!" in content.subject
 
     def test_text_contains_greeting(self) -> None:
         payload = WelcomeEmailRenderInput(
@@ -71,7 +71,7 @@ class TestBuildWelcomeEmail:
         content = build_welcome_email(payload)
 
         assert "Hi David," in content.text
-        assert "Welcome to FlowGrid" in content.text
+        assert "Welcome to VisgniteAI" in content.text
 
     def test_text_contains_dashboard_url(self) -> None:
         dashboard_url = "https://example.com/dashboard"
@@ -141,14 +141,14 @@ class TestBuildWelcomeEmail:
         assert "&quot;" in content.html
         assert 'href="https://example.com/dashboard?param=&quot;bad&quot;"' in content.html
 
-    def test_html_contains_flowgrid_branding(self) -> None:
+    def test_html_contains_visgniteai_branding(self) -> None:
         payload = WelcomeEmailRenderInput(
             first_name="Jack",
             dashboard_url="https://example.com/dashboard",
         )
         content = build_welcome_email(payload)
 
-        assert "FlowGrid" in content.html
+        assert "VisgniteAI" in content.html
         assert "Welcome aboard" in content.html
 
     def test_html_has_responsive_structure(self) -> None:

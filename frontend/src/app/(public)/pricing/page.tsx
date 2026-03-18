@@ -15,7 +15,7 @@ import { getSiteUrl } from "@/lib/site-url";
 
 const pricingTitle = `Pricing for ${PRODUCT_NAME}`;
 const pricingDescription =
-  "Simple pricing for FlowGrid. Start free, scale to Pro when ready. Enterprise plans available for custom governance and support.";
+  "Simple pricing for VisgniteAI. Start free, scale to Pro when ready. Enterprise plans available for custom governance and support.";
 const siteUrl = getSiteUrl();
 
 export const metadata: Metadata = {
@@ -134,7 +134,7 @@ export default function PricingPage() {
         <div className="landing-page min-h-screen bg-black">
           <LandingNavbar />
           <main className="bg-black pt-24">
-            <h1 className="sr-only">FlowGrid pricing plans</h1>
+            <h1 className="sr-only">VisgniteAI pricing plans</h1>
             <PricingCards />
 
             {/* Enterprise plan */}
@@ -277,7 +277,7 @@ export default function PricingPage() {
               <ScrollReveal>
                 <div className="hero-glass-card mx-auto max-w-5xl rounded-3xl border border-white/15 px-8 py-12 text-center">
                   <h2 className="text-balance text-3xl font-bold tracking-tight text-white sm:text-4xl">
-                    Start building with FlowGrid today
+                    Start building with VisgniteAI today
                   </h2>
                   <p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-white/65">
                     Launch your first board in minutes. No credit card required.

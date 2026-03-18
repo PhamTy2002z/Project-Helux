@@ -27,7 +27,7 @@ export type BlogProductCard = {
 
 export const BLOG_PRODUCT_CARDS: BlogProductCard[] = [
   {
-    title: "FlowGrid Cloud",
+    title: "VisgniteAI Cloud",
     description:
       "Manage the full AI agent lifecycle with visual controls, policy guardrails, and real-time telemetry.",
     cta: "Start Building Free",
@@ -35,7 +35,7 @@ export const BLOG_PRODUCT_CARDS: BlogProductCard[] = [
     iconKey: "cloud",
   },
   {
-    title: "FlowGrid Factory",
+    title: "VisgniteAI Factory",
     description:
       "Deploy mission-critical workflows into private VPCs or on-prem clusters with governance controls built in.",
     cta: "Talk to Sales",
@@ -43,11 +43,11 @@ export const BLOG_PRODUCT_CARDS: BlogProductCard[] = [
     iconKey: "factory",
   },
   {
-    title: "FlowGrid OSS",
+    title: "VisgniteAI OSS",
     description:
       "Use open APIs and modular components to build custom orchestration layers around your own systems.",
     cta: "Read Docs",
-    href: "https://github.com/PhamTy2002z/FlowGrid/tree/master/docs",
+    href: "https://github.com/PhamTy2002z/VisgniteAI/tree/master/docs",
     iconKey: "oss",
   },
 ];

@@ -2,7 +2,7 @@
 
 ## Overview
 
-FlowGrid is a full-stack web application with FastAPI backend, Next.js frontend, and Docker-based deployment. The codebase is organized as a monorepo with clear separation between backend, frontend, and infrastructure concerns.
+VisgniteAI is a full-stack web application with FastAPI backend, Next.js frontend, and Docker-based deployment. The codebase is organized as a monorepo with clear separation between backend, frontend, and infrastructure concerns.
 
 ## Repository Statistics
 

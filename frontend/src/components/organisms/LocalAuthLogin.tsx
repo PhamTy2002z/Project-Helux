@@ -107,7 +107,7 @@ export function LocalAuthLogin({ onAuthenticated }: LocalAuthLoginProps) {
               Local Authentication
             </h1>
             <p className="text-sm text-muted">
-              Enter your access token to unlock FlowGrid.
+              Enter your access token to unlock VisgniteAI.
             </p>
           </div>
         </CardHeader>

@@ -1,12 +1,12 @@
 # Operations
 
-This guide covers day-2 operations for FlowGrid in SaaS beta mode.
+This guide covers day-2 operations for VisgniteAI in SaaS beta mode.
 Use this page as the entry point for readiness checks, backup and restore
 workflows, and incident triage.
 
 ## Health checks
 
-FlowGrid exposes both liveness and dependency-aware readiness probes.
+VisgniteAI exposes both liveness and dependency-aware readiness probes.
 Use `/healthz` for process-level liveness and `/readyz` for deploy gates.
 
 ```bash

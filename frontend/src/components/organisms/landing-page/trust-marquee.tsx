@@ -191,7 +191,7 @@ function BrandItem({ brand }: { brand: Brand }) {
  */
 export default function TrustMarquee() {
   return (
-    <div className="relative z-10 border-t border-white/10 px-4 pb-8 pt-6 sm:px-6 sm:pb-10 sm:pt-8 lg:px-10 fhd:px-14 qhd:px-16 uhd:px-20">
+    <div className="relative z-10 px-4 pb-8 pt-6 sm:px-6 sm:pb-10 sm:pt-8 lg:px-10 fhd:px-14 qhd:px-16 uhd:px-20">
       <p className="mb-6 text-center text-lg font-medium tracking-tight text-white/80 sm:mb-8 sm:text-xl md:text-2xl">
         Loved by AI builders. Trusted by AI leaders.
       </p>

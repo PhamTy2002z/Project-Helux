@@ -51,7 +51,7 @@ const STEPS: StepConfig[] = [
   {
     key: "use_case",
     title: "Define your use case",
-    description: "What's the main mission you want FlowGrid to handle first?",
+    description: "What's the main mission you want VisgniteAI to handle first?",
     icon: ClipboardEdit,
     mode: "use_case",
   },
@@ -59,7 +59,7 @@ const STEPS: StepConfig[] = [
     key: "create_first_board",
     title: "Choose your workspace mode",
     description:
-      "How do you plan to operate in FlowGrid during the first week?",
+      "How do you plan to operate in VisgniteAI during the first week?",
     icon: Compass,
     mode: "choice",
     detailKey: "workspace_mode",

@@ -10,7 +10,7 @@ const FEATURE_POSTERS = [
     title: "Trusted",
     description:
       "Delegate critical tasks to agentic workflows with repeatable outcomes and clear review guardrails.",
-    imageSrc: "/images/landing/flowgrid-trusted.jpg",
+    imageSrc: "/images/landing/visgniteai-trusted.jpg",
     imageAlt:
       "Trusted poster showing an agent workflow timeline with task start, LLM call, tool call, completion, and guardrail highlights.",
     highlights: ["Workflow tracing", "Agent training", "Task guardrails"],
@@ -20,7 +20,7 @@ const FEATURE_POSTERS = [
     title: "Scalable",
     description:
       "Roll out agent operations across teams with centralized configuration, access control, and infrastructure primitives.",
-    imageSrc: "/images/landing/flowgrid-scalable.jpg",
+    imageSrc: "/images/landing/visgniteai-scalable.jpg",
     imageAlt:
       "Scalable poster showing workflow growth across departments with centralized agent controls.",
     highlights: [
@@ -51,7 +51,7 @@ export default function FeatureCards() {
           </h2>
           <p className="mx-auto mt-3 max-w-2xl text-balance text-[13px] leading-relaxed text-white/55 sm:text-sm md:max-w-3xl fhd:text-base">
             From repeatable agent workflows to centralized access control —
-            everything your organization needs to run FlowGrid at scale.
+            everything your organization needs to run VisgniteAI at scale.
           </p>
         </ScrollReveal>
 

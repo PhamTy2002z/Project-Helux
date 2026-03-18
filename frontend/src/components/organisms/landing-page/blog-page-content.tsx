@@ -38,7 +38,7 @@ export default function BlogPageContent({
               Practical Stories, Ideas, and Patterns for Multi-Agent Operations.
             </h1>
             <p className="mt-5 max-w-3xl text-base leading-relaxed text-white/70">
-              From open-source experiments to enterprise deployments, FlowGrid
+              From open-source experiments to enterprise deployments, VisgniteAI
               insights help teams design resilient AI workflows that scale from
               first prototype to production governance.
             </p>

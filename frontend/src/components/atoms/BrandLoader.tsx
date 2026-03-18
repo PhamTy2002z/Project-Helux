@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * Animated logo loader — FlowGrid brand loading indicator.
+ * Animated logo loader — VisgniteAI brand loading indicator.
  *
  * Animation sequence (2.4s loop):
  * 1. Corner nodes fade in with stagger

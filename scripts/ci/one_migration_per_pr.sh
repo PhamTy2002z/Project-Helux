@@ -26,7 +26,7 @@ if ! git cat-file -e "${BASE_SHA}^{commit}" 2>/dev/null; then
 fi
 
 # Only count *newly added* migration files. Modified/deleted migrations should not trip this gate.
-# See review thread: https://github.com/PhamTy2002z/FlowGrid/pull/136#discussion_r2807812935
+# See review thread: https://github.com/PhamTy2002z/VisgniteAI/pull/136#discussion_r2807812935
 ADDED_FILES=$(git diff --name-only --diff-filter=A "$BASE_SHA" "$HEAD_SHA" || true)
 if [ -z "$ADDED_FILES" ]; then
   echo "No added files detected."

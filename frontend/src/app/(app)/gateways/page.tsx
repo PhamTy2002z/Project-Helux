@@ -95,7 +95,7 @@ export default function GatewaysPage() {
           forceRedirectUrl: "/gateways",
         }}
         title="Gateways"
-        description="Manage FlowGrid gateway connections used by boards"
+        description="Manage VisgniteAI gateway connections used by boards"
         headerActions={
           isAdmin && gateways.length > 0 ? (
             <Link
@@ -125,7 +125,7 @@ export default function GatewaysPage() {
             emptyState={{
               title: "No gateways yet",
               description:
-                "Create your first gateway to connect boards and start managing your FlowGrid connections.",
+                "Create your first gateway to connect boards and start managing your VisgniteAI connections.",
               actionHref: "/gateways/new",
               actionLabel: "Create your first gateway",
             }}
@@ -145,7 +145,7 @@ export default function GatewaysPage() {
         title="Delete gateway?"
         description={
           <>
-            This removes the gateway connection from FlowGrid. Boards using it
+            This removes the gateway connection from VisgniteAI. Boards using it
             will need a new gateway assigned.
           </>
         }

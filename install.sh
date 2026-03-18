@@ -7,9 +7,9 @@ if [[ "$SCRIPT_NAME" == "bash" || "$SCRIPT_NAME" == "-bash" ]]; then
   SCRIPT_NAME="install.sh"
 fi
 REPO_ROOT=""
-REPO_GIT_URL="${HELUX_REPO_URL:-https://github.com/PhamTy2002z/Project-FlowGrid.git}"
+REPO_GIT_URL="${HELUX_REPO_URL:-https://github.com/PhamTy2002z/Project-VisgniteAI.git}"
 REPO_CLONE_REF="${HELUX_REPO_REF:-}"
-REPO_DIR_NAME="Project-FlowGrid"
+REPO_DIR_NAME="Project-VisgniteAI"
 STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}"
 LOG_DIR="$STATE_DIR/project-helux-install"
 

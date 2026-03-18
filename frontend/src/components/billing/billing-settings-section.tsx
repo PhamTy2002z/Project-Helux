@@ -301,7 +301,7 @@ export function BillingSettingsSection({
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement("a");
     anchor.href = url;
-    anchor.download = "flowgrid-billing-history.csv";
+    anchor.download = "visgniteai-billing-history.csv";
     anchor.click();
     URL.revokeObjectURL(url);
   };
@@ -407,7 +407,7 @@ export function BillingSettingsSection({
             ]}
             onAction={() => {
               window.location.href =
-                "mailto:sales@flowgrid.dev?subject=FlowGrid%20Enterprise%20Plan";
+                "mailto:sales@visgnite.com?subject=VisgniteAI%20Enterprise%20Plan";
             }}
             actionLabel="Contact us"
           />

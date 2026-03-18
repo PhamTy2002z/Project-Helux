@@ -1,6 +1,6 @@
-# FlowGrid docs
+# VisgniteAI docs
 
-This folder is the documentation home for **FlowGrid**.
+This folder is the documentation home for **VisgniteAI**.
 
 ## Start here
 

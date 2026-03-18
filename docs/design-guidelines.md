@@ -4,7 +4,7 @@
 
 ### Core Design Philosophy
 
-FlowGrid follows a **function-first, clarity-focused** design approach. The interface prioritizes operational efficiency over visual flourish, ensuring operators can quickly understand system state and take action.
+VisgniteAI follows a **function-first, clarity-focused** design approach. The interface prioritizes operational efficiency over visual flourish, ensuring operators can quickly understand system state and take action.
 
 ### Design Principles
 

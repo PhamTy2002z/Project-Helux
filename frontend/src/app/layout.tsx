@@ -22,12 +22,12 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       { url: "/favicon.ico", sizes: "any" },
-      { url: "/images/brand/flowgrid-favicon.svg", type: "image/svg+xml" },
+      { url: "/images/brand/visgniteai-favicon.svg", type: "image/svg+xml" },
     ],
-    apple: "/images/brand/flowgrid-favicon.svg",
+    apple: "/images/brand/visgniteai-favicon.svg",
   },
   title: {
-    default: `${PRODUCT_NAME} | AI Agent Operations Platform`,
+    default: `${PRODUCT_NAME} | Orchestrate Multi-Agent Workflows`,
     template: `%s | ${PRODUCT_NAME}`,
   },
   description:
@@ -35,16 +35,16 @@ export const metadata: Metadata = {
   applicationName: PRODUCT_NAME,
   keywords: [
     "ai agent operations platform",
-    "flowgrid ai operations",
+    "visgniteai ai operations",
     "board orchestration",
     "approval workflows",
     "gateway management",
-    "flowgrid",
+    "visgniteai",
   ],
   openGraph: {
     type: "website",
     url: "/",
-    title: `${PRODUCT_NAME} | AI Agent Operations Platform`,
+    title: `${PRODUCT_NAME} | Orchestrate Multi-Agent Workflows`,
     description:
       "Operate boards, agents, approvals, and gateways from one control plane with real-time visibility, governance workflows, and API-first automation.",
     siteName: PRODUCT_NAME,
@@ -52,7 +52,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: `${PRODUCT_NAME} | AI Agent Operations Platform`,
+    title: `${PRODUCT_NAME} | Orchestrate Multi-Agent Workflows`,
     description:
       "Operate boards, agents, approvals, and gateways from one control plane with real-time visibility, governance workflows, and API-first automation.",
     images: [DEFAULT_SEO_IMAGE],
