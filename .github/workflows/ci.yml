@@ -277,78 +277,101 @@ jobs:
       - name: Validate installer shell syntax
         run: bash -n install.sh
 
-      - name: Installer smoke test (parallel modes)
+      - name: Installer smoke test (docker mode)
         run: |
-          set -euo pipefail
+          ./install.sh \
+            --mode docker \
+            --backend-port 18000 \
+            --frontend-port 13000 \
+            --public-host localhost \
+            --api-url http://localhost:18000 \
+            --token-mode generate
 
-          # --- Docker mode (background) ---
-          (
-            ./install.sh \
-              --mode docker \
-              --backend-port 18000 \
-              --frontend-port 13000 \
-              --public-host localhost \
-              --api-url http://localhost:18000 \
-              --token-mode generate
+          backend_ready=0
+          for _ in {1..90}; do
+            if curl -fsS http://127.0.0.1:18000/healthz >/dev/null; then
+              backend_ready=1
+              break
+            fi
+            sleep 1
+          done
 
-            for _ in {1..90}; do
-              if curl -fsS http://127.0.0.1:18000/healthz >/dev/null 2>&1 && \
-                 curl -fsS http://127.0.0.1:13000 >/dev/null 2>&1; then
-                echo "DOCKER_OK" > /tmp/installer_docker_result
-                exit 0
-              fi
-              sleep 1
-            done
-            echo "DOCKER_FAIL" > /tmp/installer_docker_result
+          frontend_ready=0
+          for _ in {1..90}; do
+            if curl -fsS http://127.0.0.1:13000 >/dev/null; then
+              frontend_ready=1
+              break
+            fi
+            sleep 1
+          done
+
+          if [ "$backend_ready" -ne 1 ] || [ "$frontend_ready" -ne 1 ]; then
+            echo "Installer docker smoke readiness failed: backend_ready=$backend_ready frontend_ready=$frontend_ready"
+            docker compose -f compose.yml --env-file .env ps || true
+            docker compose -f compose.yml --env-file .env logs --no-color --tail=200 backend db redis frontend webhook-worker || true
             exit 1
-          ) &
-          PID_DOCKER=$!
+          fi
 
-          # --- Local mode (background) ---
-          (
-            export XDG_STATE_HOME="${{ github.workspace }}/.installer-state"
-            ./install.sh \
-              --mode local \
-              --backend-port 18001 \
-              --frontend-port 13001 \
-              --public-host localhost \
-              --api-url http://localhost:18001 \
-              --token-mode generate \
-              --db-mode docker \
-              --start-services yes
+      - name: Cleanup docker stack after docker mode
+        if: always()
+        run: |
+          docker compose -f compose.yml --env-file .env down -v --remove-orphans || true
 
-            for _ in {1..90}; do
-              if curl -fsS http://127.0.0.1:18001/healthz >/dev/null 2>&1 && \
-                 curl -fsS http://127.0.0.1:13001 >/dev/null 2>&1; then
-                echo "LOCAL_OK" > /tmp/installer_local_result
-                exit 0
-              fi
-              sleep 1
-            done
-            echo "LOCAL_FAIL" > /tmp/installer_local_result
+      - name: Installer smoke test (local mode)
+        env:
+          XDG_STATE_HOME: ${{ github.workspace }}/.installer-state
+        run: |
+          ./install.sh \
+            --mode local \
+            --backend-port 18001 \
+            --frontend-port 13001 \
+            --public-host localhost \
+            --api-url http://localhost:18001 \
+            --token-mode generate \
+            --db-mode docker \
+            --start-services yes
+
+          backend_ready=0
+          for _ in {1..90}; do
+            if curl -fsS http://127.0.0.1:18001/healthz >/dev/null; then
+              backend_ready=1
+              break
+            fi
+            sleep 1
+          done
+
+          frontend_ready=0
+          for _ in {1..90}; do
+            if curl -fsS http://127.0.0.1:13001 >/dev/null; then
+              frontend_ready=1
+              break
+            fi
+            sleep 1
+          done
+
+          if [ "$backend_ready" -ne 1 ] || [ "$frontend_ready" -ne 1 ]; then
+            echo "Installer local smoke readiness failed: backend_ready=$backend_ready frontend_ready=$frontend_ready"
+            LOG_DIR="$XDG_STATE_HOME/project-helux-install"
+            if [ -f "$LOG_DIR/backend.log" ]; then
+              echo "----- backend log (tail) -----"
+              tail -n 200 "$LOG_DIR/backend.log" || true
+            fi
+            if [ -f "$LOG_DIR/frontend.log" ]; then
+              echo "----- frontend log (tail) -----"
+              tail -n 200 "$LOG_DIR/frontend.log" || true
+            fi
             exit 1
-          ) &
-          PID_LOCAL=$!
+          fi
 
-          # Wait for both
-          FAIL=0
-          wait $PID_DOCKER || FAIL=1
-          wait $PID_LOCAL  || FAIL=1
-
-          echo "Docker result: $(cat /tmp/installer_docker_result 2>/dev/null || echo 'unknown')"
-          echo "Local result: $(cat /tmp/installer_local_result 2>/dev/null || echo 'unknown')"
-
-          [ $FAIL -eq 0 ] || exit 1
-
-      - name: Cleanup all installer resources
+      - name: Cleanup local processes and docker resources
         if: always()
         env:
           XDG_STATE_HOME: ${{ github.workspace }}/.installer-state
         run: |
-          docker compose -f compose.yml --env-file .env down -v --remove-orphans 2>/dev/null || true
           LOG_DIR="$XDG_STATE_HOME/project-helux-install"
-          if [ -f "$LOG_DIR/backend.pid" ]; then kill "$(cat "$LOG_DIR/backend.pid")" 2>/dev/null || true; fi
-          if [ -f "$LOG_DIR/frontend.pid" ]; then kill "$(cat "$LOG_DIR/frontend.pid")" 2>/dev/null || true; fi
+          if [ -f "$LOG_DIR/backend.pid" ]; then kill "$(cat "$LOG_DIR/backend.pid")" || true; fi
+          if [ -f "$LOG_DIR/frontend.pid" ]; then kill "$(cat "$LOG_DIR/frontend.pid")" || true; fi
+          docker compose -f compose.yml --env-file .env down -v --remove-orphans || true
 
   e2e:
     runs-on: self-hosted
