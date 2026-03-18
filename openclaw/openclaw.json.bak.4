@@ -1,43 +1,19 @@
 {
   "meta": {
-    "lastTouchedVersion": "2026.3.8",
-    "lastTouchedAt": "2026-03-15T06:16:26.891Z"
+    "lastTouchedVersion": "2026.3.14",
+    "lastTouchedAt": "2026-03-17T15:43:14.249Z"
   },
   "models": {
     "mode": "merge",
     "providers": {
-      "custom-provider-ccs": {
-        "baseUrl": "http://host.docker.internal:8317/api/provider/codex",
+      "custom-model": {
+        "baseUrl": "http://172.18.0.1:8317/api/provider/codex",
         "apiKey": "ccs-internal-managed",
         "api": "anthropic-messages",
         "models": [
           {
-            "id": "gpt-5.1-codex-min",
-            "name": "gpt-5.1-codex-mini (Custom Provider)",
-            "api": "anthropic-messages",
-            "reasoning": true,
-            "input": [
-              "text"
-            ],
-            "cost": {
-              "input": 0,
-              "output": 0,
-              "cacheRead": 0,
-              "cacheWrite": 0
-            },
-            "contextWindow": 200000,
-            "maxTokens": 16384
-          }
-        ]
-      },
-      "ccs-custom-2": {
-        "baseUrl": "http://host.docker.internal:8317/api/provider/codex",
-        "apiKey": "ccs-internal-managed",
-        "api": "anthropic-messages",
-        "models": [
-          {
-            "id": "gpt-5.3-codex",
-            "name": "gpt-5.3-codex (Custom Provider)",
+            "id": "gpt-5.4",
+            "name": "gpt-5.4 (Custom Provider)",
             "api": "anthropic-messages",
             "reasoning": false,
             "input": [
@@ -49,8 +25,31 @@
               "cacheRead": 0,
               "cacheWrite": 0
             },
-            "contextWindow": 400000,
-            "maxTokens": 16384
+            "contextWindow": 1000000,
+            "maxTokens": 24384
+          }
+        ]
+      },
+      "custom-model-2": {
+        "baseUrl": "http://172.18.0.1:8317/api/provider/codex",
+        "apiKey": "ccs-internal-managed",
+        "api": "anthropic-messages",
+        "models": [
+          {
+            "id": "gpt-5.1-codex-mini",
+            "name": "gpt-5.1-codex-mini (Custom Provider)",
+            "reasoning": false,
+            "input": [
+              "text"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 200000,
+            "maxTokens": 8096
           }
         ]
       }
@@ -59,11 +58,10 @@
   "agents": {
     "defaults": {
       "model": {
-        "primary": "ccs-custom-2/gpt-5.3-codex"
+        "primary": "custom-model-2/gpt-5.1-codex-mini"
       },
       "models": {
-        "custom-provider-ccs/gpt-5.1-codex-mini": {},
-        "ccs-custom-2/gpt-5.3-codex": {}
+        "custom-model-2/gpt-5.1-codex-mini": {}
       },
       "workspace": "/data/.openclaw/workspace",
       "contextTokens": 400000,
@@ -73,14 +71,13 @@
     },
     "list": [
       {
-        "id": "main",
-        "model": "ccs-custom-2/gpt-5.3-codex"
+        "id": "main"
       },
       {
-        "id": "mc-gateway-1e6b9bbf-c322-4d42-81d6-acab6de903f8",
-        "name": "Managed GateWay Agent - 1e6b9bbf-c322-4d42-81d6-acab6de903f8",
-        "workspace": "/shared/openclaw-managed/org-233705c7-87c5-4bef-82fa-5caf15032c85/workspace-gateway-1e6b9bbf-c322-4d42-81d6-acab6de903f8",
-        "agentDir": "/data/.openclaw/agents/mc-gateway-1e6b9bbf-c322-4d42-81d6-acab6de903f8/agent",
+        "id": "mc-gateway-33f8bd68-e612-4d6a-84d6-7d3d1c92032c",
+        "name": "Managed GateWay Agent - 33f8bd68-e612-4d6a-84d6-7d3d1c92032c",
+        "workspace": "/shared/openclaw-managed/org-3150bd68-3e2c-4efb-a842-f0f11c5ca794/workspace-gateway-33f8bd68-e612-4d6a-84d6-7d3d1c92032c",
+        "agentDir": "/data/.openclaw/agents/mc-gateway-33f8bd68-e612-4d6a-84d6-7d3d1c92032c/agent",
         "heartbeat": {
           "every": "10m",
           "includeReasoning": false,
@@ -91,24 +88,15 @@
         }
       },
       {
-        "id": "lead-843935b0-81ef-4f82-93e6-99b3b4f4120f",
-        "name": "Ava",
-        "workspace": "/shared/openclaw-managed/org-233705c7-87c5-4bef-82fa-5caf15032c85/workspace-lead-843935b0-81ef-4f82-93e6-99b3b4f4120f",
-        "agentDir": "/data/.openclaw/agents/lead-843935b0-81ef-4f82-93e6-99b3b4f4120f/agent"
+        "id": "lead-dfb960de-5eed-47e9-ab59-76532149f21d",
+        "name": "lead-dfb960de-5eed-47e9-ab59-76532149f21d",
+        "workspace": "/shared/openclaw-managed/org-3150bd68-3e2c-4efb-a842-f0f11c5ca794/workspace-lead-dfb960de-5eed-47e9-ab59-76532149f21d",
+        "agentDir": "/data/.openclaw/agents/lead-dfb960de-5eed-47e9-ab59-76532149f21d/agent"
       }
     ]
   },
   "tools": {
     "profile": "full",
-    "web": {
-      "search": {
-        "enabled": true,
-        "provider": "gemini",
-        "gemini": {
-          "apiKey": "AIzaSyC4idwdvawkaOK8K6yulcsG_GavwKz4IKw"
-        }
-      }
-    },
     "exec": {
       "host": "gateway",
       "security": "full"
@@ -137,11 +125,15 @@
     "mode": "local",
     "bind": "lan",
     "controlUi": {
+      "allowedOrigins": [
+        "http://localhost:18789",
+        "http://openclaw:18789"
+      ],
       "dangerouslyAllowHostHeaderOriginFallback": true
     },
     "auth": {
       "mode": "token",
-      "token": "5b65568376c384c5689b826cf425294d98cabeeef67e6ad0"
+      "token": "cbb3e72060a74c9d04f5023ce4904bc85ab41551cecc82ec"
     },
     "tailscale": {
       "mode": "off",

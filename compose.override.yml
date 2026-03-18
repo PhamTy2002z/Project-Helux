@@ -1,0 +1,8 @@
+services:
+  backend:
+    volumes:
+      - ./backend/app/services/openclaw/gateway_rpc.py:/app/app/services/openclaw/gateway_rpc.py:ro
+
+  webhook-worker:
+    volumes:
+      - ./backend/app/services/openclaw/gateway_rpc.py:/app/app/services/openclaw/gateway_rpc.py:ro

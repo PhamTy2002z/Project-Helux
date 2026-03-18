@@ -142,7 +142,7 @@ services:
       - openclaw_managed:/shared/openclaw-managed
       - ./openclaw:/data/config
     ports:
-      - "127.0.0.1:18789:18789"
+      - "0.0.0.0:18789:18789"
     networks:
       - internal
     healthcheck:
@@ -198,6 +198,7 @@ services:
       POLAR_ENVIRONMENT: ${POLAR_ENVIRONMENT:-sandbox}
       POLAR_SUCCESS_URL: ${POLAR_SUCCESS_URL:-}
       MANAGED_GATEWAY_AUTO_PROVISION: ${MANAGED_GATEWAY_AUTO_PROVISION:-true}
+      MANAGED_GATEWAY_DISABLE_DEVICE_PAIRING: ${MANAGED_GATEWAY_DISABLE_DEVICE_PAIRING:-false}
       LOG_LEVEL: ${LOG_LEVEL:-WARNING}
       LOG_FORMAT: json
       RATE_LIMIT_ENABLED: "true"

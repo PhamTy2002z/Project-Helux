@@ -232,8 +232,46 @@ def _build_control_ui_origin(gateway_url: str) -> str | None:
     return f"{origin_scheme}://{host}"
 
 
+def _prepare_localhost_connect(
+    gateway_url: str,
+) -> tuple[str, dict[str, Any]]:
+    """Prepare connection kwargs so the gateway sees ``localhost``.
+
+    When the backend connects via a Docker service hostname (e.g.
+    ``openclaw``), the gateway rejects the connection because the
+    hostname is not a secure context.  This helper resolves the
+    hostname, creates a pre-connected socket to the real IP, and
+    returns a ``ws://localhost:<port>/path`` URL so the websockets
+    library sets ``Host: localhost:<port>`` in its handshake.
+
+    Returns ``(localhost_url, extra_connect_kwargs)``.
+    """
+    import socket as _socket
+
+    parsed = urlparse(gateway_url)
+    if not parsed.hostname or parsed.hostname in {"localhost", "127.0.0.1", "::1"}:
+        return gateway_url, {}
+
+    port = parsed.port or 18789
+    try:
+        ip = _socket.gethostbyname(parsed.hostname)
+    except _socket.gaierror:
+        return gateway_url, {}
+
+    sock = _socket.socket(_socket.AF_INET, _socket.SOCK_STREAM)
+    sock.connect((ip, port))
+    sock.setblocking(False)
+
+    localhost_url = parsed._replace(netloc=f"localhost:{port}").geturl()
+    return localhost_url, {"sock": sock}
+
+
 def _resolve_connect_mode(config: GatewayConfig) -> GatewayConnectMode:
-    return "control_ui" if config.disable_device_pairing else "device"
+    # Always use device mode when a device identity is available.
+    # ``disable_device_pairing`` means the identity was pre-provisioned
+    # (shared volume), NOT that we should skip device auth entirely.
+    # control_ui mode only works from a real browser on localhost.
+    return "device"
 
 
 def _build_device_connect_payload(
@@ -422,9 +460,13 @@ async def _openclaw_call_once(
     config: GatewayConfig,
     gateway_url: str,
 ) -> object:
+    if config.disable_device_pairing:
+        gateway_url, sock_kwargs = _prepare_localhost_connect(gateway_url)
+    else:
+        sock_kwargs = {}
     origin = _build_control_ui_origin(gateway_url) if config.disable_device_pairing else None
     ssl_context = _create_ssl_context(config)
-    connect_kwargs: dict[str, Any] = {"ping_interval": None}
+    connect_kwargs: dict[str, Any] = {"ping_interval": None, **sock_kwargs}
     connect_kwargs["open_timeout"] = settings.gateway_rpc_connect_timeout_seconds
     if origin is not None:
         connect_kwargs["origin"] = origin
@@ -446,9 +488,13 @@ async def _openclaw_connect_metadata_once(
     config: GatewayConfig,
     gateway_url: str,
 ) -> object:
+    if config.disable_device_pairing:
+        gateway_url, sock_kwargs = _prepare_localhost_connect(gateway_url)
+    else:
+        sock_kwargs = {}
     origin = _build_control_ui_origin(gateway_url) if config.disable_device_pairing else None
     ssl_context = _create_ssl_context(config)
-    connect_kwargs: dict[str, Any] = {"ping_interval": None}
+    connect_kwargs: dict[str, Any] = {"ping_interval": None, **sock_kwargs}
     connect_kwargs["open_timeout"] = settings.gateway_rpc_connect_timeout_seconds
     if origin is not None:
         connect_kwargs["origin"] = origin
