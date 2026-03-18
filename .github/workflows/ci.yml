@@ -12,6 +12,7 @@ concurrency:
 
 permissions:
   contents: read
+  pull-requests: read
 
 jobs:
   # Block direct pushes to main — only allow merges via PR (GitHub web-flow bot)
@@ -27,7 +28,42 @@ jobs:
             exit 1
           fi
 
+  changes:
+    runs-on: self-hosted
+    timeout-minutes: 2
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+      installer: ${{ steps.filter.outputs.installer }}
+      docs: ${{ steps.filter.outputs.docs }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            backend:
+              - 'backend/**'
+              - 'scripts/**'
+              - 'Makefile'
+            frontend:
+              - 'frontend/**'
+              - 'Makefile'
+            installer:
+              - 'install.sh'
+              - 'compose.yml'
+              - 'compose.prod.yml'
+              - 'backend/Dockerfile'
+              - 'frontend/Dockerfile'
+              - 'openclaw/Dockerfile'
+              - '.env.example'
+            docs:
+              - 'docs/**'
+              - '*.md'
+
   check-backend:
+    needs: changes
+    if: needs.changes.outputs.backend == 'true' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
     runs-on: self-hosted
     timeout-minutes: 15
 
@@ -92,6 +128,8 @@ jobs:
           path: backend/coverage.xml
 
   check-frontend:
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
     runs-on: self-hosted
     timeout-minutes: 15
 
@@ -102,17 +140,37 @@ jobs:
       - name: Install frontend dependencies
         run: make frontend-sync
 
-      - name: Run frontend checks
+      - name: Format + Lint + Typecheck (parallel)
         env:
           NEXT_TELEMETRY_DISABLED: "1"
           NEXT_PUBLIC_API_URL: "http://localhost:8000"
           NEXT_PUBLIC_AUTH_MODE: "local"
         run: |
-          make frontend-format-check
-          make frontend-lint
-          make frontend-typecheck
-          make frontend-test
-          make frontend-build
+          make frontend-format-check &
+          PID_FMT=$!
+          make frontend-lint &
+          PID_LINT=$!
+          make frontend-typecheck &
+          PID_TC=$!
+          FAIL=0
+          wait $PID_FMT || FAIL=1
+          wait $PID_LINT || FAIL=1
+          wait $PID_TC  || FAIL=1
+          [ $FAIL -eq 0 ] || exit 1
+
+      - name: Run frontend tests
+        env:
+          NEXT_TELEMETRY_DISABLED: "1"
+          NEXT_PUBLIC_API_URL: "http://localhost:8000"
+          NEXT_PUBLIC_AUTH_MODE: "local"
+        run: make frontend-test
+
+      - name: Build frontend
+        env:
+          NEXT_TELEMETRY_DISABLED: "1"
+          NEXT_PUBLIC_API_URL: "http://localhost:8000"
+          NEXT_PUBLIC_AUTH_MODE: "local"
+        run: make frontend-build
 
       - name: Upload frontend coverage
         if: always()
@@ -124,6 +182,7 @@ jobs:
 
   check-migration:
     if: github.event_name == 'pull_request'
+    needs: changes
     runs-on: self-hosted
     timeout-minutes: 10
 
@@ -171,6 +230,8 @@ jobs:
           make backend-migration-check
 
   check-docs:
+    needs: changes
+    if: needs.changes.outputs.docs == 'true' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
     runs-on: self-hosted
     timeout-minutes: 5
 
@@ -182,6 +243,8 @@ jobs:
         run: make docs-check
 
   security:
+    needs: changes
+    if: needs.changes.outputs.backend == 'true' || needs.changes.outputs.frontend == 'true' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
     runs-on: self-hosted
     timeout-minutes: 10
 
@@ -199,7 +262,12 @@ jobs:
   installer:
     name: Installer (smoke test)
     runs-on: self-hosted
-    needs: [check-backend, check-frontend]
+    needs: [changes, check-backend, check-frontend]
+    if: >-
+      always() &&
+      (needs.changes.outputs.installer == 'true' || (github.event_name == 'push' && github.ref == 'refs/heads/main')) &&
+      needs.check-backend.result != 'failure' &&
+      needs.check-frontend.result != 'failure'
     timeout-minutes: 20
 
     steps:
@@ -209,105 +277,86 @@ jobs:
       - name: Validate installer shell syntax
         run: bash -n install.sh
 
-      - name: Installer smoke test (docker mode)
+      - name: Installer smoke test (parallel modes)
         run: |
-          ./install.sh \
-            --mode docker \
-            --backend-port 18000 \
-            --frontend-port 13000 \
-            --public-host localhost \
-            --api-url http://localhost:18000 \
-            --token-mode generate
+          set -euo pipefail
 
-          backend_ready=0
-          for _ in {1..120}; do
-            if curl -fsS http://127.0.0.1:18000/healthz >/dev/null; then
-              backend_ready=1
-              break
-            fi
-            sleep 2
-          done
+          # --- Docker mode (background) ---
+          (
+            ./install.sh \
+              --mode docker \
+              --backend-port 18000 \
+              --frontend-port 13000 \
+              --public-host localhost \
+              --api-url http://localhost:18000 \
+              --token-mode generate
 
-          frontend_ready=0
-          for _ in {1..120}; do
-            if curl -fsS http://127.0.0.1:13000 >/dev/null; then
-              frontend_ready=1
-              break
-            fi
-            sleep 2
-          done
-
-          if [ "$backend_ready" -ne 1 ] || [ "$frontend_ready" -ne 1 ]; then
-            echo "Installer docker smoke readiness failed: backend_ready=$backend_ready frontend_ready=$frontend_ready"
-            docker compose -f compose.yml --env-file .env ps || true
-            docker compose -f compose.yml --env-file .env logs --no-color --tail=200 backend db redis frontend webhook-worker || true
+            for _ in {1..90}; do
+              if curl -fsS http://127.0.0.1:18000/healthz >/dev/null 2>&1 && \
+                 curl -fsS http://127.0.0.1:13000 >/dev/null 2>&1; then
+                echo "DOCKER_OK" > /tmp/installer_docker_result
+                exit 0
+              fi
+              sleep 1
+            done
+            echo "DOCKER_FAIL" > /tmp/installer_docker_result
             exit 1
-          fi
+          ) &
+          PID_DOCKER=$!
 
-      - name: Cleanup docker stack after docker mode
-        if: always()
-        run: |
-          docker compose -f compose.yml --env-file .env down -v --remove-orphans || true
+          # --- Local mode (background) ---
+          (
+            export XDG_STATE_HOME="${{ github.workspace }}/.installer-state"
+            ./install.sh \
+              --mode local \
+              --backend-port 18001 \
+              --frontend-port 13001 \
+              --public-host localhost \
+              --api-url http://localhost:18001 \
+              --token-mode generate \
+              --db-mode docker \
+              --start-services yes
 
-      - name: Installer smoke test (local mode)
-        env:
-          XDG_STATE_HOME: ${{ github.workspace }}/.installer-state
-        run: |
-          ./install.sh \
-            --mode local \
-            --backend-port 18001 \
-            --frontend-port 13001 \
-            --public-host localhost \
-            --api-url http://localhost:18001 \
-            --token-mode generate \
-            --db-mode docker \
-            --start-services yes
-
-          backend_ready=0
-          for _ in {1..120}; do
-            if curl -fsS http://127.0.0.1:18001/healthz >/dev/null; then
-              backend_ready=1
-              break
-            fi
-            sleep 2
-          done
-
-          frontend_ready=0
-          for _ in {1..120}; do
-            if curl -fsS http://127.0.0.1:13001 >/dev/null; then
-              frontend_ready=1
-              break
-            fi
-            sleep 2
-          done
-
-          if [ "$backend_ready" -ne 1 ] || [ "$frontend_ready" -ne 1 ]; then
-            echo "Installer local smoke readiness failed: backend_ready=$backend_ready frontend_ready=$frontend_ready"
-            LOG_DIR="$XDG_STATE_HOME/project-helux-install"
-            if [ -f "$LOG_DIR/backend.log" ]; then
-              echo "----- backend log (tail) -----"
-              tail -n 200 "$LOG_DIR/backend.log" || true
-            fi
-            if [ -f "$LOG_DIR/frontend.log" ]; then
-              echo "----- frontend log (tail) -----"
-              tail -n 200 "$LOG_DIR/frontend.log" || true
-            fi
+            for _ in {1..90}; do
+              if curl -fsS http://127.0.0.1:18001/healthz >/dev/null 2>&1 && \
+                 curl -fsS http://127.0.0.1:13001 >/dev/null 2>&1; then
+                echo "LOCAL_OK" > /tmp/installer_local_result
+                exit 0
+              fi
+              sleep 1
+            done
+            echo "LOCAL_FAIL" > /tmp/installer_local_result
             exit 1
-          fi
+          ) &
+          PID_LOCAL=$!
 
-      - name: Cleanup local processes and docker resources
+          # Wait for both
+          FAIL=0
+          wait $PID_DOCKER || FAIL=1
+          wait $PID_LOCAL  || FAIL=1
+
+          echo "Docker result: $(cat /tmp/installer_docker_result 2>/dev/null || echo 'unknown')"
+          echo "Local result: $(cat /tmp/installer_local_result 2>/dev/null || echo 'unknown')"
+
+          [ $FAIL -eq 0 ] || exit 1
+
+      - name: Cleanup all installer resources
         if: always()
         env:
           XDG_STATE_HOME: ${{ github.workspace }}/.installer-state
         run: |
+          docker compose -f compose.yml --env-file .env down -v --remove-orphans 2>/dev/null || true
           LOG_DIR="$XDG_STATE_HOME/project-helux-install"
-          if [ -f "$LOG_DIR/backend.pid" ]; then kill "$(cat "$LOG_DIR/backend.pid")" || true; fi
-          if [ -f "$LOG_DIR/frontend.pid" ]; then kill "$(cat "$LOG_DIR/frontend.pid")" || true; fi
-          docker compose -f compose.yml --env-file .env down -v --remove-orphans || true
+          if [ -f "$LOG_DIR/backend.pid" ]; then kill "$(cat "$LOG_DIR/backend.pid")" 2>/dev/null || true; fi
+          if [ -f "$LOG_DIR/frontend.pid" ]; then kill "$(cat "$LOG_DIR/frontend.pid")" 2>/dev/null || true; fi
 
   e2e:
     runs-on: self-hosted
-    needs: [check-frontend]
+    needs: [changes, check-frontend]
+    if: >-
+      always() &&
+      (needs.changes.outputs.frontend == 'true' || (github.event_name == 'push' && github.ref == 'refs/heads/main')) &&
+      needs.check-frontend.result != 'failure'
     timeout-minutes: 15
 
     steps:
