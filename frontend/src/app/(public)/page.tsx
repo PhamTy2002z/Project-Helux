@@ -10,7 +10,7 @@ import {
 import { getSiteUrl } from "@/lib/site-url";
 
 const landingTitle =
-  "VisgniteAI — One Platform to Orchestrate Agents, Boards, and Approvals";
+  "VisgniteAI — Orchestrate Multi-Agent Workflows from Boards to Approvals";
 const landingDescription =
   "VisgniteAI gives teams one secure workspace to run agent operations, approvals, and gateways — with full visibility and zero handoff friction.";
 const siteUrl = getSiteUrl();

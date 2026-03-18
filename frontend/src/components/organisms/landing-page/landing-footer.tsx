@@ -58,11 +58,11 @@ export default function LandingFooter() {
               VisgniteAI
             </p>
             <p className="mt-1 text-[11px] uppercase tracking-[0.18em] text-white/55">
-              Cloud SaaS Platform
+              OpenClaw — Agent Operations
             </p>
             <p className="mt-4 text-[15px] leading-relaxed text-white/55 sm:text-base">
-              VisgniteAI helps operations teams run boards, approvals, and
-              gateways in one managed SaaS workspace.
+              Run multi-agent workflows, enforce approval gates, and monitor
+              execution health — all from one control plane.
             </p>
           </div>
 

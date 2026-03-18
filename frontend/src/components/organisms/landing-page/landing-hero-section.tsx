@@ -125,7 +125,7 @@ export default function LandingHeroSection() {
               } as CSSProperties
             }
           >
-            One Platform to Orchestrate Every Agent, Board, and Approval
+            Orchestrate Multi-Agent Workflows from Boards to Approvals
           </h1>
 
           <p
