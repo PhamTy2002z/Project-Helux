@@ -1,38 +1,18 @@
 "use client";
 
 import type { CSSProperties } from "react";
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  useSyncExternalStore,
-} from "react";
+import { useSyncExternalStore } from "react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
 import { useAuth } from "@/auth/clerk";
 import TrustMarquee from "./trust-marquee";
 
-const HERO_ANIMATION_VIDEO_SRC =
-  "https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260306_074215_04640ca7-042c-45d6-bb56-58b1e8a42489.mp4";
-const HERO_ANIMATION_VIDEO_POSTER =
-  "/videos/hero-animation-poster.jpg?v=20260310";
-const HERO_LOOP_BLEND_MS = 700;
-const HERO_LOOP_BLEND_SECONDS = HERO_LOOP_BLEND_MS / 1000;
 const HERO_COPY_DELAYS = {
   title: "120ms",
   subtitle: "240ms",
   cta: "360ms",
 } as const;
-
-type NetworkAwareNavigator = Navigator & {
-  connection?: {
-    effectiveType?: string;
-    saveData?: boolean;
-  };
-  deviceMemory?: number;
-};
 
 export default function LandingHeroSection() {
   const hasHydrated = useSyncExternalStore(
@@ -40,247 +20,100 @@ export default function LandingHeroSection() {
     () => true,
     () => false,
   );
-  const [shouldReduceMotion, setShouldReduceMotion] = useState(false);
-  const sectionRef = useRef<HTMLElement | null>(null);
-  const videoRefs = useRef<Array<HTMLVideoElement | null>>([null, null]);
-  const activeVideoIndexRef = useRef(0);
-  const blendTimeoutRef = useRef<number | null>(null);
-  const standbyStartingRef = useRef(false);
-  const [canPlayHeroVideo, setCanPlayHeroVideo] = useState(false);
-  const [canBlendHeroVideo, setCanBlendHeroVideo] = useState(false);
-  const [isHeroVisible, setIsHeroVisible] = useState(true);
-  const [activeVideoIndex, setActiveVideoIndex] = useState(0);
   const { isSignedIn } = useAuth();
   const showOpenBoardCta = hasHydrated && Boolean(isSignedIn);
-  const visibleVideoIndex =
-    canBlendHeroVideo && canPlayHeroVideo && isHeroVisible
-      ? activeVideoIndex
-      : 0;
-
-  const clearBlendTimeout = useCallback(() => {
-    if (blendTimeoutRef.current === null) return;
-    window.clearTimeout(blendTimeoutRef.current);
-    blendTimeoutRef.current = null;
-  }, []);
-
-  const playVideo = useCallback((video: HTMLVideoElement | null) => {
-    if (!video) return;
-    const playResult = video.play();
-    if (typeof playResult?.catch === "function") {
-      void playResult.catch(() => undefined);
-    }
-  }, []);
-
-  const stopVideo = useCallback((video: HTMLVideoElement | null) => {
-    if (!video) return;
-    video.pause();
-    try {
-      video.currentTime = 0;
-    } catch {
-      // Ignore browsers that block direct seek while metadata is not ready.
-    }
-  }, []);
-
-  const syncActiveVideo = useCallback((nextIndex: number) => {
-    activeVideoIndexRef.current = nextIndex;
-    setActiveVideoIndex(nextIndex);
-  }, []);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    const desktopQuery = window.matchMedia("(min-width: 768px)");
-    const reducedMotionQuery = window.matchMedia(
-      "(prefers-reduced-motion: reduce)",
-    );
-    const connection = (navigator as NetworkAwareNavigator).connection;
-    const hardwareThreads = navigator.hardwareConcurrency || 8;
-    const deviceMemory = (navigator as NetworkAwareNavigator).deviceMemory ?? 8;
-
-    const syncHeroVideoPolicy = () => {
-      const reducedMotionEnabled = reducedMotionQuery.matches;
-      const shouldDisableForNetwork =
-        connection?.saveData === true ||
-        connection?.effectiveType === "2g" ||
-        connection?.effectiveType === "3g";
-      const canPlay =
-        desktopQuery.matches &&
-        !reducedMotionEnabled &&
-        !shouldDisableForNetwork &&
-        hardwareThreads > 4 &&
-        deviceMemory > 4;
-
-      setShouldReduceMotion(reducedMotionEnabled);
-      setCanPlayHeroVideo(canPlay);
-      setCanBlendHeroVideo(
-        canPlay && hardwareThreads >= 8 && deviceMemory >= 8,
-      );
-    };
-
-    syncHeroVideoPolicy();
-    desktopQuery.addEventListener("change", syncHeroVideoPolicy);
-    reducedMotionQuery.addEventListener("change", syncHeroVideoPolicy);
-
-    return () => {
-      desktopQuery.removeEventListener("change", syncHeroVideoPolicy);
-      reducedMotionQuery.removeEventListener("change", syncHeroVideoPolicy);
-    };
-  }, []);
-
-  useEffect(() => {
-    const section = sectionRef.current;
-    if (!section) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const activeEntry = entries[0];
-        if (!activeEntry) return;
-        setIsHeroVisible(
-          activeEntry.isIntersecting && activeEntry.intersectionRatio >= 0.25,
-        );
-      },
-      { threshold: [0, 0.25, 0.6] },
-    );
-
-    observer.observe(section);
-    return () => observer.disconnect();
-  }, []);
-
-  const handleVideoTimeUpdate = useCallback(
-    (videoIndex: number) => {
-      if (
-        !canBlendHeroVideo ||
-        !canPlayHeroVideo ||
-        shouldReduceMotion ||
-        !isHeroVisible
-      ) {
-        return;
-      }
-      if (
-        standbyStartingRef.current ||
-        activeVideoIndexRef.current !== videoIndex
-      )
-        return;
-
-      const activeVideo = videoRefs.current[videoIndex];
-      if (!activeVideo) return;
-
-      const duration = activeVideo.duration;
-      if (
-        !Number.isFinite(duration) ||
-        duration <= HERO_LOOP_BLEND_SECONDS + 0.15
-      )
-        return;
-
-      const remainingTime = duration - activeVideo.currentTime;
-      if (remainingTime > HERO_LOOP_BLEND_SECONDS) return;
-
-      const standbyIndex = videoIndex === 0 ? 1 : 0;
-      const standbyVideo = videoRefs.current[standbyIndex];
-      if (!standbyVideo) return;
-
-      standbyStartingRef.current = true;
-      clearBlendTimeout();
-
-      try {
-        standbyVideo.currentTime = 0;
-      } catch {
-        // Ignore browsers that block direct seek while metadata is not ready.
-      }
-
-      playVideo(standbyVideo);
-      syncActiveVideo(standbyIndex);
-
-      blendTimeoutRef.current = window.setTimeout(() => {
-        stopVideo(activeVideo);
-        standbyStartingRef.current = false;
-        blendTimeoutRef.current = null;
-      }, HERO_LOOP_BLEND_MS);
-    },
-    [
-      canBlendHeroVideo,
-      canPlayHeroVideo,
-      clearBlendTimeout,
-      isHeroVisible,
-      playVideo,
-      shouldReduceMotion,
-      stopVideo,
-      syncActiveVideo,
-    ],
-  );
-
-  useEffect(() => {
-    const videos = videoRefs.current;
-
-    if (!canPlayHeroVideo || shouldReduceMotion || !isHeroVisible) {
-      clearBlendTimeout();
-      standbyStartingRef.current = false;
-      activeVideoIndexRef.current = 0;
-      videos.forEach((video) => stopVideo(video));
-      return;
-    }
-
-    if (!canBlendHeroVideo) {
-      clearBlendTimeout();
-      standbyStartingRef.current = false;
-      activeVideoIndexRef.current = 0;
-      stopVideo(videos[1]);
-      playVideo(videos[0]);
-      return;
-    }
-
-    playVideo(videos[activeVideoIndexRef.current]);
-  }, [
-    canBlendHeroVideo,
-    canPlayHeroVideo,
-    clearBlendTimeout,
-    isHeroVisible,
-    playVideo,
-    shouldReduceMotion,
-    stopVideo,
-    syncActiveVideo,
-  ]);
-
-  useEffect(() => () => clearBlendTimeout(), [clearBlendTimeout]);
 
   return (
     <section
       id="hero"
-      ref={sectionRef}
-      className="relative min-h-[100svh] scroll-mt-24 overflow-hidden bg-black lg:scroll-mt-28"
+      className="relative min-h-[100svh] scroll-mt-24 overflow-hidden bg-[#0a0a0a] lg:scroll-mt-28"
     >
-      {/* Background animation video from viral-vision-hero */}
-      {Array.from({ length: canBlendHeroVideo ? 2 : 1 }).map(
-        (_, videoIndex) => (
-          <video
-            key={videoIndex}
-            ref={(element) => {
-              videoRefs.current[videoIndex] = element;
-            }}
-            className={`hero-media-layer absolute inset-0 z-0 h-full w-full object-cover transition-opacity duration-700 ${
-              visibleVideoIndex === videoIndex ? "opacity-100" : "opacity-0"
-            }`}
-            src={canPlayHeroVideo ? HERO_ANIMATION_VIDEO_SRC : undefined}
-            poster={HERO_ANIMATION_VIDEO_POSTER}
-            autoPlay={
-              canPlayHeroVideo &&
-              isHeroVisible &&
-              !shouldReduceMotion &&
-              videoIndex === 0
-            }
-            muted
-            playsInline
-            loop={!canBlendHeroVideo}
-            preload={canPlayHeroVideo ? "metadata" : "none"}
-            aria-hidden="true"
-            onTimeUpdate={
-              canBlendHeroVideo
-                ? () => handleVideoTimeUpdate(videoIndex)
-                : undefined
-            }
-          />
-        ),
-      )}
+      {/* Star animation keyframes — uses transform (GPU-composited) instead of background-position */}
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+        @keyframes rising-stars {
+          from { transform: translateY(0); }
+          to { transform: translateY(-1200px); }
+        }
+        .animate-stars-slow { animation: rising-stars 150s linear infinite; will-change: transform; }
+        .animate-stars-medium { animation: rising-stars 90s linear infinite; will-change: transform; }
+        .animate-stars-fast { animation: rising-stars 60s linear infinite; will-change: transform; }
+        @media (prefers-reduced-motion: reduce) {
+          .animate-stars-slow, .animate-stars-medium, .animate-stars-fast {
+            animation: none; will-change: auto;
+          }
+        }
+      `,
+        }}
+      />
+
+      {/* Background: top-left white/grey glow — contain:strict isolates compositing */}
+      <div className="pointer-events-none absolute left-[0%] top-[0%] h-[50vw] max-h-[800px] w-[50vw] max-w-[800px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/[0.03] blur-[100px] [contain:strict]" />
+
+      {/* Background: top-right orange/red glow */}
+      <div className="pointer-events-none absolute right-[0%] top-[0%] h-[40vw] max-h-[600px] w-[40vw] max-w-[600px] translate-x-1/3 -translate-y-1/3 rounded-full bg-orange-600/10 blur-[100px] [contain:strict]" />
+
+      {/* Stars layer 1 — smallest, slowest. Extra height for translateY loop headroom */}
+      <div
+        className="animate-stars-slow pointer-events-none absolute inset-0 z-0 h-[calc(100%+1200px)]"
+        style={{
+          backgroundImage: `
+            radial-gradient(1.5px 1.5px at 20px 30px, rgba(255,255,255,1), transparent),
+            radial-gradient(1.5px 1.5px at 80px 120px, rgba(255,255,255,1), transparent),
+            radial-gradient(1.5px 1.5px at 150px 60px, rgba(255,255,255,1), transparent),
+            radial-gradient(1.5px 1.5px at 180px 180px, rgba(255,255,255,1), transparent)
+          `,
+          backgroundRepeat: "repeat",
+          backgroundSize: "200px 200px",
+        }}
+      />
+
+      {/* Stars layer 2 — medium */}
+      <div
+        className="animate-stars-medium pointer-events-none absolute inset-0 z-0 h-[calc(100%+1200px)]"
+        style={{
+          backgroundImage: `
+            radial-gradient(2px 2px at 30px 40px, rgba(255,255,255,1), transparent),
+            radial-gradient(2px 2px at 120px 150px, rgba(255,255,255,1), transparent),
+            radial-gradient(2px 2px at 200px 80px, rgba(255,255,255,1), transparent),
+            radial-gradient(2px 2px at 250px 220px, rgba(255,255,255,1), transparent)
+          `,
+          backgroundRepeat: "repeat",
+          backgroundSize: "300px 300px",
+        }}
+      />
+
+      {/* Stars layer 3 — largest, fastest */}
+      <div
+        className="animate-stars-fast pointer-events-none absolute inset-0 z-0 h-[calc(100%+1200px)]"
+        style={{
+          backgroundImage: `
+            radial-gradient(3px 3px at 50px 50px, rgba(255,255,255,1), transparent),
+            radial-gradient(3.5px 3.5px at 150px 250px, rgba(255,255,255,1), transparent),
+            radial-gradient(3px 3px at 300px 100px, rgba(255,255,255,1), transparent),
+            radial-gradient(3.5px 3.5px at 350px 350px, rgba(255,255,255,1), transparent)
+          `,
+          backgroundRepeat: "repeat",
+          backgroundSize: "400px 400px",
+        }}
+      />
+
+      {/* Deep central orange glow */}
+      <div className="pointer-events-none absolute left-1/2 top-[50%] z-0 h-[60vh] w-[80vw] max-w-[1400px] -translate-x-1/2 -translate-y-[20%] rounded-[100%] bg-orange-600/20 blur-[120px] [contain:strict]" />
+
+      {/* Planet horizon */}
+      <div className="pointer-events-none absolute bottom-0 left-1/2 z-0 h-[40vh] min-h-[400px] w-[200%] -translate-x-1/2 translate-y-[40%] md:w-[150%] lg:w-[120%]">
+        <div className="relative h-full w-full rounded-[100%] bg-[#0a0a0a]">
+          {/* Bright top border glow line */}
+          <div className="absolute inset-0 z-10 rounded-[100%] border-t-[2px] border-orange-200 shadow-[0_-8px_30px_2px_rgba(249,115,22,0.6),inset_0_10px_30px_rgba(249,115,22,0.4)]" />
+          {/* Ambient glow above horizon */}
+          <div className="absolute inset-0 rounded-[100%] shadow-[0_-50px_150px_40px_rgba(234,88,12,0.15)]" />
+          {/* Inner shading for 3D depth */}
+          <div className="absolute inset-0 rounded-[100%] bg-gradient-to-b from-orange-950/40 via-transparent to-transparent" />
+        </div>
+      </div>
+
       {/* Content */}
       <div className="relative z-10 flex min-h-[100svh] flex-col">
         <div className="flex flex-1 flex-col items-center justify-center px-6 pb-24 pt-24 md:pt-28">
