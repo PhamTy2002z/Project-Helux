@@ -19,8 +19,8 @@
   --success: #22c55e;
   --warning: #f59e0b;
   --danger: #ef4444;
-  --nav-active: #cd7b53;
-  --nav-active-bg: rgba(205, 123, 83, 0.18);
+  --nav-active: #f8fafc;
+  --nav-active-bg: rgba(215, 110, 55, 0.40);
   --shadow-panel: 0 1px 3px rgba(0, 0, 0, 0.4);
   --shadow-card: 0 0 0 1px #2e2c22;
 
@@ -59,8 +59,8 @@
   --success: #16a34a;
   --warning: #d97706;
   --danger: #dc2626;
-  --nav-active: #b85c38;
-  --nav-active-bg: rgba(184, 92, 56, 0.12);
+  --nav-active: #0f172a;
+  --nav-active-bg: rgba(184, 92, 56, 0.22);
   --shadow-panel:
     0 1px 3px rgba(15, 23, 42, 0.12), 0 1px 2px rgba(15, 23, 42, 0.08);
   --shadow-card:
