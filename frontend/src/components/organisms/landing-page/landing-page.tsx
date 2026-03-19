@@ -19,6 +19,9 @@ const ProductTabs = dynamic(() => import("./product-tabs"), {
 const TestimonialCarousel = dynamic(() => import("./testimonial-carousel"), {
   loading: () => <LandingSectionSkeleton compact />,
 });
+const FinalCtaSection = dynamic(() => import("./final-cta-section"), {
+  loading: () => <LandingSectionSkeleton compact />,
+});
 const LandingFooter = dynamic(() => import("./landing-footer"), {
   loading: () => <LandingFooterSkeleton />,
 });
@@ -63,6 +66,7 @@ export default function LandingPage() {
           <FeatureStoryShowcase />
           <ProductTabs />
           <TestimonialCarousel />
+          <FinalCtaSection />
         </main>
         <LandingFooter />
       </div>

@@ -91,6 +91,7 @@ body {
 }
 
 html {
+  overflow-y: scroll;
   scrollbar-gutter: stable;
   scroll-padding-top: 104px;
 }
@@ -362,6 +363,34 @@ button:focus-visible {
 .hero-media-layer {
   transform: translateZ(0);
   will-change: opacity;
+}
+
+/* Unified highlight pill — matches hero glass aesthetic */
+.landing-pill {
+  @apply rounded-full border border-white/15 bg-white/[0.06] px-3 py-1.5 text-xs font-medium text-white/80 transition-colors duration-200;
+}
+
+.landing-pill:hover {
+  @apply border-white/25 bg-white/[0.10];
+}
+
+/* Subtle section ambient glow — mimics hero's radial glow effect */
+.landing-section-glow {
+  position: absolute;
+  pointer-events: none;
+  border-radius: 100%;
+  filter: blur(120px);
+  contain: strict;
+}
+
+/* CTA link style — consistent orange accent from hero */
+.landing-cta-link {
+  @apply inline-flex items-center gap-1.5 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white;
+  color: #ff8d47;
+}
+
+.landing-cta-link:hover {
+  color: #ffa774;
 }
 
 .hero-copy-anim {

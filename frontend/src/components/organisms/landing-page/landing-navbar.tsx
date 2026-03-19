@@ -69,25 +69,22 @@ export default function LandingNavbar() {
       <div className="mx-auto flex w-full max-w-[1280px] items-center justify-between px-4 py-4 sm:px-6 lg:px-10 fhd:max-w-[1440px] fhd:px-14 qhd:max-w-[1600px] qhd:px-16 uhd:max-w-[1760px] uhd:px-20">
         {/* Logo column keeps width parity with auth column to center desktop nav */}
         <div className="flex min-h-[44px] items-center lg:min-w-[240px]">
-          {pathname === "/" ? (
-            <button
-              type="button"
-              aria-label="Scroll to hero"
-              className="cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black"
-              onClick={() => {
+          <Link
+            href="/"
+            aria-label={pathname === "/" ? "Scroll to top" : "VisgniteAI home"}
+            className="inline-flex cursor-pointer items-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+            onClick={(e) => {
+              if (pathname === "/") {
+                e.preventDefault();
                 document.getElementById("hero")?.scrollIntoView({
                   behavior: "smooth",
                   block: "start",
                 });
-              }}
-            >
-              <Logo />
-            </button>
-          ) : (
-            <Link href="/" aria-label="VisgniteAI home">
-              <Logo />
-            </Link>
-          )}
+              }
+            }}
+          >
+            <Logo />
+          </Link>
         </div>
 
         {/* Desktop nav links */}

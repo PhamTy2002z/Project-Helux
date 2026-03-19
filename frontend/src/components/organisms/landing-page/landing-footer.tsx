@@ -47,6 +47,8 @@ export default function LandingFooter() {
     <footer className="landing-deferred-section relative overflow-hidden border-t border-white/10 bg-black px-4 pb-8 pt-16 sm:px-6 lg:px-10 fhd:px-14 qhd:px-16 uhd:px-20">
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-white/[0.02] to-transparent" />
+        {/* Ambient glow — mirrors hero's radial glow */}
+        <div className="landing-section-glow right-[10%] top-[10%] h-[20vw] max-h-[300px] w-[30vw] max-w-[400px] bg-orange-600/[0.04]" />
       </div>
 
       <div className="mx-auto w-full max-w-[1280px] fhd:max-w-[1440px] qhd:max-w-[1600px] uhd:max-w-[1760px]">
@@ -127,14 +129,14 @@ export default function LandingFooter() {
           <div className="flex items-center gap-3">
             <a
               href="mailto:sales@visgnite.com"
-              className="inline-flex min-h-[44px] items-center rounded-full border border-white/20 px-4 py-2 text-sm font-medium text-white/80 transition-colors hover:border-white/40 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+              className="hero-btn-secondary min-h-[44px] px-4 py-2 text-sm"
             >
               Contact Sales
             </a>
             <Link
               href="/sign-in"
               prefetch={false}
-              className="inline-flex min-h-[44px] items-center rounded-full bg-white px-4 py-2 text-sm font-semibold text-black transition-colors hover:bg-white/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+              className="hero-btn-demo min-h-[44px] px-6 py-2 text-sm"
             >
               Start Free
             </Link>

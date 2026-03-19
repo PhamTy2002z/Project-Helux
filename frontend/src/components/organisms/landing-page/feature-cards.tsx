@@ -39,6 +39,8 @@ export default function FeatureCards() {
     >
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-white/[0.03] to-transparent" />
+        {/* Ambient glow — mirrors hero's radial glow */}
+        <div className="landing-section-glow left-[10%] top-[20%] h-[30vw] max-h-[500px] w-[40vw] max-w-[600px] bg-orange-600/[0.06]" />
       </div>
 
       <div className="mx-auto w-full max-w-[1280px] fhd:max-w-[1440px] qhd:max-w-[1600px] uhd:max-w-[1760px]">
@@ -58,7 +60,7 @@ export default function FeatureCards() {
         <div className="grid gap-6 lg:grid-cols-2 lg:gap-7 qhd:gap-8">
           {FEATURE_POSTERS.map((feature, index) => (
             <ScrollReveal key={feature.id} delay={index * 0.1}>
-              <article className="group mx-auto h-full w-full max-w-[620px] overflow-hidden rounded-[24px] border border-white/12 bg-[#12110e] shadow-[0_16px_45px_rgba(0,0,0,0.4)] transition-colors duration-300 hover:border-white/20 fhd:max-w-[680px] qhd:max-w-[740px] uhd:max-w-[820px]">
+              <article className="hero-glass-card group mx-auto h-full w-full max-w-[620px] overflow-hidden rounded-[24px] shadow-[0_16px_45px_rgba(0,0,0,0.4)] transition-colors duration-300 hover:border-white/20 fhd:max-w-[680px] qhd:max-w-[740px] uhd:max-w-[820px]">
                 <div className="relative h-[280px] overflow-hidden bg-[radial-gradient(circle_at_18%_12%,rgba(123,227,255,0.35),transparent_46%),radial-gradient(circle_at_82%_85%,rgba(170,125,255,0.33),transparent_45%),linear-gradient(155deg,#0a1222_4%,#13203a_46%,#2a1742_100%)] sm:h-[320px] lg:h-[380px] fhd:h-[440px] qhd:h-[500px] uhd:h-[560px]">
                   <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(6,10,18,0.08),rgba(6,10,18,0.35))]" />
                   <div className="absolute inset-0">
@@ -85,7 +87,7 @@ export default function FeatureCards() {
                     {feature.highlights.map((highlight) => (
                       <li
                         key={highlight}
-                        className="rounded-full border border-white/12 bg-white/[0.05] px-3 py-1.5 text-xs font-medium text-white/80 md:text-sm fhd:px-3.5 fhd:py-2"
+                        className="landing-pill md:text-sm fhd:px-3.5 fhd:py-2"
                       >
                         {highlight}
                       </li>

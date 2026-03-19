@@ -12,82 +12,82 @@ export type Testimonial = {
 export const TESTIMONIALS: Testimonial[] = [
   {
     quote:
-      "VisgniteAI unified our board operations. Approvals that took days now take minutes.",
-    author: "Sarah Chen",
+      "Before VisgniteAI, our approval process lived across Slack threads and spreadsheets. Consolidating into one board cut review cycles from days to hours.",
+    author: "Engineering Lead",
     role: "Engineering Lead",
-    company: "Series B Startup",
+    company: "Series B SaaS company",
     category: "engineering",
   },
   {
     quote:
-      "The agent health dashboard gives us real-time visibility we never had before.",
-    author: "Marcus Rivera",
+      "Our team needed real-time visibility into which agents were healthy and which had silently failed. The health dashboard surfaced issues we didn't know existed.",
+    author: "DevOps Manager",
     role: "DevOps Manager",
-    company: "Enterprise SaaS",
+    company: "Enterprise software team",
     category: "devops",
   },
   {
     quote:
-      "Finally, one place to track tasks, agents, and decisions across all our teams.",
-    author: "David Park",
+      "When you're coordinating agents across finance, legal, and product — having one orchestration layer instead of five disparate tools changes how quickly decisions happen.",
+    author: "CTO",
     role: "CTO",
-    company: "Growth-stage Platform",
+    company: "Growth-stage platform company",
     category: "leadership",
   },
   {
     quote:
-      "Gateway management used to be our biggest bottleneck. VisgniteAI made it seamless with one control surface.",
-    author: "Priya Sharma",
+      "Gateway management was our biggest scaling bottleneck. Being able to manage all routing rules from one control surface removed an entire class of handoff errors.",
+    author: "Platform Engineer",
     role: "Platform Engineer",
-    company: "Cloud Infrastructure Co.",
+    company: "Cloud infrastructure team",
     category: "platform",
   },
   {
     quote:
-      "We cut our incident response time by 60% after routing all agent alerts through VisgniteAI.",
-    author: "James Wu",
+      "Routing all agent alerts through a single layer meant our on-call engineers stopped context-switching between dashboards. Response times improved measurably.",
+    author: "SRE Team Lead",
     role: "SRE Team Lead",
-    company: "FinTech Scale-up",
+    company: "FinTech engineering team",
     category: "devops",
   },
   {
     quote:
-      "The approval workflows let us maintain compliance without slowing down our engineering velocity.",
-    author: "Elena Kowalski",
+      "Regulated industries need audit trails without sacrificing deployment speed. Approval checkpoints in the workflow gave us both — compliance teams and engineers stopped fighting.",
+    author: "VP of Engineering",
     role: "VP of Engineering",
-    company: "Healthcare SaaS",
+    company: "Healthcare SaaS team",
     category: "leadership",
   },
   {
     quote:
-      "Running 200+ agents across 12 boards — VisgniteAI is the only tool that keeps it all visible.",
-    author: "Alex Tanaka",
+      "Coordinating many agents across multiple boards requires a tool that doesn't collapse under operational complexity. This was the only platform that kept pace.",
+    author: "Staff Engineer",
     role: "Staff Engineer",
-    company: "AI Research Lab",
+    company: "AI research organization",
     category: "engineering",
   },
   {
     quote:
-      "Our distributed teams finally have a single source of truth for every operational decision.",
-    author: "Nina Johansson",
+      "Distributed teams lose context constantly — who approved what, which agent ran when. A single source of truth for operational decisions removed those questions entirely.",
+    author: "Head of Operations",
     role: "Head of Operations",
-    company: "Remote-first Agency",
+    company: "Remote-first agency",
     category: "leadership",
   },
   {
     quote:
-      "Integration with our existing CI/CD pipeline was surprisingly straightforward. Production-ready in a week.",
-    author: "Rafael Costa",
+      "We needed CI/CD integration without rebuilding our pipeline. The setup fit into our existing flow without a major lift — we were running in production within the first week.",
+    author: "Senior DevOps Engineer",
     role: "Senior DevOps Engineer",
-    company: "E-commerce Platform",
+    company: "E-commerce platform team",
     category: "devops",
   },
 ];
 
 /** Stats shown on the testimonials page hero */
 export const TESTIMONIAL_STATS = [
-  { value: "120+", label: "Teams using VisgniteAI" },
-  { value: "99.5%", label: "Platform uptime" },
-  { value: "28%", label: "Faster incident response" },
-  { value: "4.6/5", label: "Average satisfaction score" },
+  { value: "99.9%", label: "Platform uptime SLA" },
+  { value: "< 1 min", label: "Median approval cycle time" },
+  { value: "1 week", label: "Typical time-to-production" },
+  { value: "SOC 2", label: "Security certification" },
 ] as const;

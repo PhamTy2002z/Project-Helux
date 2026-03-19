@@ -125,7 +125,7 @@ export default function LandingHeroSection() {
               } as CSSProperties
             }
           >
-            Orchestrate Multi-Agent Workflows from Boards to Approvals
+            Ship AI Agent Operations Faster — With Full Visibility and Control
           </h1>
 
           <p
@@ -136,9 +136,9 @@ export default function LandingHeroSection() {
               } as CSSProperties
             }
           >
-            VisgniteAI gives your team one secure workspace to run agent
-            operations, approvals, and gateways — with full visibility and zero
-            handoff friction.
+            One secure workspace where your team deploys agents, enforces
+            approval gates, and monitors execution health — no more scattered
+            tools or handoff friction.
           </p>
 
           <div

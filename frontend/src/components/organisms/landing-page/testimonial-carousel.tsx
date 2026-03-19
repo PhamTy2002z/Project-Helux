@@ -55,6 +55,8 @@ export default function TestimonialCarousel() {
     >
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute inset-x-0 top-0 h-36 bg-gradient-to-b from-white/[0.03] to-transparent" />
+        {/* Ambient glow — mirrors hero's radial glow */}
+        <div className="landing-section-glow left-[15%] top-[25%] h-[20vw] max-h-[350px] w-[30vw] max-w-[450px] bg-orange-600/[0.04]" />
       </div>
 
       <div className="mx-auto w-full max-w-4xl fhd:max-w-[1040px] qhd:max-w-[1160px]">
@@ -111,7 +113,7 @@ export default function TestimonialCarousel() {
         <div className="mt-8 text-center">
           <Link
             href="/testimonials"
-            className="inline-flex items-center gap-1.5 text-sm font-medium text-white/55 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+            className="landing-cta-link"
           >
             View all testimonials
             <ArrowRight size={14} aria-hidden="true" />
