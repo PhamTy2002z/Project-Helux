@@ -9,6 +9,8 @@ export type ShowcaseStory = {
   previewImageAlt: string;
   previewImageClassName?: string;
   highlights: string[];
+  /** Optional before/after contrast pair shown below the description */
+  beforeAfter?: { before: string; after: string };
 };
 
 export const SHOWCASE_STORIES: ShowcaseStory[] = [
@@ -19,13 +21,17 @@ export const SHOWCASE_STORIES: ShowcaseStory[] = [
     description:
       "VisgniteAI brings builder configuration, deployment commands, and operational capabilities into one surface so teams can launch agents with less handoff friction.",
     ctaLabel: "Explore orchestration",
-    ctaHref: "#",
+    ctaHref: "/onboarding",
     previewImageSrc:
       "/images/landing/visgniteai-showcase-orchestrate-20260312.png",
     previewImageAlt:
       "VisgniteAI orchestration illustration showing an AI builder, deployment terminal, and capabilities card connected in one workflow.",
     previewImageClassName: "scale-[1.01]",
     highlights: ["AI builder", "VisgniteAI deploy", "Capabilities layer"],
+    beforeAfter: {
+      before: "4 disconnected tools, manual handoffs between teams",
+      after: "One orchestration loop, deploy in minutes",
+    },
   },
   {
     id: "build-integrate",
@@ -34,13 +40,17 @@ export const SHOWCASE_STORIES: ShowcaseStory[] = [
     description:
       "Route Finance, Marketing, Law firm, and Product workflows into one unified orchestration layer, then track execution volume and cluster health from a single overview.",
     ctaLabel: "Explore observability",
-    ctaHref: "#",
+    ctaHref: "/onboarding",
     previewImageSrc:
       "/images/landing/visgniteai-showcase-executions-20260312.png",
     previewImageAlt:
       "VisgniteAI execution illustration showing four business functions feeding a central orchestration node with analytics and deployment overview.",
     previewImageClassName: "",
     highlights: ["Finance to Product", "Execution analytics", "Cluster health"],
+    beforeAfter: {
+      before: "Scattered dashboards, hours to trace execution issues",
+      after: "Unified analytics, 5-minute root cause identification",
+    },
   },
   {
     id: "manage-scale",
@@ -49,7 +59,7 @@ export const SHOWCASE_STORIES: ShowcaseStory[] = [
     description:
       "Assign board leads, enforce approval checkpoints, and monitor execution signals in one unified orchestration layer as you scale teams.",
     ctaLabel: "Explore governance controls",
-    ctaHref: "#",
+    ctaHref: "/onboarding",
     previewImageSrc:
       "/images/landing/visgniteai-showcase-manage-scale-20260312.png",
     previewImageAlt:
@@ -60,5 +70,9 @@ export const SHOWCASE_STORIES: ShowcaseStory[] = [
       "Approval checkpoints",
       "Operational signals",
     ],
+    beforeAfter: {
+      before: "Ad-hoc approvals via Slack, no audit trail",
+      after: "Governed checkpoints, complete operational visibility",
+    },
   },
 ];

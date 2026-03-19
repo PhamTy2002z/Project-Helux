@@ -135,7 +135,6 @@ const BRANDS: Brand[] = [
   { name: "RBC", Icon: RbcMark },
   { name: "Genpact", Icon: GenpactMark },
   { name: "BDO", Icon: BdoMark },
-  /* Tech integrations */
   { name: "OpenAI", imgSrc: "/icons/brands/openai.svg" },
   { name: "Anthropic", imgSrc: "https://cdn.simpleicons.org/anthropic/white" },
   {
@@ -193,7 +192,7 @@ export default function TrustMarquee() {
   return (
     <div className="relative z-10 px-4 pb-8 pt-6 sm:px-6 sm:pb-10 sm:pt-8 lg:px-10 fhd:px-14 qhd:px-16 uhd:px-20">
       <p className="mb-6 text-center text-lg font-medium tracking-tight text-white/80 sm:mb-8 sm:text-xl md:text-2xl">
-        Loved by AI builders. Trusted by AI leaders.
+        Powering the next generation of AI operations
       </p>
       <div className="relative mx-auto w-[70%] overflow-hidden">
         {/* Fade edges — matches hero bg #0a0a0a */}

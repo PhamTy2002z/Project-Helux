@@ -324,7 +324,8 @@ function ChartTooltipCard({
   ...props
 }: ChartTooltipContentProps) {
   const { theme } = useTheme();
-  const colors = React.useMemo(() => getChartColors(), [theme]);
+  // Re-derive palette when the theme changes
+  const colors = React.useMemo(() => getChartColors(), [theme]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <ChartTooltipContent

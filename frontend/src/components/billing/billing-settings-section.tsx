@@ -215,11 +215,10 @@ export function BillingSettingsSection({
   const daysLeft = trialDaysRemaining(sub?.trial_expires_at);
   const isCheckingOut = simulateCheckout.isPending || createCheckout.isPending;
 
-  const historyRows = historyQuery.data ?? [];
-
   const filteredHistory = useMemo(() => {
+    const rows = historyQuery.data ?? [];
     const keyword = historySearch.trim().toLowerCase();
-    return historyRows.filter((row: ApiBillingHistoryRow) => {
+    return rows.filter((row: ApiBillingHistoryRow) => {
       const statusMatch =
         historyStatus === "all" || row.status === historyStatus;
       if (!statusMatch) return false;
@@ -228,7 +227,7 @@ export function BillingSettingsSection({
         `${row.plan_tier} ${row.amount} ${row.created_at}`.toLowerCase();
       return rowContent.includes(keyword);
     });
-  }, [historyRows, historySearch, historyStatus]);
+  }, [historyQuery.data, historySearch, historyStatus]);
 
   const handleManageSubscription = async () => {
     setPortalError(null);

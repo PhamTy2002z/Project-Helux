@@ -152,6 +152,8 @@ export default function ProductTabs() {
     >
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-white/[0.03] to-transparent" />
+        {/* Ambient glow — mirrors hero's central glow */}
+        <div className="landing-section-glow left-1/2 top-[15%] h-[30vw] max-h-[500px] w-[50vw] max-w-[700px] -translate-x-1/2 bg-orange-600/[0.05]" />
       </div>
 
       <div className="mx-auto w-full max-w-[1280px] fhd:max-w-[1440px] qhd:max-w-[1600px] uhd:max-w-[1760px]">
@@ -289,7 +291,7 @@ export default function ProductTabs() {
                     <Link
                       href={tab.href}
                       prefetch={false}
-                      className="mt-5 inline-flex min-h-[40px] items-center rounded-full border border-white/25 bg-white/10 px-4 py-2 text-xs font-medium text-white transition-colors hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white sm:text-sm"
+                      className="hero-btn-secondary mt-5 min-h-[40px] px-4 py-2 text-xs sm:text-sm"
                     >
                       Explore {tab.label}
                     </Link>

@@ -34,19 +34,19 @@
   - `max_boards=1`
   - `max_agents_total=3`
   - `max_agents_per_board=3`
-  - `org_daily_tokens=40000`
-  - `agent_daily_tokens=15000`
-  - `trial_total_tokens=280000`
-  - `max_tokens_per_run=4000`
+  - `agent_daily_tokens=5000000`
+  - `trial_total_tokens=20000000`
+  - `max_tokens_per_run=8000`
+  - `agent_daily_cost=2.50`
 - Pro (`pro`)
-  - `max_board_groups=1`
+  - `max_board_groups=2`
   - `max_boards=3`
   - `max_agents_total=15`
   - `max_agents_per_board=5`
-  - `org_daily_tokens=300000`
-  - `agent_daily_tokens=35000`
-  - `org_monthly_tokens=8000000`
-  - `max_tokens_per_run=8000`
+  - `agent_daily_tokens=20000000`
+  - `org_monthly_tokens=200000000`
+  - `max_tokens_per_run=16000`
+  - `agent_daily_cost=5.00`
 
 ## Out Of Scope (v1)
 - Real provider checkout pages (coming in v2 with Stripe/Paddle integration).

@@ -99,7 +99,5 @@ export function useSSEStream({
         window.clearTimeout(reconnectTimeout);
       }
     };
-    // key encodes external deps (boardId, etc.) that should trigger reconnect
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [enabled, key]);
 }
