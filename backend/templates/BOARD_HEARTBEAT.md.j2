@@ -29,14 +29,14 @@ jq -r '
 ' /tmp/openapi.json | sort
 ```
 
-## FlowGrid Response Protocol
-- All outputs must be sent to FlowGrid via HTTP.
+## VisgniteAI Response Protocol
+- All outputs must be sent to VisgniteAI via HTTP.
 - Always include: `X-Agent-Token: {{ auth_token }}`
 
 ## Schedule
 - If a heartbeat schedule is configured, send a lightweight check-in only.
 - On first cycle after wake/bootstrap, run heartbeat check-in immediately (do not wait for cadence).
-- Do not claim or move board tasks unless explicitly instructed by FlowGrid.
+- Do not claim or move board tasks unless explicitly instructed by VisgniteAI.
 - If you have any pending `LEAD REQUEST: ASK USER` messages in OpenClaw chat, handle them promptly (see AGENTS.md).
 
 ## Heartbeat checklist

@@ -1,6 +1,6 @@
 [project]
 domains = []
-name = "FlowGrid"
+name = "VisgniteAI"
 
 [crawler]
 max_pages = 100
