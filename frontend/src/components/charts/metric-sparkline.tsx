@@ -89,7 +89,8 @@ export default function MetricSparkline({
 }: MetricSparklineProps) {
   const gradientId = useId();
   const { theme } = useTheme();
-  const colors = useMemo(() => getChartColors(), [theme]);
+  // Re-derive palette when the theme changes
+  const colors = useMemo(() => getChartColors(), [theme]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!values.length) {
     return null;

@@ -238,6 +238,7 @@ export function MembersInvitesTable({
       onManageAccess,
       onResendInvite,
       onRevokeInvite,
+      resendingInviteId,
     ],
   );
 
