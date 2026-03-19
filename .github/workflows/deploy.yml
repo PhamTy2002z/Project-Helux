@@ -149,11 +149,11 @@ jobs:
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Sync project files
-        working-directory: /opt/projects/Project-FlowGrid
+        working-directory: /opt/projects/VisgniteAI
         run: git pull --ff-only origin main
 
       - name: Pull and restart containers
-        working-directory: /opt/projects/Project-FlowGrid
+        working-directory: /opt/projects/VisgniteAI
         env:
           GHCR_IMAGE_TAG: ${{ needs.build-backend.outputs.image_tag }}
         run: |
@@ -203,7 +203,7 @@ jobs:
 
       - name: Show container logs on failure
         if: failure()
-        working-directory: /opt/projects/Project-FlowGrid
+        working-directory: /opt/projects/VisgniteAI
         run: |
           echo "=== Backend logs ==="
           docker compose -f compose.prod.yml --env-file .env.prod logs --tail=50 backend 2>&1 || true
@@ -212,7 +212,7 @@ jobs:
 
       - name: Show running containers
         if: always()
-        working-directory: /opt/projects/Project-FlowGrid
+        working-directory: /opt/projects/VisgniteAI
         run: docker compose -f compose.prod.yml --env-file .env.prod ps
 
       - name: Cleanup old images
