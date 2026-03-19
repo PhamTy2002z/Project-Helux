@@ -66,23 +66,24 @@ export default function FeatureStoryShowcase() {
                           <p className="mb-1 text-[11px] font-medium uppercase tracking-[0.14em] text-red-400/70">
                             Before
                           </p>
-                          <p className="text-white/60">{story.beforeAfter.before}</p>
+                          <p className="text-white/60">
+                            {story.beforeAfter.before}
+                          </p>
                         </div>
                         <div className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2">
                           <p className="mb-1 text-[11px] font-medium uppercase tracking-[0.14em] text-emerald-400/70">
                             After
                           </p>
-                          <p className="text-white/60">{story.beforeAfter.after}</p>
+                          <p className="text-white/60">
+                            {story.beforeAfter.after}
+                          </p>
                         </div>
                       </div>
                     )}
 
                     <ul className="mt-4 flex flex-wrap gap-2">
                       {story.highlights.map((highlight) => (
-                        <li
-                          key={highlight}
-                          className="landing-pill"
-                        >
+                        <li key={highlight} className="landing-pill">
                           {highlight}
                         </li>
                       ))}

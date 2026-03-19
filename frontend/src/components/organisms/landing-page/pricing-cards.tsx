@@ -118,9 +118,7 @@ function PriceDisplay({
         <p className="text-3xl font-bold tracking-tight text-white md:text-4xl">
           ${activePrice}
         </p>
-        <p className="pb-1 text-xs text-white/55 md:text-sm">
-          {unit}/mo
-        </p>
+        <p className="pb-1 text-xs text-white/55 md:text-sm">{unit}/mo</p>
       </div>
     </div>
   );
@@ -235,7 +233,10 @@ export default function PricingCards() {
                       {plan.name}
                     </h3>
                     <div className="mt-4 flex items-end gap-2.5">
-                      <PriceDisplay pricing={plan.pricing} period={billingPeriod} />
+                      <PriceDisplay
+                        pricing={plan.pricing}
+                        period={billingPeriod}
+                      />
                       <p className="pb-1 text-xs text-white/55 md:text-sm">
                         {plan.priceNote[billingPeriod]}
                       </p>
@@ -286,11 +287,6 @@ export default function PricingCards() {
             );
           })}
         </div>
-
-        {/* Money-back guarantee */}
-        <p className="mt-8 text-center text-xs text-white/45">
-          30-day money-back guarantee. No questions asked.
-        </p>
 
         {/* Trust badges */}
         <div className="mt-4 flex items-center justify-center gap-2 text-xs text-white/40">

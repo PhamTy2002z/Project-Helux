@@ -111,10 +111,7 @@ export default function TestimonialCarousel() {
 
         {/* View all link */}
         <div className="mt-8 text-center">
-          <Link
-            href="/testimonials"
-            className="landing-cta-link"
-          >
+          <Link href="/testimonials" className="landing-cta-link">
             View all testimonials
             <ArrowRight size={14} aria-hidden="true" />
           </Link>
