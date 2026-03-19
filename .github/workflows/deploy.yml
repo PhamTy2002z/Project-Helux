@@ -166,6 +166,12 @@ jobs:
           docker compose -f compose.prod.yml --env-file .env.prod stop backend webhook-worker frontend 2>/dev/null || true
           docker compose -f compose.prod.yml --env-file .env.prod rm -f backend webhook-worker frontend 2>/dev/null || true
 
+          # Kill any container holding our ports (e.g. from old compose project)
+          for port in 8000 3000; do
+            cid=$(docker ps -q --filter "publish=$port") || true
+            [ -n "$cid" ] && docker rm -f "$cid" || true
+          done
+
           # Start with new images
           docker compose -f compose.prod.yml --env-file .env.prod up -d --no-deps backend webhook-worker frontend
 
