@@ -148,6 +148,10 @@ jobs:
         env:
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Sync project files
+        working-directory: /opt/projects/Project-FlowGrid
+        run: git pull --ff-only origin main
+
       - name: Pull and restart containers
         working-directory: /opt/projects/Project-FlowGrid
         env:
