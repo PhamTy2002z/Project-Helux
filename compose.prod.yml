@@ -94,7 +94,7 @@ services:
     environment:
       PORT: "20128"
       HOSTNAME: "0.0.0.0"
-      JWT_SECRET: ${NINE_ROUTER_JWT_SECRET:?Set NINE_ROUTER_JWT_SECRET}
+      JWT_SECRET: ${NINE_ROUTER_JWT_SECRET:-}
       INITIAL_PASSWORD: ${NINE_ROUTER_PASSWORD:-changeme}
       REQUIRE_API_KEY: "true"
       AUTH_COOKIE_SECURE: "true"

@@ -149,7 +149,7 @@ jobs:
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Pull and restart containers
-        working-directory: /opt/projects/Project-FlowGrid
+        working-directory: /opt/projects/VisgniteAI
         env:
           GHCR_IMAGE_TAG: ${{ needs.build-backend.outputs.image_tag }}
         run: |
@@ -178,7 +178,7 @@ jobs:
 
       - name: Show running containers
         if: always()
-        working-directory: /opt/projects/Project-FlowGrid
+        working-directory: /opt/projects/VisgniteAI
         run: docker compose -f compose.prod.yml --env-file .env.prod ps
 
       - name: Cleanup old images
