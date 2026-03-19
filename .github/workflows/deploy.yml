@@ -162,7 +162,11 @@ jobs:
           # Pull new images (webhook-worker shares backend image)
           docker compose -f compose.prod.yml --env-file .env.prod pull backend frontend webhook-worker
 
-          # Rolling restart — db/redis/minio stay up
+          # Stop existing app containers (db/redis/minio stay up)
+          docker compose -f compose.prod.yml --env-file .env.prod stop backend webhook-worker frontend 2>/dev/null || true
+          docker compose -f compose.prod.yml --env-file .env.prod rm -f backend webhook-worker frontend 2>/dev/null || true
+
+          # Start with new images
           docker compose -f compose.prod.yml --env-file .env.prod up -d --no-deps backend webhook-worker frontend
 
           echo "Deploy initiated: tag=$GHCR_IMAGE_TAG"
