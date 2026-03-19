@@ -44,9 +44,11 @@ describe("LandingHeroSection", () => {
     render(<LandingHeroSection />);
 
     expect(
-      screen.getByText(/orchestrate multi-agent workflows/i),
+      screen.getByText(/ship ai agent operations faster/i),
     ).toBeInTheDocument();
-    expect(screen.getByText(/visgniteai gives your team/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/one secure workspace where your team/i),
+    ).toBeInTheDocument();
   });
 
   it("renders the CSS star background layers", () => {
