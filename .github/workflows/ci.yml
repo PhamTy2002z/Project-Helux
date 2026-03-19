@@ -121,6 +121,7 @@ jobs:
 
       - name: Upload backend coverage
         if: always()
+        continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
           name: coverage-backend
@@ -174,6 +175,7 @@ jobs:
 
       - name: Upload frontend coverage
         if: always()
+        continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
           name: coverage-frontend
@@ -421,6 +423,7 @@ jobs:
 
       - name: Upload Cypress artifacts
         if: failure()
+        continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
           name: cypress-artifacts
