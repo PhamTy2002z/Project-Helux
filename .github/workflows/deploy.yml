@@ -172,9 +172,16 @@ jobs:
             [ -n "$cid" ] && docker rm -f "$cid" || true
           done
 
-          # Ensure infra services are running (db, redis, minio)
+          # Ensure infra services are running and healthy
           docker compose -f compose.prod.yml --env-file .env.prod up -d db redis minio
-          docker compose -f compose.prod.yml --env-file .env.prod wait db redis minio 2>/dev/null || sleep 15
+          echo "Waiting for infra services to be healthy..."
+          for i in $(seq 1 30); do
+            healthy=$(docker compose -f compose.prod.yml --env-file .env.prod ps --format json db redis minio 2>/dev/null \
+              | grep -c '"healthy"' || true)
+            [ "$healthy" -ge 3 ] && echo "All infra services healthy" && break
+            echo "  Attempt $i/30 — $healthy/3 healthy"
+            sleep 5
+          done
 
           # Start app services with new images
           docker compose -f compose.prod.yml --env-file .env.prod up -d --no-deps backend webhook-worker frontend
