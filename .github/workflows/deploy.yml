@@ -172,7 +172,11 @@ jobs:
             [ -n "$cid" ] && docker rm -f "$cid" || true
           done
 
-          # Start with new images
+          # Ensure infra services are running (db, redis, minio)
+          docker compose -f compose.prod.yml --env-file .env.prod up -d db redis minio
+          docker compose -f compose.prod.yml --env-file .env.prod wait db redis minio 2>/dev/null || sleep 15
+
+          # Start app services with new images
           docker compose -f compose.prod.yml --env-file .env.prod up -d --no-deps backend webhook-worker frontend
 
           echo "Deploy initiated: tag=$GHCR_IMAGE_TAG"
@@ -189,6 +193,15 @@ jobs:
           done
           echo "::error::Backend health check failed after 150s"
           exit 1
+
+      - name: Show container logs on failure
+        if: failure()
+        working-directory: /opt/projects/Project-FlowGrid
+        run: |
+          echo "=== Backend logs ==="
+          docker compose -f compose.prod.yml --env-file .env.prod logs --tail=50 backend 2>&1 || true
+          echo "=== Frontend logs ==="
+          docker compose -f compose.prod.yml --env-file .env.prod logs --tail=20 frontend 2>&1 || true
 
       - name: Show running containers
         if: always()
