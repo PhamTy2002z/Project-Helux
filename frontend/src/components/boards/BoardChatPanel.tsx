@@ -355,7 +355,10 @@ export const BoardChatPanel = memo(function BoardChatPanel({
               isLoading={messagesState.isLoading || sessionsState.isLoading}
               isLoadingOlder={messagesState.isLoadingOlder}
               isSending={messagesState.isSending}
-              isAwaitingReply={messagesState.isAwaitingReply || (messagesState.isSending === false && isAnyAgentActive(agents))}
+              isAwaitingReply={
+                messagesState.isAwaitingReply ||
+                (messagesState.isSending === false && isAnyAgentActive(agents))
+              }
               hasMore={messagesState.hasMore}
               error={messagesState.error}
               canWrite={canWrite}
