@@ -1,4 +1,4 @@
-name: project-helux
+name: visgniteai
 
 # ---------- shared config ----------
 x-logging: &default-logging
@@ -137,8 +137,8 @@ services:
       AUTH_MODE: ${AUTH_MODE}
       LOCAL_AUTH_TOKEN: ${LOCAL_AUTH_TOKEN}
       RQ_REDIS_URL: redis://redis:6379/0
-      WORKER_HEARTBEAT_KEY: ${WORKER_HEARTBEAT_KEY:-helux:worker:heartbeat}
-      READINESS_WORKER_HEARTBEAT_KEY: ${READINESS_WORKER_HEARTBEAT_KEY:-helux:worker:heartbeat}
+      WORKER_HEARTBEAT_KEY: ${WORKER_HEARTBEAT_KEY:-visgniteai:worker:heartbeat}
+      READINESS_WORKER_HEARTBEAT_KEY: ${READINESS_WORKER_HEARTBEAT_KEY:-visgniteai:worker:heartbeat}
       OBJECT_STORAGE_ENDPOINT: http://minio:9000
       OBJECT_STORAGE_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
       OBJECT_STORAGE_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin}
@@ -264,7 +264,7 @@ services:
       OBJECT_STORAGE_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin}
       OBJECT_STORAGE_BUCKET: ${OBJECT_STORAGE_BUCKET:-board-chat-files}
       OBJECT_STORAGE_USE_SSL: "false"
-      WORKER_HEARTBEAT_KEY: ${WORKER_HEARTBEAT_KEY:-helux:worker:heartbeat}
+      WORKER_HEARTBEAT_KEY: ${WORKER_HEARTBEAT_KEY:-visgniteai:worker:heartbeat}
       MANAGED_GATEWAY_URL: ws://openclaw:18789/ws
       MANAGED_GATEWAY_TOKEN: ${MANAGED_GATEWAY_TOKEN:-}
       OPENCLAW_GATEWAY_DEVICE_IDENTITY_PATH: /shared/device-identity/device.json
@@ -282,6 +282,7 @@ services:
     deploy:
       resources:
         limits:
+          cpus: "0.50"
           memory: 512M
 
 networks:
