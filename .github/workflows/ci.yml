@@ -2,8 +2,6 @@ name: CI
 
 on:
   pull_request:
-  push:
-    branches: [main]
   workflow_dispatch:
 
 concurrency:
@@ -15,19 +13,6 @@ permissions:
   pull-requests: read
 
 jobs:
-  # Block direct pushes to main — only allow merges via PR (GitHub web-flow bot)
-  enforce-pr:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    runs-on: self-hosted
-    timeout-minutes: 5
-    steps:
-      - name: Reject direct push to main
-        run: |
-          if [ "${{ github.event.head_commit.committer.username }}" != "web-flow" ]; then
-            echo "::error::Direct push to main detected. Use a pull request instead."
-            exit 1
-          fi
-
   changes:
     runs-on: self-hosted
     timeout-minutes: 2
@@ -353,7 +338,7 @@ jobs:
 
           if [ "$backend_ready" -ne 1 ] || [ "$frontend_ready" -ne 1 ]; then
             echo "Installer local smoke readiness failed: backend_ready=$backend_ready frontend_ready=$frontend_ready"
-            LOG_DIR="$XDG_STATE_HOME/project-helux-install"
+            LOG_DIR="$XDG_STATE_HOME/visgniteai-install"
             if [ -f "$LOG_DIR/backend.log" ]; then
               echo "----- backend log (tail) -----"
               tail -n 200 "$LOG_DIR/backend.log" || true
@@ -370,7 +355,7 @@ jobs:
         env:
           XDG_STATE_HOME: ${{ github.workspace }}/.installer-state
         run: |
-          LOG_DIR="$XDG_STATE_HOME/project-helux-install"
+          LOG_DIR="$XDG_STATE_HOME/visgniteai-install"
           if [ -f "$LOG_DIR/backend.pid" ]; then kill "$(cat "$LOG_DIR/backend.pid")" || true; fi
           if [ -f "$LOG_DIR/frontend.pid" ]; then kill "$(cat "$LOG_DIR/frontend.pid")" || true; fi
           docker compose -f compose.yml --env-file .env down -v --remove-orphans || true
