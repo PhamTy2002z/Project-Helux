@@ -42,7 +42,9 @@ jq -r '
   - Columns: METHOD, PATH, OP_ID, X_LLM_INTENT, X_WHEN_TO_USE, X_ROUTING_POLICY
 
 ## API discovery policy
-- Use operations tagged `{{ role_tag }}`.
+- Use **only** operations tagged `{{ role_tag }}`. These are under `/api/v1/agent/` prefix.
+- **Never** use `/api/v1/boards/` or `/api/v1/tasks/` endpoints — those require user auth, not agent auth.
+- Always include `-H "X-Agent-Token: $AUTH_TOKEN"` on every request.
 - Prefer operations whose `x-llm-intent` and `x-when-to-use` match the current objective.
 - Derive method/path/schema from `api/openapi.json` at runtime.
 - Do not hardcode endpoint paths in markdown files.

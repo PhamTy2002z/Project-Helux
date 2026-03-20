@@ -302,10 +302,14 @@ async def _notify_chat_targets(
             continue
         mentioned = matches_agent_mention(agent, mentions)
         header = "BOARD CHAT MENTION" if mentioned else "BOARD CHAT"
+        addressed_line = ""
+        if not mentioned and mentions:
+            addressed_line = f"Addressed to: @{', @'.join(sorted(mentions))}\n"
         message = (
             f"{header}\n"
             f"Board: {board.name}\n"
-            f"From: {actor_name}\n\n"
+            f"From: {actor_name}\n"
+            f"{addressed_line}\n"
             f"{snippet}"
             f"{file_block}\n\n"
             "Reply via board chat:\n"
