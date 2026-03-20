@@ -46,6 +46,7 @@ from app.services.webhooks.queue import TASK_TYPE as WEBHOOK_TASK_TYPE
 
 logger = get_logger(__name__)
 _WORKER_BLOCK_TIMEOUT_SECONDS = 5.0
+_DEQUEUE_ERROR_BACKOFF_SECONDS = 2.0
 
 
 @dataclass(frozen=True)
@@ -173,6 +174,7 @@ async def flush_queue(*, block: bool = False, block_timeout: float = 0) -> int:
                 "queue.worker.dequeue_failed",
                 extra={"queue_name": settings.rq_queue_name},
             )
+            await asyncio.sleep(_DEQUEUE_ERROR_BACKOFF_SECONDS)
             continue
 
         if task is None:

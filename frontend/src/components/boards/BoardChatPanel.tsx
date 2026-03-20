@@ -2,7 +2,7 @@ import { memo, useCallback, useEffect, useMemo, useState } from "react";
 
 import { ChevronDown, MessageSquare, Plus } from "lucide-react";
 
-import type { BoardMemoryRead } from "@/api/generated/model";
+import type { AgentRead, BoardMemoryRead } from "@/api/generated/model";
 import { BoardChatSessionList } from "@/components/boards/BoardChatSessionList";
 import { BoardChatThread } from "@/components/boards/BoardChatThread";
 import { Button } from "@/components/ui/button";
@@ -25,12 +25,26 @@ import type { MessageAttachment } from "@/lib/hooks/use-board-chat-messages";
 import { useBoardChatMessages } from "@/lib/hooks/use-board-chat-messages";
 import { useBoardChatSessions } from "@/lib/hooks/use-board-chat-sessions";
 
+/** Threshold (ms) — agent seen within this window is considered active. */
+const AGENT_ACTIVE_THRESHOLD_MS = 90_000;
+
+function isAnyAgentActive(agents: AgentRead[]): boolean {
+  const now = Date.now();
+  return agents.some((a) => {
+    if (a.status !== "online") return false;
+    if (!a.last_seen_at) return false;
+    const seenAt = new Date(a.last_seen_at).getTime();
+    return now - seenAt < AGENT_ACTIVE_THRESHOLD_MS;
+  });
+}
+
 type BoardChatPanelProps = {
   boardId: string | undefined;
   isOpen: boolean;
   canWrite: boolean;
   currentUserDisplayName: string;
   mentionSuggestions: string[];
+  agents?: AgentRead[];
   onClose: () => void;
   onMessageCreated: (message: BoardMemoryRead) => void;
   onError: (message: string) => void;
@@ -42,6 +56,7 @@ export const BoardChatPanel = memo(function BoardChatPanel({
   canWrite,
   currentUserDisplayName,
   mentionSuggestions,
+  agents = [],
   onClose,
   onMessageCreated,
   onError,
@@ -340,7 +355,10 @@ export const BoardChatPanel = memo(function BoardChatPanel({
               isLoading={messagesState.isLoading || sessionsState.isLoading}
               isLoadingOlder={messagesState.isLoadingOlder}
               isSending={messagesState.isSending}
-              isAwaitingReply={messagesState.isAwaitingReply}
+              isAwaitingReply={
+                messagesState.isAwaitingReply ||
+                (messagesState.isSending === false && isAnyAgentActive(agents))
+              }
               hasMore={messagesState.hasMore}
               error={messagesState.error}
               canWrite={canWrite}

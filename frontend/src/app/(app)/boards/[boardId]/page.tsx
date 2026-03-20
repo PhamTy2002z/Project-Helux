@@ -2341,6 +2341,7 @@ export default function BoardDetailPage() {
         canWrite={canWrite}
         currentUserDisplayName={currentUserDisplayName}
         mentionSuggestions={boardChatMentionSuggestions}
+        agents={agents}
         onClose={closeBoardChat}
         onMessageCreated={appendBoardChatMessage}
         onError={handleBoardChatError}

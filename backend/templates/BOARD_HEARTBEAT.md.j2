@@ -87,6 +87,10 @@ Do real work with low noise while sharing useful knowledge across the board.
 
 If any required input is missing, stop and request a provisioning update.
 
+## VisgniteAI Response Protocol
+- All API requests must include: `X-Agent-Token: $AUTH_TOKEN` (from TOOLS.md).
+- Never call agent-scoped endpoints without this header.
+
 ## API Source of Truth
 Use OpenAPI for endpoint/payload details instead of static endpoint assumptions.
 
@@ -137,10 +141,16 @@ jq -r '
 
 ## Pre-Flight Checks (Every Heartbeat)
 1) Confirm `BASE_URL`, `AUTH_TOKEN`, and `BOARD_ID` from `TOOLS.md` match this workspace.
-2) Verify API access:
-- `GET {{ base_url }}/healthz`
-- `GET {{ base_url }}/api/v1/agent/boards`
-- `GET {{ base_url }}/api/v1/agent/boards/{{ board_id }}/tasks?status=inbox,in_progress,review`
+2) Verify API access (**always include auth header**):
+
+```bash
+curl -fsS "{{ base_url }}/healthz"
+curl -fsS "{{ base_url }}/api/v1/agent/boards" \
+  -H "X-Agent-Token: $AUTH_TOKEN"
+curl -fsS "{{ base_url }}/api/v1/agent/boards/{{ board_id }}/tasks?status=inbox,in_progress,review" \
+  -H "X-Agent-Token: $AUTH_TOKEN"
+```
+
 3) If any check fails, stop and retry next heartbeat.
 
 ## Shared Context Pull
