@@ -1,4 +1,12 @@
-import { memo, useCallback, useEffect, useMemo, useState } from "react";
+import {
+  memo,
+  startTransition,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 import { ChevronDown, MessageSquare, Plus } from "lucide-react";
 
@@ -126,6 +134,8 @@ export const BoardChatPanel = memo(function BoardChatPanel({
     chatSessionId: effectiveActiveSessionId,
     enabled: isOpen && Boolean(effectiveActiveSessionId),
   });
+  const anyAgentActive = useMemo(() => isAnyAgentActive(agents), [agents]);
+
   const pendingUploads = filesState.pendingUploads;
   const pendingFileChips = useMemo(
     () =>
@@ -196,18 +206,25 @@ export const BoardChatPanel = memo(function BoardChatPanel({
     [filesState, onError],
   );
 
+  // Ref so handleSend stays stable (no pendingUploads in deps)
+  const pendingUploadsRef = useRef(pendingUploads);
+  pendingUploadsRef.current = pendingUploads;
+
   const handleSend = useCallback(
     async (content: string) => {
-      const fileIds = pendingUploads
-        .filter((u) => u.status === "ready" && u.fileId)
-        .map((u) => u.fileId!);
-      const attachments: MessageAttachment[] = pendingUploads
-        .filter((u) => u.status === "ready" && u.fileId)
-        .map((u) => ({
-          id: u.fileId!,
-          file_name: u.file.name,
-          status: "ready",
-        }));
+      // Single iteration to collect fileIds + attachments
+      const fileIds: string[] = [];
+      const attachments: MessageAttachment[] = [];
+      for (const u of pendingUploadsRef.current) {
+        if (u.status === "ready" && u.fileId) {
+          fileIds.push(u.fileId);
+          attachments.push({
+            id: u.fileId,
+            file_name: u.file.name,
+            status: "ready",
+          });
+        }
+      }
       const ok = await messagesState.sendMessage(
         content,
         fileIds.length ? fileIds : undefined,
@@ -221,12 +238,12 @@ export const BoardChatPanel = memo(function BoardChatPanel({
       }
       return ok;
     },
-    [filesState, messagesState, onError, pendingUploads, sessionsState],
+    [filesState, messagesState, onError, sessionsState],
   );
 
   const handleSelectSession = useCallback(
     (chatSessionId: string) => {
-      setActiveSessionId(chatSessionId);
+      startTransition(() => setActiveSessionId(chatSessionId));
       setIsSessionMenuOpen(false);
       triggerComposerFocus();
     },
@@ -357,7 +374,7 @@ export const BoardChatPanel = memo(function BoardChatPanel({
               isSending={messagesState.isSending}
               isAwaitingReply={
                 messagesState.isAwaitingReply ||
-                (messagesState.isSending === false && isAnyAgentActive(agents))
+                (messagesState.isSending === false && anyAgentActive)
               }
               hasMore={messagesState.hasMore}
               error={messagesState.error}

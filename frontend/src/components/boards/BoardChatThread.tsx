@@ -1,4 +1,4 @@
-import { memo, useEffect, useLayoutEffect, useRef } from "react";
+import { memo, useEffect, useLayoutEffect, useMemo, useRef } from "react";
 
 import { FileText } from "lucide-react";
 
@@ -100,7 +100,12 @@ const MessageCard = memo(function MessageCard({
 
   return (
     <div
-      className={cn("flex", isCurrentUser ? "justify-end" : "justify-start")}
+      className={cn(
+        "flex",
+        isCurrentUser ? "justify-end" : "justify-start",
+        /* content-visibility: skip layout/paint for off-screen messages */
+        "[content-visibility:auto] [contain-intrinsic-size:0_120px]",
+      )}
     >
       <div
         className={cn(
@@ -151,6 +156,33 @@ const MessageCard = memo(function MessageCard({
 });
 
 MessageCard.displayName = "MessageCard";
+
+/** Typing/awaiting-reply indicator — hoisted & memoized to avoid re-creating JSX. */
+const TypingIndicator = memo(function TypingIndicator({
+  isSending,
+}: {
+  isSending: boolean;
+}) {
+  return (
+    <div className="flex justify-start">
+      <div className="flex items-center gap-2 rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] px-4 py-3 shadow-sm">
+        <div
+          className="flex items-center gap-1.5"
+          role="status"
+          aria-label="Agent is typing"
+        >
+          <span className="h-1.5 w-1.5 rounded-full bg-[color:var(--text-quiet)] animate-typing-dot-1" />
+          <span className="h-1.5 w-1.5 rounded-full bg-[color:var(--text-quiet)] animate-typing-dot-2" />
+          <span className="h-1.5 w-1.5 rounded-full bg-[color:var(--text-quiet)] animate-typing-dot-3" />
+        </div>
+        <span className="text-xs text-quiet">
+          {isSending ? "Sending..." : "Awaiting reply..."}
+        </span>
+      </div>
+    </div>
+  );
+});
+TypingIndicator.displayName = "TypingIndicator";
 
 export const BoardChatThread = memo(function BoardChatThread({
   activeSessionId,
@@ -253,24 +285,8 @@ export const BoardChatThread = memo(function BoardChatThread({
           ))
         )}
 
-        {/* Typing indicator — visible while sending or awaiting agent reply */}
         {(isSending || isAwaitingReply) && (
-          <div className="flex justify-start">
-            <div className="flex items-center gap-2 rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] px-4 py-3 shadow-sm">
-              <div
-                className="flex items-center gap-1.5"
-                role="status"
-                aria-label="Agent is typing"
-              >
-                <span className="h-1.5 w-1.5 rounded-full bg-[color:var(--text-quiet)] animate-typing-dot-1" />
-                <span className="h-1.5 w-1.5 rounded-full bg-[color:var(--text-quiet)] animate-typing-dot-2" />
-                <span className="h-1.5 w-1.5 rounded-full bg-[color:var(--text-quiet)] animate-typing-dot-3" />
-              </div>
-              <span className="text-xs text-quiet">
-                {isSending ? "Sending..." : "Awaiting reply..."}
-              </span>
-            </div>
-          </div>
+          <TypingIndicator isSending={isSending} />
         )}
       </div>
 
