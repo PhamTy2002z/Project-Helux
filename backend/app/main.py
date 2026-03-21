@@ -481,10 +481,15 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
                 logger.info("app.lifecycle.workspace_templates.seeded count=%d", created)
     except Exception:
         logger.warning("app.lifecycle.workspace_templates.seed_failed", exc_info=True)
+    # Start exec approval auto-approve listener for managed gateway
+    from app.services.openclaw.exec_approval_listener import start_listener, stop_listener
+
+    start_listener()
     logger.info("app.lifecycle.started")
     try:
         yield
     finally:
+        await stop_listener()
         logger.info("app.lifecycle.stopped")
 
 
