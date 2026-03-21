@@ -100,17 +100,28 @@ const preserveExistingAttachments = (
 const upsertSortedMessage = (
   items: BoardMemoryRead[],
   incoming: BoardMemoryRead,
+  /** Optional id->index map for O(1) lookups; mutated in place on insert/update. */
+  idIndex?: Map<string, number>,
 ): BoardMemoryRead[] => {
-  const existingIndex = items.findIndex(
-    (message) => message.id === incoming.id,
-  );
+  const existingIndex = idIndex
+    ? (idIndex.get(incoming.id) ?? -1)
+    : items.findIndex((message) => message.id === incoming.id);
+
   if (existingIndex === -1) {
     const insertionIndex = findInsertionIndex(items, incoming);
-    return [
+    const result = [
       ...items.slice(0, insertionIndex),
       incoming,
       ...items.slice(insertionIndex),
     ];
+    // Update index: entries at/after insertionIndex shifted +1
+    if (idIndex) {
+      for (const [id, idx] of idIndex) {
+        if (idx >= insertionIndex) idIndex.set(id, idx + 1);
+      }
+      idIndex.set(incoming.id, insertionIndex);
+    }
+    return result;
   }
 
   if (items[existingIndex] === incoming) {
@@ -129,21 +140,31 @@ const upsertSortedMessage = (
     withoutExisting,
     normalizedIncoming,
   );
-  return [
+  const result = [
     ...withoutExisting.slice(0, insertionIndex),
     normalizedIncoming,
     ...withoutExisting.slice(insertionIndex),
   ];
+  // Rebuild id->index map from scratch (update is rare)
+  if (idIndex) {
+    idIndex.clear();
+    for (let i = 0; i < result.length; i++) idIndex.set(result[i].id, i);
+  }
+  return result;
 };
 
 const mergeMessagesById = (
   base: BoardMemoryRead[],
   ...collections: BoardMemoryRead[][]
 ): BoardMemoryRead[] => {
+  // Build id->index map once for O(1) lookups during merge
+  const idIndex = new Map<string, number>();
+  for (let i = 0; i < base.length; i++) idIndex.set(base[i].id, i);
+
   let merged = base;
   for (const collection of collections) {
     for (const message of collection) {
-      merged = upsertSortedMessage(merged, message);
+      merged = upsertSortedMessage(merged, message, idIndex);
     }
   }
   return merged;
