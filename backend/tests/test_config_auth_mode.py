@@ -137,6 +137,40 @@ def test_base_url_is_normalized_without_trailing_slash() -> None:
     assert settings.base_url == BASE_URL
 
 
+def test_production_requires_managed_gateway_token_when_auto_provision_enabled() -> None:
+    with pytest.raises(
+        ValidationError,
+        match=(
+            "MANAGED_GATEWAY_TOKEN must be set when MANAGED_GATEWAY_AUTO_PROVISION=true in production"
+        ),
+    ):
+        Settings(
+            _env_file=None,
+            environment="production",
+            auth_mode=AuthMode.LOCAL,
+            local_auth_token="a" * 50,
+            base_url=BASE_URL,
+            managed_gateway_auto_provision=True,
+            managed_gateway_url="ws://openclaw:18789/ws",
+            managed_gateway_token="",
+        )
+
+
+def test_production_allows_managed_gateway_auto_provision_with_token() -> None:
+    settings = Settings(
+        _env_file=None,
+        environment="production",
+        auth_mode=AuthMode.LOCAL,
+        local_auth_token="a" * 50,
+        base_url=BASE_URL,
+        managed_gateway_auto_provision=True,
+        managed_gateway_url="ws://openclaw:18789/ws",
+        managed_gateway_token="token-123",
+    )
+
+    assert settings.managed_gateway_token == "token-123"
+
+
 def test_resend_email_provider_requires_required_fields() -> None:
     with pytest.raises(
         ValidationError,

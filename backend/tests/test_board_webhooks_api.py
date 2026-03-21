@@ -288,3 +288,96 @@ async def test_ingest_board_webhook_rejects_disabled_endpoint(
         assert sent_messages == []
     finally:
         await engine.dispose()
+
+
+@pytest.mark.asyncio
+async def test_ingest_board_webhook_rejects_payload_too_large(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from app.core import config
+
+    engine = await _make_engine()
+    session_maker = async_sessionmaker(
+        engine,
+        class_=AsyncSession,
+        expire_on_commit=False,
+    )
+    app = _build_test_app(session_maker)
+
+    async with session_maker() as session:
+        board, webhook = await _seed_webhook(session, enabled=True)
+
+    monkeypatch.setattr(config.settings, "inbound_webhook_max_body_bytes", 16)
+
+    try:
+        async with AsyncClient(
+            transport=ASGITransport(app=app),
+            base_url="http://testserver",
+        ) as client:
+            response = await client.post(
+                f"/api/v1/boards/{board.id}/webhooks/{webhook.id}",
+                content=b"x" * 32,
+                headers={"content-type": "text/plain"},
+            )
+
+        assert response.status_code == 413
+        assert response.json() == {"detail": "Webhook payload too large."}
+
+        async with session_maker() as session:
+            stored_payloads = (
+                await session.exec(
+                    select(BoardWebhookPayload).where(col(BoardWebhookPayload.board_id) == board.id),
+                )
+            ).all()
+            stored_memory = (
+                await session.exec(
+                    select(BoardMemory).where(col(BoardMemory.board_id) == board.id),
+                )
+            ).all()
+            assert stored_payloads == []
+            assert stored_memory == []
+    finally:
+        await engine.dispose()
+
+
+@pytest.mark.asyncio
+async def test_ingest_board_webhook_truncates_large_preview_text(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from app.core import config
+
+    engine = await _make_engine()
+    session_maker = async_sessionmaker(
+        engine,
+        class_=AsyncSession,
+        expire_on_commit=False,
+    )
+    app = _build_test_app(session_maker)
+
+    async with session_maker() as session:
+        board, webhook = await _seed_webhook(session, enabled=True)
+
+    monkeypatch.setattr(config.settings, "inbound_webhook_max_body_bytes", 2048)
+    monkeypatch.setattr(config.settings, "inbound_webhook_preview_max_chars", 40)
+
+    try:
+        async with AsyncClient(
+            transport=ASGITransport(app=app),
+            base_url="http://testserver",
+        ) as client:
+            response = await client.post(
+                f"/api/v1/boards/{board.id}/webhooks/{webhook.id}",
+                json={"message": "abcdefghijklmnopqrstuvwxyz" * 5},
+            )
+        assert response.status_code == 202
+
+        async with session_maker() as session:
+            memory_items = (
+                await session.exec(
+                    select(BoardMemory).where(col(BoardMemory.board_id) == board.id),
+                )
+            ).all()
+            assert len(memory_items) == 1
+            assert "...[truncated" in memory_items[0].content
+    finally:
+        await engine.dispose()

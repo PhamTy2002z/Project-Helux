@@ -41,6 +41,7 @@ if [ ! -f "$ENV_FILE" ]; then
   PG_PASS=$(openssl rand -base64 24 | tr -d '/+=' | head -c 32)
   MINIO_PASS=$(openssl rand -base64 24 | tr -d '/+=' | head -c 32)
   AUTH_TOKEN=$(openssl rand -base64 48 | tr -d '/+=' | head -c 64)
+  MANAGED_GATEWAY_TOKEN=$(openssl rand -hex 24)
 
   cat > "$ENV_FILE" <<ENVEOF
 # VisgniteAI Production — visgnite.com
@@ -72,7 +73,11 @@ RATE_LIMIT_ENABLED=true
 # OpenClaw Gateway
 MANAGED_GATEWAY_AUTO_PROVISION=true
 MANAGED_GATEWAY_URL=ws://openclaw:18789/ws
-MANAGED_GATEWAY_TOKEN=
+MANAGED_GATEWAY_TOKEN=${MANAGED_GATEWAY_TOKEN}
+
+# Webhook hardening
+INBOUND_WEBHOOK_MAX_BODY_BYTES=262144
+INBOUND_WEBHOOK_PREVIEW_MAX_CHARS=4000
 
 # Worker
 WORKER_HEARTBEAT_KEY=mission-control:worker:heartbeat
@@ -121,8 +126,14 @@ cloudflared tunnel route dns visgniteai "api.${DOMAIN}" 2>/dev/null || true
 echo "    DNS route: api.${DOMAIN} → tunnel"
 
 # Restart tunnel
+systemctl enable cloudflared >/dev/null 2>&1 || true
 systemctl restart cloudflared
-echo "    cloudflared restarted"
+if ! systemctl is-active --quiet cloudflared; then
+  echo "    ERROR: cloudflared failed to start"
+  journalctl -u cloudflared -n 80 --no-pager || true
+  exit 1
+fi
+echo "    cloudflared restarted and active"
 
 # --- 4. Setup GitHub Actions self-hosted runner ---
 echo "==> [4/4] GitHub Actions runner setup"

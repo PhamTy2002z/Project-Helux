@@ -23,7 +23,7 @@ on:
 
 concurrency:
   group: deploy-production
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -170,6 +170,11 @@ jobs:
         run: |
           set -euo pipefail
 
+          if ! grep -Eq '^MANAGED_GATEWAY_TOKEN=.+$' .env.prod; then
+            echo "::error::MANAGED_GATEWAY_TOKEN is missing in .env.prod"
+            exit 1
+          fi
+
           # Pull new images (webhook-worker shares backend image)
           docker compose -f compose.prod.yml --env-file .env.prod pull backend frontend webhook-worker
 
@@ -200,17 +205,27 @@ jobs:
           echo "Deploy initiated: tag=$GHCR_IMAGE_TAG"
 
       - name: Verify deployment health
+        working-directory: /opt/projects/VisgniteAI
         run: |
           echo "Waiting for backend health check..."
           for i in $(seq 1 30); do
             if curl -fsS http://localhost:8000/healthz > /dev/null 2>&1; then
               echo "Backend is healthy"
-              exit 0
+              break
             fi
             sleep 5
           done
-          echo "::error::Backend health check failed after 150s"
-          exit 1
+
+          if ! curl -fsS http://localhost:8000/healthz > /dev/null 2>&1; then
+            echo "::error::Backend health check failed after 150s"
+            exit 1
+          fi
+
+          if docker compose -f compose.prod.yml --env-file .env.prod logs --since=2m openclaw \
+            | grep -q "reason=token_missing"; then
+            echo "::error::OpenClaw rejected backend auth with token_missing after deploy"
+            exit 1
+          fi
 
       - name: Show container logs on failure
         if: failure()

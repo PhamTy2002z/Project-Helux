@@ -51,6 +51,7 @@ UPGRADE_MODAL_EVENT_TYPE = "saas.billing.simulated.upgrade_modal_open"
 CHECKOUT_SUCCESS_EVENT_TYPE = "saas.billing.simulated.checkout_succeeded"
 CHECKOUT_FAILURE_EVENT_TYPE = "saas.billing.simulated.checkout_failed"
 TRIAL_BLOCKED_EVENT_TYPE = "saas.plan.expired.blocked"
+TASK_REVIEW_SLA_ENQUEUE_FAILED_EVENT_TYPE = "task.review_sla_enqueue_failed"
 _RUNTIME_TYPE_REFERENCES = (UUID, AsyncSession)
 RANGE_QUERY = Query(default="24h")
 BOARD_ID_QUERY = Query(default=None)
@@ -414,6 +415,45 @@ async def _task_status_counts(
     return counts
 
 
+async def _review_overdue_tasks(
+    session: AsyncSession,
+    board_ids: list[UUID],
+) -> int:
+    if not board_ids:
+        return 0
+    statement = (
+        select(func.count())
+        .where(col(Task.board_id).in_(board_ids))
+        .where(col(Task.status) == "review")
+        .where(col(Task.review_due_at).is_not(None))
+        .where(col(Task.review_due_at) < utcnow())
+    )
+    return int((await session.exec(statement)).one() or 0)
+
+
+async def _median_review_wait_minutes(
+    session: AsyncSession,
+    board_ids: list[UUID],
+) -> float | None:
+    if not board_ids:
+        return None
+    wait_minutes = func.extract("epoch", utcnow() - sql_cast(Task.review_entered_at, DateTime)) / 60.0
+    statement = (
+        select(func.percentile_cont(0.5).within_group(wait_minutes))
+        .where(col(Task.board_id).in_(board_ids))
+        .where(col(Task.status) == "review")
+        .where(col(Task.review_entered_at).is_not(None))
+    )
+    value = (await session.exec(statement)).one_or_none()
+    if value is None:
+        return None
+    if isinstance(value, tuple):
+        value = value[0]
+    if value is None:
+        return None
+    return float(value)
+
+
 async def _pending_approvals_snapshot(
     session: AsyncSession,
     board_ids: list[UUID],
@@ -577,6 +617,7 @@ async def dashboard_metrics(
         inbox_tasks=task_status_counts["inbox"],
         in_progress_tasks=task_status_counts["in_progress"],
         review_tasks=task_status_counts["review"],
+        review_overdue_tasks=await _review_overdue_tasks(session, board_ids),
         done_tasks=task_status_counts["done"],
         error_rate_pct=await _error_rate_kpi(session, primary, board_ids),
         median_cycle_time_hours_7d=await _median_cycle_time_for_range(
@@ -584,6 +625,7 @@ async def dashboard_metrics(
             primary,
             board_ids,
         ),
+        median_review_wait_minutes=await _median_review_wait_minutes(session, board_ids),
     )
 
     return DashboardMetrics(
@@ -676,6 +718,12 @@ async def tenant_slo_metrics(
         error_rate_pct=await _error_rate_kpi(session, primary, board_ids),
         median_cycle_time_hours=await _median_cycle_time_for_range(session, primary, board_ids),
         approval_queue_lag_seconds=await _pending_approval_queue_lag_seconds(session, board_ids),
+        review_sla_enqueue_failed_count=await _count_org_event_type(
+            session,
+            organization_id=ctx.organization.id,
+            event_type=TASK_REVIEW_SLA_ENQUEUE_FAILED_EVENT_TYPE,
+            range_spec=primary,
+        ),
         quota_usage=await get_entitlement_usage(session, organization_id=ctx.organization.id),
     )
 

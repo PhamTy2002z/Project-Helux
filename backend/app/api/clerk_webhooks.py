@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter, Request, status
+from fastapi import APIRouter, HTTPException, Request, status
 from fastapi.responses import JSONResponse
 
 from app.core.auth_mode import AuthMode
@@ -14,6 +14,47 @@ from app.services.email.welcome_email_queue import enqueue_welcome_email_send
 
 logger = get_logger(__name__)
 router = APIRouter(prefix="/webhooks", tags=["webhooks"])
+_WEBHOOK_TOO_LARGE_DETAIL = "Webhook payload too large."
+
+
+def _content_length_or_none(request: Request) -> int | None:
+    raw = request.headers.get("content-length")
+    if not raw:
+        return None
+    try:
+        value = int(raw)
+    except (TypeError, ValueError):
+        return None
+    if value < 0:
+        return None
+    return value
+
+
+async def _read_webhook_body_limited(request: Request) -> bytes:
+    max_bytes = int(settings.inbound_webhook_max_body_bytes)
+    if max_bytes <= 0:
+        return await request.body()
+
+    content_length = _content_length_or_none(request)
+    if content_length is not None and content_length > max_bytes:
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail=_WEBHOOK_TOO_LARGE_DETAIL,
+        )
+
+    chunks: list[bytes] = []
+    total_bytes = 0
+    async for chunk in request.stream():
+        if not chunk:
+            continue
+        total_bytes += len(chunk)
+        if total_bytes > max_bytes:
+            raise HTTPException(
+                status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                detail=_WEBHOOK_TOO_LARGE_DETAIL,
+            )
+        chunks.append(chunk)
+    return b"".join(chunks)
 
 
 @router.post("/clerk")
@@ -35,7 +76,7 @@ async def handle_clerk_webhook(request: Request) -> JSONResponse:
         )
 
     # Read raw body for Svix signature verification
-    body = await request.body()
+    body = await _read_webhook_body_limited(request)
     headers: dict[str, str] = {
         "svix-id": request.headers.get("svix-id", ""),
         "svix-timestamp": request.headers.get("svix-timestamp", ""),

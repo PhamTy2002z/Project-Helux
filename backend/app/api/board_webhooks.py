@@ -46,6 +46,7 @@ BOARD_USER_READ_DEP = Depends(get_board_for_user_read)
 BOARD_USER_WRITE_DEP = Depends(get_board_for_user_write)
 BOARD_OR_404_DEP = Depends(get_board_or_404)
 logger = get_logger(__name__)
+_WEBHOOK_TOO_LARGE_DETAIL = "Webhook payload too large."
 
 
 def _webhook_endpoint_path(board_id: UUID, webhook_id: UUID) -> str:
@@ -160,6 +161,46 @@ def _decode_payload(
     return body_text
 
 
+def _content_length_or_none(request: Request) -> int | None:
+    raw = request.headers.get("content-length")
+    if not raw:
+        return None
+    try:
+        value = int(raw)
+    except (TypeError, ValueError):
+        return None
+    if value < 0:
+        return None
+    return value
+
+
+async def _read_webhook_body_limited(request: Request) -> bytes:
+    max_bytes = int(settings.inbound_webhook_max_body_bytes)
+    if max_bytes <= 0:
+        return await request.body()
+
+    content_length = _content_length_or_none(request)
+    if content_length is not None and content_length > max_bytes:
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail=_WEBHOOK_TOO_LARGE_DETAIL,
+        )
+
+    chunks: list[bytes] = []
+    total_bytes = 0
+    async for chunk in request.stream():
+        if not chunk:
+            continue
+        total_bytes += len(chunk)
+        if total_bytes > max_bytes:
+            raise HTTPException(
+                status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                detail=_WEBHOOK_TOO_LARGE_DETAIL,
+            )
+        chunks.append(chunk)
+    return b"".join(chunks)
+
+
 def _captured_headers(request: Request) -> dict[str, str] | None:
     captured: dict[str, str] = {}
     for header, value in request.headers.items():
@@ -179,6 +220,10 @@ def _payload_preview(
             preview = json.dumps(value, indent=2, ensure_ascii=True)
         except TypeError:
             preview = str(value)
+    max_chars = int(settings.inbound_webhook_preview_max_chars)
+    if max_chars > 0 and len(preview) > max_chars:
+        truncated_chars = len(preview) - max_chars
+        return f"{preview[:max_chars]}\n\n...[truncated {truncated_chars} chars]"
     return preview
 
 
@@ -457,10 +502,8 @@ async def ingest_board_webhook(
 
     content_type = request.headers.get("content-type")
     headers = _captured_headers(request)
-    payload_value = _decode_payload(
-        await request.body(),
-        content_type=content_type,
-    )
+    raw_body = await _read_webhook_body_limited(request)
+    payload_value = _decode_payload(raw_body, content_type=content_type)
     payload = BoardWebhookPayload(
         board_id=board.id,
         webhook_id=webhook.id,

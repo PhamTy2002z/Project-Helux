@@ -127,6 +127,38 @@ async def test_bootstrap_reuses_existing_gateway_and_backfills_main_agent(
 
 
 @pytest.mark.asyncio
+async def test_bootstrap_reconciles_managed_gateway_token_on_existing_record(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _patch_managed_settings(monkeypatch)
+    session_maker = await _build_session_maker()
+    org_id = uuid4()
+    gateway_id = uuid4()
+
+    async with session_maker() as session:
+        await _create_org(session, org_id)
+        session.add(
+            Gateway(
+                id=gateway_id,
+                organization_id=org_id,
+                name="Managed Gateway",
+                url="ws://gateway.example:18789/ws",
+                token="stale-token",
+                workspace_root=f"/srv/openclaw/managed/org-{org_id}",
+            ),
+        )
+        await session.commit()
+
+        gateway = await ensure_managed_gateway_for_organization(session, organization_id=org_id)
+        assert gateway is not None
+        await session.commit()
+
+        reloaded_gateway = await Gateway.objects.by_id(gateway_id).first(session)
+        assert reloaded_gateway is not None
+        assert reloaded_gateway.token == "token-123"
+
+
+@pytest.mark.asyncio
 async def test_bootstrap_marks_gateway_degraded_when_enqueue_fails(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

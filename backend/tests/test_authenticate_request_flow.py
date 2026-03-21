@@ -7,7 +7,9 @@ from typing import Any
 
 import pytest
 from fastapi import HTTPException
+from starlette.datastructures import Headers
 
+from app.core import agent_auth
 from app.core import auth
 from app.core.auth_mode import AuthMode
 from app.core.auth_profile import AuthProfile
@@ -204,3 +206,34 @@ async def test_get_auth_context_clerk_mode_disables_local_fallback_in_saas_profi
         )
 
     assert exc_info.value.status_code == 401
+
+
+def test_agent_token_candidates_include_all_x_agent_token_headers() -> None:
+    request = SimpleNamespace(
+        headers=Headers(
+            raw=[
+                (b"x-agent-token", b"stale-token"),
+                (b"x-agent-token", b"fresh-token"),
+            ],
+        ),
+    )
+
+    out = agent_auth._resolve_agent_token_candidates(
+        request,  # type: ignore[arg-type]
+        agent_token="stale-token",
+        authorization=None,
+    )
+
+    assert out == ["stale-token", "fresh-token"]
+
+
+def test_agent_token_candidates_split_proxy_joined_values_and_keep_authorization() -> None:
+    request = SimpleNamespace(headers=Headers(raw=[(b"x-agent-token", b"bad-token, good-token")]))
+
+    out = agent_auth._resolve_agent_token_candidates(
+        request,  # type: ignore[arg-type]
+        agent_token="bad-token, good-token",
+        authorization="Bearer fallback-token",
+    )
+
+    assert out == ["bad-token", "good-token", "fallback-token"]

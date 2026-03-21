@@ -40,11 +40,25 @@ class Task(TenantScoped, table=True):
         foreign_key="users.id",
         index=True,
     )
+    owner_agent_id: UUID | None = Field(
+        default=None,
+        foreign_key="agents.id",
+        index=True,
+    )
+    reviewer_agent_id: UUID | None = Field(
+        default=None,
+        foreign_key="agents.id",
+        index=True,
+    )
     assigned_agent_id: UUID | None = Field(
         default=None,
         foreign_key="agents.id",
         index=True,
     )
+    review_entered_at: datetime | None = Field(default=None, index=True)
+    review_due_at: datetime | None = Field(default=None, index=True)
+    review_overdue_count: int = Field(default=0)
+    last_nudged_at: datetime | None = None
     auto_created: bool = Field(default=False)
     auto_reason: str | None = None
 

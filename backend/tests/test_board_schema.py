@@ -90,6 +90,7 @@ def test_board_rule_toggles_have_expected_defaults() -> None:
     assert created.require_approval_for_done is True
     assert created.require_review_before_done is False
     assert created.comment_required_for_review is False
+    assert created.review_sla_minutes == 20
     assert created.block_status_changes_with_pending_approval is False
     assert created.only_lead_can_change_status is False
     assert created.max_agents == 1
@@ -98,6 +99,7 @@ def test_board_rule_toggles_have_expected_defaults() -> None:
         require_approval_for_done=False,
         require_review_before_done=True,
         comment_required_for_review=True,
+        review_sla_minutes=45,
         block_status_changes_with_pending_approval=True,
         only_lead_can_change_status=True,
         max_agents=3,
@@ -105,6 +107,7 @@ def test_board_rule_toggles_have_expected_defaults() -> None:
     assert updated.require_approval_for_done is False
     assert updated.require_review_before_done is True
     assert updated.comment_required_for_review is True
+    assert updated.review_sla_minutes == 45
     assert updated.block_status_changes_with_pending_approval is True
     assert updated.only_lead_can_change_status is True
     assert updated.max_agents == 3
@@ -122,6 +125,17 @@ def test_board_max_agents_must_be_non_negative() -> None:
 
     with pytest.raises(ValueError):
         BoardUpdate(max_agents=-1)
+
+    with pytest.raises(ValueError):
+        BoardCreate(
+            name="Ops Board",
+            slug="ops-board",
+            description="Operations workflow board.",
+            review_sla_minutes=0,
+        )
+
+    with pytest.raises(ValueError):
+        BoardUpdate(review_sla_minutes=0)
 
 
 def test_onboarding_confirm_requires_goal_fields() -> None:

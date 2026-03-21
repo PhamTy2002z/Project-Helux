@@ -60,6 +60,36 @@ async def _find_agent_for_token(session: AsyncSession, token: str) -> Agent | No
     return None
 
 
+def _resolve_agent_token_candidates(
+    request: Request,
+    agent_token: str | None,
+    authorization: str | None,
+    *,
+    accept_authorization: bool = True,
+) -> list[str]:
+    values: list[str] = []
+    getlist = getattr(request.headers, "getlist", None)
+    if callable(getlist):
+        values.extend(getlist("x-agent-token"))
+    if agent_token and agent_token not in values:
+        values.insert(0, agent_token)
+    if accept_authorization and authorization:
+        value = authorization.strip()
+        if value.lower().startswith("bearer "):
+            values.append(value.split(" ", 1)[1].strip())
+
+    candidates: list[str] = []
+    seen: set[str] = set()
+    for raw in values:
+        for item in raw.split(","):
+            token = item.strip()
+            if not token or token in seen:
+                continue
+            seen.add(token)
+            candidates.append(token)
+    return candidates
+
+
 def _resolve_agent_token(
     agent_token: str | None,
     authorization: str | None,
@@ -114,12 +144,13 @@ async def get_agent_auth_context(
     session: AsyncSession = SESSION_DEP,
 ) -> AgentAuthContext:
     """Require and validate agent auth token from request headers."""
-    resolved = _resolve_agent_token(
+    candidates = _resolve_agent_token_candidates(
+        request,
         agent_token,
         authorization,
         accept_authorization=True,
     )
-    if not resolved:
+    if not candidates:
         logger.warning(
             "agent auth missing token path=%s x_agent=%s authorization=%s",
             request.url.path,
@@ -127,14 +158,23 @@ async def get_agent_auth_context(
             bool(authorization),
         )
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
-    agent = await _find_agent_for_token(session, resolved)
+
+    agent: Agent | None = None
+    for candidate in candidates:
+        matched = await _find_agent_for_token(session, candidate)
+        if matched is None:
+            continue
+        agent = matched
+        break
+
     if agent is None:
         logger.warning(
             "agent auth invalid token path=%s token_prefix=%s",
             request.url.path,
-            resolved[:6],
+            candidates[0][:6],
         )
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+
     await _touch_agent_presence(request, session, agent)
     return AgentAuthContext(actor_type="agent", agent=agent)
 
@@ -154,13 +194,14 @@ async def get_agent_auth_context_optional(
     a board or task via the shared `ACTOR_DEP` chain (e.g. PATCH /tasks/{id},
     POST /tasks/{id}/comments) when the caller used `Authorization: Bearer`.
     """
-    resolved = _resolve_agent_token(
+    candidates = _resolve_agent_token_candidates(
+        request,
         agent_token,
         authorization,
         accept_authorization=True,
     )
-    if not resolved:
-        if agent_token:
+    if not candidates:
+        if agent_token or authorization:
             logger.warning(
                 "agent auth optional missing token path=%s x_agent=%s authorization=%s",
                 request.url.path,
@@ -168,13 +209,21 @@ async def get_agent_auth_context_optional(
                 bool(authorization),
             )
         return None
-    agent = await _find_agent_for_token(session, resolved)
+
+    agent: Agent | None = None
+    for candidate in candidates:
+        matched = await _find_agent_for_token(session, candidate)
+        if matched is None:
+            continue
+        agent = matched
+        break
+
     if agent is None:
-        if agent_token:
+        if agent_token or authorization:
             logger.warning(
                 "agent auth optional invalid token path=%s token_prefix=%s",
                 request.url.path,
-                resolved[:6],
+                candidates[0][:6],
             )
         return None
     await _touch_agent_presence(request, session, agent)

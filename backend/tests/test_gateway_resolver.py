@@ -57,6 +57,19 @@ def test_gateway_client_config_maps_allow_insecure_tls() -> None:
     assert config.allow_insecure_tls is True
 
 
+def test_gateway_client_config_falls_back_to_managed_gateway_token(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr("app.core.config.settings.managed_gateway_url", "ws://openclaw:18789/ws")
+    monkeypatch.setattr("app.core.config.settings.managed_gateway_token", "managed-token")
+
+    config = gateway_client_config(
+        _gateway(disable_device_pairing=False, url="ws://openclaw:18789/ws", token="   "),
+    )
+
+    assert config.token == "managed-token"
+
+
 def test_optional_gateway_client_config_returns_none_for_missing_or_blank_url() -> None:
     assert optional_gateway_client_config(None) is None
     assert (

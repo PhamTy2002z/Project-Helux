@@ -4,9 +4,18 @@
 
 **Version**: 0.1.0 (Active Development)
 **Status**: Pre-release, under active development
-**Last Updated**: 2026-03-16
+**Last Updated**: 2026-03-21
 
 ## Recent Updates (March 2026)
+
+- ✅ **Task review SLA automation + lead nudge hardening complete** (2026-03-21):
+  - Added board-level `review_sla_minutes` configuration and task-level review tracking fields.
+  - Added review SLA queue + worker to enforce review deadlines with retry backoff.
+  - Added auto-reassign path from `review` to `inbox` after repeated missed review checks.
+  - Added lead comment fallback routing so untagged lead review comments notify the last worker.
+  - Added dashboard KPIs for review-overdue workload and median review wait.
+  - Added tenant-SLO alert metric `review_sla_enqueue_failed_count` from activity events.
+  - Added migration + regression tests for review tracking and worker behavior.
 
 - ✅ **Billing & Polar Integration Hardening Complete** (2026-03-16):
   - Implemented store-then-process webhook pattern with `polar_webhook_events` table
@@ -203,6 +212,7 @@
 - ✅ Agent configuration and metadata
 - ✅ Skills marketplace integration
 - ✅ Agent monitoring and status tracking
+- ✅ Task review SLA automation (deadline checks, lead nudge, auto-reassign)
 - ✅ OpenClaw gateway integration
 - ✅ Gateway WebSocket communication
 - ✅ Gateway health checks

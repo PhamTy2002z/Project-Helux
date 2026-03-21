@@ -283,3 +283,33 @@ class TestClerkWebhookEndpoint:
         assert response.status_code == 200
         assert response.json()["status"] == "ok"
         assert len(handler_calls) == 0  # Should not call handler for non-user.created
+
+    @pytest.mark.asyncio
+    async def test_returns_413_when_payload_too_large(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        from app.core import config
+
+        monkeypatch.setattr(config.settings, "auth_mode", AuthMode.CLERK)
+        monkeypatch.setattr(config.settings, "clerk_webhook_secret", "test-secret")
+        monkeypatch.setattr(config.settings, "inbound_webhook_max_body_bytes", 16)
+
+        app = _build_test_app()
+        async with AsyncClient(
+            transport=ASGITransport(app=app),
+            base_url="http://testserver",
+        ) as client:
+            response = await client.post(
+                "/webhooks/clerk",
+                content=b"x" * 32,
+                headers={
+                    "svix-id": "test-id",
+                    "svix-timestamp": "123456789",
+                    "svix-signature": "test-sig",
+                    "content-type": "application/json",
+                },
+            )
+
+        assert response.status_code == 413
+        assert response.json() == {"detail": "Webhook payload too large."}
