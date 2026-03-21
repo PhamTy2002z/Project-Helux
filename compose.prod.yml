@@ -143,6 +143,9 @@ services:
       - ./openclaw:/data/config
     ports:
       - "0.0.0.0:18789:18789"
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     networks:
       - internal
     healthcheck:
@@ -285,6 +288,9 @@ services:
       OBJECT_STORAGE_USE_SSL: "false"
       WORKER_HEARTBEAT_KEY: ${WORKER_HEARTBEAT_KEY:-mission-control:worker:heartbeat}
       OPENCLAW_GATEWAY_DEVICE_IDENTITY_PATH: /shared/device-identity/device.json
+      MANAGED_GATEWAY_URL: ws://openclaw:18789/ws
+      MANAGED_GATEWAY_TOKEN: ${MANAGED_GATEWAY_TOKEN:-}
+      MANAGED_GATEWAY_DISABLE_DEVICE_PAIRING: ${MANAGED_GATEWAY_DISABLE_DEVICE_PAIRING:-false}
       BILLING_MODE: ${BILLING_MODE:-simulated}
       PAYMENT_PROVIDER: ${PAYMENT_PROVIDER:-none}
       POLAR_ACCESS_TOKEN: ${POLAR_ACCESS_TOKEN:-}

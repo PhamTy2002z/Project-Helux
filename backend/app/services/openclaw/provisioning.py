@@ -981,6 +981,13 @@ class BaseAgentLifecycleManager(ABC):
         if workspace_template_files:
             rendered.update(workspace_template_files)
 
+        # Inject .curlrc so curl auto-includes X-Agent-Token header.
+        # LLM agents often omit auth headers; this ensures every curl
+        # request carries the correct token without relying on LLM behavior.
+        auth_token = context.get("auth_token", "")
+        if auth_token:
+            rendered[".curlrc"] = f'-H "X-Agent-Token: {auth_token}"'
+
         await self._set_agent_files(
             agent=agent,
             agent_id=agent_id,
