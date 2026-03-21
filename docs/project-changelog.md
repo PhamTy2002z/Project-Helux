@@ -1,5 +1,19 @@
 # Project Changelog
 
+## 2026-03-22
+
+### Production reliability and delivery flow hardening
+
+- Integrated task review SLA system into production deployment workflow
+- Hardened billing enforcement across all entitlement tiers
+- Enhanced gateway activation flow with compatibility checking
+- Improved error handling and retry logic in background workers
+- Updated OpenClaw Docker configuration for managed workspace consistency
+- Added comprehensive observability for SLA compliance and billing health
+- Validated migration scripts and database schema consistency checks
+
+---
+
 ## 2026-03-21
 
 ### Task review SLA automation + lead nudging hardening

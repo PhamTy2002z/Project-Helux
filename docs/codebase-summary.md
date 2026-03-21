@@ -9,19 +9,20 @@ VisgniteAI is a full-stack web application with FastAPI backend, Next.js fronten
 ### Backend (Python)
 - **Total Python Files**: ~1,899 files
 - **Core Application Files**: ~150 files (excluding migrations, tests, cache)
-- **API Routes**: 30 route modules (activity, agents, approvals, auth, billing, board-chat, board-groups, board-memory, board-onboarding, board-webhooks, boards, gateways, metrics, onboarding-progress, organizations, skills-marketplace, souls-directory, tags, task-custom-fields, tasks, users, workspace-templates)
-- **Database Models**: 39 SQLModel models + CASCADE delete migration for AgentTokenDailyUsage
-- **Service Modules**: 19 core services + 30+ OpenClaw integration services + email services
-- **Email Services**: Resend provider integration with async queue + worker
+- **API Routes**: 31 route modules (activity, agents, approvals, auth, billing, board-chat, board-groups, board-memory, board-onboarding, board-webhooks, boards, gateways, metrics, onboarding-progress, organizations, skills-marketplace, souls-directory, tags, task-custom-fields, tasks, users, workspace-templates, billing-portal-session, board-chat-sessions, board-chat-files, board-chat-file-reports)
+- **Database Models**: 41 SQLModel models (agents, boards, tasks, approvals, organizations, gateways, tags, board-chat-sessions, board-chat-files, etc.)
+- **Service Modules**: 50+ modules (19 core services + 26 OpenClaw integration modules + email/billing services)
+- **Email Services**: Resend provider integration with async queue + worker for invites/notifications
+- **Billing Services**: Polar integration with webhook processing, customer portal, payment enforcement
 - **Primary Language**: Python 3.12
 - **Framework**: FastAPI 0.131.0
 
 ### Frontend (TypeScript/React)
-- **Total TypeScript Files**: ~411 files
-- **Pages**: 40+ routes using Next.js App Router
-- **Components**: 200+ React components (atomic design + domain-specific)
+- **Total TypeScript Files**: ~617 files
+- **Pages**: 40+ routes using Next.js App Router with (app) and (public) route groups
+- **Components**: 141 React components (atomic design + domain-specific)
 - **API Client Modules**: 30+ generated API endpoints via Orval
-- **New Components**: BrandLoader (animated SVG), BrandMark variations, useSidebarCollapse hook
+- **Key Features**: Boards with planning overlay, board chat multi-session, agents, approvals, workspace templates, activity feed, metrics dashboard
 - **Primary Language**: TypeScript 5
 - **Framework**: Next.js 16.1.6, React 19.2.4
 
@@ -99,12 +100,14 @@ GitHub Actions             - CI/CD pipeline
 ```
 backend/
 ├── app/
-│   ├── api/               # API route handlers (29 modules)
+│   ├── api/               # API route handlers (31 modules)
 │   │   ├── activity.py
-│   │   ├── agent.py       # Primary agent operations (69KB)
+│   │   ├── agent.py       # Primary agent operations (3,279 LOC)
 │   │   ├── agents.py
 │   │   ├── approvals.py
 │   │   ├── auth.py
+│   │   ├── billing.py     # Polar billing integration
+│   │   ├── board_chat.py  # Board chat sessions + file upload
 │   │   ├── board_groups.py
 │   │   ├── board_memory.py
 │   │   ├── board_onboarding.py
@@ -114,11 +117,11 @@ backend/
 │   │   ├── gateway.py
 │   │   ├── metrics.py
 │   │   ├── organizations.py
-│   │   ├── skills_marketplace.py (45KB)
+│   │   ├── skills_marketplace.py (1,338 LOC)
 │   │   ├── souls_directory.py
 │   │   ├── tags.py
 │   │   ├── task_custom_fields.py
-│   │   ├── tasks.py       # Primary task operations (86KB)
+│   │   ├── tasks.py       # Primary task operations (3,279 LOC)
 │   │   ├── users.py
 │   │   ├── workspace_templates.py # Template CRUD operations
 │   │   └── deps.py        # Dependency injection
@@ -129,7 +132,7 @@ backend/
 │   ├── db/                # Database configuration
 │   │   ├── session.py     # Async session management
 │   │   └── base.py        # Base model imports
-│   ├── models/            # SQLModel database models (39 models)
+│   ├── models/            # SQLModel database models (41 models)
 │   │   ├── activity_events.py
 │   │   ├── agent_token_daily_usage.py
 │   │   ├── agents.py
@@ -168,29 +171,34 @@ backend/
 │   │   └── workspace_templates.py
 │   ├── schemas/           # Pydantic schemas (30 modules)
 │   │   └── [request/response schemas]
-│   ├── services/          # Business logic (19+ modules)
+│   ├── services/          # Business logic (50+ modules)
 │   │   ├── activity_log.py
 │   │   ├── admin_access.py
 │   │   ├── approval_task_links.py
 │   │   ├── board_group_snapshot.py
 │   │   ├── board_lifecycle.py
 │   │   ├── board_snapshot.py
+│   │   ├── billing/       # Billing & Polar integration (7 modules)
+│   │   ├── email/         # Email delivery (9 modules with Resend)
 │   │   ├── lead_policy.py
 │   │   ├── mentions.py
-│   │   ├── organizations.py (19KB)
+│   │   ├── organizations.py
 │   │   ├── queue.py
 │   │   ├── queue_worker.py
+│   │   ├── task_review_sla_queue.py    # Task review SLA deadline tracking
+│   │   ├── task_review_sla_worker.py   # Review deadline enforcement
 │   │   ├── souls_directory.py
 │   │   ├── tags.py
 │   │   ├── task_dependencies.py
-│   │   ├── openclaw/      # OpenClaw integration (20+ modules)
+│   │   ├── token_ledger.py             # Agent daily token quota tracking
+│   │   ├── openclaw/      # OpenClaw integration (26 modules)
 │   │   │   ├── gateway_rpc.py
 │   │   │   ├── lifecycle_orchestrator.py
 │   │   │   ├── provisioning.py
 │   │   │   ├── provisioning_db.py
 │   │   │   └── internal/
-│   │   └── webhooks/      # Webhook handlers
-│   └── main.py            # FastAPI application entry (19KB)
+│   │   └── webhooks/      # Webhook handlers (Svix, Polar)
+│   └── main.py            # FastAPI application entry
 ├── migrations/            # Alembic migrations
 ├── scripts/               # Utility scripts
 ├── tests/                 # Test suite
@@ -232,38 +240,43 @@ frontend/
 │   │   │   └── layout.tsx
 │   │   ├── (public)/      # Public routes (no auth required)
 │   │   │   ├── sign-in/
+│   │   │   ├── checkout/  # Billing checkout with Polar
 │   │   │   └── layout.tsx
 │   │   ├── api/           # API routes (server-side)
 │   │   │   └── local-auth/
 │   │   ├── layout.tsx
 │   │   ├── page.tsx
 │   │   └── globals.css
-│   ├── components/        # React components (atomic design)
-│   │   ├── atoms/         # Basic UI elements
-│   │   ├── molecules/     # Composite components
-│   │   ├── organisms/     # Complex components
+│   ├── components/        # React components (141 total, atomic design)
+│   │   ├── atoms/         # Basic UI elements (buttons, inputs)
+│   │   ├── molecules/     # Composite components (form fields, cards)
+│   │   ├── organisms/     # Complex components (forms, tables, overlays)
 │   │   ├── templates/     # Page templates
 │   │   ├── ui/            # Radix UI wrappers
 │   │   ├── activity/
 │   │   ├── agents/
 │   │   ├── approvals/
 │   │   ├── auth/
-│   │   ├── boards/
+│   │   ├── billing/       # Billing, upgrade modal, settings
+│   │   ├── boards/        # Board planning overlay, task grouping
+│   │   ├── board-chat/    # Multi-session chat, file upload UI
 │   │   ├── board-groups/
-│   │   ├── charts/
+│   │   ├── charts/        # Data visualization (Recharts)
 │   │   ├── gateways/
 │   │   ├── organization/
-│   │   ├── providers/
+│   │   ├── providers/     # Context providers (theme, auth, query)
 │   │   ├── skills/
 │   │   ├── tables/
 │   │   └── tags/
 │   ├── lib/               # Utility libraries
-│   │   ├── api/           # Generated API client (26 modules)
+│   │   ├── api/           # Generated API client (30+ modules)
 │   │   │   ├── activity/
 │   │   │   ├── agents/
 │   │   │   ├── approvals/
 │   │   │   ├── auth/
+│   │   │   ├── billing/
 │   │   │   ├── boards/
+│   │   │   ├── board-chat/
 │   │   │   ├── board-groups/
 │   │   │   ├── gateways/
 │   │   │   ├── metrics/
@@ -274,11 +287,13 @@ frontend/
 │   │   │   └── users/
 │   │   ├── api-base-server.ts # Server-side API base with auth handling
 │   │   ├── api-base.ts    # Client-side API base
-│   │   ├── sse-parser.ts  # Server-sent event buffer parser
+│   │   ├── sse-parser.ts  # Server-sent event buffer parser for SSE streaming
+│   │   ├── sse-stream.ts  # useSSEStream hook with exponential backoff
 │   │   ├── query-policy.ts # React Query default policies
+│   │   ├── boards/        # Board overlay logic (filter, cursor, pagination)
 │   │   ├── utils.ts
 │   │   └── constants.ts
-│   ├── hooks/             # Custom React hooks
+│   ├── hooks/             # Custom React hooks (useSSEStream, useSidebarCollapse, etc.)
 │   ├── types/             # TypeScript type definitions
 │   └── auth/              # Authentication utilities
 ├── public/                # Static assets
@@ -396,19 +411,29 @@ frontend/
 - `/api/v1/metrics/board-overlay` - Board overlay latency, filter usage, cursor pagination stats, agent loop regression markers
 - `/api/v1/metrics/quotas` - Token usage ledger aggregation per agent with plan tier
 - `/api/v1/metrics/saas-billing-health` - Trial expiry, subscription status, entitlement enforcement events
+- `/api/v1/metrics/tenant-slo` - Task review SLA enqueue failures and other SLO metrics
 - `/api/v1/metrics` - General system metrics endpoint
 - `/api/v1/billing/support/timeline` - Billing event history for debugging
-- `/api/v1/onboarding/progress/me` - Step-based onboarding checklist completion
+- `/api/v1/billing/portal-session` - Polar customer portal session (checkout, subscription management)
 - `/api/v1/billing/me/subscription` - Current subscription status and trial details
+- `/api/v1/onboarding/progress/me` - Step-based onboarding checklist completion
 
 ### Feature Flags & Canary Targeting
 - `board_planning_overlay_v1` - Board overlay UX with saved views, density modes, compression (board/org-level canary)
 - `board_query_v2` - New cursor pagination task query endpoint
 
 ### Email & Notifications
-- `EMAIL_PROVIDER=resend` - Enable Resend email provider for organization invites
-- Async queue integration: `organization_invite_email_send` job handler with retry/backoff
+- `EMAIL_PROVIDER=resend` - Enable Resend email provider for invites/notifications
+- Async queue tasks:
+  - `organization_invite_email_send` - Invitations with deterministic idempotency
+  - `billing_email_send` - Upgrade/trial warning/payment failure notifications
 - Admin resend endpoint: `POST /api/v1/organizations/me/invites/{invite_id}/resend`
+
+### Task Review SLA
+- `boards.review_sla_minutes` - Board-level SLA configuration (1..240 minutes, default 20)
+- Async queue task: `task_review_sla_check` - Deadline enforcement with lead nudge and auto-reassign
+- Dashboard KPIs: `review_overdue_tasks`, `median_review_wait_minutes`
+- Observability metric: `review_sla_enqueue_failed_count` from activity events
 
 ## Unresolved Questions
 
