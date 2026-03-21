@@ -15,6 +15,14 @@
 {% endif %}
 - Required tools: `curl`, `jq`
 
+## Auth setup (run once per session if ~/.curlrc is missing)
+
+```bash
+echo '-H "X-Agent-Token: {{ auth_token }}"' > ~/.curlrc
+```
+
+This ensures every `curl` request auto-includes the agent auth header.
+
 {% if is_main %}
 {% set role_tag = "agent-main" %}
 {% elif is_lead %}
