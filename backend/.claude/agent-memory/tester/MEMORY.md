@@ -1,4 +1,15 @@
-# Tester Agent Memory - Project Helux Backend
+# Tester Agent Memory - VisgniteAI Backend
+
+## Phase 5: GoClaw Cutover Test Status (Current)
+
+**Status**: OpenClaw deleted, 27 test files uncollectable, 29/545 collectable tests failing
+
+See: phase5-goclaw-cutover-status.md for full details
+
+**Quick Fixes Needed**:
+1. Add GOCLAW_GATEWAY_TOKEN to tests/conftest.py (fixes 7 failures)
+2. Rewrite test_integration-phase3.py for Phase 5 (fixes 3 failures)
+3. Locate BoardOnboardingMessagingService (fixes 7 failures)
 
 ## Phase 7: Cost-Based Quota Testing (Complete)
 

@@ -1,8 +1,8 @@
 # Tester Agent Memory
 
 ## Project Context
-- **Project:** Project-Helux (full-stack agent coordination platform)
-- **Repo Root:** /Users/typham/Documents/GitHub/Project-Helux
+- **Project:** VisgniteAI (full-stack agent coordination platform)
+- **Repo Root:** /Users/typham/Dev/VisgniteAI
 - **Backend:** FastAPI + SQLAlchemy (Python)
 - **Focus Areas:** Phase 6 (board-chat-file-upload), quota enforcement, webhook dispatch
 
@@ -18,7 +18,7 @@
 - **Base Command:** `python -m pytest tests/ -v --tb=line`
 - **Config File:** `pyproject.toml` with pytest section
 - **Conftest Location:** `tests/conftest.py`
-- **Reports Location:** `/Users/typham/Documents/GitHub/Project-Helux/plans/reports/`
+- **Reports Location:** `/Users/typham/Dev/VisgniteAI/plans/reports/`
 
 ## Critical Configuration Issue (FIXED)
 **Problem:** `tests/conftest.py` was setting only `AUTH_MODE=local` but not `AUTH_PROFILE`, causing validation errors when `.env` had `AUTH_PROFILE=saas` and `AUTH_MODE=clerk`.
@@ -60,7 +60,7 @@ BOARD_CHAT_FILE_ALLOWED_TYPES=txt,md,csv,json,pdf
 ```
 
 ## Key Locations
-- Backend: `/Users/typham/Documents/GitHub/Project-Helux/backend/`
+- Backend: `/Users/typham/Dev/VisgniteAI/backend/`
 - Tests: `backend/tests/`
 - Config: `backend/app/core/config.py`
 - Conftest: `backend/tests/conftest.py`
