@@ -210,9 +210,7 @@ async def _run_listener() -> None:
                 from urllib.parse import urlencode, urlparse, urlunparse
 
                 parsed = urlparse(ws_url)
-                ws_url = str(
-                    urlunparse(parsed._replace(query=urlencode({"token": token})))
-                )
+                ws_url = str(urlunparse(parsed._replace(query=urlencode({"token": token}))))
 
             async with websockets.connect(
                 ws_url,
