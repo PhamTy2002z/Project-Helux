@@ -41,6 +41,9 @@ from app.services.openclaw.lifecycle_queue import TASK_TYPE as LIFECYCLE_RECONCI
 from app.services.openclaw.lifecycle_queue import requeue_lifecycle_queue_task
 from app.services.openclaw.lifecycle_reconcile import process_lifecycle_queue_task
 from app.services.queue import QueuedTask, dequeue_task
+from app.services.task_review_sla_queue import TASK_TYPE as TASK_REVIEW_SLA_TASK_TYPE
+from app.services.task_review_sla_queue import requeue_task_review_sla_deadline
+from app.services.task_review_sla_worker import process_task_review_sla_deadline_task
 from app.services.webhooks.dispatch import process_webhook_queue_task, requeue_webhook_queue_task
 from app.services.webhooks.queue import TASK_TYPE as WEBHOOK_TASK_TYPE
 
@@ -112,6 +115,14 @@ _TASK_HANDLERS: dict[str, _TaskHandler] = {
             settings.rq_dispatch_retry_max_seconds,
         ),
         requeue=lambda task, delay: requeue_deadline_task(task, delay_seconds=delay),
+    ),
+    TASK_REVIEW_SLA_TASK_TYPE: _TaskHandler(
+        handler=process_task_review_sla_deadline_task,
+        attempts_to_delay=lambda attempts: min(
+            settings.rq_dispatch_retry_base_seconds * (2 ** max(0, attempts)),
+            settings.rq_dispatch_retry_max_seconds,
+        ),
+        requeue=lambda task, delay: requeue_task_review_sla_deadline(task, delay_seconds=delay),
     ),
     WEBHOOK_TASK_TYPE: _TaskHandler(
         handler=process_webhook_queue_task,

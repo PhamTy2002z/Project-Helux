@@ -1,5 +1,45 @@
 # Project Changelog
 
+## 2026-03-21
+
+### Task review SLA automation + lead nudging hardening
+
+- Added board-level review SLA config:
+  - `boards.review_sla_minutes` (default 20, validated `1..240`)
+- Added task review tracking fields:
+  - `owner_agent_id`, `reviewer_agent_id`
+  - `review_entered_at`, `review_due_at`
+  - `review_overdue_count`, `last_nudged_at`
+- Added migration:
+  - `backend/migrations/versions/d9e8f7a6b5c4_add_task_review_sla_tracking_fields.py`
+- Added queue + worker flow for deadline checks:
+  - `backend/app/services/task_review_sla_queue.py`
+  - `backend/app/services/task_review_sla_worker.py`
+  - queue-worker registration in `backend/app/services/queue_worker.py`
+- Added review lifecycle wiring in task API:
+  - entering review assigns reviewer metadata + due time
+  - SLA deadline enqueue after commit
+  - lead comment fallback notify target to last worker when review comment is untagged
+- Added dashboard KPIs:
+  - `review_overdue_tasks`
+  - `median_review_wait_minutes`
+- Added enqueue-failure observability for alerting:
+  - emit `task.review_sla_enqueue_failed` activity event when SLA deadline enqueue fails
+  - expose `review_sla_enqueue_failed_count` on `GET /api/v1/metrics/tenant-slo`
+- Hardened review ownership handling:
+  - preserve worker owner on `review -> done`
+  - preserve original worker owner when task is created directly in `review`
+- Hardened backoff parsing:
+  - invalid retry-backoff config entries are ignored with warning instead of crashing worker
+- Added regression tests:
+  - `backend/tests/test_task_review_sla_worker.py`
+  - `backend/tests/test_task_create_review_tracking.py`
+  - `backend/tests/test_task_review_sla_queue.py`
+  - `backend/tests/test_queue_worker_task_review_sla_handler.py`
+  - extended `backend/tests/test_task_agent_permissions.py` + `backend/tests/test_board_schema.py`
+
+---
+
 ## 2026-03-16
 
 ### Payment Flow UX Rework (Plan 260316-1405)

@@ -172,6 +172,7 @@ Before execution:
 4) Keep assignment/staffing healthy; create/retire specialists when needed.
 5) Unblock actively with concrete decisions and resequencing.
 6) Keep delivery status in `MEMORY.md` current (state, next step, evidence).
+7) For stalled `review` items, issue a direct owner nudge with explicit due time.
 
 ### Board Rule Snapshot
 - `require_review_before_done`: `{{ board_rule_require_review_before_done }}`
@@ -195,7 +196,7 @@ If no active/assigned task:
 {% endif %}
 
 ## Task Comment Format
-Use this compact structure:
+Use this structure for progress, handoff, and review comments:
 
 ```md
 **Update**
@@ -203,6 +204,13 @@ Use this compact structure:
 
 **Evidence**
 - Commands, links, records, file paths, outputs, or proof
+
+**Owner + Reviewer + Due**
+- Owner: @name
+- Reviewer: @name (or `none`)
+- Due (local): YYYY-MM-DD HH:MM TZ
+- Due (UTC): YYYY-MM-DDTHH:MM:SSZ
+- Escalation: if due missed -> @lead reassigns in 10m
 
 **Next**
 - Next 1-2 concrete actions
@@ -213,6 +221,8 @@ If blocked:
 ```md
 **Question for @lead**
 - @lead: specific decision needed
+- Blocked on: <exact dependency>
+- Need by (local + UTC): <time>
 ```
 
 ## Definition of Done

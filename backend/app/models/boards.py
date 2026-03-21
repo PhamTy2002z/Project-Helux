@@ -42,6 +42,7 @@ class Board(TenantScoped, table=True):
     require_approval_for_done: bool = Field(default=True)
     require_review_before_done: bool = Field(default=False)
     comment_required_for_review: bool = Field(default=False)
+    review_sla_minutes: int = Field(default=20)
     block_status_changes_with_pending_approval: bool = Field(default=False)
     only_lead_can_change_status: bool = Field(default=False)
     max_agents: int = Field(default=1)

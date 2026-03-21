@@ -70,9 +70,11 @@ class DashboardKpis(SQLModel):
     inbox_tasks: int
     in_progress_tasks: int
     review_tasks: int
+    review_overdue_tasks: int
     done_tasks: int
     error_rate_pct: float
     median_cycle_time_hours_7d: float | None
+    median_review_wait_minutes: float | None
 
 
 class DashboardPendingApproval(SQLModel):
@@ -117,6 +119,7 @@ class TenantSloMetrics(SQLModel):
     error_rate_pct: float
     median_cycle_time_hours: float | None
     approval_queue_lag_seconds: float
+    review_sla_enqueue_failed_count: int
     quota_usage: EntitlementUsageRead
 
 

@@ -34,6 +34,13 @@ def _managed_gateway_token() -> str | None:
     return token or None
 
 
+def _is_managed_gateway_record(gateway: Gateway, *, expected_url: str) -> bool:
+    return (
+        (gateway.url or "").strip() == expected_url
+        and (gateway.name or "").strip() == settings.managed_gateway_name.strip()
+    )
+
+
 async def _find_org_gateway(session: AsyncSession, organization_id: UUID) -> Gateway | None:
     return (
         await Gateway.objects.filter_by(organization_id=organization_id)
@@ -79,6 +86,17 @@ async def ensure_managed_gateway_for_organization(
     gateway = await _find_org_gateway(session, organization_id)
     service = GatewayAdminLifecycleService(session)
     if gateway is not None:
+        managed_token = _managed_gateway_token()
+        if _is_managed_gateway_record(gateway, expected_url=gateway_url):
+            current_token = (gateway.token or "").strip() or None
+            if managed_token and current_token != managed_token:
+                gateway.token = managed_token
+                session.add(gateway)
+                logger.info(
+                    "managed.gateway.bootstrap.token_reconciled organization_id=%s gateway_id=%s",
+                    organization_id,
+                    gateway.id,
+                )
         if not await _has_main_agent(session, gateway.id):
             await service.upsert_main_agent_record(gateway)
         return gateway

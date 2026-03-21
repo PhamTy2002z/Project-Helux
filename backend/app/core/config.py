@@ -131,6 +131,11 @@ class Settings(BaseSettings):
     board_chat_file_report_max_retries: int = Field(default=2, ge=0)
     board_chat_file_report_retry_backoff_seconds: str = "30,120"
 
+    # Task review SLA retry / escalation policy
+    task_review_sla_retry_backoff_seconds: str = "600,1200"
+    task_review_sla_auto_reassign_after: int = Field(default=3, ge=1)
+    task_review_sla_queue_max_retries: int = Field(default=3, ge=0)
+
     # Shared knowledge publication
     board_chat_file_publish_group_memory: bool = False
 
@@ -146,6 +151,8 @@ class Settings(BaseSettings):
     rate_limit_prefix: str = "api-rl"
     rate_limit_ip_limit_per_minute: int = Field(default=240, ge=1)
     rate_limit_actor_limit_per_minute: int = Field(default=480, ge=1)
+    inbound_webhook_max_body_bytes: int = Field(default=262_144, ge=1_024)
+    inbound_webhook_preview_max_chars: int = Field(default=4_000, ge=0)
     billing_mode: str = "simulated"
     payment_provider: str = "none"
 
@@ -202,6 +209,15 @@ class Settings(BaseSettings):
         self.managed_gateway_url = self.managed_gateway_url.strip()
         self.managed_gateway_token = self.managed_gateway_token.strip()
         self.managed_gateway_workspace_root = self.managed_gateway_workspace_root.strip()
+        if (
+            self.environment.strip().lower() == "production"
+            and self.managed_gateway_auto_provision
+            and self.managed_gateway_url
+            and not self.managed_gateway_token
+        ):
+            raise ValueError(
+                "MANAGED_GATEWAY_TOKEN must be set when MANAGED_GATEWAY_AUTO_PROVISION=true in production.",
+            )
         self.board_planning_overlay_v1_canary_board_ids = (
             self.board_planning_overlay_v1_canary_board_ids.strip()
         )
@@ -210,6 +226,9 @@ class Settings(BaseSettings):
         )
         self.board_query_v2_canary_board_ids = self.board_query_v2_canary_board_ids.strip()
         self.board_query_v2_canary_org_ids = self.board_query_v2_canary_org_ids.strip()
+        self.task_review_sla_retry_backoff_seconds = (
+            self.task_review_sla_retry_backoff_seconds.strip() or "600,1200"
+        )
         self.billing_mode = self.billing_mode.strip().lower()
         if self.billing_mode not in BILLING_MODES:
             raise ValueError("BILLING_MODE must be one of: simulated, provider.")

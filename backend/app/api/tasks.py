@@ -8,7 +8,7 @@ import binascii
 import json
 from collections import deque
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from time import perf_counter
 from typing import TYPE_CHECKING, cast
 from uuid import UUID
@@ -29,6 +29,7 @@ from app.api.deps import (
     require_admin_auth,
     require_admin_or_agent,
 )
+from app.core.logging import get_logger
 from app.core.time import utcnow
 from app.db import crud
 from app.db.pagination import paginate
@@ -80,6 +81,7 @@ from app.services.task_dependencies import (
     replace_task_dependencies,
     validate_dependency_update,
 )
+from app.services.task_review_sla_queue import enqueue_task_review_sla_deadline
 from app.services.tenant_invariants import require_agent_in_board
 
 if TYPE_CHECKING:
@@ -93,6 +95,8 @@ if TYPE_CHECKING:
     from app.models.users import User
 
 router = APIRouter(prefix="/boards/{board_id}/tasks", tags=["tasks"])
+logger = get_logger(__name__)
+TASK_REVIEW_SLA_ENQUEUE_FAILED_EVENT_TYPE = "task.review_sla_enqueue_failed"
 
 ALLOWED_STATUSES = {"inbox", "in_progress", "review", "done"}
 TASK_EVENT_TYPES = {
@@ -1797,6 +1801,7 @@ async def create_task(
     if task.created_by_user_id is None and auth.user is not None:
         task.created_by_user_id = auth.user.id
 
+    original_assigned_agent_id = task.assigned_agent_id
     if task.assigned_agent_id is not None:
         await require_agent_in_board(
             session,
@@ -1804,6 +1809,27 @@ async def create_task(
             board_id=board.id,
             organization_id=board.organization_id,
         )
+        if task.status != "review":
+            task.owner_agent_id = task.assigned_agent_id
+    if task.status == "review":
+        lead = (
+            await Agent.objects.filter_by(board_id=board.id)
+            .filter(col(Agent.is_board_lead).is_(True))
+            .first(session)
+        )
+        task.assigned_agent_id = lead.id if lead is not None else None
+        task.reviewer_agent_id = task.assigned_agent_id
+        task.owner_agent_id = (
+            original_assigned_agent_id
+            if original_assigned_agent_id != task.assigned_agent_id
+            else None
+        )
+        task.review_entered_at = utcnow()
+        task.review_due_at = task.review_entered_at + timedelta(
+            minutes=max(board.review_sla_minutes, 1)
+        )
+        task.review_overdue_count = 0
+        task.last_nudged_at = None
 
     normalized_deps = await validate_dependency_update(
         session,
@@ -1851,6 +1877,8 @@ async def create_task(
     )
     await session.commit()
     await session.refresh(task)
+    if task.status == "review":
+        await _schedule_review_sla_deadline(session, task=task)
 
     record_activity(
         session,
@@ -2119,10 +2147,50 @@ async def _comment_targets(
         )
         if assigned_agent:
             targets[assigned_agent.id] = assigned_agent
+    if not mention_names:
+        review_fallback = await _review_lead_comment_target(
+            session,
+            task=task,
+            actor=actor,
+        )
+        if review_fallback is not None:
+            targets[review_fallback.id] = review_fallback
 
     if actor.actor_type == "agent" and actor.agent:
         targets.pop(actor.agent.id, None)
     return targets, mention_names
+
+
+async def _review_lead_comment_target(
+    session: AsyncSession,
+    *,
+    task: Task,
+    actor: ActorContext,
+) -> Agent | None:
+    """Route untagged lead review comments back to the last worker assignee.
+
+    In review, tasks are assigned to lead. Without this fallback, an untagged
+    lead comment can target only the lead (then be removed as self-target),
+    causing no worker notification.
+    """
+    if (
+        actor.actor_type != "agent"
+        or actor.agent is None
+        or not actor.agent.is_board_lead
+        or task.status != "review"
+        or task.board_id is None
+        or task.assigned_agent_id != actor.agent.id
+    ):
+        return None
+    worker_id = await _last_worker_who_moved_task_to_review(
+        session,
+        task_id=task.id,
+        board_id=task.board_id,
+        lead_agent_id=actor.agent.id,
+    )
+    if worker_id is None:
+        return None
+    return await Agent.objects.by_id(worker_id).first(session)
 
 
 @dataclass(frozen=True, slots=True)
@@ -2655,6 +2723,7 @@ async def _apply_lead_task_update(
         target_status=update.task.status,
     )
     await _assign_review_task_to_lead(session, update=update)
+    entered_review = await _apply_review_tracking(session, update=update)
 
     if normalized_tag_ids is not None:
         await replace_tags(
@@ -2691,6 +2760,8 @@ async def _apply_lead_task_update(
     )
     await session.commit()
     await session.refresh(update.task)
+    if entered_review:
+        await _schedule_review_sla_deadline(session, task=update.task)
     await _lead_notify_new_assignee(session, update=update)
     return await _task_read_response(
         session,
@@ -2935,6 +3006,80 @@ async def _assign_review_task_to_lead(
     update.task.assigned_agent_id = lead.id
 
 
+async def _board_review_sla_minutes(session: AsyncSession, *, board_id: UUID) -> int:
+    value = (
+        await session.exec(select(col(Board.review_sla_minutes)).where(col(Board.id) == board_id))
+    ).first()
+    if value is None:
+        return 20
+    return max(int(value), 1)
+
+
+async def _apply_review_tracking(
+    session: AsyncSession,
+    *,
+    update: _TaskUpdateInput,
+) -> bool:
+    entered_review = update.previous_status != "review" and update.task.status == "review"
+    exited_review = update.previous_status == "review" and update.task.status != "review"
+
+    if entered_review:
+        now = utcnow()
+        review_sla_minutes = await _board_review_sla_minutes(session, board_id=update.board_id)
+        update.task.owner_agent_id = (
+            update.previous_assigned if update.previous_assigned != update.task.assigned_agent_id else None
+        )
+        update.task.reviewer_agent_id = update.task.assigned_agent_id
+        update.task.review_entered_at = now
+        update.task.review_due_at = now + timedelta(minutes=review_sla_minutes)
+        update.task.review_overdue_count = 0
+        update.task.last_nudged_at = None
+        return True
+
+    if exited_review:
+        update.task.reviewer_agent_id = None
+        update.task.review_entered_at = None
+        update.task.review_due_at = None
+        update.task.review_overdue_count = 0
+        update.task.last_nudged_at = None
+        # Preserve owner on review->done. Only rewrite owner when lead sends task
+        # back to inbox and explicitly re-assigns a worker.
+        if update.task.status == "inbox" and update.task.assigned_agent_id is not None:
+            update.task.owner_agent_id = update.task.assigned_agent_id
+        return False
+
+    if update.task.status in {"in_progress", "inbox"} and update.task.assigned_agent_id is not None:
+        update.task.owner_agent_id = update.task.assigned_agent_id
+    return False
+
+
+async def _schedule_review_sla_deadline(
+    session: AsyncSession,
+    *,
+    task: Task,
+) -> bool:
+    if task.review_due_at is None:
+        return True
+    delay_seconds = max((task.review_due_at - utcnow()).total_seconds(), 0.0)
+    if enqueue_task_review_sla_deadline(task.id, delay_seconds=delay_seconds):
+        return True
+    logger.warning(
+        "task.review_sla.enqueue_failed",
+        extra={"task_id": str(task.id), "delay_seconds": delay_seconds},
+    )
+    if task.board_id is not None and task.organization_id is not None:
+        record_activity(
+            session,
+            event_type=TASK_REVIEW_SLA_ENQUEUE_FAILED_EVENT_TYPE,
+            task_id=task.id,
+            board_id=task.board_id,
+            organization_id=task.organization_id,
+            message="Review SLA deadline enqueue failed; deadline check not scheduled.",
+        )
+        await session.commit()
+    return False
+
+
 async def _notify_task_update_assignment_changes(
     session: AsyncSession,
     *,
@@ -3031,8 +3176,6 @@ async def _finalize_updated_task(
         previous_status=update.previous_status,
         target_status=update.task.status,
     )
-    update.task.updated_at = utcnow()
-
     status_raw = update.updates.get("status")
     # Entering review can require a new comment or valid recent context when
     # the board-level rule is enabled.
@@ -3055,6 +3198,8 @@ async def _finalize_updated_task(
         ):
             raise _comment_validation_error()
     await _assign_review_task_to_lead(session, update=update)
+    entered_review = await _apply_review_tracking(session, update=update)
+    update.task.updated_at = utcnow()
 
     if update.tag_ids is not None:
         normalized = (
@@ -3082,6 +3227,8 @@ async def _finalize_updated_task(
     session.add(update.task)
     await session.commit()
     await session.refresh(update.task)
+    if entered_review:
+        await _schedule_review_sla_deadline(session, task=update.task)
     await _record_task_comment_from_update(session, update=update)
     await _record_task_update_activity(session, update=update)
     await _notify_task_update_assignment_changes(session, update=update)

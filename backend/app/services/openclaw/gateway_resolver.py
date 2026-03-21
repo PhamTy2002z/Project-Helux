@@ -15,12 +15,24 @@ from typing import TYPE_CHECKING
 
 from fastapi import HTTPException, status
 
+from app.core.config import settings
 from app.models.boards import Board
 from app.models.gateways import Gateway
 from app.services.openclaw.gateway_rpc import GatewayConfig as GatewayClientConfig
 
 if TYPE_CHECKING:
     from sqlmodel.ext.asyncio.session import AsyncSession
+
+
+def _resolved_gateway_token(gateway: Gateway, *, url: str) -> str | None:
+    token = (gateway.token or "").strip()
+    if token:
+        return token
+    managed_url = settings.managed_gateway_url.strip()
+    managed_token = settings.managed_gateway_token.strip()
+    if managed_token and managed_url and url == managed_url:
+        return managed_token
+    return None
 
 
 def gateway_client_config(gateway: Gateway) -> GatewayClientConfig:
@@ -31,7 +43,7 @@ def gateway_client_config(gateway: Gateway) -> GatewayClientConfig:
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="Gateway url is required",
         )
-    token = (gateway.token or "").strip() or None
+    token = _resolved_gateway_token(gateway, url=url)
     return GatewayClientConfig(
         url=url,
         token=token,
@@ -47,7 +59,7 @@ def optional_gateway_client_config(gateway: Gateway | None) -> GatewayClientConf
     url = (gateway.url or "").strip()
     if not url:
         return None
-    token = (gateway.token or "").strip() or None
+    token = _resolved_gateway_token(gateway, url=url)
     return GatewayClientConfig(
         url=url,
         token=token,

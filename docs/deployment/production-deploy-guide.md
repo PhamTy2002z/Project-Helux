@@ -416,7 +416,7 @@ docker build -t ghcr.io/phamty2002z/visgniteai-backend:latest -f backend/Dockerf
 env $(grep -E '^NEXT_PUBLIC_' frontend/.env | xargs) \
   docker compose --profile docker-frontend build frontend
 
-docker tag project-helux-frontend:latest ghcr.io/phamty2002z/visgniteai-frontend:latest
+docker tag visgniteai-frontend:latest ghcr.io/phamty2002z/visgniteai-frontend:latest
 
 # Push
 docker push ghcr.io/phamty2002z/visgniteai-backend:latest
