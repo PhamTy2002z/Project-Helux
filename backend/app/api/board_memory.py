@@ -242,9 +242,9 @@ def _agent_reply_instructions(*, base_url: str, board_id: UUID, memory: BoardMem
         f"POST {endpoint}\n"
         f"Body: {body}\n"
         "Use AUTH_TOKEN from TOOLS.md/USER.md and include header:\n"
-        'X-Agent-Token: $AUTH_TOKEN\n'
+        "X-Agent-Token: $AUTH_TOKEN\n"
         "Example:\n"
-        f"curl -s -X POST \"{endpoint}\" "
+        f'curl -s -X POST "{endpoint}" '
         '-H "X-Agent-Token: $AUTH_TOKEN" '
         '-H "Content-Type: application/json" '
         f"-d '{body}'"
