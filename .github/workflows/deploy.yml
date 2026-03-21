@@ -1,6 +1,11 @@
 name: Deploy
 
 on:
+  # Auto-deploy after CI passes on main
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [main]
   workflow_dispatch:
     inputs:
       environment:
@@ -29,6 +34,10 @@ env:
 
 jobs:
   build-backend:
+    # Skip if triggered by workflow_run and CI failed
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
     runs-on: self-hosted
     timeout-minutes: 15
     outputs:
@@ -75,6 +84,9 @@ jobs:
           cache-to: type=registry,ref=${{ steps.meta.outputs.image }}:buildcache,mode=max
 
   build-frontend:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
     runs-on: self-hosted
     timeout-minutes: 15
     outputs:
