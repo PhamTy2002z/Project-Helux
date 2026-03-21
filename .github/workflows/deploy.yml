@@ -15,6 +15,11 @@ on:
         type: choice
         options:
           - production
+      no_cache:
+        description: "Skip Docker build cache (use when secrets changed)"
+        required: false
+        default: false
+        type: boolean
 
 concurrency:
   group: deploy-production
@@ -69,6 +74,7 @@ jobs:
           context: .
           file: backend/Dockerfile
           push: true
+          no-cache: ${{ inputs.no_cache == true }}
           tags: |
             ${{ steps.meta.outputs.image }}:${{ steps.meta.outputs.version }}
             ${{ steps.meta.outputs.image }}:latest
@@ -118,6 +124,7 @@ jobs:
           context: ./frontend
           file: frontend/Dockerfile
           push: true
+          no-cache: ${{ inputs.no_cache == true }}
           build-args: |
             NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
             NEXT_PUBLIC_AUTH_MODE=${{ secrets.NEXT_PUBLIC_AUTH_MODE || 'local' }}
