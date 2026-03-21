@@ -150,7 +150,12 @@ jobs:
 
       - name: Sync project files
         working-directory: /opt/projects/VisgniteAI
-        run: git pull --ff-only origin main
+        run: |
+          git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git"
+          git fetch origin main
+          git reset --hard origin/main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Pull and restart containers
         working-directory: /opt/projects/VisgniteAI
