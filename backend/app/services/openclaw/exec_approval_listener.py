@@ -118,12 +118,16 @@ async def _handle_connect(ws: websockets.ClientConnection) -> None:
         pass
 
     connect_id = str(uuid4())
-    await ws.send(json.dumps({
-        "type": "req",
-        "id": connect_id,
-        "method": "connect",
-        "params": _build_connect_params(connect_nonce=connect_nonce),
-    }))
+    await ws.send(
+        json.dumps(
+            {
+                "type": "req",
+                "id": connect_id,
+                "method": "connect",
+                "params": _build_connect_params(connect_nonce=connect_nonce),
+            }
+        )
+    )
 
     # Wait for connect response
     deadline = asyncio.get_running_loop().time() + 10
@@ -145,15 +149,19 @@ async def _auto_resolve(
 ) -> None:
     """Send exec.approval.resolve with allow=true for a pending approval."""
     resolve_id = str(uuid4())
-    await ws.send(json.dumps({
-        "type": "req",
-        "id": resolve_id,
-        "method": "exec.approval.resolve",
-        "params": {
-            "approvalId": approval_id,
-            "decision": "allow",
-        },
-    }))
+    await ws.send(
+        json.dumps(
+            {
+                "type": "req",
+                "id": resolve_id,
+                "method": "exec.approval.resolve",
+                "params": {
+                    "approvalId": approval_id,
+                    "decision": "allow",
+                },
+            }
+        )
+    )
     logger.info(
         "exec_approval_listener.auto_resolved approval_id=%s",
         approval_id,
@@ -202,7 +210,9 @@ async def _run_listener() -> None:
                 from urllib.parse import urlencode, urlparse, urlunparse
 
                 parsed = urlparse(ws_url)
-                ws_url = str(urlunparse(parsed._replace(query=urlencode({"token": token}))))
+                ws_url = str(
+                    urlunparse(parsed._replace(query=urlencode({"token": token})))
+                )
 
             async with websockets.connect(
                 ws_url,

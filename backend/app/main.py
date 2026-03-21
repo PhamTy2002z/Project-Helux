@@ -295,14 +295,18 @@ def _example_from_schema(schema: dict[str, Any], *, components: dict[str, Any]) 
             for key, property_schema in properties.items():
                 if not isinstance(property_schema, dict):
                     continue
-                property_example = _example_from_schema(property_schema, components=components)
+                property_example = _example_from_schema(
+                    property_schema, components=components
+                )
                 if property_example is not None:
                     output[key] = property_example
         if output:
             return output
         additional_properties = resolved.get("additionalProperties")
         if isinstance(additional_properties, dict):
-            value_example = _example_from_schema(additional_properties, components=components)
+            value_example = _example_from_schema(
+                additional_properties, components=components
+            )
             if value_example is not None:
                 return {"key": value_example}
         return {}
@@ -388,7 +392,10 @@ def _normalize_operation_docs(
         if not isinstance(response, dict):
             continue
         existing_description = str(response.get("description", "")).strip()
-        if not existing_description or existing_description in _GENERIC_RESPONSE_DESCRIPTIONS:
+        if (
+            not existing_description
+            or existing_description in _GENERIC_RESPONSE_DESCRIPTIONS
+        ):
             response["description"] = _HTTP_RESPONSE_DESCRIPTIONS.get(
                 str(status_code),
                 "Request processed.",
@@ -422,7 +429,9 @@ def _inject_tagged_operation_openapi_docs(openapi_schema: dict[str, Any]) -> Non
             if isinstance(request_body, dict):
                 request_content = request_body.get("content")
                 if isinstance(request_content, dict):
-                    _inject_json_content_example(content=request_content, components=components)
+                    _inject_json_content_example(
+                        content=request_content, components=components
+                    )
 
             responses = operation.get("responses")
             if isinstance(responses, dict):
@@ -478,11 +487,16 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
         async with async_session_maker() as seed_session:
             created = await ensure_seed_templates(seed_session)
             if created:
-                logger.info("app.lifecycle.workspace_templates.seeded count=%d", created)
+                logger.info(
+                    "app.lifecycle.workspace_templates.seeded count=%d", created
+                )
     except Exception:
         logger.warning("app.lifecycle.workspace_templates.seed_failed", exc_info=True)
     # Start exec approval auto-approve listener for managed gateway
-    from app.services.openclaw.exec_approval_listener import start_listener, stop_listener
+    from app.services.openclaw.exec_approval_listener import (
+        start_listener,
+        stop_listener,
+    )
 
     start_listener()
     logger.info("app.lifecycle.started")
@@ -581,7 +595,9 @@ def healthz() -> HealthStatusResponse:
 async def readyz(response: Response) -> ReadinessStatusResponse:
     """Readiness probe endpoint for service orchestration checks."""
     ready, checks, checked_at = await evaluate_readiness()
-    response.status_code = status.HTTP_200_OK if ready else status.HTTP_503_SERVICE_UNAVAILABLE
+    response.status_code = (
+        status.HTTP_200_OK if ready else status.HTTP_503_SERVICE_UNAVAILABLE
+    )
     return ReadinessStatusResponse(
         ok=ready,
         checked_at=checked_at,
