@@ -9,7 +9,10 @@ const SHORT_CONTENT_MAX_CHARS = 280;
 const MENTION_PATTERN =
   /(^|[^A-Za-z0-9_])(@[A-Za-z0-9_](?:[A-Za-z0-9_.-]*[A-Za-z0-9_])?)/g;
 const HEAVY_MARKDOWN_PATTERN =
-  /(^|\n)\s*(#{1,6}\s|>|\* |\d+\.\s|- |\|.+\||```|~~~)|\[[^\]]+\]\([^)]+\)|`|~~|^\s*[-*]\s\[[ xX]\]/m;
+  /(^|\n)\s*(#{1,6}\s|>|\* |\+ |\d+\.\s|- |\|.+\||```|~~~|[-*_]{3,}\s*$)|\[[^\]]+\]\([^)]+\)|`|~~|^\s*[-*+]\s\[[ xX]\]/m;
+const INLINE_MARKDOWN_PATTERN =
+  /(\*\*[^*\n]+\*\*)|(__[^_\n]+__)|(^|[^A-Za-z0-9])\*[^*\n]+\*(?=[^A-Za-z0-9]|$)|(^|[^A-Za-z0-9])_[^_\n]+_(?=[^A-Za-z0-9]|$)/m;
+const URL_PATTERN = /\bhttps?:\/\/[^\s<>()]+/i;
 
 const normalizeLiteContent = (
   content: string,
@@ -35,6 +38,8 @@ export const shouldRenderMarkdownLite = (
   if (variant === "description") return false;
   if (normalized.length > SHORT_CONTENT_MAX_CHARS) return false;
   if (HEAVY_MARKDOWN_PATTERN.test(normalized)) return false;
+  if (INLINE_MARKDOWN_PATTERN.test(normalized)) return false;
+  if (URL_PATTERN.test(normalized)) return false;
   if (variant === "basic" && normalized.includes("\n")) return false;
   return true;
 };
