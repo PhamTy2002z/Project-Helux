@@ -1145,7 +1145,9 @@ async def test_lead_review_comment_without_mentions_notifies_last_worker() -> No
                 tasks_api, "_send_agent_task_message", _fake_send_agent_task_message
             )
             try:
-                review_task = (await session.exec(select(Task).where(col(Task.id) == task_id))).first()
+                review_task = (
+                    await session.exec(select(Task).where(col(Task.id) == task_id))
+                ).first()
                 assert review_task is not None
                 await tasks_api.create_task_comment(
                     payload=TaskCommentCreate(message="Please add edge-case tests."),

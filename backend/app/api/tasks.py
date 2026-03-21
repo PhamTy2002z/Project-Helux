@@ -3027,7 +3027,9 @@ async def _apply_review_tracking(
         now = utcnow()
         review_sla_minutes = await _board_review_sla_minutes(session, board_id=update.board_id)
         update.task.owner_agent_id = (
-            update.previous_assigned if update.previous_assigned != update.task.assigned_agent_id else None
+            update.previous_assigned
+            if update.previous_assigned != update.task.assigned_agent_id
+            else None
         )
         update.task.reviewer_agent_id = update.task.assigned_agent_id
         update.task.review_entered_at = now

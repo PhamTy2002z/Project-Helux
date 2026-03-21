@@ -437,7 +437,9 @@ async def _median_review_wait_minutes(
 ) -> float | None:
     if not board_ids:
         return None
-    wait_minutes = func.extract("epoch", utcnow() - sql_cast(Task.review_entered_at, DateTime)) / 60.0
+    wait_minutes = (
+        func.extract("epoch", utcnow() - sql_cast(Task.review_entered_at, DateTime)) / 60.0
+    )
     statement = (
         select(func.percentile_cont(0.5).within_group(wait_minutes))
         .where(col(Task.board_id).in_(board_ids))

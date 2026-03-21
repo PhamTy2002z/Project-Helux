@@ -107,4 +107,3 @@ async def test_create_review_task_preserves_original_worker_as_owner() -> None:
             assert created.review_due_at is not None
     finally:
         await engine.dispose()
-

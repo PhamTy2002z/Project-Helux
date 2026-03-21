@@ -51,7 +51,9 @@ async def test_review_sla_worker_marks_overdue_and_reschedules(
         )
         monkeypatch.setattr(review_sla_worker, "async_session_maker", session_factory)
         monkeypatch.setattr(review_sla_worker.settings, "task_review_sla_auto_reassign_after", 3)
-        monkeypatch.setattr(review_sla_worker.settings, "task_review_sla_retry_backoff_seconds", "60")
+        monkeypatch.setattr(
+            review_sla_worker.settings, "task_review_sla_retry_backoff_seconds", "60"
+        )
 
         requeues: list[float] = []
         monkeypatch.setattr(
@@ -131,7 +133,9 @@ async def test_review_sla_worker_marks_overdue_and_reschedules(
             )
             await session.commit()
 
-        await review_sla_worker.process_task_review_sla_deadline_task(_queued_deadline_task(task_id))
+        await review_sla_worker.process_task_review_sla_deadline_task(
+            _queued_deadline_task(task_id)
+        )
 
         async with session_factory() as session:
             updated = (await session.exec(select(Task).where(col(Task.id) == task_id))).first()
@@ -160,7 +164,9 @@ async def test_review_sla_worker_auto_reassigns_to_owner_after_threshold(
         )
         monkeypatch.setattr(review_sla_worker, "async_session_maker", session_factory)
         monkeypatch.setattr(review_sla_worker.settings, "task_review_sla_auto_reassign_after", 2)
-        monkeypatch.setattr(review_sla_worker.settings, "task_review_sla_retry_backoff_seconds", "60")
+        monkeypatch.setattr(
+            review_sla_worker.settings, "task_review_sla_retry_backoff_seconds", "60"
+        )
 
         requeues: list[float] = []
         monkeypatch.setattr(
@@ -240,7 +246,9 @@ async def test_review_sla_worker_auto_reassigns_to_owner_after_threshold(
             )
             await session.commit()
 
-        await review_sla_worker.process_task_review_sla_deadline_task(_queued_deadline_task(task_id))
+        await review_sla_worker.process_task_review_sla_deadline_task(
+            _queued_deadline_task(task_id)
+        )
 
         async with session_factory() as session:
             updated = (await session.exec(select(Task).where(col(Task.id) == task_id))).first()
