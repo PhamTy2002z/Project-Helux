@@ -37,10 +37,14 @@ async def test_tenant_slo_metrics_exposes_tenant_dimensions(
             quotas=[QuotaUsage(resource="boards", used=3, limit=20, remaining=17, exceeded=False)],
         )
 
+    async def _count_events(*_args: object, **_kwargs: object) -> int:
+        return 0
+
     monkeypatch.setattr(metrics_api, "_resolve_dashboard_board_ids", _board_ids)
     monkeypatch.setattr(metrics_api, "_error_rate_kpi", _error_rate)
     monkeypatch.setattr(metrics_api, "_median_cycle_time_for_range", _cycle_time)
     monkeypatch.setattr(metrics_api, "_pending_approval_queue_lag_seconds", _queue_lag)
+    monkeypatch.setattr(metrics_api, "_count_org_event_type", _count_events)
     monkeypatch.setattr(metrics_api, "get_entitlement_usage", _usage)
 
     ctx = SimpleNamespace(

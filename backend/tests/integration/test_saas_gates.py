@@ -33,6 +33,16 @@ def test_required_saas_gate_test_files_exist() -> None:
 
 
 def test_readyz_gate_blocks_when_required_dependency_fails(monkeypatch) -> None:
+    async def _noop_async() -> None:
+        return None
+
+    def _noop_sync() -> None:
+        return None
+
+    monkeypatch.setattr("app.main.init_db", _noop_async)
+    monkeypatch.setattr("app.services.openclaw.exec_approval_listener.start_listener", _noop_sync)
+    monkeypatch.setattr("app.services.openclaw.exec_approval_listener.stop_listener", _noop_async)
+
     async def _failing_readiness() -> tuple[bool, list[object], datetime]:
         return False, [], datetime(2026, 3, 8, 8, 0, 0)
 

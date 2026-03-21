@@ -11,9 +11,23 @@ from app.db.session import ReadinessComponentCheck
 from app.main import app
 
 
+def _patch_startup_dependencies(monkeypatch) -> None:
+    async def _noop_async() -> None:
+        return None
+
+    def _noop_sync() -> None:
+        return None
+
+    monkeypatch.setattr("app.main.init_db", _noop_async)
+    monkeypatch.setattr("app.services.openclaw.exec_approval_listener.start_listener", _noop_sync)
+    monkeypatch.setattr("app.services.openclaw.exec_approval_listener.stop_listener", _noop_async)
+
+
 def test_readyz_returns_200_when_required_dependencies_are_healthy(
     monkeypatch,
 ) -> None:
+    _patch_startup_dependencies(monkeypatch)
+
     async def _fake_evaluate_readiness() -> tuple[bool, list[ReadinessComponentCheck], datetime]:
         return (
             True,
@@ -38,6 +52,8 @@ def test_readyz_returns_200_when_required_dependencies_are_healthy(
 
 
 def test_readyz_returns_503_when_required_dependency_fails(monkeypatch) -> None:
+    _patch_startup_dependencies(monkeypatch)
+
     async def _fake_evaluate_readiness() -> tuple[bool, list[ReadinessComponentCheck], datetime]:
         return (
             False,
