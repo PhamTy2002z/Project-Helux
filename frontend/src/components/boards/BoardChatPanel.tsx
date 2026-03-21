@@ -208,7 +208,9 @@ export const BoardChatPanel = memo(function BoardChatPanel({
 
   // Ref so handleSend stays stable (no pendingUploads in deps)
   const pendingUploadsRef = useRef(pendingUploads);
-  pendingUploadsRef.current = pendingUploads;
+  useEffect(() => {
+    pendingUploadsRef.current = pendingUploads;
+  }, [pendingUploads]);
 
   const handleSend = useCallback(
     async (content: string) => {
