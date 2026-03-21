@@ -191,6 +191,8 @@ async def test_notify_chat_targets_includes_chat_session_id_in_reply_hint(
     payload = sent_payloads[0]
     assert payload.get("deliver") is True
     assert f'"chat_session_id":"{session_id}"' in str(payload["message"])
+    assert "X-Agent-Token: $AUTH_TOKEN" in str(payload["message"])
+    assert "curl -s -X POST" in str(payload["message"])
 
 
 @pytest.mark.asyncio

@@ -234,6 +234,23 @@ def _agent_reply_body_hint(memory: BoardMemory) -> str:
     return payload
 
 
+def _agent_reply_instructions(*, base_url: str, board_id: UUID, memory: BoardMemory) -> str:
+    endpoint = f"{base_url}/api/v1/agent/boards/{board_id}/memory"
+    body = _agent_reply_body_hint(memory)
+    return (
+        "Reply via board chat (do NOT reply in OpenClaw chat):\n"
+        f"POST {endpoint}\n"
+        f"Body: {body}\n"
+        "Use AUTH_TOKEN from TOOLS.md/USER.md and include header:\n"
+        "X-Agent-Token: $AUTH_TOKEN\n"
+        "Example:\n"
+        f'curl -s -X POST "{endpoint}" '
+        '-H "X-Agent-Token: $AUTH_TOKEN" '
+        '-H "Content-Type: application/json" '
+        f"-d '{body}'"
+    )
+
+
 async def _notify_chat_targets(
     *,
     session: AsyncSession,
@@ -305,6 +322,11 @@ async def _notify_chat_targets(
         addressed_line = ""
         if not mentioned and mentions:
             addressed_line = f"Addressed to: @{', @'.join(sorted(mentions))}\n"
+        reply_instructions = _agent_reply_instructions(
+            base_url=base_url,
+            board_id=board.id,
+            memory=memory,
+        )
         message = (
             f"{header}\n"
             f"Board: {board.name}\n"
@@ -312,9 +334,7 @@ async def _notify_chat_targets(
             f"{addressed_line}\n"
             f"{snippet}"
             f"{file_block}\n\n"
-            "Reply via board chat:\n"
-            f"POST {base_url}/api/v1/agent/boards/{board.id}/memory\n"
-            f"Body: {_agent_reply_body_hint(memory)}"
+            f"{reply_instructions}"
         )
         error = await dispatch.try_send_agent_message(
             session_key=agent.openclaw_session_id,
