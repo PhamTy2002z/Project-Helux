@@ -37,7 +37,7 @@ from app.services.openclaw.gateway_rpc import (
 logger = get_logger(__name__)
 
 _RECONNECT_DELAYS = (1, 2, 5, 10, 30)
-_LISTENER_CLIENT_ID = "exec-approval-auto-approver"
+_LISTENER_CLIENT_ID = "gateway-client"
 _LISTENER_CLIENT_MODE = "backend"
 
 # Sentinel used to cancel the background task cleanly.
