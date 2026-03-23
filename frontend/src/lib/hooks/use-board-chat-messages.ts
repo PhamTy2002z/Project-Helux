@@ -267,7 +267,10 @@ export const useBoardChatMessages = ({
         return;
       }
       const lastMsg = items[items.length - 1];
-      const lastSource = resolveHumanActorName(lastMsg.source, DEFAULT_HUMAN_LABEL);
+      const lastSource = resolveHumanActorName(
+        lastMsg.source,
+        DEFAULT_HUMAN_LABEL,
+      );
       if (lastSource !== source) {
         clearAwaitingReply();
         return;
@@ -549,7 +552,10 @@ export const useBoardChatMessages = ({
                 writeSessionCache(toSessionCacheKey(boardId, sessionId), {
                   messages: merged,
                   hasMore,
-                  fetchedCount: Math.max(fetchedCountRef.current, merged.length),
+                  fetchedCount: Math.max(
+                    fetchedCountRef.current,
+                    merged.length,
+                  ),
                   fetchedAt: Date.now(),
                 });
               }

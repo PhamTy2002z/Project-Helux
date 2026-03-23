@@ -146,11 +146,7 @@ describe("useBoardChatMessages", () => {
     });
 
     const { result, rerender } = renderHook(
-      ({
-        enabled,
-      }: {
-        enabled: boolean;
-      }) =>
+      ({ enabled }: { enabled: boolean }) =>
         useBoardChatMessages({
           boardId: "board-1",
           chatSessionId: "session-1",
@@ -191,7 +187,9 @@ describe("useBoardChatMessages", () => {
           return {
             status: 200,
             data: {
-              items: [makeMessage({ id: "msg-s1", chat_session_id: "session-1" })],
+              items: [
+                makeMessage({ id: "msg-s1", chat_session_id: "session-1" }),
+              ],
               total: 1,
             },
           };

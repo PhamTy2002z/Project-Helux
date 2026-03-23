@@ -326,7 +326,9 @@ async def test_ingest_board_webhook_rejects_payload_too_large(
         async with session_maker() as session:
             stored_payloads = (
                 await session.exec(
-                    select(BoardWebhookPayload).where(col(BoardWebhookPayload.board_id) == board.id),
+                    select(BoardWebhookPayload).where(
+                        col(BoardWebhookPayload.board_id) == board.id
+                    ),
                 )
             ).all()
             stored_memory = (

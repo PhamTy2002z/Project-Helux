@@ -1,7 +1,8 @@
 """Test group chat target routing logic for board group memory mentions."""
 
-import pytest
 from uuid import uuid4
+
+import pytest
 
 from app.api.board_group_memory import _group_chat_targets
 from app.api.deps import ActorContext

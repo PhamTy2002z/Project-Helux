@@ -9,8 +9,7 @@ import pytest
 from fastapi import HTTPException
 from starlette.datastructures import Headers
 
-from app.core import agent_auth
-from app.core import auth
+from app.core import agent_auth, auth
 from app.core.auth_mode import AuthMode
 from app.core.auth_profile import AuthProfile
 from app.models.users import User

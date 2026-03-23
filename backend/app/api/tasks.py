@@ -628,9 +628,7 @@ def _assignment_notification_message(*, board: Board, task: Task, agent: Agent) 
             "Approve by moving to done or return to inbox with clear feedback."
         )
         return "TASK READY FOR LEAD REVIEW\n" + "\n".join(details) + f"\n\n{action}"
-    comment_endpoint = (
-        f"/api/v1/agent/boards/{board.id}/tasks/{task.id}/comments"
-    )
+    comment_endpoint = f"/api/v1/agent/boards/{board.id}/tasks/{task.id}/comments"
     return (
         "TASK ASSIGNED\n"
         + "\n".join(details)
@@ -2287,9 +2285,7 @@ async def _notify_task_comment_targets(
         if not agent.openclaw_session_id:
             continue
         mentioned = matches_agent_mention(agent, request.mention_names)
-        assignee_mentioned = bool(
-            mentioned and request.task.assigned_agent_id == agent.id
-        )
+        assignee_mentioned = bool(mentioned and request.task.assigned_agent_id == agent.id)
         notification = _task_comment_notification_message(
             board=board,
             task=request.task,
@@ -3081,7 +3077,9 @@ async def _apply_review_tracking(
         now = utcnow()
         review_sla_minutes = await _board_review_sla_minutes(session, board_id=update.board_id)
         update.task.owner_agent_id = (
-            update.previous_assigned if update.previous_assigned != update.task.assigned_agent_id else None
+            update.previous_assigned
+            if update.previous_assigned != update.task.assigned_agent_id
+            else None
         )
         update.task.reviewer_agent_id = update.task.assigned_agent_id
         update.task.review_entered_at = now

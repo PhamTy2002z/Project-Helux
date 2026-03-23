@@ -35,10 +35,9 @@ def _managed_gateway_token() -> str | None:
 
 
 def _is_managed_gateway_record(gateway: Gateway, *, expected_url: str) -> bool:
-    return (
-        (gateway.url or "").strip() == expected_url
-        and (gateway.name or "").strip() == settings.managed_gateway_name.strip()
-    )
+    return (gateway.url or "").strip() == expected_url and (
+        gateway.name or ""
+    ).strip() == settings.managed_gateway_name.strip()
 
 
 async def _find_org_gateway(session: AsyncSession, organization_id: UUID) -> Gateway | None:

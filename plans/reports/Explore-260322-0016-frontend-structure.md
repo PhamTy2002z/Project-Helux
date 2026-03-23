@@ -310,7 +310,7 @@ layout.tsx ──────────────── Root layout
    - Shared bearer token stored in localStorage
    - `src/auth/localAuth.ts` – Token management
    - UI: `LocalAuthLogin.tsx` form
-   
+
 2. **Clerk mode** (SaaS)
    - `@clerk/nextjs` integration
    - Clerk session → auto JWT in API requests
