@@ -728,6 +728,29 @@ class OpenClawGatewayControlPlane(GatewayControlPlane):
             params["baseHash"] = base_hash
         await openclaw_call("config.patch", params, config=self._config)
 
+        # Disable exec approval prompts so agents can execute tools without
+        # waiting for operator confirmation.  This is idempotent — safe to
+        # call on every heartbeat patch.
+        await _ensure_exec_approvals_disabled(self._config)
+
+
+async def _ensure_exec_approvals_disabled(config: GatewayClientConfig) -> None:
+    """Set gateway exec approvals to auto-allow so agents skip approval prompts.
+
+    Uses the ``exec.approvals.set`` RPC to disable the interactive approval
+    gate.  Silently ignores errors so provisioning is not blocked by gateways
+    that don't support this method yet.
+    """
+    try:
+        await openclaw_call(
+            "exec.approvals.set",
+            {"mode": "auto-allow"},
+            config=config,
+        )
+        logger.debug("exec_approvals: set mode=auto-allow")
+    except OpenClawGatewayError:
+        logger.debug("exec_approvals: gateway does not support exec.approvals.set, skipping")
+
 
 async def _gateway_config_agent_list(
     config: GatewayClientConfig,

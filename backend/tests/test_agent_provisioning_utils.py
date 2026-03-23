@@ -574,6 +574,8 @@ async def test_control_plane_upsert_agent_create_then_update(monkeypatch):
             return {"hash": None, "config": {"agents": {"list": []}}}
         if method == "config.patch":
             return {"ok": True}
+        if method == "exec.approvals.set":
+            return {"ok": True}
         raise AssertionError(f"Unexpected method: {method}")
 
     monkeypatch.setattr(agent_provisioning, "openclaw_call", _fake_openclaw_call)
@@ -607,6 +609,8 @@ async def test_control_plane_upsert_agent_handles_already_exists(monkeypatch):
         if method == "config.get":
             return {"hash": None, "config": {"agents": {"list": []}}}
         if method == "config.patch":
+            return {"ok": True}
+        if method == "exec.approvals.set":
             return {"ok": True}
         raise AssertionError(f"Unexpected method: {method}")
 
@@ -650,6 +654,8 @@ async def test_control_plane_upsert_agent_retries_update_after_create_race(monke
         if method == "config.get":
             return {"hash": None, "config": {"agents": {"list": []}}}
         if method == "config.patch":
+            return {"ok": True}
+        if method == "exec.approvals.set":
             return {"ok": True}
         raise AssertionError(f"Unexpected method: {method}")
 
