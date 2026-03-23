@@ -207,9 +207,13 @@ def _chat_targets(
     actor: ActorContext,
 ) -> dict[str, Agent]:
     targets: dict[str, Agent] = {}
+    # When non-lead agents are explicitly mentioned, only route to them.
+    # Lead receives all messages only when no specific member is targeted.
+    has_non_lead_mentions = bool(mentions - {"lead"})
     for agent in agents:
         if agent.is_board_lead:
-            targets[str(agent.id)] = agent
+            if not has_non_lead_mentions or matches_agent_mention(agent, mentions):
+                targets[str(agent.id)] = agent
             continue
         if mentions and matches_agent_mention(agent, mentions):
             targets[str(agent.id)] = agent
