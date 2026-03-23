@@ -719,6 +719,56 @@ def test_is_missing_agent_error_matches_gateway_agent_not_found() -> None:
     )
 
 
+def test_updated_agent_list_enforces_required_skills_and_preserves_custom_skills() -> None:
+    updated = agent_provisioning._updated_agent_list(
+        [
+            {
+                "id": "agent-a",
+                "workspace": "/tmp/old",
+                "skills": ["weather", "custom-ops", "WEATHER"],
+                "tools": {"profile": "minimal"},
+            },
+        ],
+        {
+            "agent-a": (
+                "/tmp/new",
+                {"every": "10m", "target": "last", "includeReasoning": False},
+            ),
+        },
+    )
+
+    entry = updated[0]
+    assert entry["workspace"] == "/tmp/new"
+    assert entry["tools"]["profile"] == "full"
+    assert entry["skills"][: len(agent_provisioning.DEFAULT_REQUIRED_AGENT_SKILLS)] == list(
+        agent_provisioning.DEFAULT_REQUIRED_AGENT_SKILLS,
+    )
+    assert "custom-ops" in entry["skills"]
+    assert entry["skills"].count("weather") == 1
+
+
+def test_updated_agent_list_new_entries_get_required_skills() -> None:
+    updated = agent_provisioning._updated_agent_list(
+        [],
+        {
+            "agent-b": (
+                "/tmp/workspace-agent-b",
+                {"every": "10m", "target": "last", "includeReasoning": False},
+            ),
+        },
+    )
+
+    assert updated == [
+        {
+            "id": "agent-b",
+            "workspace": "/tmp/workspace-agent-b",
+            "heartbeat": {"every": "10m", "target": "last", "includeReasoning": False},
+            "skills": list(agent_provisioning.DEFAULT_REQUIRED_AGENT_SKILLS),
+            "tools": {"profile": "full"},
+        },
+    ]
+
+
 def test_select_role_soul_ref_prefers_exact_slug() -> None:
     refs = [
         SoulRef(handle="team", slug="security"),

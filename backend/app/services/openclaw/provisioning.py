@@ -25,6 +25,7 @@ from app.models.gateways import Gateway
 from app.services import souls_directory
 from app.services.openclaw.constants import (
     BOARD_SHARED_TEMPLATE_MAP,
+    DEFAULT_REQUIRED_AGENT_SKILLS,
     DEFAULT_CHANNEL_HEARTBEAT_VISIBILITY,
     DEFAULT_GATEWAY_FILES,
     DEFAULT_HEARTBEAT_CONFIG,
@@ -757,6 +758,38 @@ def _heartbeat_entry_map(
     }
 
 
+def _coerce_agent_skill_names(raw_skills: object) -> list[str]:
+    if isinstance(raw_skills, str):
+        parts = [part.strip() for part in raw_skills.split(",")]
+        return [part for part in parts if part]
+    if isinstance(raw_skills, list):
+        normalized: list[str] = []
+        for item in raw_skills:
+            if not isinstance(item, str):
+                continue
+            name = item.strip()
+            if name:
+                normalized.append(name)
+        return normalized
+    if isinstance(raw_skills, dict):
+        allow = raw_skills.get("allow")
+        if isinstance(allow, list):
+            return _coerce_agent_skill_names(allow)
+    return []
+
+
+def _merged_required_agent_skills(raw_skills: object) -> list[str]:
+    merged: list[str] = []
+    seen: set[str] = set()
+    for name in (*DEFAULT_REQUIRED_AGENT_SKILLS, *_coerce_agent_skill_names(raw_skills)):
+        key = name.casefold()
+        if key in seen:
+            continue
+        seen.add(key)
+        merged.append(name)
+    return merged
+
+
 def _updated_agent_list(
     raw_list: list[object],
     entry_by_id: dict[str, tuple[str, dict[str, Any]]],
@@ -777,6 +810,7 @@ def _updated_agent_list(
         new_entry = dict(raw_entry)
         new_entry["workspace"] = workspace_path
         new_entry["heartbeat"] = heartbeat
+        new_entry["skills"] = _merged_required_agent_skills(new_entry.get("skills"))
         # Ensure full tool access per agent.
         new_entry.setdefault("tools", {})
         if isinstance(new_entry["tools"], dict):
@@ -792,6 +826,7 @@ def _updated_agent_list(
                 "id": agent_id,
                 "workspace": workspace_path,
                 "heartbeat": heartbeat,
+                "skills": list(DEFAULT_REQUIRED_AGENT_SKILLS),
                 "tools": {"profile": "full"},
             },
         )
