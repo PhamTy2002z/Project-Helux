@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 from uuid import UUID, uuid4
 
+from sqlalchemy import Index
 from sqlmodel import Field
 
 from app.core.time import utcnow
@@ -17,6 +18,15 @@ class BoardChatSession(QueryModel, table=True):
     """Logical chat thread for board chat messages."""
 
     __tablename__ = "board_chat_sessions"  # pyright: ignore[reportAssignmentType]
+    __table_args__ = (
+        Index(
+            "ix_board_chat_sessions_board_archived_updated_created",
+            "board_id",
+            "archived_at",
+            "updated_at",
+            "created_at",
+        ),
+    )
 
     id: UUID = Field(default_factory=uuid4, primary_key=True)
     board_id: UUID = Field(foreign_key="boards.id", index=True)

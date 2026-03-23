@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import { Markdown } from "./Markdown";
-import { MarkdownLite } from "./MarkdownLite";
+import { MarkdownLite, shouldRenderMarkdownLite } from "./MarkdownLite";
 
 describe("Markdown", () => {
   it("renders single-line breaks for chat variant", () => {
@@ -97,5 +97,26 @@ describe("Markdown", () => {
     const mention = screen.getByText("@lead");
     expect(mention).toHaveClass("text-cyan-700");
     expect(container).toHaveTextContent("Check task status");
+  });
+
+  it("falls back to full markdown renderer for inline emphasis tokens", () => {
+    expect(shouldRenderMarkdownLite("BTC **70,445 USD**", "chat")).toBe(false);
+    expect(
+      shouldRenderMarkdownLite("Use *active* profile before deploy", "chat"),
+    ).toBe(false);
+  });
+
+  it("falls back to full markdown renderer for urls, plus-lists, and separators", () => {
+    expect(
+      shouldRenderMarkdownLite("Check https://api.visgnite.com now", "chat"),
+    ).toBe(false);
+    expect(shouldRenderMarkdownLite("+ first item", "chat")).toBe(false);
+    expect(shouldRenderMarkdownLite("---", "chat")).toBe(false);
+  });
+
+  it("keeps lite renderer for plain snake_case text", () => {
+    expect(
+      shouldRenderMarkdownLite("auth_token rotation is required", "chat"),
+    ).toBe(true);
   });
 });

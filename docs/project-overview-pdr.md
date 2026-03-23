@@ -50,18 +50,20 @@ Connect internal workflows and automation clients to the same operational model 
 - **Tags**: Cross-cutting categorization and filtering
 - **Custom Fields**: Extensible metadata for domain-specific requirements
 - **File Upload**: Board chat file attachment with PDF OCR extraction and full-text indexing
-- **Workspace Templates**: 12 pre-configured agent templates with auto-provisioning
 
 ### Agent Operations
 - **Agent Lifecycle**: Create, configure, inspect, and manage agents
 - **Agent Assignment**: Assign agents to boards and tasks
 - **Agent Monitoring**: Track agent status and execution history
+- **Token Quota Tracking**: Per-agent daily token usage ledger with quota enforcement
+- **Workspace Templates**: 12 pre-configured templates for quick agent provisioning
 - **Skills Marketplace**: Discover and install agent capabilities
 - **Memory Management**: Board-level and board-group-level memory persistence
 
 ### Governance and Approvals
 - **Approval Workflows**: Route sensitive actions through explicit approval flows
 - **Multi-Stage Approvals**: Support for sequential approval chains
+- **Review SLA Automation**: Board-configurable review deadlines with auto-escalation and lead nudging
 - **Approval History**: Complete audit trail of approval decisions
 - **Role-Based Access**: Organization-level and board-level access control
 

@@ -71,7 +71,8 @@ export const useBoardChatSessions = (
       }
       return sortSessions(result.data ?? []);
     },
-    staleTime: 15_000,
+    staleTime: 60_000,
+    refetchOnWindowFocus: false,
   });
 
   const invalidateSessions = useCallback(async () => {

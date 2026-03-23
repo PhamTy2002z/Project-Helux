@@ -29,6 +29,7 @@ from app.services.openclaw.constants import (
     DEFAULT_GATEWAY_FILES,
     DEFAULT_HEARTBEAT_CONFIG,
     DEFAULT_IDENTITY_PROFILE,
+    DEFAULT_REQUIRED_AGENT_SKILLS,
     EXTRA_IDENTITY_PROFILE_FIELDS,
     HEARTBEAT_AGENT_TEMPLATE,
     HEARTBEAT_LEAD_TEMPLATE,
@@ -727,6 +728,29 @@ class OpenClawGatewayControlPlane(GatewayControlPlane):
             params["baseHash"] = base_hash
         await openclaw_call("config.patch", params, config=self._config)
 
+        # Disable exec approval prompts so agents can execute tools without
+        # waiting for operator confirmation.  This is idempotent — safe to
+        # call on every heartbeat patch.
+        await _ensure_exec_approvals_disabled(self._config)
+
+
+async def _ensure_exec_approvals_disabled(config: GatewayClientConfig) -> None:
+    """Set gateway exec approvals to auto-allow so agents skip approval prompts.
+
+    Uses the ``exec.approvals.set`` RPC to disable the interactive approval
+    gate.  Silently ignores errors so provisioning is not blocked by gateways
+    that don't support this method yet.
+    """
+    try:
+        await openclaw_call(
+            "exec.approvals.set",
+            {"mode": "auto-allow"},
+            config=config,
+        )
+        logger.debug("exec_approvals: set mode=auto-allow")
+    except OpenClawGatewayError:
+        logger.debug("exec_approvals: gateway does not support exec.approvals.set, skipping")
+
 
 async def _gateway_config_agent_list(
     config: GatewayClientConfig,
@@ -757,6 +781,38 @@ def _heartbeat_entry_map(
     }
 
 
+def _coerce_agent_skill_names(raw_skills: object) -> list[str]:
+    if isinstance(raw_skills, str):
+        parts = [part.strip() for part in raw_skills.split(",")]
+        return [part for part in parts if part]
+    if isinstance(raw_skills, list):
+        normalized: list[str] = []
+        for item in raw_skills:
+            if not isinstance(item, str):
+                continue
+            name = item.strip()
+            if name:
+                normalized.append(name)
+        return normalized
+    if isinstance(raw_skills, dict):
+        allow = raw_skills.get("allow")
+        if isinstance(allow, list):
+            return _coerce_agent_skill_names(allow)
+    return []
+
+
+def _merged_required_agent_skills(raw_skills: object) -> list[str]:
+    merged: list[str] = []
+    seen: set[str] = set()
+    for name in (*DEFAULT_REQUIRED_AGENT_SKILLS, *_coerce_agent_skill_names(raw_skills)):
+        key = name.casefold()
+        if key in seen:
+            continue
+        seen.add(key)
+        merged.append(name)
+    return merged
+
+
 def _updated_agent_list(
     raw_list: list[object],
     entry_by_id: dict[str, tuple[str, dict[str, Any]]],
@@ -777,6 +833,7 @@ def _updated_agent_list(
         new_entry = dict(raw_entry)
         new_entry["workspace"] = workspace_path
         new_entry["heartbeat"] = heartbeat
+        new_entry["skills"] = _merged_required_agent_skills(new_entry.get("skills"))
         # Ensure full tool access per agent.
         new_entry.setdefault("tools", {})
         if isinstance(new_entry["tools"], dict):
@@ -792,6 +849,7 @@ def _updated_agent_list(
                 "id": agent_id,
                 "workspace": workspace_path,
                 "heartbeat": heartbeat,
+                "skills": list(DEFAULT_REQUIRED_AGENT_SKILLS),
                 "tools": {"profile": "full"},
             },
         )

@@ -115,7 +115,7 @@ function GroupChatMessageCard({ message }: { message: BoardGroupMemoryRead }) {
         </span>
       </div>
       <div className="mt-1 select-text cursor-text text-sm leading-6 text-strong break-words">
-        <LazyMarkdown content={message.content} variant="basic" />
+        <LazyMarkdown content={message.content} variant="chat" />
       </div>
       {message.tags?.length ? (
         <div className="mt-2.5 flex flex-wrap gap-2 text-[11px] text-[color:var(--text-muted)]">

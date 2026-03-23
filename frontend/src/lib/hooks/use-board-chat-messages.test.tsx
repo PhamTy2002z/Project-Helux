@@ -135,4 +135,106 @@ describe("useBoardChatMessages", () => {
 
     expect(result.current.isAwaitingReply).toBe(false);
   });
+
+  it("keeps in-memory messages when chat panel is temporarily disabled", async () => {
+    listBoardMemoryMock.mockResolvedValueOnce({
+      status: 200,
+      data: {
+        items: [makeMessage({ id: "msg-keep" })],
+        total: 1,
+      },
+    });
+
+    const { result, rerender } = renderHook(
+      ({ enabled }: { enabled: boolean }) =>
+        useBoardChatMessages({
+          boardId: "board-1",
+          chatSessionId: "session-1",
+          enabled,
+          source: "Pham",
+        }),
+      {
+        initialProps: { enabled: true },
+      },
+    );
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.messages.map((m) => m.id)).toEqual(["msg-keep"]);
+    expect(listBoardMemoryMock).toHaveBeenCalledTimes(1);
+
+    rerender({ enabled: false });
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.messages.map((m) => m.id)).toEqual(["msg-keep"]);
+
+    rerender({ enabled: true });
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.messages.map((m) => m.id)).toEqual(["msg-keep"]);
+    expect(listBoardMemoryMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("clears stale previous-session messages while loading uncached session", async () => {
+    let resolveSession2!: (value: {
+      status: number;
+      data: { items: BoardMemoryRead[]; total: number };
+    }) => void;
+
+    listBoardMemoryMock.mockImplementation(
+      async (
+        _boardId: string,
+        params: { chat_session_id?: string | null } = {},
+      ) => {
+        if (params.chat_session_id === "session-1") {
+          return {
+            status: 200,
+            data: {
+              items: [
+                makeMessage({ id: "msg-s1", chat_session_id: "session-1" }),
+              ],
+              total: 1,
+            },
+          };
+        }
+        if (params.chat_session_id === "session-2") {
+          return await new Promise<{
+            status: number;
+            data: { items: BoardMemoryRead[]; total: number };
+          }>((resolve) => {
+            resolveSession2 = resolve;
+          });
+        }
+        return { status: 200, data: { items: [], total: 0 } };
+      },
+    );
+
+    const { result, rerender } = renderHook(
+      ({ chatSessionId }: { chatSessionId: string }) =>
+        useBoardChatMessages({
+          boardId: "board-1",
+          chatSessionId,
+          enabled: true,
+          source: "Pham",
+        }),
+      {
+        initialProps: { chatSessionId: "session-1" },
+      },
+    );
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.messages.map((m) => m.id)).toEqual(["msg-s1"]);
+
+    rerender({ chatSessionId: "session-2" });
+    await waitFor(() => expect(result.current.messages).toEqual([]));
+
+    resolveSession2({
+      status: 200,
+      data: {
+        items: [makeMessage({ id: "msg-s2", chat_session_id: "session-2" })],
+        total: 1,
+      },
+    });
+
+    await waitFor(() =>
+      expect(result.current.messages.map((m) => m.id)).toEqual(["msg-s2"]),
+    );
+  });
 });

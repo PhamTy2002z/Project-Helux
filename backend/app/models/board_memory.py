@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 from uuid import UUID, uuid4
 
-from sqlalchemy import JSON, Column
+from sqlalchemy import JSON, Column, Index
 from sqlmodel import Field
 
 from app.core.time import utcnow
@@ -18,6 +18,21 @@ class BoardMemory(QueryModel, table=True):
     """Persisted memory item attached directly to a board."""
 
     __tablename__ = "board_memory"  # pyright: ignore[reportAssignmentType]
+    __table_args__ = (
+        Index(
+            "ix_board_memory_board_id_is_chat_created_at",
+            "board_id",
+            "is_chat",
+            "created_at",
+        ),
+        Index(
+            "ix_board_memory_board_id_is_chat_chat_session_id_created_at",
+            "board_id",
+            "is_chat",
+            "chat_session_id",
+            "created_at",
+        ),
+    )
 
     id: UUID = Field(default_factory=uuid4, primary_key=True)
     board_id: UUID = Field(foreign_key="boards.id", index=True)

@@ -115,7 +115,7 @@ VisgniteAI follows a three-tier architecture with clear separation between prese
 │  ┌──────────────────────────────────────────────────────┐   │
 │  │  API Layer (app/api/)                                │   │
 │  │  ┌────────────────────────────────────────────────┐  │   │
-│  │  │  Route Handlers (24 modules)                   │  │   │
+│  │  │  Route Handlers (31 modules)                   │  │   │
 │  │  │  - Request validation (Pydantic)               │  │   │
 │  │  │  - Response serialization                      │  │   │
 │  │  │  - Authentication/Authorization                │  │   │
@@ -476,48 +476,24 @@ Authorized Request Processing
 
 ## Database Schema Overview
 
-### Core Entities
+### Core Entities (41 models)
 
 ```
-Organizations
-    │
-    ├─→ OrganizationMembers (users in org)
-    │
-    ├─→ OrganizationInvites (pending invites)
-    │
-    ├─→ OrganizationBoardAccess (board permissions)
-    │
-    ├─→ WorkspaceTemplates (pre-built agent configurations)
-    │
-    └─→ BoardGroups
-            │
-            ├─→ BoardGroupMemory (shared memory)
-            │
-            └─→ Boards
-                    │
-                    ├─→ BoardMemory (board-specific memory)
-                    │
-                    ├─→ BoardOnboarding (setup state)
-                    │
-                    ├─→ BoardWebhooks
-                    │   └─→ BoardWebhookPayloads
-                    │
-                    ├─→ Agents (assigned to board)
-                    │   └─→ uses WorkspaceTemplate during provisioning
-                    │
-                    └─→ Tasks
-                            │
-                            ├─→ TaskCustomFields (metadata)
-                            │
-                            ├─→ TaskDependencies (task relationships)
-                            │
-                            ├─→ TaskFingerprints (deduplication)
-                            │
-                            ├─→ TagAssignments
-                            │   └─→ Tags
-                            │
-                            └─→ ApprovalTaskLinks
-                                    └─→ Approvals
+Organizations (with OrganizationMembers, InvitesOrgBoardAccess, Plans)
+    ├─→ BoardGroups → BoardGroupMemory → Boards (with Chat Sessions, Webhooks)
+    ├─→ WorkspaceTemplates (pre-built agent configs with auto-provisioning)
+    ├─→ Gateways (managed gateways with status tracking and health checks)
+    └─→ Tasks (with CustomFields, Dependencies, Fingerprints, Groups, Assignments)
+        ├─→ Tags (cross-cutting categorization via TagAssignments)
+        ├─→ ApprovalTaskLinks → Approvals (governance chains)
+        ├─→ BoardMemory (board+group memory with SSE streaming)
+        └─→ Review SLA Tracking (owner_agent_id, reviewer_agent_id, review_due_at)
+
+Supporting Models:
+- AgentTokenDailyUsage (quota ledger)
+- BoardChatSessions, BoardChatFiles, BoardChatFileReports, BoardChatMessageFiles
+- ActivityEvents (audit trail for all operations)
+- PolarWebhookEvents (billing event processing store)
 ```
 
 ### Key Relationships
@@ -542,101 +518,12 @@ Organizations
 ### REST API Endpoints
 
 ```
-/api/
-├── /auth
-│   ├── POST /login
-│   └── POST /logout
-│
-├── /organizations
-│   ├── GET    /organizations
-│   ├── POST   /organizations
-│   ├── GET    /organizations/{id}
-│   ├── PATCH  /organizations/{id}
-│   ├── DELETE /organizations/{id}
-│   ├── GET    /organizations/{id}/members
-│   ├── POST   /organizations/{id}/invites
-│   └── GET    /organizations/{id}/boards
-│
-├── /board-groups
-│   ├── GET    /board-groups
-│   ├── POST   /board-groups
-│   ├── GET    /board-groups/{id}
-│   ├── PATCH  /board-groups/{id}
-│   ├── DELETE /board-groups/{id}
-│   ├── GET    /board-groups/{id}/memory
-│   └── POST   /board-groups/{id}/memory
-│
-├── /boards
-│   ├── GET    /boards
-│   ├── POST   /boards
-│   ├── GET    /boards/{id}
-│   ├── PATCH  /boards/{id}
-│   ├── DELETE /boards/{id}
-│   ├── GET    /boards/{id}/tasks
-│   ├── GET    /boards/{id}/agents
-│   ├── GET    /boards/{id}/memory
-│   ├── POST   /boards/{id}/memory
-│   ├── GET    /boards/{id}/webhooks
-│   └── POST   /boards/{id}/webhooks
-│
-├── /tasks
-│   ├── GET    /tasks
-│   ├── POST   /tasks
-│   ├── GET    /tasks/{id}
-│   ├── PATCH  /tasks/{id}
-│   ├── DELETE /tasks/{id}
-│   ├── GET    /tasks/{id}/dependencies
-│   ├── POST   /tasks/{id}/dependencies
-│   └── GET    /tasks/{id}/custom-fields
-│
-├── /agents
-│   ├── GET    /agents
-│   ├── POST   /agents
-│   ├── GET    /agents/{id}
-│   ├── PATCH  /agents/{id}
-│   ├── DELETE /agents/{id}
-│   ├── POST   /agents/{id}/start
-│   ├── POST   /agents/{id}/stop
-│   └── GET    /agents/{id}/logs
-│
-├── /gateways
-│   ├── GET    /gateways
-│   ├── POST   /gateways
-│   ├── GET    /gateways/{id}
-│   ├── PATCH  /gateways/{id}
-│   ├── DELETE /gateways/{id}
-│   └── GET    /gateways/{id}/health
-│
-├── /approvals
-│   ├── GET    /approvals
-│   ├── POST   /approvals
-│   ├── GET    /approvals/{id}
-│   ├── POST   /approvals/{id}/approve
-│   └── POST   /approvals/{id}/reject
-│
-├── /tags
-│   ├── GET    /tags
-│   ├── POST   /tags
-│   ├── GET    /tags/{id}
-│   ├── PATCH  /tags/{id}
-│   └── DELETE /tags/{id}
-│
-├── /activity
-│   └── GET    /activity
-│
-├── /metrics
-│   └── GET    /metrics
-│
-├── /skills
-│   ├── GET    /skills/marketplace
-│   └── POST   /skills/install
-│
-└── /workspace-templates
-    ├── GET    /workspace-templates
-    ├── POST   /workspace-templates
-    ├── GET    /workspace-templates/{id}
-    ├── PATCH  /workspace-templates/{id}
-    └── DELETE /workspace-templates/{id}
+Key endpoints (31 route modules):
+/auth, /organizations, /board-groups, /boards, /tasks, /agents,
+/gateways, /approvals, /tags, /activity, /metrics, /skills,
+/workspace-templates, /billing, /board-chat, /metrics/quotas,
+/metrics/saas-billing-health, /metrics/board-overlay,
+/metrics/tenant-slo, /onboarding, /custom-fields, /souls-directory
 ```
 
 ### WebSocket Endpoints

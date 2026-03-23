@@ -214,12 +214,15 @@ def _group_chat_targets(
     mentions: set[str],
 ) -> dict[str, Agent]:
     targets: dict[str, Agent] = {}
+    # When non-lead agents are explicitly mentioned, only route to them.
+    # Lead receives all messages only when no specific member is targeted.
+    has_non_lead_mentions = bool(mentions - {"lead"})
     for agent in agents:
         if not agent.openclaw_session_id:
             continue
         if actor.actor_type == "agent" and actor.agent and agent.id == actor.agent.id:
             continue
-        if is_broadcast or agent.is_board_lead:
+        if is_broadcast or (agent.is_board_lead and not has_non_lead_mentions):
             targets[str(agent.id)] = agent
             continue
         if mentions and matches_agent_mention(agent, mentions):

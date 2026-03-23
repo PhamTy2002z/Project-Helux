@@ -33,17 +33,17 @@ Database
 ```
 
 #### Module Responsibilities
-- **API Routes** (`app/api/`): HTTP request/response handling, validation, auth
-- **Services** (`app/services/`): Business logic, orchestration, external integrations
-- **Models** (`app/models/`): Database schema definitions with SQLModel
-- **Schemas** (`app/schemas/`): Pydantic request/response schemas
+- **API Routes** (`app/api/`, 31 modules): HTTP request/response handling, validation, auth
+- **Services** (`app/services/`, 50+ modules): Business logic, orchestration, external integrations
+- **Models** (`app/models/`, 41 entities): Database schema definitions with SQLModel
+- **Schemas** (`app/schemas/`, 30+ modules): Pydantic request/response schemas
 - **Core** (`app/core/`): Configuration, security, logging utilities
 
 #### File Size Guidelines
 - Target: < 200 lines per file for optimal maintainability
 - Split large modules into logical sub-modules
 - Extract reusable logic into utility functions
-- Current exceptions: `agent.py` (69KB), `tasks.py` (86KB) - candidates for refactoring
+- Current exceptions: `agent.py` (3,279 LOC), `tasks.py` (3,279 LOC), `skills_marketplace.py` (1,338 LOC) - candidates for refactoring
 
 ### Frontend Structure
 
@@ -629,6 +629,33 @@ Clarify environment variable requirements.
 - Use deterministic keys for idempotency (example: `f"{org_id}:{invite_id}:{attempt}"`)
 - Return job ID immediately to API caller; job execution is eventual
 - Use `SELECT FOR UPDATE` on rows being modified concurrently to prevent race conditions
+
+### Task Review SLA Pattern (Queue + Worker)
+- Store deadline config at board level: `boards.review_sla_minutes` (validated 1..240)
+- Track review lifecycle in task model:
+  - `owner_agent_id`: Agent that created task
+  - `reviewer_agent_id`: Agent assigned to review
+  - `review_entered_at`: When task entered review status
+  - `review_due_at`: When review is due (review_entered_at + SLA minutes)
+  - `review_overdue_count`: Incremented each check cycle when overdue
+  - `last_nudged_at`: Last time lead was nudged about this task
+- Enqueue deadline checks asynchronously via `task_review_sla_queue.py`
+- Worker (`task_review_sla_worker.py`) implements check/nudge/reassign logic:
+  - Emit lead nudge comments when overdue (idempotent per nudge cycle)
+  - Auto-reassign from review → inbox after repeated missed checks
+  - Preserve original worker owner through status transitions
+- Observability: Emit `task.review_sla_enqueue_failed` activity event on queue failures
+- Dashboard KPIs: `review_overdue_tasks`, `median_review_wait_minutes`
+
+### Token Ledger Pattern (Daily Usage Quota)
+- Track per-agent token usage in `agent_token_daily_usage` ledger:
+  - `agent_id`, `used_today`, `limit_today`, `reset_at`
+  - Query endpoint: `GET /api/v1/metrics/quotas` aggregates ledger per agent
+- Service integration: Query ledger on agent read operations
+- Fallback: Use agent metadata when ledger is empty (smooth transition)
+- Quota enforcement: Block agent operations when `token_remaining < 0`
+- Frontend surfaces: Agents UI shows "Tokens left" column with reset hint
+- Plan-tier labels: Normalize `trial_7d` → `Basic`, `pro` → `Pro`
 
 ## Compatibility Standards (OpenClaw Board Workflows)
 

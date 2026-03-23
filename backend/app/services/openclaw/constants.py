@@ -68,6 +68,19 @@ DEFAULT_GATEWAY_FILES = frozenset(
     },
 )
 
+# Mandatory skills that every provisioned agent must expose by default.
+# Keep this aligned with product policy for global board/user capabilities.
+DEFAULT_REQUIRED_AGENT_SKILLS: tuple[str, ...] = (
+    "multi-search-engine",
+    "ontology",
+    "Self-Improving + Proactive Agent",
+    "healthcheck",
+    "nano-pdf",
+    "node-connect",
+    "skill-creator",
+    "weather",
+)
+
 # Lead-only workspace contract. Used for board leads to allow an iterative rollout
 # without changing worker templates.
 LEAD_GATEWAY_FILES = frozenset(

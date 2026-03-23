@@ -628,10 +628,17 @@ def _assignment_notification_message(*, board: Board, task: Task, agent: Agent) 
             "Approve by moving to done or return to inbox with clear feedback."
         )
         return "TASK READY FOR LEAD REVIEW\n" + "\n".join(details) + f"\n\n{action}"
+    comment_endpoint = f"/api/v1/agent/boards/{board.id}/tasks/{task.id}/comments"
     return (
         "TASK ASSIGNED\n"
         + "\n".join(details)
-        + ("\n\nTake action: open the task and begin work. " "Post updates as task comments.")
+        + "\n\nTake action now:\n"
+        + "- Move task to `in_progress` when you start.\n"
+        + "- Post an initial task comment immediately.\n"
+        + "  Include: source(s), 1-2 early findings, ETA for first draft.\n"
+        + "- Do not wait for deep research/search or tool approvals before first update.\n"
+        + f"- Task comment endpoint: POST {comment_endpoint}\n"
+        + '- Body: {"message":"..."}'
     )
 
 
@@ -2202,6 +2209,57 @@ class _TaskCommentNotifyRequest:
     mention_names: set[str]
 
 
+def _task_comment_notification_message(
+    *,
+    board: Board,
+    task: Task,
+    actor_name: str,
+    snippet: str,
+    mentioned: bool,
+    assignee_mentioned: bool,
+) -> str:
+    comment_endpoint = f"/api/v1/agent/boards/{board.id}/tasks/{task.id}/comments"
+    if mentioned and assignee_mentioned:
+        return (
+            "TASK MENTION\n"
+            f"Board: {board.name}\n"
+            f"Task: {task.title}\n"
+            f"Task ID: {task.id}\n"
+            f"From: {actor_name}\n\n"
+            "You are assigned and were mentioned in this comment.\n\n"
+            f"Comment:\n{snippet}\n\n"
+            "Immediate action required:\n"
+            "- Post a short progress update now.\n"
+            "  Include: source(s), 1-2 early findings, ETA for first draft.\n"
+            "- Do not wait for deep research/search or tool approvals before first update.\n"
+            f"- Task comment endpoint: POST {comment_endpoint}\n"
+            '- Body: {"message":"..."}'
+        )
+    if mentioned:
+        return (
+            "TASK MENTION\n"
+            f"Board: {board.name}\n"
+            f"Task: {task.title}\n"
+            f"Task ID: {task.id}\n"
+            f"From: {actor_name}\n\n"
+            "You were mentioned in this comment.\n\n"
+            f"Comment:\n{snippet}\n\n"
+            "If you are mentioned but not assigned, reply in the task "
+            "thread but do not change task status.\n"
+            f"Task comment endpoint: POST {comment_endpoint}\n"
+            '- Body: {"message":"..."}'
+        )
+    return (
+        "NEW TASK COMMENT\n"
+        f"Board: {board.name}\n"
+        f"Task: {task.title}\n"
+        f"Task ID: {task.id}\n"
+        f"From: {actor_name}\n\n"
+        "A new comment was posted on your task.\n\n"
+        f"Comment:\n{snippet}"
+    )
+
+
 async def _notify_task_comment_targets(
     session: AsyncSession,
     *,
@@ -2227,22 +2285,14 @@ async def _notify_task_comment_targets(
         if not agent.openclaw_session_id:
             continue
         mentioned = matches_agent_mention(agent, request.mention_names)
-        header = "TASK MENTION" if mentioned else "NEW TASK COMMENT"
-        action_line = (
-            "You were mentioned in this comment."
-            if mentioned
-            else "A new comment was posted on your task."
-        )
-        notification = (
-            f"{header}\n"
-            f"Board: {board.name}\n"
-            f"Task: {request.task.title}\n"
-            f"Task ID: {request.task.id}\n"
-            f"From: {actor_name}\n\n"
-            f"{action_line}\n\n"
-            f"Comment:\n{snippet}\n\n"
-            "If you are mentioned but not assigned, reply in the task "
-            "thread but do not change task status."
+        assignee_mentioned = bool(mentioned and request.task.assigned_agent_id == agent.id)
+        notification = _task_comment_notification_message(
+            board=board,
+            task=request.task,
+            actor_name=actor_name,
+            snippet=snippet,
+            mentioned=mentioned,
+            assignee_mentioned=assignee_mentioned,
         )
         await _send_agent_task_message(
             dispatch=dispatch,

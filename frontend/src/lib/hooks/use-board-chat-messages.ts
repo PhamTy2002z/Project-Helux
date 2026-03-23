@@ -10,8 +10,9 @@ import { apiDatetimeToMs } from "@/lib/datetime";
 import { DEFAULT_HUMAN_LABEL, resolveHumanActorName } from "@/lib/display-name";
 import { useSSEStream } from "@/lib/hooks/use-sse-stream";
 
-const PAGE_SIZE = 50;
+const PAGE_SIZE = 30;
 const AWAITING_REPLY_TIMEOUT_MS = 45_000;
+const SESSION_CACHE_TTL_MS = 30_000;
 
 type UseBoardChatMessagesOptions = {
   boardId: string;
@@ -48,6 +49,16 @@ export type MessageAttachment = {
 type BoardMemoryWithAttachments = BoardMemoryRead & {
   attachments?: MessageAttachment[];
 };
+
+type SessionCacheEntry = {
+  messages: BoardMemoryRead[];
+  hasMore: boolean;
+  fetchedCount: number;
+  fetchedAt: number;
+};
+
+const toSessionCacheKey = (boardId: string, sessionId: string): string =>
+  `${boardId}:${sessionId}`;
 
 const compareMessagesAsc = (
   left: BoardMemoryRead,
@@ -196,6 +207,7 @@ export const useBoardChatMessages = ({
   const [hasMore, setHasMore] = useState(false);
   const fetchedCountRef = useRef(0);
   const messagesRef = useRef<BoardMemoryRead[]>([]);
+  const sessionCacheRef = useRef<Map<string, SessionCacheEntry>>(new Map());
   const awaitingReplySourceRef = useRef<string | null>(null);
   const awaitingSinceRef = useRef<number>(0);
 
@@ -248,15 +260,79 @@ export const useBoardChatMessages = ({
   const skipInitialFetchRef = useRef(skipInitialFetch);
   skipInitialFetchRef.current = skipInitialFetch;
 
+  const restoreAwaitingReplyFromItems = useCallback(
+    (items: BoardMemoryRead[]) => {
+      if (items.length === 0) {
+        clearAwaitingReply();
+        return;
+      }
+      const lastMsg = items[items.length - 1];
+      const lastSource = resolveHumanActorName(
+        lastMsg.source,
+        DEFAULT_HUMAN_LABEL,
+      );
+      if (lastSource !== source) {
+        clearAwaitingReply();
+        return;
+      }
+      const lastAt = apiDatetimeToMs(lastMsg.created_at) ?? 0;
+      const age = lastAt ? Date.now() - lastAt : Number.POSITIVE_INFINITY;
+      if (age <= AWAITING_REPLY_TIMEOUT_MS) {
+        startAwaitingReply(lastAt || Date.now());
+      } else {
+        clearAwaitingReply();
+      }
+    },
+    [clearAwaitingReply, source, startAwaitingReply],
+  );
+
+  const writeSessionCache = useCallback(
+    (sessionId: string, entry: SessionCacheEntry) => {
+      sessionCacheRef.current.set(sessionId, entry);
+    },
+    [],
+  );
+
   const fetchLatest = useCallback(async () => {
-    if (!enabled || !boardId || !chatSessionId) {
+    if (!boardId || !chatSessionId) {
       resetState(true);
       return;
     }
+    if (!enabled) {
+      setIsLoading(false);
+      setError(null);
+      return;
+    }
+
+    const cacheKey = toSessionCacheKey(boardId, chatSessionId);
+    const cached = sessionCacheRef.current.get(cacheKey);
+    if (cached) {
+      fetchedCountRef.current = cached.fetchedCount;
+      setHasMore(cached.hasMore);
+      setMessages(cached.messages);
+      restoreAwaitingReplyFromItems(cached.messages);
+    } else {
+      fetchedCountRef.current = 0;
+      setHasMore(false);
+      setMessages([]);
+      clearAwaitingReply();
+    }
+
+    if (cached && Date.now() - cached.fetchedAt < SESSION_CACHE_TTL_MS) {
+      setError(null);
+      return;
+    }
+
     // Fresh session — known empty, skip the network call
     if (skipInitialFetchRef.current) {
       skipInitialFetchRef.current = false;
       resetState(true);
+      writeSessionCache(cacheKey, {
+        messages: [],
+        hasMore: false,
+        fetchedCount: 0,
+        fetchedAt: Date.now(),
+      });
       return;
     }
     setIsLoading(true);
@@ -273,31 +349,18 @@ export const useBoardChatMessages = ({
       }
       const items = sortAsc(result.data.items ?? []);
       fetchedCountRef.current = items.length;
-      setHasMore((result.data.total ?? items.length) > fetchedCountRef.current);
+      const nextHasMore =
+        (result.data.total ?? items.length) > fetchedCountRef.current;
+      setHasMore(nextHasMore);
       setMessages(items);
+      writeSessionCache(cacheKey, {
+        messages: items,
+        hasMore: nextHasMore,
+        fetchedCount: items.length,
+        fetchedAt: Date.now(),
+      });
 
-      // Restore awaiting-reply state: if the latest message is from the
-      // current user, the agent hasn't replied yet.
-      if (items.length > 0) {
-        const lastMsg = items[items.length - 1];
-        const lastSource = resolveHumanActorName(
-          lastMsg.source,
-          DEFAULT_HUMAN_LABEL,
-        );
-        if (lastSource === source) {
-          const lastAt = apiDatetimeToMs(lastMsg.created_at) ?? 0;
-          const age = lastAt ? Date.now() - lastAt : Number.POSITIVE_INFINITY;
-          if (age <= AWAITING_REPLY_TIMEOUT_MS) {
-            startAwaitingReply(lastAt || Date.now());
-          } else {
-            clearAwaitingReply();
-          }
-        } else {
-          clearAwaitingReply();
-        }
-      } else {
-        clearAwaitingReply();
-      }
+      restoreAwaitingReplyFromItems(items);
     } catch (nextError) {
       resetState();
       setError(
@@ -314,8 +377,8 @@ export const useBoardChatMessages = ({
     clearAwaitingReply,
     enabled,
     resetState,
-    source,
-    startAwaitingReply,
+    restoreAwaitingReplyFromItems,
+    writeSessionCache,
   ]);
 
   useEffect(() => {
@@ -339,11 +402,23 @@ export const useBoardChatMessages = ({
       }
       const incoming = result.data.items ?? [];
       fetchedCountRef.current += incoming.length;
-      setHasMore(
+      const nextHasMore =
         (result.data.total ?? fetchedCountRef.current) >
-          fetchedCountRef.current,
-      );
-      setMessages((prev) => mergeMessagesById(prev, incoming));
+        fetchedCountRef.current;
+      setHasMore(nextHasMore);
+      const sessionId = chatSessionId;
+      setMessages((prev) => {
+        const merged = mergeMessagesById(prev, incoming);
+        if (sessionId) {
+          writeSessionCache(toSessionCacheKey(boardId, sessionId), {
+            messages: merged,
+            hasMore: nextHasMore,
+            fetchedCount: fetchedCountRef.current,
+            fetchedAt: Date.now(),
+          });
+        }
+        return merged;
+      });
     } catch (nextError) {
       setError(
         nextError instanceof Error
@@ -353,7 +428,14 @@ export const useBoardChatMessages = ({
     } finally {
       setIsLoadingOlder(false);
     }
-  }, [boardId, chatSessionId, enabled, hasMore, isLoadingOlder]);
+  }, [
+    boardId,
+    chatSessionId,
+    enabled,
+    hasMore,
+    isLoadingOlder,
+    writeSessionCache,
+  ]);
 
   const sendMessage = useCallback(
     async (
@@ -387,9 +469,21 @@ export const useBoardChatMessages = ({
           attachments?.length && !created.attachments?.length
             ? { ...created, attachments }
             : created;
-        setMessages((prev) =>
-          mergeMessagesById(prev, [createdWithAttachments as BoardMemoryRead]),
-        );
+        const sessionId = chatSessionId;
+        setMessages((prev) => {
+          const merged = mergeMessagesById(prev, [
+            createdWithAttachments as BoardMemoryRead,
+          ]);
+          if (sessionId) {
+            writeSessionCache(toSessionCacheKey(boardId, sessionId), {
+              messages: merged,
+              hasMore,
+              fetchedCount: Math.max(fetchedCountRef.current, merged.length),
+              fetchedAt: Date.now(),
+            });
+          }
+          return merged;
+        });
         onMessageCreated?.(createdWithAttachments as BoardMemoryRead);
         startAwaitingReply(
           apiDatetimeToMs(createdWithAttachments.created_at) ?? Date.now(),
@@ -412,9 +506,11 @@ export const useBoardChatMessages = ({
       chatSessionId,
       clearAwaitingReply,
       enabled,
+      hasMore,
       onMessageCreated,
       source,
       startAwaitingReply,
+      writeSessionCache,
     ],
   );
 
@@ -449,7 +545,22 @@ export const useBoardChatMessages = ({
           };
           if (payload.memory?.tags?.includes("chat")) {
             const mem = payload.memory as BoardMemoryRead;
-            setMessages((prev) => mergeMessagesById(prev, [mem]));
+            const sessionId = chatSessionId;
+            setMessages((prev) => {
+              const merged = mergeMessagesById(prev, [mem]);
+              if (sessionId) {
+                writeSessionCache(toSessionCacheKey(boardId, sessionId), {
+                  messages: merged,
+                  hasMore,
+                  fetchedCount: Math.max(
+                    fetchedCountRef.current,
+                    merged.length,
+                  ),
+                  fetchedAt: Date.now(),
+                });
+              }
+              return merged;
+            });
             onMessageCreated?.(mem);
             if (
               awaitingReplySourceRef.current &&

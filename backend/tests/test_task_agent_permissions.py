@@ -101,6 +101,111 @@ async def test_non_lead_agent_can_update_status_for_assigned_task() -> None:
         await engine.dispose()
 
 
+def test_assignment_notification_requires_immediate_progress_update() -> None:
+    board_id = uuid4()
+    task_id = uuid4()
+    board = Board(
+        id=board_id,
+        organization_id=uuid4(),
+        name="DebtMapOS",
+        slug="debtmapos",
+        gateway_id=uuid4(),
+    )
+    task = Task(
+        id=task_id,
+        board_id=board_id,
+        title="STB 7-day analysis",
+        description="Analyze recent trend.",
+        status="inbox",
+    )
+    agent = Agent(
+        id=uuid4(),
+        name="Luke",
+        board_id=board_id,
+        gateway_id=uuid4(),
+        status="online",
+    )
+
+    message = tasks_api._assignment_notification_message(
+        board=board,
+        task=task,
+        agent=agent,
+    )
+
+    assert "TASK ASSIGNED" in message
+    assert "Post an initial task comment immediately." in message
+    assert "Do not wait for deep research/search or tool approvals" in message
+    assert f"/api/v1/agent/boards/{board_id}/tasks/{task_id}/comments" in message
+
+
+def test_task_mention_for_assignee_demands_fast_ack_comment() -> None:
+    board_id = uuid4()
+    task_id = uuid4()
+    assignee_id = uuid4()
+    board = Board(
+        id=board_id,
+        organization_id=uuid4(),
+        name="DebtMapOS",
+        slug="debtmapos",
+        gateway_id=uuid4(),
+    )
+    task = Task(
+        id=task_id,
+        board_id=board_id,
+        title="STB 7-day analysis",
+        description="Analyze recent trend.",
+        status="in_progress",
+        assigned_agent_id=assignee_id,
+    )
+
+    message = tasks_api._task_comment_notification_message(
+        board=board,
+        task=task,
+        actor_name="Noah",
+        snippet="@Luke update now",
+        mentioned=True,
+        assignee_mentioned=True,
+    )
+
+    assert "TASK MENTION" in message
+    assert "You are assigned and were mentioned" in message
+    assert "Immediate action required" in message
+    assert "Do not wait for deep research/search or tool approvals" in message
+    assert f"/api/v1/agent/boards/{board_id}/tasks/{task_id}/comments" in message
+
+
+def test_task_mention_for_non_assignee_keeps_no_status_change_rule() -> None:
+    board_id = uuid4()
+    task_id = uuid4()
+    board = Board(
+        id=board_id,
+        organization_id=uuid4(),
+        name="DebtMapOS",
+        slug="debtmapos",
+        gateway_id=uuid4(),
+    )
+    task = Task(
+        id=task_id,
+        board_id=board_id,
+        title="STB 7-day analysis",
+        description="Analyze recent trend.",
+        status="in_progress",
+        assigned_agent_id=uuid4(),
+    )
+
+    message = tasks_api._task_comment_notification_message(
+        board=board,
+        task=task,
+        actor_name="Noah",
+        snippet="@lead ping",
+        mentioned=True,
+        assignee_mentioned=False,
+    )
+
+    assert "TASK MENTION" in message
+    assert "If you are mentioned but not assigned" in message
+
+
 @pytest.mark.asyncio
 async def test_non_lead_agent_can_update_status_for_unassigned_task() -> None:
     engine = await _make_engine()

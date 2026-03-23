@@ -70,7 +70,10 @@ export const BoardChatPanel = memo(function BoardChatPanel({
   onError,
 }: BoardChatPanelProps) {
   const resolvedBoardId = boardId ?? "";
-  const sessionsState = useBoardChatSessions(resolvedBoardId, isOpen);
+  const sessionsState = useBoardChatSessions(
+    resolvedBoardId,
+    Boolean(resolvedBoardId),
+  );
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
   const [focusComposer, setFocusComposer] = useState(false);
   const [archiveTargetId, setArchiveTargetId] = useState<string | null>(null);
